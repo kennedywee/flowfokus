@@ -10,4 +10,4 @@ RUN bundle install && rm -rf /usr/local/bundle/cache
 COPY . ./
 ENV RAILS_ENV=development
 EXPOSE 3000
-CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
+CMD ["bin/dev", "-b", "0.0.0.0", "-p", "3000"]
