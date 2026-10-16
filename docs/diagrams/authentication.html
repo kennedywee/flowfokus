@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hydraflow app interaction with auth</title>
+<style>
+:root{color-scheme:light dark;--background:#fff;--foreground:#111827;--card:#f8fafc;--card-foreground:#111827;--muted-foreground:#6b7280;--border:#d1d5db;--primary:#2563eb;--primary-foreground:#fff;--code-background:#eef2f7;--code-foreground:#111827;--chart-1:#2563eb;--radius:10px;--font-sans:system-ui,sans-serif;--font-mono:ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root{--background:#0b0f17;--foreground:#e5e7eb;--card:#111827;--card-foreground:#e5e7eb;--muted-foreground:#9ca3af;--border:#374151;--primary:#3b82f6;--code-background:#1f2937;--code-foreground:#e5e7eb;--chart-1:#60a5fa}}
+html{background:var(--background)}body{margin:0;padding:24px;max-width:960px;margin-inline:auto}
+:root{--hl:var(--chart-1,#3b82f6);--ok:var(--success,#16a34a)}
+body{font-family:var(--font-sans,system-ui,sans-serif);color:var(--foreground);line-height:1.45}
+.wrap{max-width:100%}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.tabs button{font:inherit;font-size:13px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--foreground);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+svg{display:block;width:100%;min-width:600px;height:auto}
+.node rect{fill:var(--card);stroke:var(--border);stroke-width:1.5}
+.node .t{font-size:14px;font-weight:600;fill:var(--card-foreground)}
+.node .s{font-size:11.5px;fill:var(--muted-foreground)}
+.node.on rect{stroke:var(--hl);stroke-width:2.5}
+.group{fill:none;stroke:var(--border);stroke-dasharray:4 4;stroke-width:1.2}
+.glabel{font-size:11.5px;fill:var(--muted-foreground);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.edge{fill:none;stroke:var(--muted-foreground);stroke-opacity:.45;stroke-width:1.6;marker-end:url(#ar)}
+.edge.dash{stroke-dasharray:5 4}
+.edge.on{stroke:var(--hl);stroke-opacity:1;stroke-width:3;marker-end:url(#arh);stroke-dasharray:8 6;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+@media (prefers-reduced-motion:reduce){.edge.on{animation:none}}
+.lbl{font-size:11px;fill:var(--muted-foreground);paint-order:stroke;stroke:var(--background);stroke-width:4px;stroke-linejoin:round}
+.lbl.on{fill:var(--hl);font-weight:600}
+.panel{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin-top:10px;padding:16px;border-radius:var(--radius,10px);background:var(--card);border:1px solid var(--border)}
+.num{font-size:12px;font-weight:700;color:var(--primary-foreground);background:var(--hl);border-radius:999px;min-width:26px;height:26px;display:grid;place-items:center}
+.stext b{display:block;margin-bottom:2px}
+.stext p{margin:0;font-size:14px;color:var(--muted-foreground)}
+.stext code,td code,li code{font-family:var(--font-mono,monospace);font-size:12.5px;background:var(--code-background);color:var(--code-foreground);padding:1px 5px;border-radius:4px}
+.nav{display:flex;gap:8px;align-items:center;margin-top:10px}
+.nav button{font:inherit;font-size:13px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--foreground);cursor:pointer}
+.nav button:disabled{opacity:.4;cursor:default}
+.dots{display:flex;gap:5px;margin-left:auto}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.dots span.on{background:var(--hl)}
+h3{font-size:15px;margin:22px 0 8px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--muted-foreground);font-weight:600;font-size:12.5px}
+ul.never{margin:0;padding-left:18px;font-size:14px}
+ul.never li{margin:3px 0}
+</style></head><body><div class="wrap">
+
+<div class="tabs" role="tablist" id="tabs"></div>
+
+<div class="scroll"><svg viewBox="0 0 900 530" role="img" aria-labelledby="svgt">
+<title id="svgt">Hydraflow apps: browsers talk to TanStack Start Workers, which call Rails with Bearer tokens. Mobile calls Rails directly. WorkOS handles sign-in and sends webhooks to Rails.</title>
+<defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted-foreground)" fill-opacity=".6"/></marker>
+<marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--hl)"/></marker>
+</defs>
+
+<rect class="group" x="258" y="118" width="304" height="268" rx="12"/>
+<text class="glabel" x="272" y="140">Cloudflare Workers · BFF</text>
+
+<!-- edges -->
+<path id="e11" class="edge dash" d="M110 160 L110 62 L338 62"/>
+<path id="e12" class="edge dash" d="M200 312 L236 312 L236 74 L338 74"/>
+<path id="e8"  class="edge dash" d="M20 482 L8 482 L8 50 L338 50"/>
+<path id="e1"  class="edge" d="M200 192 L298 192"/>
+<path id="e2"  class="edge" d="M200 332 L298 332"/>
+<path id="e5"  class="edge" d="M400 160 L400 84"/>
+<path id="e6"  class="edge" d="M500 316 L540 316 L540 84"/>
+<path id="e3"  class="edge" d="M500 196 L620 196 L620 252 L678 252"/>
+<path id="e4"  class="edge" d="M500 344 L620 344 L620 272 L678 272"/>
+<path id="e7"  class="edge" d="M200 482 L650 482 L650 290 L678 290"/>
+<path id="e9"  class="edge dash" d="M562 40 L780 40 L780 228"/>
+<path id="e10" class="edge" d="M780 294 L780 418"/>
+
+<!-- labels -->
+<text id="l11" class="lbl" x="120" y="56">redirect to AuthKit page</text>
+<text id="l1" class="lbl" x="262" y="186" text-anchor="middle">cookie</text>
+<text id="l2" class="lbl" x="262" y="326" text-anchor="middle">cookie</text>
+<text id="l5" class="lbl" x="408" y="126">code · refresh</text>
+<text id="l6" class="lbl" x="548" y="110" transform="rotate(90 548 110)">code · refresh</text>
+<text id="l3" class="lbl" x="562" y="190" text-anchor="middle">Bearer + org + secret</text>
+<text id="l4" class="lbl" x="562" y="362" text-anchor="middle">Bearer + org + secret</text>
+<text id="l7" class="lbl" x="420" y="476" text-anchor="middle">Bearer + org · api.hydraflow.com/member</text>
+<text id="l8" class="lbl" x="22" y="300" transform="rotate(-90 22 300)" text-anchor="middle">PKCE</text>
+<text id="l9" class="lbl" x="670" y="34" text-anchor="middle">signed webhooks</text>
+<text id="l10" class="lbl" x="788" y="360">SQL</text>
+
+<!-- nodes -->
+<g class="node" id="n-staff"><rect x="20" y="160" width="180" height="64" rx="10"/><text class="t" x="110" y="187" text-anchor="middle">Staff browser</text><text class="s" x="110" y="206" text-anchor="middle">portal.hydraflow.com</text></g>
+<g class="node" id="n-member"><rect x="20" y="300" width="180" height="64" rx="10"/><text class="t" x="110" y="327" text-anchor="middle">Member browser</text><text class="s" x="110" y="346" text-anchor="middle">chainsaw.hydraflow.com</text></g>
+<g class="node" id="n-mobile"><rect x="20" y="450" width="180" height="64" rx="10"/><text class="t" x="110" y="477" text-anchor="middle">Mobile app</text><text class="s" x="110" y="496" text-anchor="middle">deferred · Keychain</text></g>
+<g class="node" id="n-pw"><rect x="300" y="160" width="200" height="64" rx="10"/><text class="t" x="400" y="187" text-anchor="middle">Portal Worker</text><text class="s" x="400" y="206" text-anchor="middle">TanStack Start + AuthKit SDK</text></g>
+<g class="node" id="n-sw"><rect x="300" y="300" width="200" height="64" rx="10"/><text class="t" x="400" y="327" text-anchor="middle">Site Worker</text><text class="s" x="400" y="346" text-anchor="middle">TanStack Start + AuthKit SDK</text></g>
+<g class="node" id="n-workos"><rect x="340" y="20" width="220" height="64" rx="10"/><text class="t" x="450" y="47" text-anchor="middle">WorkOS AuthKit</text><text class="s" x="450" y="66" text-anchor="middle">sign-in · tokens · RBAC</text></g>
+<g class="node" id="n-rails"><rect x="680" y="230" width="200" height="64" rx="10"/><text class="t" x="780" y="257" text-anchor="middle">Rails API</text><text class="s" x="780" y="276" text-anchor="middle">VPS · Bearer tokens only</text></g>
+<g class="node" id="n-pg"><rect x="680" y="420" width="200" height="64" rx="10"/><text class="t" x="780" y="447" text-anchor="middle">PostgreSQL</text><text class="s" x="780" y="466" text-anchor="middle">business data</text></g>
+</svg></div>
+
+<div class="panel" aria-live="polite"><div class="num" id="num">1</div><div class="stext"><b id="stitle"></b><p id="sbody"></p></div></div>
+<div class="nav"><button id="prev">← Back</button><button id="next">Next →</button><div class="dots" id="dots"></div></div>
+
+<h3>What each link carries</h3>
+<table>
+<thead><tr><th>Link</th><th>Credential</th></tr></thead>
+<tbody>
+<tr><td>Browser → its Worker</td><td>Encrypted <code>__Host-hf_session</code> cookie. <code>HttpOnly</code>, host-only, <code>SameSite=Lax</code>.</td></tr>
+<tr><td>Worker → Rails</td><td><code>Authorization: Bearer</code> WorkOS access token, plus <code>Hydraflow-Organization</code>, <code>Hydraflow-Client-IP</code> and <code>Hydraflow-Worker-Secret</code>, all set by the Worker.</td></tr>
+<tr><td>Worker ↔ WorkOS</td><td>API key (Worker secret). Code exchange, refresh, organization switch.</td></tr>
+<tr><td>Mobile → Rails</td><td><code>Authorization: Bearer</code> from PKCE sign-in, plus <code>Hydraflow-Organization</code>.</td></tr>
+<tr><td>WorkOS → Rails</td><td>Signed webhooks. Rails verifies them and syncs idempotently.</td></tr>
+</tbody></table>
+
+<h3>Never</h3>
+<ul class="never">
+<li>The browser never sees the access token or calls Rails.</li>
+<li>Rails never sets cookies. It verifies Bearer tokens against the WorkOS JWKS.</li>
+<li>Rails never reads host headers, and the gym slug never grants access. Rails always checks the staff membership or the <code>Member</code>.</li>
+<li>Workers hold no business rules and touch no database.</li>
+</ul>
+</div>
+
+<script>
+const S={
+ staff:{name:"Staff signs in",steps:[
+  {t:"Staff opens the portal",b:"The browser requests <code>portal.hydraflow.com/chainsaw</code>. There is no session cookie yet.",e:["e1"],n:["n-staff","n-pw"]},
+  {t:"Redirect to AuthKit",b:"The Portal Worker redirects the browser to the WorkOS AuthKit page with <code>redirect_uri=portal.hydraflow.com/callback</code>.",e:["e11"],n:["n-staff","n-workos"]},
+  {t:"Callback on the portal's own host",b:"After sign-in, AuthKit sends the browser to <code>portal.hydraflow.com/callback?code=…</code>.",e:["e1"],n:["n-staff","n-pw"]},
+  {t:"Worker exchanges the code",b:"The Worker exchanges the code with its API key and gets an access token and a refresh token.",e:["e5"],n:["n-pw","n-workos"]},
+  {t:"Session cookie set",b:"The Worker stores both tokens in the encrypted <code>__Host-hf_session</code> cookie. Browser JavaScript can't read it.",e:["e1"],n:["n-staff","n-pw"]},
+  {t:"Switch to the organization",b:"<code>switchToOrganization()</code> refreshes the session for Chainsaw. The new access token carries the organization, role and permissions.",e:["e5"],n:["n-pw","n-workos"]},
+  {t:"Worker calls Rails",b:"Server rendering calls <code>/staff/…</code> with <code>Bearer &lt;access token&gt;</code>, <code>Hydraflow-Organization: chainsaw</code> (from the URL) and the Worker secret.",e:["e3"],n:["n-pw","n-rails"]},
+  {t:"Rails authorizes",b:"Rails verifies the JWT. The <code>/staff</code> path means staff audience, so Rails checks that the token's organization matches the slug, then checks permissions. Then it reads data.",e:["e10"],n:["n-rails","n-pg"]},
+  {t:"Page returned",b:"The Worker renders the page with the data and returns HTML. The token stayed on the server.",e:["e1"],n:["n-staff","n-pw"]}]},
+ member:{name:"Member uses gym site",steps:[
+  {t:"Member opens the member area",b:"The browser requests <code>chainsaw.hydraflow.com/account</code> and sends its own host's session cookie.",e:["e2"],n:["n-member","n-sw"]},
+  {t:"No cookie? Sign in",b:"Without a session, the Site Worker redirects to AuthKit with <code>redirect_uri=chainsaw.hydraflow.com/callback</code>, which matches the <code>*.hydraflow.com</code> wildcard. The callback and cookie work as for staff.",e:["e12","e6"],n:["n-member","n-workos","n-sw"]},
+  {t:"Session checked and refreshed",b:"<code>authkitMiddleware()</code> decrypts the cookie. If the access token is near expiry, it refreshes it with WorkOS.",e:["e6"],n:["n-sw","n-workos"]},
+  {t:"Worker calls Rails",b:"The Worker calls <code>/member/…</code> with <code>Bearer</code>, <code>Hydraflow-Organization: chainsaw</code> (from its host) and the Worker secret.",e:["e4"],n:["n-sw","n-rails"]},
+  {t:"Rails authorizes",b:"The <code>/member</code> path means member audience. Rails finds Chainsaw from the slug, ignores staff permissions, and requires a <code>Member</code> for this user in Chainsaw.",e:["e10"],n:["n-rails","n-pg"]},
+  {t:"Browser action",b:"A purchase posts JSON to <code>chainsaw.hydraflow.com/api/…</code>. CSRF middleware checks it, and the catch-all route forwards it to <code>/member/…</code> with the Bearer token. The Site Worker never forwards <code>/staff/*</code>.",e:["e2","e4"],n:["n-member","n-sw","n-rails"]}]},
+ mobile:{name:"Mobile app (later)",steps:[
+  {t:"PKCE sign-in",b:"The app opens AuthKit with a PKCE challenge. It holds no client secret.",e:["e8"],n:["n-mobile","n-workos"]},
+  {t:"Tokens in secure storage",b:"The app exchanges the code with its verifier and keeps the tokens in Keychain or Keystore.",e:["e8"],n:["n-mobile","n-workos"]},
+  {t:"Direct API call",b:"The app calls <code>api.hydraflow.com/member/…</code> with <code>Bearer</code> and <code>Hydraflow-Organization</code> for the chosen gym. There is no Worker in between.",e:["e7"],n:["n-mobile","n-rails"]},
+  {t:"Same checks as the web",b:"Rails verifies the JWT the same way and requires a <code>Member</code> in that gym.",e:["e10"],n:["n-rails","n-pg"]}]},
+ sync:{name:"WorkOS sync",steps:[
+  {t:"Change in WorkOS",b:"An admin changes a staff role, or an invitation is accepted. WorkOS sends a signed webhook to <code>api.hydraflow.com</code>.",e:["e9"],n:["n-workos","n-rails"]},
+  {t:"Rails syncs",b:"Rails verifies the signature and updates its local users, organizations and memberships. Duplicates and out-of-order events are safe.",e:["e10"],n:["n-rails","n-pg"]},
+  {t:"New claims on refresh",b:"The next session refresh in the Portal Worker returns a token with the new permissions. Until then the old token stays valid (the stale sessions question).",e:["e5"],n:["n-pw","n-workos"]}]}
+};
+const lblFor={e1:"l1",e2:"l2",e3:"l3",e4:"l4",e5:"l5",e6:"l6",e7:"l7",e8:"l8",e9:"l9",e10:"l10",e11:"l11",e12:"l11"};
+let cur="staff",i=0;
+const tabs=document.getElementById("tabs");
+Object.entries(S).forEach(([k,v])=>{const b=document.createElement("button");b.textContent=v.name;b.setAttribute("role","tab");b.onclick=()=>{cur=k;i=0;draw()};b.dataset.k=k;tabs.appendChild(b)});
+document.getElementById("prev").onclick=()=>{if(i>0){i--;draw()}};
+document.getElementById("next").onclick=()=>{if(i<S[cur].steps.length-1){i++;draw()}};
+function draw(){
+ const st=S[cur].steps[i];
+ document.querySelectorAll(".edge,.node,.lbl").forEach(x=>x.classList.remove("on"));
+ st.e.forEach(id=>{document.getElementById(id).classList.add("on");document.getElementById(lblFor[id]).classList.add("on")});
+ st.n.forEach(id=>document.getElementById(id).classList.add("on"));
+ document.getElementById("num").textContent=i+1;
+ document.getElementById("stitle").textContent=st.t;
+ document.getElementById("sbody").innerHTML=st.b;
+ document.getElementById("prev").disabled=i===0;
+ document.getElementById("next").disabled=i===S[cur].steps.length-1;
+ tabs.querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.k===cur));
+ document.getElementById("dots").innerHTML=S[cur].steps.map((_,j)=>`<span class="${j===i?"on":""}"></span>`).join("");
+}
+draw();
+</script></body></html>

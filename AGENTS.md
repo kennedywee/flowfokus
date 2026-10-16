@@ -1,0 +1,14 @@
+# Working agreement
+
+Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before implementation. Keep the agreed stack and domain terms.
+
+- Use short sentences and familiar words. Prefer active voice.
+- Commit small, complete changes directly to `master` for this sprint. Do not push or deploy.
+- Do not erase unrelated work. Stage explicit paths.
+- Rails owns business rules. Use models and Rails primitives. There is no default service layer.
+- All tenant-owned queries must use the current organization. Verify linked records belong to that organization.
+- Keep demo access opt-in, local-only, and disabled in production.
+- Keep credentials on the server. No browser storage for access tokens.
+- Update the OpenAPI contract, generate types, and check real API responses.
+- Run relevant tests and builds. Report failures and unverified deployment steps clearly.
+- Native mobile, recurring billing, classes, and reservations are deferred.
