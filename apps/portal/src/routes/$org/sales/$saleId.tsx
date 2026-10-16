@@ -94,7 +94,7 @@ function SalePage() {
                 aria-valuenow={data.paid_minor}
                 aria-valuetext={`${formatMoney(data.paid_minor, data.currency)} of ${formatMoney(data.total_minor, data.currency)}`}
               >
-                <div className="meter__fill" style={{ width: `${(data.paid_minor / data.total_minor) * 100}%` }} />
+                <div className="meter__fill" style={{ transform: `scaleX(${data.paid_minor / data.total_minor})` }} />
               </div>
             </div>
           ) : null}

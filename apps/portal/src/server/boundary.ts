@@ -4,7 +4,20 @@
  * Pure functions, used by the request middleware in `src/start.ts`.
  */
 
+import type { CsrfMiddlewareOptions } from "@tanstack/react-start";
+
 export type HandlerType = "serverFn" | "router";
+
+/**
+ * Options for `createCsrfMiddleware()`. Same as Start's built-in default:
+ * only server function calls are checked, and they must be same-origin
+ * (`Sec-Fetch-Site`, then `Origin`, then `Referer`). Page loads are never
+ * checked, so a typed address (`Sec-Fetch-Site: none`) or a link from
+ * another site still opens a page.
+ */
+export const csrfOptions = {
+  filter: ({ handlerType }: { handlerType: HandlerType }) => handlerType === "serverFn",
+} satisfies CsrfMiddlewareOptions;
 
 /**
  * Checks the method and content type before Start handles a request.

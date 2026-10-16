@@ -1,5 +1,5 @@
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
-import { createNonce, rejectUnsafeRequest, securityHeaders, withHeaders } from "./server/boundary";
+import { createNonce, csrfOptions, rejectUnsafeRequest, securityHeaders, withHeaders } from "./server/boundary";
 
 const dev = import.meta.env.DEV;
 
@@ -18,6 +18,10 @@ const boundaryMiddleware = createMiddleware().server(async ({ request, handlerTy
 
 export const startInstance = createStart(() => ({
   // A custom start instance turns off the default CSRF check, so add it back.
-  // It rejects server function calls that are not same-origin.
-  requestMiddleware: [boundaryMiddleware, createCsrfMiddleware()],
+  // It rejects server function calls that are not same-origin. Page loads are
+  // not checked: a typed address or an outside link must still open a page.
+  requestMiddleware: [
+    boundaryMiddleware,
+    createCsrfMiddleware(csrfOptions),
+  ],
 }));

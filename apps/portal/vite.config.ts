@@ -24,6 +24,8 @@ export default defineConfig(({ command }) => ({
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
+      // Portal and site run side by side; a shared debugger port would clash.
+      inspectorPort: false,
       ...(command === "serve" ? { config: { vars: localVars() } } : {}),
     }),
     tanstackStart(),

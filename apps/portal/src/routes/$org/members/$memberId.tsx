@@ -126,7 +126,7 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
                     aria-valuenow={right.remaining}
                     aria-label={`${right.name}: visits left`}
                   >
-                    <div className="meter__fill" style={{ width: `${(right.remaining / right.usage_limit) * 100}%` }} />
+                    <div className="meter__fill" style={{ transform: `scaleX(${right.usage_limit ? right.remaining / right.usage_limit : 0})` }} />
                   </div>
                   <span className="cell-sub">
                     {right.remaining} of {right.usage_limit} visits left · {right.used_count} used

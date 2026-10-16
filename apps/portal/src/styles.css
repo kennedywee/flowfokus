@@ -866,7 +866,8 @@ a.counter:hover .counter__label {
   height: 100%;
   background: var(--granted);
   border-radius: inherit;
-  transition: width 320ms var(--ease-out);
+  transform-origin: left center;
+  transition: transform 320ms var(--ease-out);
 }
 .meter[data-state="due"] .meter__fill {
   background: var(--due);
