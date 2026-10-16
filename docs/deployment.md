@@ -20,6 +20,8 @@ bun run check
 docker build -t hydraflow-server:local apps/server
 ```
 
+With the apps running through `bun run dev`, run `bun run smoke` in another terminal. This creates a test member and records a sale, partial payments, fulfillment, and check-ins in the local demo database. It checks retries as well as successful access. It refuses a remote API URL.
+
 CI runs these checks on pushes to `master` and pull requests. A tag matching `v*` or a manual run of **Build release candidate** packages the verified image, Worker outputs, OpenAPI contract, and a SHA-256 manifest as one workflow artifact. This workflow needs no cloud account credentials. It does not publish a GitHub Release or registry image yet.
 
 The full tag promotion, registry publication, preview, and approval-gated deployment design remains in [Release](release.md). Sprint 1 implements local builds, CI, and candidate packaging only. Use an `rc` tag for this sprint.

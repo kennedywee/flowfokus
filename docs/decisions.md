@@ -6,6 +6,7 @@ Status of each design decision. The rules themselves live in the linked document
 
 | Decision | Home |
 | --- | --- |
+| `master` is the integration branch. Sprint 1 uses direct commits, as requested. | [Sprint 1](sprint-1.md#worker-ownership) |
 | Rails 8, WorkOS AuthKit, RSpec. | [Architecture](architecture.md#technology) |
 | WorkOS owns identity and staff access. Rails owns business data and rules. | [Architecture](architecture.md#responsibilities) |
 | No default service layer. Integrations in `lib/` or gems. | [Architecture](architecture.md#rails-code-layout) |

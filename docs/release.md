@@ -8,9 +8,9 @@ One Git tag releases every app in the [monorepo](monorepo.md). Building a releas
 
 ```mermaid
 flowchart LR
-  pr["Pull request<br/>CI, optional preview"] --> main["Merge to main<br/>CI only"]
-  main --> rc["Tag vX.Y.Z-rc.N<br/>candidate"]
-  rc -->|test, fix on main, new rc| rc
+  pr["Pull request<br/>CI, optional preview"] --> master["Merge to master<br/>CI only"]
+  master --> rc["Tag vX.Y.Z-rc.N<br/>candidate"]
+  rc -->|test, fix on master, new rc| rc
   rc --> stable["Tag vX.Y.Z<br/>same commit"]
   stable --> deploy["Deploy workflow<br/>approval gate"]
   stable --> mobile["Mobile workflow<br/>update or store build"]
@@ -22,7 +22,7 @@ flowchart LR
 | Release candidate | Tag `vX.Y.Z-rc.N` | A person pushes the tag | No |
 | Stable release | Tag `vX.Y.Z` | A person tags the tested candidate commit | Only through Deploy and Mobile |
 
-Merging to `main` runs CI only. It never deploys.
+Merging to `master` runs CI only. It never deploys.
 
 There is no staging environment yet. Production is the only deployed environment. Test release candidates locally and with PR previews.
 
@@ -30,7 +30,7 @@ There is no staging environment yet. Production is the only deployed environment
 
 | Workflow | Trigger | Does |
 | --- | --- | --- |
-| `ci.yml` | Pull request, push to `main` | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
+| `ci.yml` | Pull request, push to `master` | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
 | `preview.yml` | PR with the `preview` label | Builds every app from the PR. Uploads portal and site Worker preview versions. No secrets in the build job. |
 | `release.yml` | Push of a `v*` tag | Runs CI, builds each app once, publishes the server image, writes the release manifest, creates one GitHub Release. Deploys nothing. |
 | `deploy.yml` | Manual: tag, apps | Approval, database backup, migration, server start, smoke test, then web sites. |
@@ -40,7 +40,7 @@ The **release manifest** records the tag, commit, channel, and each app's build 
 
 ## Rules
 
-- **Never move a tag.** Fix on `main` and tag the next `rc`.
+- **Never move a tag.** Fix on `master` and tag the next `rc`.
 - **Promote the same commit.** A stable tag points at the tested candidate commit.
 - **Build once, promote the artifact.** Server image and web builds are reused across environments. Only runtime configuration changes. Mobile is the exception: it needs one build per environment.
 - **Candidates never reach production.** Deploy and Mobile refuse candidate tags for production.
@@ -58,14 +58,14 @@ The **release manifest** records the tag, commit, channel, and each app's build 
 
 ## Hotfix
 
-Production runs `v1.0.0`. `main` has work that cannot ship yet.
+Production runs `v1.0.0`. `master` has work that cannot ship yet.
 
 1. Branch from the production tag: `git switch -c hotfix/v1.0.1 v1.0.0`.
 2. Fix the bug and run the relevant checks.
 3. Tag `v1.0.1` and push the branch and tag. The normal release workflow builds it.
-4. Merge the hotfix branch back into `main`.
+4. Merge the hotfix branch back into `master`.
 
-`v1.0.1` contains `v1.0.0` plus the fix, and none of the newer `main` work.
+`v1.0.1` contains `v1.0.0` plus the fix, and none of the newer `master` work.
 
 ## Hosting
 
