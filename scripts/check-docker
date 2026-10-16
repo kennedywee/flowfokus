@@ -9,4 +9,4 @@ docker compose run --rm --no-deps \
   -e TEST_DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
   server bash -c 'bin/rails db:prepare && bundle exec rspec'
 docker compose run --rm --no-deps portal sh -c \
-  'bun run --cwd packages/api check:generated && bun run test:web && bun run typecheck && bun run build'
+  'bun run test:tooling && bun run --cwd packages/api check:generated && bun run test:web && bun run typecheck && bun run build'

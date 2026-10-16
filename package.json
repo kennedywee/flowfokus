@@ -14,6 +14,7 @@
     "contract:check": "bash scripts/contract-check",
     "typecheck": "bun run --cwd packages/api typecheck && bun run --cwd apps/portal typecheck && bun run --cwd apps/site typecheck",
     "test:web": "bun run --cwd apps/portal test && bun run --cwd apps/site test",
+    "test:tooling": "node --test scripts/*.test.mjs",
     "build": "bun run --cwd apps/portal build && bun run --cwd apps/site build && node scripts/worker-artifacts.mjs --clean && node scripts/worker-artifacts.mjs",
     "artifacts:check": "node scripts/worker-artifacts.mjs"
   },
