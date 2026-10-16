@@ -11,7 +11,8 @@ Implementation starts with [Sprint 1](docs/sprint-1.md). The agreed design is in
 - `apps/site`: public gym site and future signed-in member area.
 - `packages/api`: generated API types and shared client.
 - `scripts`: local setup and checks.
-- `infra`: local and deployment configuration.
+- `compose.yaml`: local services.
+- `compose.production.yaml`: production API deployment.
 
 ## Run with Docker
 

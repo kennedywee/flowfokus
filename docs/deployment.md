@@ -38,18 +38,18 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 ## Rails container preparation
 
 1. Build the image from `apps/server`, or load a candidate image with `gunzip -c server-image.tar.gz | docker load`.
-2. Put real configuration in a private environment file based on `infra/production.env.example`. Set the loaded `hydraflow-server:<commit>` image tag or its image ID from the manifest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
+2. Put real configuration in a private environment file based on `.env.production.example`. Set the loaded `hydraflow-server:<commit>` image tag or its image ID from the manifest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
 4. Run the migration as a separate command:
 
 ```sh
-docker compose -f infra/compose.production.yaml --env-file /private/hydraflow.env run --rm server bin/rails db:migrate
+docker compose -f compose.production.yaml --env-file /private/hydraflow.env run --rm server bin/rails db:migrate
 ```
 
 5. Start the server explicitly:
 
 ```sh
-docker compose -f infra/compose.production.yaml --env-file /private/hydraflow.env up -d --wait
+docker compose -f compose.production.yaml --env-file /private/hydraflow.env up -d --wait
 ```
 
 6. Check `/up`, then the public organization endpoint with `Hydraflow-Organization: <slug>`. Run the database readiness check described by the API.
