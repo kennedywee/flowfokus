@@ -6,7 +6,7 @@ Verified locally on 16 October 2026. Supporting services run in Docker. All appl
 
 - `docker compose build server portal site`: three independent app images build.
 - `docker compose run --rm server bin/rails db:prepare`: explicit database preparation completes.
-- `docker compose up -d --build --wait`: local PostgreSQL, Rails, portal, and gym site start. The stack contains these four services.
+- `docker compose up -d --build --wait`: local PostgreSQL, Rails, portal, and gym site start. The stack contains these four services. Only PostgreSQL has a local health check; app endpoints are verified separately.
 - `bash scripts/check-docker`: Rails specs, frontend tests, generated API types, TypeScript checks, and both Worker builds pass inside containers.
 - `bun run contract:check`: generated types match the committed OpenAPI contract.
 - `bun run smoke`: public organization, member creation, denied access, sale retry, partial payments, payment retry, fulfillment retry, granted check-in, and single consumption pass against the running API.

@@ -12,6 +12,7 @@ Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before i
 - Run supporting services in Docker. Do not install or start host PostgreSQL, Redis, or similar daemons for this project.
 - Each app owns its Dockerfiles and image. Do not combine portal and site in one image.
 - Keep database preparation explicit. Do not add a database setup service to Compose.
+- Keep local Compose simple: use PostgreSQL readiness, and verify app endpoints in smoke checks.
 - Keep credentials on the server. No browser storage for access tokens.
 - Update the OpenAPI contract, generate types, and check real API responses.
 - Run relevant tests and builds. Report failures and unverified deployment steps clearly.
