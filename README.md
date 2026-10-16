@@ -16,12 +16,14 @@ Implementation starts with [Sprint 1](docs/sprint-1.md). The agreed design is in
 ## Run with Docker
 
 ```sh
-docker compose up --build
+docker compose build
+docker compose run --rm server bin/rails db:prepare
+docker compose up
 ```
 
 Open the staff portal at `http://localhost:3001` and the gym site at `http://chainsaw.localhost:3002`. The API uses `http://127.0.0.1:3000`. The local demo requires no external credentials. It uses sample data and records manual payments; it does not collect money.
 
-PostgreSQL and all three apps run in containers. A separate local setup container prepares the database. The production server never migrates on boot. Data stays in the Compose volume when the stack stops with `docker compose down`.
+PostgreSQL and all three apps run in containers. Run `db:prepare` explicitly on first setup and after adding migrations. It loads demo data into a new database. To reload demo data later, run `docker compose run --rm server bin/rails db:seed`. Data stays in the Compose volume when the stack stops with `docker compose down`.
 
 Each app owns its Dockerfiles and image: `apps/server/Dockerfile` (production), `apps/server/Dockerfile.dev` (local), `apps/portal/Dockerfile`, and `apps/site/Dockerfile`. The two web Dockerfiles have separate `development` and `worker-build` targets. The latter produces that app's Cloudflare Worker bundle.
 

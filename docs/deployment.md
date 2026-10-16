@@ -13,7 +13,7 @@ Do not use this candidate for live member or payment data. WorkOS sign-in and to
 
 ## Build and check
 
-For a fully containerized local demo, run `docker compose up --build`. PostgreSQL, the API, and the two Worker emulators run in Docker. A local one-off setup job prepares and seeds the database before Rails starts. This setup job is not part of the production Compose file.
+For a fully containerized local demo, follow [Run with Docker](../README.md#run-with-docker). Prepare the database explicitly with `docker compose run --rm server bin/rails db:prepare`, then start the stack with `docker compose up`. PostgreSQL, the API, and the two Worker emulators run in Docker. Database preparation is separate from normal app startup.
 
 Every app has its own Dockerfile and image. Compose uses the server's `Dockerfile.dev` and the web apps' `development` targets. The server's default `Dockerfile` builds the production API. Each web app's `worker-build` target builds only its own Cloudflare bundle, using the repository root as the build context:
 

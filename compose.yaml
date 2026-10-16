@@ -1,33 +1,24 @@
 name: hydraflow
 
 services:
-  server-setup:
-    image: hydraflow-server:development
-    pull_policy: never
-    environment: &server-environment
-      RAILS_ENV: development
-      DATABASE_URL: postgres://hydraflow:hydraflow@db:5432/hydraflow_development
-      SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
-      HYDRAFLOW_DEMO_MODE: "true"
-      HYDRAFLOW_DEMO_TOKEN: hydraflow-local-demo-token
-      RAILS_DEVELOPMENT_HOSTS: server
-    command: ["bash", "-c", "bin/rails db:prepare && bin/rails db:seed"]
-    depends_on:
-      db:
-        condition: service_healthy
-
   server:
     build:
       context: apps/server
       dockerfile: Dockerfile.dev
     image: hydraflow-server:development
     init: true
-    environment: *server-environment
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgres://hydraflow:hydraflow@db:5432/hydraflow_development
+      SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
+      HYDRAFLOW_DEMO_MODE: "true"
+      HYDRAFLOW_DEMO_TOKEN: hydraflow-local-demo-token
+      RAILS_DEVELOPMENT_HOSTS: server
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
-      server-setup:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/ready')).is_a?(Net::HTTPSuccess) ? 0 : 1)"]
       interval: 5s
