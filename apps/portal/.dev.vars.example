@@ -1,0 +1,5 @@
+# Local development only. Copy to .dev.vars. Never commit .dev.vars.
+# Production builds ignore the demo settings.
+API_BASE_URL=http://127.0.0.1:3000
+HYDRAFLOW_DEMO_MODE=true
+HYDRAFLOW_DEMO_TOKEN=hydraflow-local-demo-token
