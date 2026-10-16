@@ -1,0 +1,1483 @@
+openapi: 3.0.3
+info:
+  title: Hydraflow API
+  version: 0.1.0
+  description: |
+    Rails API for Hydraflow. Web apps call it from server code only.
+
+    - Success bodies use `{ "data": ... }`.
+    - Error bodies use `{ "error": { "code", "message", "details"? } }`.
+    - Organization-scoped paths need the `Hydraflow-Organization` header with the gym slug.
+    - `/staff/*` paths need `Authorization: Bearer <token>`. In Sprint 1 only the
+      local demo token works, and only when `HYDRAFLOW_DEMO_MODE=true` in development or test.
+    - Money uses integer minor units with an ISO 4217 currency code.
+    - Times are UTC ISO 8601 strings.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: health
+  - name: public
+  - name: staff
+  - name: member
+
+paths:
+  /up:
+    get:
+      tags: [health]
+      operationId: getLiveness
+      summary: Liveness check. Does not touch the database.
+      responses:
+        "200":
+          description: The process is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /ready:
+    get:
+      tags: [health]
+      operationId: getReadiness
+      summary: Readiness check. Runs a database query.
+      responses:
+        "200":
+          description: The database answers.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /public/organization:
+    get:
+      tags: [public]
+      operationId: getPublicOrganization
+      summary: Published details of the gym named by the slug header.
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: The gym.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PublicOrganization"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /public/products:
+    get:
+      tags: [public]
+      operationId: listPublicProducts
+      summary: Published products and their available prices.
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: Offers on sale.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicProduct"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /staff/organization:
+    get:
+      tags: [staff]
+      operationId: getStaffOrganization
+      summary: The current organization, its locations, and the actor's permissions.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: The organization.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/StaffOrganization"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/overview:
+    get:
+      tags: [staff]
+      operationId: getStaffOverview
+      summary: Counts for the staff dashboard.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: Dashboard counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/StaffOverview"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/members:
+    get:
+      tags: [staff]
+      operationId: listStaffMembers
+      summary: Members of the organization, newest first. Needs members:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - name: q
+          in: query
+          required: false
+          description: Case-insensitive match on name or email.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Members.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [staff]
+      operationId: createStaffMember
+      summary: Create a member without a login. Needs members:create.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/members/{id}:
+    get:
+      tags: [staff]
+      operationId: getStaffMember
+      summary: One member with membership periods and current rights. Needs members:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: The member.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/MemberDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/products:
+    get:
+      tags: [staff]
+      operationId: listStaffProducts
+      summary: All products with benefits and prices, including archived prices. Needs products:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: Products.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StaffProduct"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales:
+    get:
+      tags: [staff]
+      operationId: listStaffSales
+      summary: Sales, newest first. Needs purchases:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - name: member_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Sales.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Sale"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [staff]
+      operationId: createStaffSale
+      summary: Record a membership sale with one line, quantity one. Needs purchases:create.
+      description: |
+        The line snapshots the product name, price, and benefit terms.
+        A retry with the same Idempotency-Key and body returns the first sale with status 200.
+        The same key with a different body returns 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaleInput"
+      responses:
+        "200":
+          description: Replay of an earlier request with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales/{id}:
+    get:
+      tags: [staff]
+      operationId: getStaffSale
+      summary: One sale. Needs purchases:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: The sale.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales/{id}/payments:
+    post:
+      tags: [staff]
+      operationId: createStaffSalePayment
+      summary: Record a manual cash or bank-transfer payment. Needs payments:create.
+      description: |
+        Partial payments are allowed. A payment above the balance returns 422 `overpayment`.
+        Hydraflow does not move money; this records money received by staff.
+        Returns the updated sale.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdPath"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "200":
+          description: Replay of an earlier request with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "201":
+          description: Payment recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales/{id}/fulfill:
+    post:
+      tags: [staff]
+      operationId: fulfillStaffSale
+      summary: Deliver a fully paid sale. Needs purchases:fulfill.
+      description: |
+        Creates the membership (or adds a period to the existing one), the benefit grant,
+        and entitlements in one transaction. A repeat call returns the existing
+        fulfillment with status 200 and creates nothing. An unpaid balance returns 422 `sale_not_paid`.
+        Returns the updated sale.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Already fulfilled. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "201":
+          description: Fulfilled now.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/check_ins:
+    get:
+      tags: [staff]
+      operationId: listStaffCheckIns
+      summary: Recent check-ins, newest first, at most 100. Needs check_ins:read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - name: member_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Check-ins.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CheckIn"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [staff]
+      operationId: createStaffCheckIn
+      summary: Check a member in at a location. Needs check_ins:create.
+      description: |
+        Returns 201 for both granted and denied attempts. Read `result`.
+        A denied attempt records `denial_reason` and consumes nothing.
+        A retry with the same Idempotency-Key and body returns the first check-in with
+        status 200 and never consumes twice. The same key with a different body returns 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckInInput"
+      responses:
+        "200":
+          description: Replay of an earlier request with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInResponse"
+        "201":
+          description: Check-in recorded (granted or denied).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/profile:
+    get:
+      tags: [member]
+      operationId: getMemberProfile
+      summary: The signed-in member. Not available until WorkOS verification ships.
+      description: |
+        Always fails closed in Sprint 1. No token gives 401. The demo token gives 403
+        because demo actors are staff only. Any other token gives 503 or 401.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/OrganizationSlug"
+      responses:
+        "200":
+          description: The member.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: WorkOS access token (next sprint) or the local demo token (development and test only).
+
+  parameters:
+    OrganizationSlug:
+      name: Hydraflow-Organization
+      in: header
+      required: true
+      description: Gym slug, for example `chainsaw`.
+      schema:
+        type: string
+        pattern: "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 255
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Missing header or malformed request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Missing or invalid Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: The actor lacks access to this organization or permission.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Unknown organization or record.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Idempotency-Key reused with a different request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unprocessable:
+      description: Validation or business rule failure.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: Authentication is not configured, or a dependency is down.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [ok]
+
+    ErrorCode:
+      type: string
+      description: |
+        Stable machine-readable error code.
+        - `bad_request` (400), `organization_required` (400), `idempotency_key_required` (400)
+        - `unauthenticated` (401), `invalid_token` (401)
+        - `forbidden` (403), `organization_mismatch` (403)
+        - `not_found` (404)
+        - `idempotency_key_reused` (409)
+        - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid`,
+          `currency_mismatch` (422)
+        - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
+      enum:
+        - bad_request
+        - organization_required
+        - idempotency_key_required
+        - unauthenticated
+        - invalid_token
+        - forbidden
+        - organization_mismatch
+        - not_found
+        - idempotency_key_reused
+        - validation_failed
+        - price_unavailable
+        - overpayment
+        - sale_not_paid
+        - currency_mismatch
+        - auth_not_configured
+        - auth_unavailable
+        - database_unavailable
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              $ref: "#/components/schemas/ErrorCode"
+            message:
+              type: string
+            details:
+              type: object
+              description: For `validation_failed`, maps a field name to a list of messages.
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+
+    PublicOrganization:
+      type: object
+      additionalProperties: false
+      required: [slug, name, timezone, currency, locations]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        timezone:
+          type: string
+          description: IANA time zone, for example `Asia/Kuala_Lumpur`.
+        currency:
+          type: string
+          description: ISO 4217 code.
+        locations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicLocation"
+
+    PublicLocation:
+      type: object
+      additionalProperties: false
+      required: [name, address]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+
+    Location:
+      type: object
+      additionalProperties: false
+      required: [id, name, address]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        address:
+          type: string
+          nullable: true
+
+    Permission:
+      type: string
+      enum:
+        - members:read
+        - members:create
+        - products:read
+        - purchases:read
+        - purchases:create
+        - purchases:fulfill
+        - payments:create
+        - check_ins:read
+        - check_ins:create
+
+    StaffOrganization:
+      type: object
+      additionalProperties: false
+      required: [id, slug, name, timezone, currency, locations, actor]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        timezone:
+          type: string
+        currency:
+          type: string
+        locations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Location"
+        actor:
+          $ref: "#/components/schemas/Actor"
+
+    Actor:
+      type: object
+      additionalProperties: false
+      required: [name, email, demo, permissions]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        demo:
+          type: boolean
+          description: True when the local demo token authenticated the request.
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+
+    StaffOverview:
+      type: object
+      additionalProperties: false
+      required:
+        - member_count
+        - active_membership_count
+        - unpaid_sale_count
+        - awaiting_fulfillment_count
+        - check_ins_today
+      properties:
+        member_count:
+          type: integer
+        active_membership_count:
+          type: integer
+          description: Members with a membership period covering now.
+        unpaid_sale_count:
+          type: integer
+          description: Sales with a balance above zero.
+        awaiting_fulfillment_count:
+          type: integer
+          description: Fully paid sales that are not fulfilled.
+        check_ins_today:
+          type: object
+          additionalProperties: false
+          required: [granted, denied]
+          description: Counts since midnight in the organization's time zone.
+          properties:
+            granted:
+              type: integer
+            denied:
+              type: integer
+
+    MemberInput:
+      type: object
+      additionalProperties: false
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 320
+
+    MemberSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, email]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+
+    Member:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    MemberDetail:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, created_at, membership, current_period, entitlements]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        membership:
+          allOf:
+            - $ref: "#/components/schemas/Membership"
+          nullable: true
+        current_period:
+          allOf:
+            - $ref: "#/components/schemas/MembershipPeriod"
+          nullable: true
+          description: The period that covers now, if any.
+        entitlements:
+          type: array
+          description: Rights that are active now or start later. Expired rights are left out.
+          items:
+            $ref: "#/components/schemas/Entitlement"
+
+    Membership:
+      type: object
+      additionalProperties: false
+      required: [id, created_at, periods]
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        periods:
+          type: array
+          description: All periods, oldest first. Periods never overlap.
+          items:
+            $ref: "#/components/schemas/MembershipPeriod"
+
+    MembershipPeriod:
+      type: object
+      additionalProperties: false
+      required: [id, membership_id, sale_id, fulfillment_id, starts_at, ends_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        membership_id:
+          type: string
+          format: uuid
+        sale_id:
+          type: string
+          format: uuid
+        fulfillment_id:
+          type: string
+          format: uuid
+        starts_at:
+          type: string
+          format: date-time
+          description: Inclusive.
+        ends_at:
+          type: string
+          format: date-time
+          description: Exclusive.
+
+    Entitlement:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - kind
+        - name
+        - starts_at
+        - ends_at
+        - location_id
+        - usage_limit
+        - used_count
+        - remaining
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/BenefitKind"
+        name:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        location_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Null means every location of the organization.
+        usage_limit:
+          type: integer
+          nullable: true
+          description: Null means unlimited.
+        used_count:
+          type: integer
+        remaining:
+          type: integer
+          nullable: true
+          description: Null means unlimited.
+        active:
+          type: boolean
+          description: True when now is inside the validity window.
+
+    BenefitKind:
+      type: string
+      enum: [gym_access]
+
+    Benefit:
+      type: object
+      additionalProperties: false
+      required: [id, kind, name, usage_limit, location_id]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/BenefitKind"
+        name:
+          type: string
+        usage_limit:
+          type: integer
+          nullable: true
+          description: Uses per period. Null means unlimited.
+        location_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Null means every location.
+
+    PublicBenefit:
+      type: object
+      additionalProperties: false
+      required: [kind, name, usage_limit, location_name]
+      properties:
+        kind:
+          $ref: "#/components/schemas/BenefitKind"
+        name:
+          type: string
+        usage_limit:
+          type: integer
+          nullable: true
+        location_name:
+          type: string
+          nullable: true
+          description: Null means every location.
+
+    Price:
+      type: object
+      additionalProperties: false
+      required: [id, label, amount_minor, currency, duration_days, available, archived_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        amount_minor:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+        duration_days:
+          type: integer
+          minimum: 1
+          description: Fixed duration of each membership period.
+        available:
+          type: boolean
+          description: True when the price can be used for a new sale.
+        archived_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PublicPrice:
+      type: object
+      additionalProperties: false
+      required: [id, label, amount_minor, currency, duration_days]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        duration_days:
+          type: integer
+
+    PublicProduct:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, benefits, prices]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicBenefit"
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicPrice"
+
+    StaffProduct:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, published, benefits, prices]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        published:
+          type: boolean
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Benefit"
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Price"
+
+    SaleInput:
+      type: object
+      additionalProperties: false
+      required: [member_id, price_id, location_id]
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        price_id:
+          type: string
+          format: uuid
+        location_id:
+          type: string
+          format: uuid
+          description: Where the sale happened.
+
+    PaymentMethod:
+      type: string
+      enum: [cash, bank_transfer]
+
+    PaymentInput:
+      type: object
+      additionalProperties: false
+      required: [amount_minor, method]
+      properties:
+        amount_minor:
+          type: integer
+          minimum: 1
+        method:
+          $ref: "#/components/schemas/PaymentMethod"
+        reference:
+          type: string
+          maxLength: 200
+          nullable: true
+          description: Optional receipt or bank reference.
+
+    CheckInInput:
+      type: object
+      additionalProperties: false
+      required: [member_id, location_id]
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        location_id:
+          type: string
+          format: uuid
+
+    SaleLineItemTerms:
+      type: object
+      additionalProperties: false
+      required: [duration_days, benefits]
+      description: Terms snapshotted at purchase. Later catalog edits never change them.
+      properties:
+        duration_days:
+          type: integer
+        benefits:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, name, usage_limit, location_id]
+            properties:
+              kind:
+                $ref: "#/components/schemas/BenefitKind"
+              name:
+                type: string
+              usage_limit:
+                type: integer
+                nullable: true
+              location_id:
+                type: string
+                format: uuid
+                nullable: true
+
+    SaleLineItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - price_id
+        - product_id
+        - product_name
+        - price_label
+        - quantity
+        - unit_amount_minor
+        - total_minor
+        - currency
+        - terms
+      properties:
+        id:
+          type: string
+          format: uuid
+        price_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        product_name:
+          type: string
+        price_label:
+          type: string
+        quantity:
+          type: integer
+          enum: [1]
+        unit_amount_minor:
+          type: integer
+        total_minor:
+          type: integer
+        currency:
+          type: string
+        terms:
+          $ref: "#/components/schemas/SaleLineItemTerms"
+
+    Payment:
+      type: object
+      additionalProperties: false
+      required: [id, amount_minor, currency, method, reference, received_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        method:
+          $ref: "#/components/schemas/PaymentMethod"
+        reference:
+          type: string
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+
+    Fulfillment:
+      type: object
+      additionalProperties: false
+      required: [id, sale_line_item_id, membership_id, membership_period, fulfilled_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sale_line_item_id:
+          type: string
+          format: uuid
+        membership_id:
+          type: string
+          format: uuid
+        membership_period:
+          $ref: "#/components/schemas/MembershipPeriod"
+        fulfilled_at:
+          type: string
+          format: date-time
+
+    PaymentStatus:
+      type: string
+      enum: [unpaid, partially_paid, paid]
+
+    Sale:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - member
+        - location_id
+        - currency
+        - total_minor
+        - paid_minor
+        - balance_minor
+        - payment_status
+        - fulfilled
+        - purchased_at
+        - line_item
+        - payments
+        - fulfillment
+      properties:
+        id:
+          type: string
+          format: uuid
+        member:
+          $ref: "#/components/schemas/MemberSummary"
+        location_id:
+          type: string
+          format: uuid
+        currency:
+          type: string
+        total_minor:
+          type: integer
+        paid_minor:
+          type: integer
+        balance_minor:
+          type: integer
+        payment_status:
+          $ref: "#/components/schemas/PaymentStatus"
+        fulfilled:
+          type: boolean
+        purchased_at:
+          type: string
+          format: date-time
+        line_item:
+          $ref: "#/components/schemas/SaleLineItem"
+        payments:
+          type: array
+          description: Oldest first.
+          items:
+            $ref: "#/components/schemas/Payment"
+        fulfillment:
+          allOf:
+            - $ref: "#/components/schemas/Fulfillment"
+          nullable: true
+
+    SaleResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Sale"
+
+    CheckInResult:
+      type: string
+      enum: [granted, denied]
+
+    DenialReason:
+      type: string
+      description: |
+        - `no_entitlement`: no right is valid at this time.
+        - `location_not_allowed`: a right is valid now but not at this location.
+        - `usage_limit_reached`: every matching right has no uses left.
+      enum: [no_entitlement, location_not_allowed, usage_limit_reached]
+
+    CheckIn:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - member
+        - location_id
+        - result
+        - denial_reason
+        - entitlement_id
+        - checked_in_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        member:
+          $ref: "#/components/schemas/MemberSummary"
+        location_id:
+          type: string
+          format: uuid
+        result:
+          $ref: "#/components/schemas/CheckInResult"
+        denial_reason:
+          allOf:
+            - $ref: "#/components/schemas/DenialReason"
+          nullable: true
+        entitlement_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The right used by a granted check-in.
+        checked_in_at:
+          type: string
+          format: date-time
+
+    CheckInResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/CheckIn"
