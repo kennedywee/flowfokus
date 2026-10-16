@@ -33,6 +33,9 @@ module Authentication
       end
     rescue Hydraflow::WorkosTokens::Unavailable => error
       fail_auth! :service_unavailable, "auth_unavailable", error.message
+    rescue Hydraflow::DemoIdentity::ProductionError, Hydraflow::DemoIdentity::TokenError => error
+      # Boot already refuses these settings. This guard keeps a request from ever passing.
+      fail_auth! :service_unavailable, "auth_not_configured", error.message
     end
 
     def fail_auth!(status, code, message)

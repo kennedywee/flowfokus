@@ -1,0 +1,16 @@
+# Shared by Dockerfile (production, owned by apps/server) and Dockerfile.dev (parent-owned).
+# Exclude only local state and secrets here; the production Dockerfile drops test files itself.
+.git
+.env
+.env.*
+!.env.example
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/storage/*
+/vendor/bundle
+/.bundle
+/coverage
+/config/master.key
+/config/credentials/*.key
