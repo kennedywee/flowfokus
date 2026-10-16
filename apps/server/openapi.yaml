@@ -7,7 +7,8 @@ info:
 
     - Success bodies use `{ "data": ... }`.
     - Error bodies use `{ "error": { "code", "message", "details"? } }`.
-    - Organization-scoped paths need the `Hydraflow-Organization` header with the gym slug.
+    - Organization-scoped paths need the `Hydraflow-Organization` header with the gym slug
+      (the `organizationHeader` scheme).
     - `/staff/*` paths need `Authorization: Bearer <token>`. In Sprint 1 only the
       local demo token works, and only when `HYDRAFLOW_DEMO_MODE=true` in development or test.
     - Money uses integer minor units with an ISO 4217 currency code.
@@ -54,9 +55,9 @@ paths:
     get:
       tags: [public]
       operationId: getPublicOrganization
+      security:
+        - organizationHeader: []
       summary: Published details of the gym named by the slug header.
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
       responses:
         "200":
           description: The gym.
@@ -78,9 +79,9 @@ paths:
     get:
       tags: [public]
       operationId: listPublicProducts
+      security:
+        - organizationHeader: []
       summary: Published products and their available prices.
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
       responses:
         "200":
           description: Offers on sale.
@@ -107,8 +108,7 @@ paths:
       summary: The current organization, its locations, and the actor's permissions.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
+          organizationHeader: []
       responses:
         "200":
           description: The organization.
@@ -139,8 +139,7 @@ paths:
       summary: Counts for the staff dashboard.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
+          organizationHeader: []
       responses:
         "200":
           description: Dashboard counts.
@@ -171,8 +170,8 @@ paths:
       summary: Members of the organization, newest first. Needs members:read.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - name: q
           in: query
           required: false
@@ -209,8 +208,7 @@ paths:
       summary: Create a member without a login. Needs members:create.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
+          organizationHeader: []
       requestBody:
         required: true
         content:
@@ -249,8 +247,8 @@ paths:
       summary: One member with membership periods and current rights. Needs members:read.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdPath"
       responses:
         "200":
@@ -282,8 +280,7 @@ paths:
       summary: All products with benefits and prices, including archived prices. Needs products:read.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
+          organizationHeader: []
       responses:
         "200":
           description: Products.
@@ -316,8 +313,8 @@ paths:
       summary: Sales, newest first. Needs purchases:read.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - name: member_id
           in: query
           required: false
@@ -358,8 +355,8 @@ paths:
         The same key with a different body returns 409.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
@@ -402,8 +399,8 @@ paths:
       summary: One sale. Needs purchases:read.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdPath"
       responses:
         "200":
@@ -434,8 +431,8 @@ paths:
         Returns the updated sale.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdPath"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
@@ -484,8 +481,8 @@ paths:
         Returns the updated sale.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdPath"
       responses:
         "200":
@@ -520,8 +517,8 @@ paths:
       summary: Recent check-ins, newest first, at most 100. Needs check_ins:read.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - name: member_id
           in: query
           required: false
@@ -563,8 +560,8 @@ paths:
         status 200 and never consumes twice. The same key with a different body returns 409.
       security:
         - bearerAuth: []
+          organizationHeader: []
       parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
         - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
@@ -610,8 +607,7 @@ paths:
         because demo actors are staff only. Any other token gives 503 or 401.
       security:
         - bearerAuth: []
-      parameters:
-        - $ref: "#/components/parameters/OrganizationSlug"
+          organizationHeader: []
       responses:
         "200":
           description: The member.
@@ -637,20 +633,20 @@ paths:
 
 components:
   securitySchemes:
+    organizationHeader:
+      type: apiKey
+      in: header
+      name: Hydraflow-Organization
+      description: |
+        Gym slug, for example `chainsaw`. Required on every `/public/*`, `/staff/*`, and
+        `/member/*` call. It selects the organization; it never grants access by itself.
+        Modeled as a scheme so the shared client can set it once.
     bearerAuth:
       type: http
       scheme: bearer
       description: WorkOS access token (next sprint) or the local demo token (development and test only).
 
   parameters:
-    OrganizationSlug:
-      name: Hydraflow-Organization
-      in: header
-      required: true
-      description: Gym slug, for example `chainsaw`.
-      schema:
-        type: string
-        pattern: "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
     IdempotencyKey:
       name: Idempotency-Key
       in: header

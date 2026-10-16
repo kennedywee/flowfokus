@@ -1,0 +1,31 @@
+{
+  "name": "@hydraflow/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated Hydraflow API types and typed fetch client.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./schema": {
+      "types": "./src/schema.d.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/server/openapi.yaml --output src/schema.d.ts",
+    "check:generated": "openapi-typescript ../../apps/server/openapi.yaml --output /tmp/hydraflow-schema.check.d.ts && diff -u src/schema.d.ts /tmp/hydraflow-schema.check.d.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript": "^5.9.3"
+  }
+}
