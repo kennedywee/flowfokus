@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hydraflow
+          POSTGRES_PASSWORD: hydraflow
+          POSTGRES_DB: hydraflow_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hydraflow -d hydraflow_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      RAILS_ENV: test
+      CLOUDFLARE_SEND_METRICS: "false"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.5"
+          bundler-cache: true
+          working-directory: apps/server
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - name: Check breaking API changes
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: bash scripts/contract-diff "$BASE_SHA"
+      - name: Build API image
+        run: docker build -t hydraflow-server:ci apps/server
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worker-builds-${{ github.sha }}
+          path: |
+            apps/portal/dist
+            apps/site/dist
+          if-no-files-found: error

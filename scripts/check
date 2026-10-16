@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+source scripts/env.sh
+
+bun run contract:check
+(
+  cd apps/server
+  RAILS_ENV=test DATABASE_URL="$TEST_DATABASE_URL" bin/rails db:prepare
+  RAILS_ENV=test DATABASE_URL="$TEST_DATABASE_URL" bundle exec rspec
+)
+bun run test:web
+bun run typecheck
+bun run build

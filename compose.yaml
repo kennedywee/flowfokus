@@ -1,0 +1,21 @@
+name: hydraflow
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: hydraflow
+      POSTGRES_PASSWORD: hydraflow
+      POSTGRES_DB: hydraflow_development
+    ports:
+      - "127.0.0.1:${HYDRAFLOW_DB_PORT:-54329}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hydraflow -d hydraflow_development"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres_data:

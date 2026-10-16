@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+base="${1:?Usage: scripts/contract-diff BASE_GIT_REF}"
+contract=apps/server/openapi.yaml
+if ! git cat-file -e "$base:$contract" 2>/dev/null; then
+  echo "No contract exists in the base revision. Initial contract accepted."
+  exit 0
+fi
+temp_dir="$(mktemp -d)"
+trap 'rm -rf "$temp_dir"' EXIT
+git show "$base:$contract" > "$temp_dir/base.yaml"
+cp "$contract" "$temp_dir/current.yaml"
+docker run --rm -v "$temp_dir:/spec:ro" tufin/oasdiff:v1.33.0 breaking /spec/base.yaml /spec/current.yaml --fail-on ERR

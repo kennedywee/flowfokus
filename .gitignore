@@ -12,3 +12,13 @@ coverage/
 tmp/
 *.log
 !.gitkeep
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.bundle/
+vendor/bundle/
+apps/server/log/*
+!apps/server/log/.keep
+apps/server/storage/*
+!apps/server/storage/.keep
+/release/

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+source scripts/env.sh
+export HYDRAFLOW_DEMO_MODE="${HYDRAFLOW_DEMO_MODE:-true}"
+export HYDRAFLOW_DEMO_TOKEN="${HYDRAFLOW_DEMO_TOKEN:-hydraflow-local-demo-token}"
+
+pids=()
+cleanup() {
+  trap - EXIT INT TERM
+  for pid in "${pids[@]}"; do
+    kill "$pid" 2>/dev/null || true
+  done
+  wait || true
+}
+trap cleanup EXIT INT TERM
+
+(cd apps/server && exec bin/rails server -b 127.0.0.1 -p 3000) &
+pids+=("$!")
+bun run --cwd apps/portal dev &
+pids+=("$!")
+bun run --cwd apps/site dev &
+pids+=("$!")
+echo "Portal: http://localhost:3001 | Gym: http://chainsaw.localhost:3002"
+wait -n "${pids[@]}"

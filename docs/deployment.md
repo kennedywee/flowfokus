@@ -1,0 +1,64 @@
+# Deployment candidate
+
+Sprint 1 builds a Rails container and two Cloudflare Worker bundles. It does not publish or deploy them. The local demo is the complete test path until WorkOS credentials are available.
+
+## What can run now
+
+- PostgreSQL and the Rails API run locally.
+- The staff portal can use a fixed local demo actor.
+- The gym site can show public organization details and offers.
+- Production builds serve public pages. Protected requests fail closed while real authentication is unavailable.
+
+Do not use this candidate for live member or payment data. WorkOS sign-in and token verification are a next-sprint release requirement. Manual payment recording does not collect money from a bank or card processor.
+
+## Build and check
+
+```sh
+mise install
+bun run setup
+bun run check
+docker build -t hydraflow-server:local apps/server
+```
+
+CI runs these checks on pushes to `master` and pull requests. A tag matching `v*` or a manual run of **Build release candidate** packages the verified image, Worker outputs, OpenAPI contract, and a SHA-256 manifest as one workflow artifact. This workflow needs no cloud account credentials. It does not publish a GitHub Release or registry image yet.
+
+The full tag promotion, registry publication, preview, and approval-gated deployment design remains in [Release](release.md). Sprint 1 implements local builds, CI, and candidate packaging only. Use an `rc` tag for this sprint.
+
+## Rails container preparation
+
+1. Build the image from `apps/server`, or load a candidate image with `gunzip -c server-image.tar.gz | docker load`.
+2. Put real configuration in a private environment file based on `infra/production.env.example`. Select an immutable image tag or digest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
+3. Back up the target database with `pg_dump`. Keep the backup off the server.
+4. Run the migration as a separate command:
+
+```sh
+docker compose -f infra/compose.production.yaml --env-file /private/hydraflow.env run --rm server bin/rails db:migrate
+```
+
+5. Start the server explicitly:
+
+```sh
+docker compose -f infra/compose.production.yaml --env-file /private/hydraflow.env up -d --wait
+```
+
+6. Check `/up`, then the public organization endpoint with `Hydraflow-Organization: <slug>`. Run the database readiness check described by the API.
+
+The container binds to the VPS loopback interface. Put a TLS reverse proxy in front. Permit only Cloudflare to reach the VPS. The process never migrates on boot. Do not seed demo records in production.
+
+Rollback starts the previous image. It does not undo data changes. Restore a verified database backup if a migration cannot be reversed safely.
+
+## Cloudflare preparation
+
+Build each app with its workspace `build` command. Each output includes the generated Wrangler deployment configuration. Keep that output intact when moving a candidate between machines.
+
+The next sprint must configure the API URL, the portal host, the wildcard gym route, and the WorkOS secrets as runtime bindings. Never bake secrets into a Vite build variable. Never deploy `.dev.vars`. Verify real authentication before enabling staff or member operations.
+
+## Credentials and decisions for Sprint 2
+
+- WorkOS staging client ID, API key, session-cookie secret, redirect URIs, JWKS integration, and webhook verification.
+- Cloudflare account, API token, zone, Worker names, routes, and runtime bindings.
+- VPS access, TLS/network restrictions, image registry, PostgreSQL host, backups, and restore procedure.
+- A test organization in WorkOS, with verified staff permissions and a member-linking policy.
+- Confirm duration, activation, renewal, refund, and access override policies from [Decisions](decisions.md).
+
+Verify AuthKit on Workers, CSRF checks, organization switching, revoked access, and webhook reconciliation with the real environment. These checks are required before calling the system production-ready.

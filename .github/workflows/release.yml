@@ -1,0 +1,57 @@
+name: Build release candidate
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: hydraflow
+          POSTGRES_PASSWORD: hydraflow
+          POSTGRES_DB: hydraflow_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hydraflow -d hydraflow_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      RAILS_ENV: test
+      CLOUDFLARE_SEND_METRICS: "false"
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4.5"
+          bundler-cache: true
+          working-directory: apps/server
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - name: Package the server image
+        run: |
+          mkdir -p release
+          docker build -t hydraflow-server:${GITHUB_SHA} apps/server
+          docker save hydraflow-server:${GITHUB_SHA} | gzip > release/server-image.tar.gz
+      - name: Package Worker builds and manifest
+        run: |
+          tar -czf release/portal.tar.gz -C apps/portal dist
+          tar -czf release/site.tar.gz -C apps/site dist
+          cp apps/server/openapi.yaml release/openapi.yaml
+          node scripts/release-manifest.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hydraflow-candidate-${{ github.sha }}
+          path: release/
+          if-no-files-found: error
+          retention-days: 30

@@ -2,7 +2,7 @@
 
 Hydraflow is a membership platform for service businesses, such as gyms. It sells memberships, delivers their benefits, and records how members use them.
 
-These documents describe the design. Nothing is implemented yet.
+These documents describe the design. Implementation starts with [Sprint 1](sprint-1.md). The current deployment boundary is in [Deployment candidate](deployment.md).
 
 **Principle:** One identity. Multiple organizations. Separate staff and customer relationships.
 
@@ -10,6 +10,8 @@ These documents describe the design. Nothing is implemented yet.
 
 | Document | Covers |
 | --- | --- |
+| [Sprint 1](sprint-1.md) | Task split, acceptance checks, demo limits, and next-sprint work. |
+| [Deployment candidate](deployment.md) | Candidate builds, local deployment files, and required credentials. |
 | [Architecture](architecture.md) | Technology, WorkOS and Rails responsibilities, Rails code layout, testing. |
 | [Monorepo](monorepo.md) | Apps, shared packages, API contract, local development. |
 | [Release](release.md) | Tags, CI, candidates, deployment, hotfixes, mobile delivery. |

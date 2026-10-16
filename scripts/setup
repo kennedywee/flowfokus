@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+source scripts/env.sh
+
+for tool in bun ruby bundle docker; do
+  command -v "$tool" >/dev/null || { echo "Missing $tool. Run mise install and install Docker." >&2; exit 1; }
+done
+
+docker compose up -d --wait db
+bun install --frozen-lockfile
+for app in portal site; do
+  if [[ ! -f "apps/$app/.dev.vars" ]]; then
+    cp "apps/$app/.dev.vars.example" "apps/$app/.dev.vars"
+  fi
+done
+(
+  cd apps/server
+  bundle install
+  bin/rails db:prepare
+  HYDRAFLOW_DEMO_MODE=true HYDRAFLOW_DEMO_TOKEN="${HYDRAFLOW_DEMO_TOKEN:-hydraflow-local-demo-token}" bin/rails db:seed
+  RAILS_ENV=test DATABASE_URL="$TEST_DATABASE_URL" bin/rails db:prepare
+)
+echo "Setup complete. Run bun run dev in this directory."

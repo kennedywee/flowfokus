@@ -1,5 +1,7 @@
 # Release
 
+This is the target release process. Sprint 1 implements CI and candidate artifact packaging. Registry publication and live deployment wait for credentials. See [Deployment candidate](deployment.md).
+
 One Git tag releases every app in the [monorepo](monorepo.md). Building a release never deploys it. A person deploys it later, through an approval gate.
 
 ## Flow
