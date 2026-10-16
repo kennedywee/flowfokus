@@ -58,3 +58,5 @@ The smoke workflow creates records in the local database. Tests use a separate d
 ## Release boundary
 
 This is a local demo and deployment candidate. Live WorkOS sign-in and cloud deployment need credentials in Sprint 2. Production refuses demo authentication. See the [deployment guide](docs/deployment.md) for builds, artifacts, migration commands, and remaining requirements.
+
+The completed local checks and browser workflow are recorded in [Verification](docs/verification.md).

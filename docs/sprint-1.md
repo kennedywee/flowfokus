@@ -39,4 +39,6 @@ Claude Opus 5.5 implements the API and web apps. Shared-checkout work uses separ
 
 ## Next sprint
 
-Provide WorkOS staging settings, Cloudflare access, VPS/registry details, and the deployment domain configuration. Complete verified AuthKit sessions, JWT/JWKS verification and sync, member linking, credentialed deployment smoke tests, and the remaining first-release workflows. Resolve the open product policies in `decisions.md` before expanding the demo's limits.
+Provide WorkOS staging settings, Cloudflare access, VPS/registry details, and the deployment domain configuration. Complete verified AuthKit sessions, JWT/JWKS verification and sync, trusted Worker/client-IP middleware, member linking, credentialed deployment smoke tests, and the remaining first-release workflows. Resolve the open product policies in `decisions.md` before expanding the demo's limits.
+
+Local acceptance evidence is in [Verification](verification.md). Live authentication and external deployment are next-sprint requirements.

@@ -12,6 +12,7 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 | --- | --- |
 | [Sprint 1](sprint-1.md) | Task split, acceptance checks, demo limits, and next-sprint work. |
 | [Deployment candidate](deployment.md) | Candidate builds, local deployment files, and required credentials. |
+| [Verification](verification.md) | Local checks, browser workflow, schema protections, and unverified release steps. |
 | [Architecture](architecture.md) | Technology, WorkOS and Rails responsibilities, Rails code layout, testing. |
 | [Monorepo](monorepo.md) | Apps, shared packages, API contract, local development. |
 | [Release](release.md) | Tags, CI, candidates, deployment, hotfixes, mobile delivery. |
