@@ -41,8 +41,8 @@ jobs:
       - name: Package the server image
         run: |
           mkdir -p release
-          docker build -t hydraflow-server:${GITHUB_SHA} apps/server
-          docker save hydraflow-server:${GITHUB_SHA} | gzip > release/server-image.tar.gz
+          docker build -t "hydraflow-server:${GITHUB_SHA}" apps/server
+          docker save "hydraflow-server:${GITHUB_SHA}" | gzip > release/server-image.tar.gz
       - name: Package Worker builds and manifest
         run: |
           tar -czf release/portal.tar.gz -C apps/portal dist
