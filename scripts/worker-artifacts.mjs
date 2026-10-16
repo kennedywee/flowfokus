@@ -2,7 +2,10 @@ import { readdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 
 const clean = process.argv.includes('--clean')
-for (const app of ['portal', 'site']) {
+const appIndex = process.argv.indexOf('--app')
+const apps = appIndex < 0 ? ['portal', 'site'] : [process.argv[appIndex + 1]]
+if (apps.some((app) => !['portal', 'site'].includes(app))) throw new Error('Expected --app portal or --app site')
+for (const app of apps) {
   const root = `apps/${app}/dist`
   let removed = 0
   function inspect(directory) {

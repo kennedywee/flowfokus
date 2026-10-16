@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -eu
+umask 077
+printf 'API_BASE_URL=%s\nHYDRAFLOW_DEMO_MODE=%s\nHYDRAFLOW_DEMO_TOKEN=%s\n' \
+  "${API_BASE_URL:-http://server:3000}" \
+  "${HYDRAFLOW_DEMO_MODE:-false}" \
+  "${HYDRAFLOW_DEMO_TOKEN:-}" > /app/apps/portal/.dev.vars
+exec "$@"

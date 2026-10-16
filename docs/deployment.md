@@ -15,6 +15,13 @@ Do not use this candidate for live member or payment data. WorkOS sign-in and to
 
 For a fully containerized local demo, run `docker compose up --build`. PostgreSQL, the API, and the two Worker emulators run in Docker. A local one-off setup job prepares and seeds the database before Rails starts. This setup job is not part of the production Compose file.
 
+Every app has its own Dockerfile and image. Compose uses the server's `Dockerfile.dev` and the web apps' `development` targets. The server's default `Dockerfile` builds the production API. Each web app's `worker-build` target builds only its own Cloudflare bundle, using the repository root as the build context:
+
+```sh
+docker build --target worker-build -f apps/portal/Dockerfile -t hydraflow-portal:bundle .
+docker build --target worker-build -f apps/site/Dockerfile -t hydraflow-site:bundle .
+```
+
 ```sh
 mise install
 bun run setup

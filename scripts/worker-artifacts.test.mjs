@@ -41,3 +41,10 @@ test('cleanup removes local env files and preserves deployable assets', (t) => {
   assert.equal(existsSync(join(output, 'index.js')), true)
   assert.equal(existsSync(join(output, 'wrangler.json')), true)
 })
+
+test('one app can validate its own output without the other app present', (t) => {
+  const cwd = fixture(t)
+  rmSync(join(cwd, 'apps/site'), { recursive: true })
+  assert.equal(run(cwd, '--app', 'portal').status, 0)
+  assert.notEqual(run(cwd, '--app', 'unknown').status, 0)
+})

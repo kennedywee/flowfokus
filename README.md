@@ -23,6 +23,8 @@ Open the staff portal at `http://localhost:3001` and the gym site at `http://cha
 
 PostgreSQL and all three apps run in containers. A separate local setup container prepares the database. The production server never migrates on boot. Data stays in the Compose volume when the stack stops with `docker compose down`.
 
+Each app owns its Dockerfiles and image: `apps/server/Dockerfile` (production), `apps/server/Dockerfile.dev` (local), `apps/portal/Dockerfile`, and `apps/site/Dockerfile`. The two web Dockerfiles have separate `development` and `worker-build` targets. The latter produces that app's Cloudflare Worker bundle.
+
 ## Run with live reload
 
 Install the versions in `mise.toml`, then run:

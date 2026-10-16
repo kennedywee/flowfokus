@@ -10,6 +10,7 @@ Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before i
 - All tenant-owned queries must use the current organization. Verify linked records belong to that organization.
 - Keep demo access opt-in, local-only, and disabled in production.
 - Run supporting services in Docker. Do not install or start host PostgreSQL, Redis, or similar daemons for this project.
+- Each app owns its Dockerfiles and image. Do not combine portal and site in one image.
 - Keep credentials on the server. No browser storage for access tokens.
 - Update the OpenAPI contract, generate types, and check real API responses.
 - Run relevant tests and builds. Report failures and unverified deployment steps clearly.

@@ -18,8 +18,8 @@ services:
 
   server:
     build:
-      context: .
-      dockerfile: infra/Dockerfile.dev-server
+      context: apps/server
+      dockerfile: Dockerfile.dev
     image: hydraflow-server:development
     init: true
     environment: *server-environment
@@ -37,11 +37,11 @@ services:
   portal:
     build:
       context: .
-      dockerfile: infra/Dockerfile.dev-web
-    image: hydraflow-web:development
+      dockerfile: apps/portal/Dockerfile
+      target: development
+    image: hydraflow-portal:development
     init: true
     environment:
-      HYDRAFLOW_WEB_APP: portal
       API_BASE_URL: http://server:3000
       HYDRAFLOW_DEMO_MODE: "true"
       HYDRAFLOW_DEMO_TOKEN: hydraflow-local-demo-token
@@ -52,12 +52,13 @@ services:
         condition: service_healthy
 
   site:
-    image: hydraflow-web:development
-    pull_policy: never
+    build:
+      context: .
+      dockerfile: apps/site/Dockerfile
+      target: development
+    image: hydraflow-site:development
     init: true
-    command: ["bun", "run", "--cwd", "apps/site", "dev", "--host", "0.0.0.0"]
     environment:
-      HYDRAFLOW_WEB_APP: site
       API_BASE_URL: http://server:3000
     ports:
       - "127.0.0.1:3002:3002"

@@ -2,11 +2,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 docker compose up -d --wait db
-docker compose build server portal
+docker compose build server portal site
 docker compose run --rm --no-deps \
   -e RAILS_ENV=test -e HYDRAFLOW_DEMO_MODE=false \
   -e DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
   -e TEST_DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
   server bash -c 'bin/rails db:prepare && bundle exec rspec'
 docker compose run --rm --no-deps portal sh -c \
-  'bun run test:tooling && bun run --cwd packages/api check:generated && bun run test:web && bun run typecheck && bun run build'
+  'bun run test:tooling && bun run --cwd packages/api check:generated && bun run --cwd packages/api typecheck && bun run --cwd apps/portal test && bun run --cwd apps/portal typecheck && bun run --cwd apps/portal build && node scripts/worker-artifacts.mjs --app portal --clean && node scripts/worker-artifacts.mjs --app portal'
+docker compose run --rm --no-deps site sh -c \
+  'bun run --cwd apps/site test && bun run --cwd apps/site typecheck && bun run --cwd apps/site build && node scripts/worker-artifacts.mjs --app site --clean && node scripts/worker-artifacts.mjs --app site'
