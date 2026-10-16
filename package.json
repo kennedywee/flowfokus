@@ -8,6 +8,7 @@
     "setup": "bash scripts/setup",
     "dev": "bash scripts/dev",
     "check": "bash scripts/check",
+    "smoke": "node scripts/smoke.mjs",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
     "contract:check": "bun run contract:types && git diff --exit-code -- packages/api/src/schema.d.ts",
     "typecheck": "bun run --cwd packages/api typecheck && bun run --cwd apps/portal typecheck && bun run --cwd apps/site typecheck",
