@@ -12,7 +12,6 @@ Implementation starts with [Sprint 1](docs/sprint-1.md). The agreed design is in
 - `packages/api`: generated API types and shared client.
 - `scripts`: local setup and checks.
 - `compose.yaml`: local services.
-- `compose.production.yaml`: production API deployment.
 
 ## Run with Docker
 

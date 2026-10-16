@@ -38,23 +38,13 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 ## Rails container preparation
 
 1. Build the image from `apps/server`, or load a candidate image with `gunzip -c server-image.tar.gz | docker load`.
-2. Put real configuration in a private environment file based on `.env.production.example`. Set the loaded `hydraflow-server:<commit>` image tag or its image ID from the manifest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
+2. Configure the hosting platform with the image tag or image ID from the manifest. Supply `DATABASE_URL` and `SECRET_KEY_BASE` as runtime secrets. Generate the latter with `bin/rails secret`. Demo mode must remain disabled.
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
-4. Run the migration as a separate command:
+4. Run `bin/rails db:migrate` in the API image as a separate release step.
+5. Start the image through the hosting platform. The Dockerfile defines the server command.
+6. Check `/up`, `/ready`, and the public organization endpoint with `Hydraflow-Organization: <slug>`.
 
-```sh
-docker compose -f compose.production.yaml --env-file /private/hydraflow.env run --rm server bin/rails db:migrate
-```
-
-5. Start the server explicitly:
-
-```sh
-docker compose -f compose.production.yaml --env-file /private/hydraflow.env up -d --wait
-```
-
-6. Check `/up`, then the public organization endpoint with `Hydraflow-Organization: <slug>`. Run the database readiness check described by the API.
-
-The container binds to the VPS loopback interface. Put a TLS reverse proxy in front. Permit only Cloudflare to reach the VPS. The process never migrates on boot. Do not seed demo records in production.
+Configure a loopback binding and TLS reverse proxy on the VPS. Permit only Cloudflare to reach the VPS. The process never migrates on boot. Do not seed demo records in production. Hosting configuration waits for Sprint 2; Compose is local only.
 
 Rollback starts the previous image. It does not undo data changes. Restore a verified database backup if a migration cannot be reversed safely.
 
