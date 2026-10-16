@@ -153,3 +153,21 @@ const { data, error } = await api.GET("/staff/members");
 ```
 
 Regenerate types with `bun run --cwd packages/api generate` after editing `openapi.yaml`.
+
+## Server commands and coordination
+
+| Task | Command (in `apps/server`) |
+| --- | --- |
+| Prepare a database (loads `db/schema.rb`) | `bin/rails db:prepare` |
+| Seed demo data (skipped in test, refused in production) | `bin/rails db:seed` |
+| Specs (contract-checked) | `RAILS_ENV=test DATABASE_URL=$TEST_DATABASE_URL bin/rails db:prepare && RAILS_ENV=test DATABASE_URL=$TEST_DATABASE_URL bundle exec rspec` |
+| Lint and security | `bin/rubocop`, `bin/brakeman --no-pager` |
+| Regenerate client types (repository root) | `bun run contract:types` |
+
+- Specs refuse to run unless the database name ends in `_test`.
+- A full spec run fails when a documented success response has no contract-checked spec.
+- Schema format is `db/schema.rb` (project preference). Triggers use the Fx gem.
+- `RAILS_DEVELOPMENT_HOSTS=server` works with no app change; Rails 8.1 reads it in development.
+- Production image: `apps/server/Dockerfile`. `apps/server/Dockerfile.dev` belongs to the coordinator.
+- `@hydraflow/api` needs `openapi-fetch` at runtime and `openapi-typescript` and `typescript` 5.x
+  (peer range of `openapi-typescript`) for generation and type checks. No other packages.

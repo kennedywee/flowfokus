@@ -1,6 +1,8 @@
 # Local demo data. Idempotent: run it as often as you like.
 # Refuses to run in production. Production data comes from WorkOS sync and staff.
 abort "db/seeds.rb is local demo data and does not run in production." if Rails.env.production?
+# Specs build their own data. bin/rails db:prepare seeds new databases, so skip test.
+return if Rails.env.test?
 
 demo = Hydraflow::DemoIdentity
 
