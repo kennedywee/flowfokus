@@ -13,6 +13,8 @@ Do not use this candidate for live member or payment data. WorkOS sign-in and to
 
 ## Build and check
 
+For a fully containerized local demo, run `docker compose up --build`. PostgreSQL, the API, and the two Worker emulators run in Docker. A local one-off setup job prepares and seeds the database before Rails starts. This setup job is not part of the production Compose file.
+
 ```sh
 mise install
 bun run setup
@@ -29,7 +31,7 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 ## Rails container preparation
 
 1. Build the image from `apps/server`, or load a candidate image with `gunzip -c server-image.tar.gz | docker load`.
-2. Put real configuration in a private environment file based on `infra/production.env.example`. Select an immutable image tag or digest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
+2. Put real configuration in a private environment file based on `infra/production.env.example`. Set the loaded `hydraflow-server:<commit>` image tag or its image ID from the manifest. Generate `SECRET_KEY_BASE` with `bin/rails secret`.
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
 4. Run the migration as a separate command:
 
@@ -64,3 +66,7 @@ The next sprint must configure the API URL, the portal host, the wildcard gym ro
 - Confirm duration, activation, renewal, refund, and access override policies from [Decisions](decisions.md).
 
 Verify AuthKit on Workers, CSRF checks, organization switching, revoked access, and webhook reconciliation with the real environment. These checks are required before calling the system production-ready.
+
+## Release lab patterns
+
+The [monorepo release lab](https://github.com/kennedywee/monorepo-release-lab) informed the Docker startup, one-tag candidate packaging, source-commit tracking, SHA-256 artifact checks, and separation between building and deploying. Hydraflow keeps PostgreSQL and Cloudflare Workers from its own accepted architecture. It does not copy the lab's SQLite or static-app hosting.

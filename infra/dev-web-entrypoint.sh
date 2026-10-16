@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 case "${HYDRAFLOW_WEB_APP:-portal}" in
-  portal|site) app="$HYDRAFLOW_WEB_APP" ;;
+  portal|site) app="${HYDRAFLOW_WEB_APP:-portal}" ;;
   *) echo "HYDRAFLOW_WEB_APP must be portal or site" >&2; exit 1 ;;
 esac
 # Local Worker bindings. This file is created at runtime, never in a release build.

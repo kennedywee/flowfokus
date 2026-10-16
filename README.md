@@ -13,4 +13,38 @@ Implementation starts with [Sprint 1](docs/sprint-1.md). The agreed design is in
 - `scripts`: local setup and checks.
 - `infra`: local and deployment configuration.
 
-Setup and verification instructions will be added as the sprint is implemented.
+## Run with Docker
+
+```sh
+docker compose up --build
+```
+
+Open the staff portal at `http://localhost:3001` and the gym site at `http://chainsaw.localhost:3002`. The API uses `http://127.0.0.1:3000`. The local demo requires no external credentials. It uses sample data and records manual payments; it does not collect money.
+
+PostgreSQL and all three apps run in containers. A separate local setup container prepares the database. The production server never migrates on boot. Data stays in the Compose volume when the stack stops with `docker compose down`.
+
+## Run with live reload
+
+Install the versions in `mise.toml`, then run:
+
+```sh
+mise install
+bun run setup
+bun run dev
+```
+
+The apps run on the host. PostgreSQL still runs in Docker. Stop the full Docker app stack before using these commands, because both modes use ports 3000–3002.
+
+## Verify
+
+```sh
+bun run check
+# With the local apps running:
+bun run smoke
+```
+
+The smoke workflow creates records in the local database. Tests use a separate database.
+
+## Release boundary
+
+This is a local demo and deployment candidate. Live WorkOS sign-in and cloud deployment need credentials in Sprint 2. Production refuses demo authentication. See the [deployment guide](docs/deployment.md) for builds, artifacts, migration commands, and remaining requirements.
