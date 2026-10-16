@@ -22,3 +22,5 @@ apps/server/log/*
 apps/server/storage/*
 !apps/server/storage/.keep
 /release/
+**/config/master.key
+**/config/credentials/*.key
