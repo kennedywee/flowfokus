@@ -37,6 +37,14 @@ The apps run on the host. PostgreSQL still runs in Docker. Stop the full Docker 
 
 ## Verify
 
+Use Docker without installing the app runtimes on the host:
+
+```sh
+bash scripts/check-docker
+```
+
+Or use the installed runtimes:
+
 ```sh
 bun run check
 # With the local apps running:

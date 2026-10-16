@@ -11,6 +11,7 @@ RUN bun install --frozen-lockfile
 COPY apps/portal apps/portal
 COPY apps/site apps/site
 COPY packages/api packages/api
+COPY apps/server/openapi.yaml apps/server/openapi.yaml
 COPY infra/dev-web-entrypoint.sh /usr/local/bin/hydraflow-dev-web
 RUN chmod +x /usr/local/bin/hydraflow-dev-web
 ENV CLOUDFLARE_SEND_METRICS=false WRANGLER_SEND_METRICS=false

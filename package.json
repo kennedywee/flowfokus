@@ -8,6 +8,7 @@
     "setup": "bash scripts/setup",
     "dev": "bash scripts/dev",
     "check": "bash scripts/check",
+    "check:docker": "bash scripts/check-docker",
     "smoke": "node scripts/smoke.mjs",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
     "contract:check": "bash scripts/contract-check",

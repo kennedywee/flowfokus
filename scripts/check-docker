@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+docker compose up -d --wait db
+docker compose build server portal
+docker compose run --rm --no-deps \
+  -e RAILS_ENV=test -e HYDRAFLOW_DEMO_MODE=false \
+  -e DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
+  -e TEST_DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
+  server bash -c 'bin/rails db:prepare && bundle exec rspec'
+docker compose run --rm --no-deps portal sh -c \
+  'bun run --cwd packages/api check:generated && bun run test:web && bun run typecheck && bun run build'
