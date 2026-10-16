@@ -6,6 +6,7 @@ Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before i
 - Commit small, complete changes directly to `master` for this sprint. Do not push or deploy.
 - Do not erase unrelated work. Stage explicit paths.
 - Rails owns business rules. Use models and Rails primitives. There is no default service layer.
+- Use Rails `db/schema.rb`. Do not switch to `db/structure.sql`. Keep database protections reproducible through a fresh schema load.
 - All tenant-owned queries must use the current organization. Verify linked records belong to that organization.
 - Keep demo access opt-in, local-only, and disabled in production.
 - Run supporting services in Docker. Do not install or start host PostgreSQL, Redis, or similar daemons for this project.

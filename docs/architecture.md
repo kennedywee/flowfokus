@@ -49,6 +49,7 @@ There is no default `app/services/` layer. Business behavior belongs in models a
 
 ## Data conventions
 
+- Use Rails `db/schema.rb` as the schema dump. A fresh schema load must restore all database constraints and protections.
 - Tables use UUID primary keys and `created_at` / `updated_at`.
 - Money uses integer minor units with a currency. No floating-point money.
 - Every tenant-owned record belongs to one organization. See [Authorization](authorization.md#tenant-isolation).
