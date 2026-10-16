@@ -21,6 +21,12 @@ The test run includes 97 Rails examples, 55 portal tests, 42 gym-site tests, and
 
 The project uses `apps/server/db/schema.rb`. A fresh test database loads from this file. Tests confirm that composite foreign keys, check constraints, membership-period exclusion constraints, and all three immutability triggers survive the load. Fx manages trigger and function definitions. There is no `structure.sql`.
 
+## Development reload
+
+Local Compose mounts Rails source, both web apps' `src` directories, and the shared API client's source. A temporary controller edit appeared on the next Rails request. Temporary CSS edits appeared automatically in both browser tabs through Vite hot updates. All probe edits were reverted. The container IDs, images, and start times stayed unchanged during these checks.
+
+Normal code edits need no image rebuild. Dependencies, Dockerfiles, and web configuration outside `src` still require a rebuild.
+
 ## Browser workflow
 
 A real Chromium browser completed this sequence through the Docker portal:

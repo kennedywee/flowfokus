@@ -13,6 +13,7 @@ Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before i
 - Each app owns its Dockerfiles and image. Do not combine portal and site in one image.
 - Keep database preparation explicit. Do not add a database setup service to Compose.
 - Compose is for local development only. Keep PostgreSQL readiness, and verify app endpoints in smoke checks.
+- Mount development source for Rails reloading and Vite hot updates. Code edits must not require rebuilding images.
 - Keep credentials on the server. No browser storage for access tokens.
 - Update the OpenAPI contract, generate types, and check real API responses.
 - Run relevant tests and builds. Report failures and unverified deployment steps clearly.

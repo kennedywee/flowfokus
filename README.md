@@ -27,7 +27,21 @@ PostgreSQL and all three apps run in containers. Run `db:prepare` explicitly on 
 
 Each app owns its Dockerfiles and image: `apps/server/Dockerfile` (production), `apps/server/Dockerfile.dev` (local), `apps/portal/Dockerfile`, and `apps/site/Dockerfile`. The two web Dockerfiles have separate `development` and `worker-build` targets. The latter produces that app's Cloudflare Worker bundle.
 
-## Run with live reload
+Compose mounts the Rails app, each web app's `src` directory, and the shared API client's `src` directory from your working tree. Rails reloads on requests; Vite updates the browser as you edit. Normal code changes need no rebuild. Installed dependencies and local Worker configuration stay inside the images.
+
+For daily use:
+
+```sh
+docker compose up -d
+```
+
+Rebuild after changing dependencies, Dockerfiles, or web configuration outside `src`:
+
+```sh
+docker compose up -d --build
+```
+
+## Run apps on the host
 
 Install the versions in `mise.toml`, then run:
 
