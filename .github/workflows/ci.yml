@@ -59,6 +59,8 @@ jobs:
           bash scripts/contract-diff "$BASE_SHA"
       - name: Build API image
         run: docker build -t hydraflow-server:ci apps/server
+      - name: Verify production image boundary
+        run: bash scripts/check-production-image hydraflow-server:ci
       - uses: actions/upload-artifact@v4
         with:
           name: worker-builds-${{ github.sha }}
