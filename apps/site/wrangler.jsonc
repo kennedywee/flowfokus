@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hydraflow-site",
+  "main": "@tanstack/react-start/server-entry",
+  "compatibility_date": "2026-10-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": {
+    // Gym sites answer on <slug>.<base domain>. Development also accepts <slug>.localhost.
+    "SITE_BASE_DOMAINS": "hydraflow.com"
+  }
+  // Set API_BASE_URL as a variable and WORKER_SECRET as a secret per environment.
+}
