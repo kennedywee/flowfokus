@@ -2,6 +2,7 @@ name: hydraflow
 
 services:
   server:
+    container_name: hydraflow-server
     build:
       context: apps/server
       dockerfile: Dockerfile.dev
@@ -24,6 +25,7 @@ services:
         condition: service_healthy
 
   portal:
+    container_name: hydraflow-portal
     build:
       context: .
       dockerfile: apps/portal/Dockerfile
@@ -43,6 +45,7 @@ services:
       - server
 
   site:
+    container_name: hydraflow-site
     build:
       context: .
       dockerfile: apps/site/Dockerfile
@@ -60,6 +63,7 @@ services:
       - server
 
   db:
+    container_name: hydraflow-db
     image: postgres:17
     environment:
       POSTGRES_USER: hydraflow
