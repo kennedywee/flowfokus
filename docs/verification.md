@@ -39,4 +39,6 @@ Nothing was pushed, tagged, published, or deployed. Manual payment records do no
 
 The Vite CSS plugin reports a source-map warning. App builds pass; CSS debugging maps can be inaccurate.
 
+An additional Claude API review could not complete because the provider rate limit was reached. The coordinating agent reviewed the authentication boundary, tenant queries, payment and fulfillment transactions, check-in locking, and schema protections. The completed tests and browser checks are the release evidence; no successful independent final review is claimed.
+
 See [Deployment candidate](deployment.md) for runtime configuration, migration steps, and credentials required next sprint.
