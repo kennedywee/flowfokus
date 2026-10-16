@@ -305,12 +305,12 @@ export interface components {
          *     - `forbidden` (403), `organization_mismatch` (403)
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
-         *     - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid`,
-         *       `currency_mismatch` (422)
+         *     - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
+         *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "currency_mismatch" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
         ErrorResponse: {
             error: {
                 code: components["schemas"]["ErrorCode"];
