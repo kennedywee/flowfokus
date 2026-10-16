@@ -69,26 +69,9 @@ class CreatePurchases < ActiveRecord::Migration[8.1]
     add_foreign_key :payments, :organizations
     add_foreign_key :payments, :sales, column: [ :sale_id, :organization_id ], primary_key: [ :id, :organization_id ]
 
-    reversible do |dir|
-      dir.up do
-        execute <<~SQL
-          CREATE FUNCTION prevent_update() RETURNS trigger AS $$
-          BEGIN
-            RAISE EXCEPTION '% rows are immutable', TG_TABLE_NAME USING ERRCODE = 'check_violation';
-          END;
-          $$ LANGUAGE plpgsql;
-
-          CREATE TRIGGER sale_line_items_immutable BEFORE UPDATE ON sale_line_items
-            FOR EACH ROW EXECUTE FUNCTION prevent_update();
-          CREATE TRIGGER payments_immutable BEFORE UPDATE ON payments
-            FOR EACH ROW EXECUTE FUNCTION prevent_update();
-        SQL
-      end
-      dir.down do
-        execute "DROP TRIGGER payments_immutable ON payments"
-        execute "DROP TRIGGER sale_line_items_immutable ON sale_line_items"
-        execute "DROP FUNCTION prevent_update()"
-      end
-    end
+    # Line items and payments are never updated. Corrections are new records.
+    create_function :prevent_update
+    create_trigger :sale_line_items_immutable, on: :sale_line_items
+    create_trigger :payments_immutable, on: :payments
   end
 end

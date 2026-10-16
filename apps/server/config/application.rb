@@ -19,8 +19,8 @@ module Hydraflow
     config.api_only = true
     config.time_zone = "UTC"
     config.active_record.default_timezone = :utc
-    # Composite foreign keys, exclusion constraints, and triggers need SQL schema.
-    config.active_record.schema_format = :sql
+    # db/schema.rb is the schema format (project preference). Composite foreign keys,
+    # check and exclusion constraints dump natively; Fx dumps functions and triggers.
 
     config.generators do |g|
       g.orm :active_record, primary_key_type: :uuid

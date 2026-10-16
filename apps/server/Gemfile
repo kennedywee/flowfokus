@@ -4,6 +4,8 @@ source "https://rubygems.org"
 gem "rails", "~> 8.1.4"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
+# Dumps the immutability functions and triggers into db/schema.rb
+gem "fx", "~> 0.11"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 

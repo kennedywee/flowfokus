@@ -49,30 +49,7 @@ class CreateCatalog < ActiveRecord::Migration[8.1]
     add_foreign_key :prices, :products, column: [ :product_id, :organization_id ], primary_key: [ :id, :organization_id ]
 
     # Amount, currency, product, and terms never change. A change creates a new price.
-    reversible do |dir|
-      dir.up do
-        execute <<~SQL
-          CREATE FUNCTION prevent_price_term_changes() RETURNS trigger AS $$
-          BEGIN
-            IF NEW.organization_id IS DISTINCT FROM OLD.organization_id
-              OR NEW.product_id IS DISTINCT FROM OLD.product_id
-              OR NEW.amount_minor IS DISTINCT FROM OLD.amount_minor
-              OR NEW.currency IS DISTINCT FROM OLD.currency
-              OR NEW.duration_days IS DISTINCT FROM OLD.duration_days THEN
-              RAISE EXCEPTION 'price terms are immutable; create a new price' USING ERRCODE = 'check_violation';
-            END IF;
-            RETURN NEW;
-          END;
-          $$ LANGUAGE plpgsql;
-
-          CREATE TRIGGER prices_immutable_terms BEFORE UPDATE ON prices
-            FOR EACH ROW EXECUTE FUNCTION prevent_price_term_changes();
-        SQL
-      end
-      dir.down do
-        execute "DROP TRIGGER prices_immutable_terms ON prices"
-        execute "DROP FUNCTION prevent_price_term_changes()"
-      end
-    end
+    create_function :prevent_price_term_changes
+    create_trigger :prices_immutable_terms, on: :prices
   end
 end
