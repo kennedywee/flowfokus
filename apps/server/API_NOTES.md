@@ -123,7 +123,8 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim. Ironworks has its own membe
 | 403 | `forbidden`, `organization_mismatch` |
 | 404 | `not_found` (also for records of another organization) |
 | 409 | `idempotency_key_reused` |
-| 422 | `validation_failed` (with `details`), `price_unavailable`, `overpayment`, `sale_not_paid`, `currency_mismatch` |
+| 422 | `validation_failed` (with `details`), `price_unavailable`, `overpayment`, `sale_not_paid` |
+| 500 | `internal_error` |
 | 503 | `auth_not_configured`, `auth_unavailable`, `database_unavailable` |
 
 Body references to another organization's member, price, or location return `422 validation_failed` with `details`, for example `{ "member_id": ["was not found"] }`.

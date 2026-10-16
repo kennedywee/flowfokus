@@ -732,8 +732,8 @@ components:
         - `forbidden` (403), `organization_mismatch` (403)
         - `not_found` (404)
         - `idempotency_key_reused` (409)
-        - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid`,
-          `currency_mismatch` (422)
+        - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
+        - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
       enum:
         - bad_request
@@ -749,7 +749,7 @@ components:
         - price_unavailable
         - overpayment
         - sale_not_paid
-        - currency_mismatch
+        - internal_error
         - auth_not_configured
         - auth_unavailable
         - database_unavailable

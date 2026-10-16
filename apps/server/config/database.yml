@@ -1,0 +1,18 @@
+# DATABASE_URL always wins when set. Local defaults match compose.yaml.
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  url: <%= ENV.fetch("DATABASE_URL") { "postgres://hydraflow:hydraflow@127.0.0.1:54329/hydraflow_development" } %>
+
+# spec/rails_helper.rb refuses to run unless the database name ends in _test.
+test:
+  <<: *default
+  url: <%= ENV.fetch("TEST_DATABASE_URL") { "postgres://hydraflow:hydraflow@127.0.0.1:54329/hydraflow_test" } %>
+
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
