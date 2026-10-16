@@ -1,0 +1,21 @@
+FROM oven/bun:1.2.21 AS bun
+FROM node:26.12.0-bookworm-slim
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+
+WORKDIR /app
+COPY package.json bun.lock ./
+COPY apps/portal/package.json apps/portal/package.json
+COPY apps/site/package.json apps/site/package.json
+COPY packages/api/package.json packages/api/package.json
+RUN bun install --frozen-lockfile
+COPY apps/portal apps/portal
+COPY apps/site apps/site
+COPY packages/api packages/api
+COPY infra/dev-web-entrypoint.sh /usr/local/bin/hydraflow-dev-web
+RUN chmod +x /usr/local/bin/hydraflow-dev-web
+ENV CLOUDFLARE_SEND_METRICS=false WRANGLER_SEND_METRICS=false
+ENV HYDRAFLOW_WEB_APP=portal
+# This is the local Worker emulator. Production uses the built Worker bundle.
+EXPOSE 3001 3002
+ENTRYPOINT ["hydraflow-dev-web"]
+CMD ["bun", "run", "--cwd", "apps/portal", "dev", "--host", "0.0.0.0"]

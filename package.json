@@ -10,9 +10,9 @@
     "check": "bash scripts/check",
     "smoke": "node scripts/smoke.mjs",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
-    "contract:check": "bun run contract:types && git diff --exit-code -- packages/api/src/schema.d.ts",
+    "contract:check": "bash scripts/contract-check",
     "typecheck": "bun run --cwd packages/api typecheck && bun run --cwd apps/portal typecheck && bun run --cwd apps/site typecheck",
-    "test:web": "bun test apps/portal apps/site",
+    "test:web": "bun run --cwd apps/portal test && bun run --cwd apps/site test",
     "build": "bun run --cwd apps/portal build && bun run --cwd apps/site build"
   },
   "devDependencies": {

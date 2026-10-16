@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 base="${1:?Usage: scripts/contract-diff BASE_GIT_REF}"
+git rev-parse --verify "$base^{commit}" >/dev/null
 contract=apps/server/openapi.yaml
 if ! git cat-file -e "$base:$contract" 2>/dev/null; then
   echo "No contract exists in the base revision. Initial contract accepted."

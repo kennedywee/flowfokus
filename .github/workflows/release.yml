@@ -8,9 +8,18 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: candidate-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   candidate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17
@@ -30,7 +39,15 @@ jobs:
       WRANGLER_SEND_METRICS: "false"
     steps:
       - uses: actions/checkout@v4
+      - name: Validate release tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]] && [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "Expected vX.Y.Z or vX.Y.Z-rc.N" >&2
+            exit 1
+          fi
       - uses: jdx/mise-action@v2
+        env:
+          MISE_DISABLE_TOOLS: ruby
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.4.5"
@@ -41,8 +58,9 @@ jobs:
       - name: Package the server image
         run: |
           mkdir -p release
-          docker build -t "hydraflow-server:${GITHUB_SHA}" apps/server
+          docker build -t "hydraflow-server:${GITHUB_SHA}" --label "org.opencontainers.image.revision=${GITHUB_SHA}" apps/server
           docker save "hydraflow-server:${GITHUB_SHA}" | gzip > release/server-image.tar.gz
+          docker image inspect "hydraflow-server:${GITHUB_SHA}" --format '{{json .}}' > release/server-image.json
       - name: Package Worker builds and manifest
         run: |
           tar -czf release/portal.tar.gz -C apps/portal dist

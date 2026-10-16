@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+bun run contract:types
+if [[ -n "$(git status --porcelain -- packages/api/src/schema.d.ts)" ]]; then
+  echo "Generated API types differ from the committed contract. Regenerate and commit them." >&2
+  git diff -- packages/api/src/schema.d.ts
+  exit 1
+fi

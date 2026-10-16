@@ -2,14 +2,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
+docker compose up -d --wait db
 export HYDRAFLOW_DEMO_MODE="${HYDRAFLOW_DEMO_MODE:-true}"
 export HYDRAFLOW_DEMO_TOKEN="${HYDRAFLOW_DEMO_TOKEN:-hydraflow-local-demo-token}"
 
+set -m
 pids=()
 cleanup() {
   trap - EXIT INT TERM
   for pid in "${pids[@]}"; do
-    kill "$pid" 2>/dev/null || true
+    kill -- "-$pid" 2>/dev/null || true
   done
   wait || true
 }
