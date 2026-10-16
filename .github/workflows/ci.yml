@@ -68,3 +68,4 @@ jobs:
             apps/portal/dist
             apps/site/dist
           if-no-files-found: error
+          include-hidden-files: true

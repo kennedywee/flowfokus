@@ -10,6 +10,7 @@ Verified locally on 16 October 2026. Supporting services run in Docker. All appl
 - `bun run contract:check`: generated types match the committed OpenAPI contract.
 - `bun run smoke`: public organization, member creation, denied access, sale retry, partial payments, payment retry, fulfillment retry, granted check-in, and single consumption pass against the running API.
 - `docker build -t hydraflow-server:candidate apps/server`: the production API image builds.
+- The `worker-build` targets in `apps/portal/Dockerfile` and `apps/site/Dockerfile` build independently and contain no local environment files.
 - `bash scripts/check-production-image hydraflow-server:candidate`: production rejects demo mode, boots without a database connection, and refuses protected requests when authentication is unavailable.
 - Workflow syntax and shell checks pass. GitHub-hosted CI and release workflows have not been run.
 
