@@ -9,6 +9,10 @@ const manifest = {
   ref: process.env.GITHUB_REF_NAME,
   channel: process.env.GITHUB_REF_NAME?.match(/^v\d+\.\d+\.\d+$/) ? 'stable' : 'candidate',
   deployment: 'not_deployed',
+  contract: {
+    base: process.env.CONTRACT_BASE || null,
+    breaking_check: process.env.CONTRACT_BASE ? 'passed' : 'no_stable_release',
+  },
   apps: {
     server: { build: 'success', publication: 'not_configured', image_id: image.Id, tags: image.RepoTags },
     portal: { build: 'success', publication: 'not_configured' },

@@ -17,7 +17,7 @@ services:
       HYDRAFLOW_DEMO_MODE: "false"
       RAILS_MAX_THREADS: "5"
     healthcheck:
-      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).is_a?(Net::HTTPSuccess) ? 0 : 1)"]
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/ready')).is_a?(Net::HTTPSuccess) ? 0 : 1)"]
       interval: 30s
       timeout: 5s
       retries: 3

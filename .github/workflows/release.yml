@@ -39,6 +39,8 @@ jobs:
       WRANGLER_SEND_METRICS: "false"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Validate release tag
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]] && [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
@@ -55,6 +57,14 @@ jobs:
           working-directory: apps/server
       - run: bun install --frozen-lockfile
       - run: bun run check
+      - name: Check compatibility with the last stable contract
+        run: |
+          stable_tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -vx "$GITHUB_REF_NAME" | head -n1 || true)
+          if [[ -n "$stable_tag" ]]; then
+            bash scripts/contract-diff "$stable_tag"
+            echo "CONTRACT_BASE=$stable_tag" >> "$GITHUB_ENV"
+          fi
+      - run: bun run artifacts:check
       - name: Package the server image
         run: |
           mkdir -p release

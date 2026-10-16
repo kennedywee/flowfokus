@@ -54,7 +54,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          stable_tag=$(git tag --list 'v*' --sort=-v:refname | rg '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
+          stable_tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
           if [[ -n "$stable_tag" ]]; then BASE_SHA="$stable_tag"; fi
           bash scripts/contract-diff "$BASE_SHA"
       - name: Build API image
