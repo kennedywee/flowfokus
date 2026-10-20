@@ -61,7 +61,6 @@ function SalePage() {
   if (!sale.ok) {
     return (
       <div className="page sale-page">
-        <Crumbs />
         <FailureNotice error={sale.error} title="This sale did not load" />
       </div>
     );
@@ -71,7 +70,6 @@ function SalePage() {
   const line = data.line_item;
   return (
     <div className="page sale-page">
-      <Crumbs />
       <PageHead
         title={`${line.product_name}, ${line.price_label}`}
         description={
@@ -156,18 +154,6 @@ function SalePage() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Crumbs() {
-  const organization = useOrganization();
-  return (
-    <nav className="crumbs" aria-label="Breadcrumb">
-      <Link to="/$org/sales" params={{ org: organization.slug }}>
-        Sales
-      </Link>
-      <span aria-hidden="true">/</span>
-    </nav>
   );
 }
 

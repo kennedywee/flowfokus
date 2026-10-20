@@ -37,7 +37,6 @@ function MemberPage() {
   if (!record.ok) {
     return (
       <div className="page member-page">
-        <Crumbs />
         <FailureNotice error={record.error} title="This member did not load" />
       </div>
     );
@@ -46,7 +45,6 @@ function MemberPage() {
   const { member, sales, checkIns } = record.data;
   return (
     <div className="page member-page">
-      <Crumbs />
       <PageHead title={member.name}>
         <Link
           to="/$org/sales/new"
@@ -107,18 +105,6 @@ function MemberPage() {
         )}
       </Plate>
     </div>
-  );
-}
-
-function Crumbs() {
-  const organization = useOrganization();
-  return (
-    <nav className="crumbs" aria-label="Breadcrumb">
-      <Link to="/$org/members" params={{ org: organization.slug }}>
-        Members
-      </Link>
-      <span aria-hidden="true">/</span>
-    </nav>
   );
 }
 
