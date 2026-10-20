@@ -36,7 +36,7 @@ function Home() {
             <section className="plate" aria-labelledby="demo-heading">
               <div className="plate__head">
                 <div className="plate__text">
-                  <h2 id="demo-heading">Local demo</h2>
+                  <h2 id="demo-heading">{import.meta.env.DEV ? "Frontend preview" : "Local demo"}</h2>
                 </div>
                 <div className="plate__action">
                   <span className="demo-tag">Local development only</span>
@@ -44,8 +44,7 @@ function Home() {
               </div>
               <div className="plate__body">
                 <p>
-                  You act as the seeded Demo Owner. This is not a real sign-in, and it is turned off in
-                  production builds.
+                  {import.meta.env.DEV ? "Explore Flowfokus with sample members, memberships, and payments. Changes stay in this preview and reset on a full reload." : "This is not a real sign-in, and it is turned off in production builds."}
                 </p>
               </div>
               {demoOrganization?.ok ? (
@@ -112,7 +111,7 @@ function OpenBySlug() {
     void navigate({ to: "/$org", params: { org: value } });
   }
 
-  const hint = "The demo actor has staff access to chainsaw only. Other gyms show an access error.";
+  const hint = import.meta.env.DEV ? "Sample organizations: chainsaw and ironworks." : "The demo actor has staff access to chainsaw only.";
   return (
     <form className="plate form" onSubmit={onSubmit} noValidate aria-labelledby="open-heading">
       <div className="plate__head">

@@ -1,0 +1,120 @@
+/** Sample records for the frontend preview. These are not API response types. */
+export const sampleMembers = [
+  {
+    id: "m1",
+    name: "Marcus Ang",
+    email: "marcus.ang@example.com",
+    plan: "Monthly",
+    access: "active",
+    lastVisit: "Today, 08:42",
+    balance: 0,
+  },
+  {
+    id: "m2",
+    name: "Hui Lin Ong",
+    email: "huilin.ong@example.com",
+    plan: "Monthly",
+    access: "active",
+    lastVisit: "29 Sep",
+    balance: 0,
+  },
+  {
+    id: "m3",
+    name: "Arjun Rao",
+    email: "arjun.rao@example.com",
+    plan: "Monthly",
+    access: "expired",
+    lastVisit: "2 Oct",
+    balance: 18000,
+  },
+  {
+    id: "m4",
+    name: "Aina Zulkifli",
+    email: "aina.z@example.com",
+    plan: "10 visits",
+    access: "active",
+    lastVisit: "Yesterday",
+    balance: 0,
+  },
+  {
+    id: "m5",
+    name: "Daniel Koh",
+    email: "daniel.koh@example.com",
+    plan: "Monthly",
+    access: "active",
+    lastVisit: "Today, 07:15",
+    balance: 0,
+  },
+  {
+    id: "m6",
+    name: "Priya Nair",
+    email: "priya.nair@example.com",
+    plan: "Monthly",
+    access: "expired",
+    lastVisit: "14 Oct",
+    balance: 9000,
+  },
+] as const;
+
+export const initialInbox = [
+  {
+    id: "n1",
+    category: "Payments",
+    name: "Arjun Rao",
+    title: "Payment needs a follow-up",
+    detail: "RM 180.00 is still due on Arjun’s Monthly membership. A bank-transfer reference has not been added.",
+    time: "09:12",
+    unread: true,
+    resolved: false,
+  },
+  {
+    id: "n2",
+    category: "Memberships",
+    name: "Hui Lin Ong",
+    title: "Membership ends in 3 days",
+    detail:
+      "Hui Lin’s current access ends on 24 October. Check whether they would like another membership before their next visit.",
+    time: "08:45",
+    unread: true,
+    resolved: false,
+  },
+  {
+    id: "n3",
+    category: "Desk",
+    name: "Priya Nair",
+    title: "Check-in was denied",
+    detail:
+      "Priya tried to check in at Bangsar. Her membership has expired. Review her record with her before taking a new payment.",
+    time: "08:31",
+    unread: true,
+    resolved: false,
+  },
+  {
+    id: "n4",
+    category: "Payments",
+    name: "Marcus Ang",
+    title: "Bank transfer recorded",
+    detail: "Aina recorded RM 180.00 by bank transfer. Reference: OCT-MARCUS. The membership is ready for delivery.",
+    time: "Yesterday",
+    unread: false,
+    resolved: false,
+  },
+  {
+    id: "n5",
+    category: "Desk",
+    name: "Aina Zulkifli",
+    title: "Morning handover",
+    detail:
+      "The front desk is ready. Two membership follow-ups are waiting. The spare access tags are in the top drawer.",
+    time: "Yesterday",
+    unread: false,
+    resolved: false,
+  },
+];
+
+export const reportWeeks = [
+  { label: "28 Sep", sales: 124000, visits: 116 },
+  { label: "5 Oct", sales: 162000, visits: 143 },
+  { label: "12 Oct", sales: 148000, visits: 128 },
+  { label: "19 Oct", sales: 186000, visits: 162 },
+];
