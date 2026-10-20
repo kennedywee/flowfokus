@@ -21,8 +21,7 @@ export function currentStaffAccess(): StaffAccess {
   // `import.meta.env.DEV` is a build-time constant. Production bundles keep
   // only the second branch, so demo access cannot exist there.
   if (import.meta.env.DEV) {
-    const hostname = new URL(getRequest().url).hostname;
-    return resolveStaffAccess({ dev: true, env: portalEnv(), hostname });
+    return resolveStaffAccess({ dev: true, env: portalEnv() });
   }
   return resolveProductionAccess(portalEnv());
 }

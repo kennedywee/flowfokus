@@ -14,10 +14,6 @@ const COPY: Record<UnavailableReason, { title: string; body: string }> = {
     title: "Local demo is not set up",
     body: "FLOWFOKUS_DEMO_MODE is on, but FLOWFOKUS_DEMO_TOKEN is missing or shorter than 16 characters. Set a token of 16 or more characters in apps/portal/.dev.vars, then reload.",
   },
-  demo_not_local: {
-    title: "Local demo works on this computer only",
-    body: "The local demo is not a real sign-in, so it refuses any other address. Open the portal at http://localhost:3001 to use it.",
-  },
 };
 
 export function AccessUnavailable({ reason }: { reason: UnavailableReason }) {

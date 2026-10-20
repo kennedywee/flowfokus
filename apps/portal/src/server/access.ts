@@ -27,9 +27,7 @@ export type UnavailableReason =
   /** WorkOS settings exist, but the integration ships next sprint. */
   | "sign_in_not_integrated"
   /** Demo mode is on, but the token is missing or too short. */
-  | "demo_token_invalid"
-  /** Demo mode is on, but the request did not come from a local host name. */
-  | "demo_not_local";
+  | "demo_token_invalid";
 
 export type StaffAccess =
   | { kind: "demo"; token: string }
@@ -48,31 +46,16 @@ export interface AccessInput {
    */
   dev: boolean;
   env: PortalEnv;
-  /** Host name of the incoming request, without the port. */
-  hostname: string;
-}
-
-/** True for `localhost`, `*.localhost`, and loopback addresses. */
-export function isLoopbackHostname(hostname: string): boolean {
-  const name = hostname.toLowerCase().replace(/\.$/, "");
-  return (
-    name === "localhost" ||
-    name.endsWith(".localhost") ||
-    name === "127.0.0.1" ||
-    name === "[::1]" ||
-    name === "::1"
-  );
 }
 
 function workosConfigured(env: PortalEnv): boolean {
   return Boolean(env.WORKOS_CLIENT_ID && env.WORKOS_API_KEY && env.WORKOS_COOKIE_PASSWORD);
 }
 
-export function resolveStaffAccess({ dev, env, hostname }: AccessInput): StaffAccess {
-  // Demo access needs all three: a development build, the explicit flag, and a
-  // local host name. A production build never reaches this branch.
+export function resolveStaffAccess({ dev, env }: AccessInput): StaffAccess {
+  // Demo access needs a development build and the explicit flag.
+  // Development hosts can be reached through localhost, LAN, or Tailscale.
   if (dev && env.FLOWFOKUS_DEMO_MODE === "true") {
-    if (!isLoopbackHostname(hostname)) return { kind: "unavailable", reason: "demo_not_local" };
     const token = env.FLOWFOKUS_DEMO_TOKEN ?? "";
     if (token.length < MIN_DEMO_TOKEN_LENGTH) {
       return { kind: "unavailable", reason: "demo_token_invalid" };
