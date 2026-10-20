@@ -631,19 +631,15 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
 }
 
-/* Headers span the main area; working content stays centered below them. */
+/* Header and content share one centered column and the same vertical edges. */
 .page > * {
   width: 100%;
   min-width: 0;
-  max-width: 1200px;
-}
-.page > :not(.page-head) {
-  justify-self: center;
-}
-.page > .page-head {
-  max-width: none;
 }
 
 /* Page header: title, description, and actions on the right. */
