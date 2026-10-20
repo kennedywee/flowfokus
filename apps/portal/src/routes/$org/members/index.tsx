@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react";
@@ -51,16 +51,16 @@ function Members() {
   const members = Route.useLoaderData();
   const { q } = Route.useSearch();
   const organization = useOrganization();
+  const [adding, setAdding] = useState(false);
 
   return (
     <div className="page members-page">
       <PageHead title="Members" description="Find a member, or add a new one before their first sale.">
-        <button type="button" className={buttonClass()} onClick={() => focusField("member-name")}>
+        <button type="button" className={buttonClass()} onClick={() => setAdding(true)}>
           <UserPlus aria-hidden="true" />
           Add member
         </button>
       </PageHead>
-      <AddMember />
       <Plate title={q ? `Results for “${q}”` : "All members"} icon={<Users />} flush>
         <div className="members-toolbar toolbar">
           <p className="members-count" aria-live="polite">
@@ -83,7 +83,7 @@ function Members() {
                 </Empty>
               ) : (
                 <Empty title="No members yet">
-                  <p>Add the first member with the form above. You can then sell them a membership.</p>
+                  <p>Select Add member to add the first member. You can then sell them a membership.</p>
                 </Empty>
               )}
             </div>
@@ -94,6 +94,7 @@ function Members() {
           </div>
         )}
       </Plate>
+      {adding ? <AddMember onClose={() => setAdding(false)} /> : null}
     </div>
   );
 }
@@ -243,7 +244,17 @@ function SearchForm({ initial }: { initial: string }) {
   );
 }
 
-function AddMember() {
+function AddMember({ onClose }: { onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog?.showModal();
+    return () => {
+      dialog?.close();
+      opener?.focus();
+    };
+  }, []);
   const organization = useOrganization();
   const router = useRouter();
   const toast = useToast();
@@ -277,86 +288,90 @@ function AddMember() {
       setEmail("");
       toast.show({ tone: "success", title: "Member added", body: `${result.data.name} can now buy a membership.` });
       void router.invalidate();
+      onClose();
     }
   }
 
-  const created = action.data;
   return (
-    <Plate title="Add a member" description="Add the member first. Then sell them a membership." icon={<UserPlus />}>
-      <form className="form" onSubmit={onSubmit} noValidate>
-        {fieldErrors.length ? (
-          <Notice tone="error" title="The member was not added" live>
-            <p>Fix {fieldErrors.length === 1 ? "this field" : "these fields"}, then select Add member.</p>
-            <ul className="members-errors">
-              {fieldErrors.map((item) => (
-                <li key={item.id}>
-                  <a
-                    href={`#${item.id}`}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      focusField(item.id);
-                    }}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </Notice>
-        ) : null}
-        <div className="members-add">
-          <Field id="member-name" label="Full name" error={nameError}>
-            <input
-              id="member-name"
-              className="input"
-              name="name"
-              autoComplete="off"
-              maxLength={200}
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              aria-invalid={nameError ? true : undefined}
-              aria-describedby={describedBy("member-name", undefined, nameError)}
-            />
-          </Field>
-          <Field id="member-email" label="Email" error={emailError}>
-            <input
-              id="member-email"
-              className="input"
-              name="email"
-              type="email"
-              autoComplete="off"
-              maxLength={320}
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              aria-invalid={emailError ? true : undefined}
-              aria-describedby={describedBy("member-email", undefined, emailError)}
-            />
-          </Field>
-          <div className="members-add__submit">
-            <SubmitButton pending={action.pending} pendingLabel="Adding…">
-              <UserPlus aria-hidden="true" />
-              Add member
-            </SubmitButton>
+    <dialog
+      ref={dialogRef}
+      className="dialog members-dialog"
+      aria-labelledby="add-member-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!action.pending) onClose();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !action.pending) onClose();
+      }}
+    >
+      <div className="dialog__body">
+        <h2 className="dialog__title" id="add-member-title">Add member</h2>
+        <form className="form" onSubmit={onSubmit} noValidate>
+          {fieldErrors.length ? (
+            <Notice tone="error" title="The member was not added" live>
+              <p>Fix {fieldErrors.length === 1 ? "this field" : "these fields"}, then select Add member.</p>
+              <ul className="members-errors">
+                {fieldErrors.map((item) => (
+                  <li key={item.id}>
+                    <a
+                      href={`#${item.id}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        focusField(item.id);
+                      }}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Notice>
+          ) : null}
+          <div className="members-add">
+            <Field id="member-name" label="Full name" error={nameError}>
+              <input
+                id="member-name"
+                autoFocus
+                className="input"
+                name="name"
+                autoComplete="off"
+                maxLength={200}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                aria-invalid={nameError ? true : undefined}
+                aria-describedby={describedBy("member-name", undefined, nameError)}
+              />
+            </Field>
+            <Field id="member-email" label="Email" error={emailError}>
+              <input
+                id="member-email"
+                className="input"
+                name="email"
+                type="email"
+                autoComplete="off"
+                maxLength={320}
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                aria-invalid={emailError ? true : undefined}
+                aria-describedby={describedBy("member-email", undefined, emailError)}
+              />
+            </Field>
+            <div className="members-add__submit">
+              <button type="button" className={buttonClass({ variant: "ghost" })} disabled={action.pending} onClick={onClose}>
+                Cancel
+              </button>
+              <SubmitButton pending={action.pending} pendingLabel="Adding…">
+                <UserPlus aria-hidden="true" />
+                Add member
+              </SubmitButton>
+            </div>
           </div>
-        </div>
-        {action.error && !fieldErrors.length ? (
-          <FailureNotice error={action.error} title="The member was not added" />
-        ) : null}
-        {created ? (
-          <Notice tone="success" title={`${created.name} was added`} live>
-            <p>
-              <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: created.id }}>
-                Open their record
-              </Link>{" "}
-              or{" "}
-              <Link to="/$org/sales/new" params={{ org: organization.slug }} search={{ member: created.id }}>
-                sell a membership
-              </Link>
-              .
-            </p>
-          </Notice>
-        ) : null}
-      </form>
-    </Plate>
+          {action.error && !fieldErrors.length ? (
+            <FailureNotice error={action.error} title="The member was not added" />
+          ) : null}
+        </form>
+      </div>
+    </dialog>
   );
 }

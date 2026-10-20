@@ -13,20 +13,16 @@
 
 /* ---------- Members list ---------- */
 
-/* Add form: two fields and the button in one row when there is room. */
+/* Add form: shown only in the dialog opened from the page header. */
 .members-page .members-add {
   display: grid;
   gap: var(--space-4);
   align-items: start;
 }
-@media (min-width: 768px) {
-  .members-page .members-add {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  }
-  /* Line the button up with the inputs: label height (16px) plus the field gap (8px). */
-  .members-page .members-add__submit {
-    padding-top: var(--space-6);
-  }
+.members-page .members-add__submit {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 .members-page .members-errors {
   margin: var(--space-1) 0 0;
