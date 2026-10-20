@@ -24,9 +24,8 @@ import {
 } from "lucide-react";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
-import { FailureNotice, Wordmark, buttonClass, initials } from "../../components/ui";
+import { FailureNotice, Pill, Wordmark, buttonClass, initials } from "../../components/ui";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
-import { SOON_PAGES, parseSoonPage, type SoonPage } from "../../lib/soon";
 import { isSlug } from "../../lib/validate";
 
 export const Route = createFileRoute("/$org")({
@@ -52,23 +51,20 @@ export const Route = createFileRoute("/$org")({
   component: OrganizationLayout,
 });
 
-type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products";
+type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products"
+  | "/$org/inbox" | "/$org/agents" | "/$org/check-in" | "/$org/reports" | "/$org/settings"
+  | "/$org/branches" | "/$org/changelog";
 
-/** A sidebar item. It opens a real page (`to`) or the placeholder page for `page`. */
-type NavItem = { label: string; icon: LucideIcon } & (
-  | { to: RoutedPath; exact: boolean; page?: undefined; path: string }
-  | { page: SoonPage; to?: undefined; exact?: undefined; path?: undefined }
-);
+type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean; path: string };
 
-// Sections with a `page` have no screen yet. They open the placeholder page.
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Desk",
     items: [
       { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
-      { page: "inbox", label: "Inbox", icon: Inbox },
-      { page: "agents", label: "Agents", icon: Bot },
-      { page: "check-in", label: "Check-in", icon: LogIn },
+      { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
+      { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
+      { to: "/$org/check-in", label: "Check-in", icon: LogIn, exact: false, path: "/check-in" },
       { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
       { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
     ],
@@ -77,8 +73,8 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: "Manage",
     items: [
       { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
-      { page: "reports", label: "Reports", icon: ChartColumn },
-      { page: "settings", label: "Settings", icon: Settings },
+      { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
+      { to: "/$org/settings", label: "Settings", icon: Settings, exact: false, path: "/settings" },
     ],
   },
 ];
@@ -134,7 +130,6 @@ function BranchRing() {
 
 function Shell({ organization: data }: { organization: OrganizationData }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const search = useRouterState({ select: (state) => state.location.search }) as Record<string, unknown>;
   const [navOpen, setNavOpen] = useState(false);
   // The desktop rail. Kept in React state only, so a reload opens the full sidebar.
   const [collapsed, setCollapsed] = useState(false);
@@ -145,8 +140,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
 
   const base = `/${data.slug}`;
   const trimmed = pathname.replace(/\/$/, "");
-  const onSoon = trimmed === `${base}/soon`;
-  const soonPage = onSoon ? parseSoonPage(search.page) : undefined;
   const routed = NAV_GROUPS.flatMap((group) => group.items).find(
     (item) => item.to !== undefined && (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)),
   );
@@ -206,33 +199,19 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
     );
     return (
       <li key={item.label}>
-        {item.page !== undefined ? (
-          <Link
-            to="/$org/soon"
-            params={{ org: data.slug }}
-            search={{ page: item.page }}
-            activeOptions={{ exact: true }}
-            {...props}
-          >
-            {content}
-          </Link>
-        ) : (
-          <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} {...props}>
-            {content}
-          </Link>
-        )}
+        <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} {...props}>
+          {content}
+        </Link>
       </li>
     );
   }
 
   // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
-  const crumb: { label: string; section?: RoutedPath } | null = onSoon
-    ? { label: soonPage ? SOON_PAGES[soonPage] : "Coming soon" }
-    : routed?.to === undefined
-      ? null
-      : routed.exact || atSectionRoot
-        ? { label: routed.label }
-        : { label: routed.label, section: routed.to };
+  const crumb: { label: string; section?: RoutedPath } | null = routed
+    ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, section: routed.to }
+    : trimmed === `${base}/branches` ? { label: "Branches" }
+    : trimmed === `${base}/changelog` ? { label: "Changelog" }
+    : null;
 
   return (
     <div className="shell" data-collapsed={collapsed}>
@@ -298,9 +277,8 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                 Branches
               </p>
               <Link
-                to="/$org/soon"
+                to="/$org/branches"
                 params={{ org: data.slug }}
-                search={{ page: "branches" }}
                 activeOptions={{ exact: true }}
                 className="nav-group__add"
                 onClick={onSidebarLink}
@@ -313,9 +291,8 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               {data.locations.map((location) => (
                 <li key={location.id}>
                   <Link
-                    to="/$org/soon"
+                    to="/$org/branches"
                     params={{ org: data.slug }}
-                    search={{ page: "branches" }}
                     hash={`branch-${location.id}`}
                     activeOptions={{ exact: true, includeHash: true }}
                     className="nav-item nav-item--branch"
@@ -352,9 +329,8 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               <div className="whatsnew__foot">
                 <span className="whatsnew__version">v0.4</span>
                 <Link
-                  to="/$org/soon"
+                  to="/$org/changelog"
                   params={{ org: data.slug }}
-                  search={{ page: "changelog" }}
                   activeOptions={{ exact: true }}
                   className="whatsnew__link"
                   onClick={onSidebarLink}
@@ -366,9 +342,8 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             </aside>
             {/* On the rail the card becomes one icon with a dot. */}
             <Link
-              to="/$org/soon"
+              to="/$org/changelog"
               params={{ org: data.slug }}
-              search={{ page: "changelog" }}
               activeOptions={{ exact: true }}
               className="whatsnew-rail"
               data-tooltip="What’s new"
@@ -424,6 +399,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             </nav>
           </div>
           <div className="topbar__end">
+            {import.meta.env.DEV ? <span className="preview-global-badge"><Pill>Sample data</Pill></span> : null}
             {/* Visual only for now. The members page has the search. */}
             <Link to="/$org/members" params={{ org: data.slug }} className="topbar__search">
               <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
@@ -499,7 +475,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
               <>
                 <span className="demo-tag">Local demo access</span>
                 <span className="account__note">
-                  This is not a real sign-in. It works on this computer only and is off in production.
+                  {import.meta.env.DEV ? "Frontend preview with sample records. A full reload resets your changes." : "This is not a real sign-in. Demo access is off in production."}
                 </span>
               </>
             ) : null}

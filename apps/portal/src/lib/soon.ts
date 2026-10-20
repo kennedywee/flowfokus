@@ -1,7 +1,4 @@
-/**
- * Sections that the sidebar shows but the portal does not build yet. They all open
- * one placeholder page, `/$org/soon?page=<key>`.
- */
+/** Legacy placeholder keys. Old bookmarks redirect to the completed screens. */
 export const SOON_PAGES = {
   inbox: "Inbox",
   agents: "Agents",

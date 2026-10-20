@@ -12,7 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
+import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
+import { Route as OrgBranchesRouteImport } from './routes/$org/branches'
+import { Route as OrgChangelogRouteImport } from './routes/$org/changelog'
+import { Route as OrgCheckInRouteImport } from './routes/$org/check-in'
+import { Route as OrgInboxRouteImport } from './routes/$org/inbox'
 import { Route as OrgProductsRouteImport } from './routes/$org/products'
+import { Route as OrgReportsRouteImport } from './routes/$org/reports'
+import { Route as OrgSettingsRouteImport } from './routes/$org/settings'
 import { Route as OrgSoonRouteImport } from './routes/$org/soon'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
@@ -35,9 +42,44 @@ const OrgIndexRoute = OrgIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgAgentsRoute = OrgAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgBranchesRoute = OrgBranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgChangelogRoute = OrgChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgCheckInRoute = OrgCheckInRouteImport.update({
+  id: '/check-in',
+  path: '/check-in',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgInboxRoute = OrgInboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 const OrgProductsRoute = OrgProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgReportsRoute = OrgReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgSettingsRoute = OrgSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgSoonRoute = OrgSoonRouteImport.update({
@@ -74,7 +116,14 @@ const OrgSalesNewRoute = OrgSalesNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/branches': typeof OrgBranchesRoute
+  '/$org/changelog': typeof OrgChangelogRoute
+  '/$org/check-in': typeof OrgCheckInRoute
+  '/$org/inbox': typeof OrgInboxRoute
   '/$org/products': typeof OrgProductsRoute
+  '/$org/reports': typeof OrgReportsRoute
+  '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
@@ -85,7 +134,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/branches': typeof OrgBranchesRoute
+  '/$org/changelog': typeof OrgChangelogRoute
+  '/$org/check-in': typeof OrgCheckInRoute
+  '/$org/inbox': typeof OrgInboxRoute
   '/$org/products': typeof OrgProductsRoute
+  '/$org/reports': typeof OrgReportsRoute
+  '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
@@ -98,7 +154,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/$org/agents': typeof OrgAgentsRoute
+  '/$org/branches': typeof OrgBranchesRoute
+  '/$org/changelog': typeof OrgChangelogRoute
+  '/$org/check-in': typeof OrgCheckInRoute
+  '/$org/inbox': typeof OrgInboxRoute
   '/$org/products': typeof OrgProductsRoute
+  '/$org/reports': typeof OrgReportsRoute
+  '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
@@ -112,7 +175,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$org'
+    | '/$org/agents'
+    | '/$org/branches'
+    | '/$org/changelog'
+    | '/$org/check-in'
+    | '/$org/inbox'
     | '/$org/products'
+    | '/$org/reports'
+    | '/$org/settings'
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
@@ -123,7 +193,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$org/agents'
+    | '/$org/branches'
+    | '/$org/changelog'
+    | '/$org/check-in'
+    | '/$org/inbox'
     | '/$org/products'
+    | '/$org/reports'
+    | '/$org/settings'
     | '/$org/soon'
     | '/$org'
     | '/$org/members/$memberId'
@@ -135,7 +212,14 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$org'
+    | '/$org/agents'
+    | '/$org/branches'
+    | '/$org/changelog'
+    | '/$org/check-in'
+    | '/$org/inbox'
     | '/$org/products'
+    | '/$org/reports'
+    | '/$org/settings'
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
@@ -173,11 +257,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgIndexRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/agents': {
+      id: '/$org/agents'
+      path: '/agents'
+      fullPath: '/$org/agents'
+      preLoaderRoute: typeof OrgAgentsRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/branches': {
+      id: '/$org/branches'
+      path: '/branches'
+      fullPath: '/$org/branches'
+      preLoaderRoute: typeof OrgBranchesRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/changelog': {
+      id: '/$org/changelog'
+      path: '/changelog'
+      fullPath: '/$org/changelog'
+      preLoaderRoute: typeof OrgChangelogRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/check-in': {
+      id: '/$org/check-in'
+      path: '/check-in'
+      fullPath: '/$org/check-in'
+      preLoaderRoute: typeof OrgCheckInRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/inbox': {
+      id: '/$org/inbox'
+      path: '/inbox'
+      fullPath: '/$org/inbox'
+      preLoaderRoute: typeof OrgInboxRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/products': {
       id: '/$org/products'
       path: '/products'
       fullPath: '/$org/products'
       preLoaderRoute: typeof OrgProductsRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/reports': {
+      id: '/$org/reports'
+      path: '/reports'
+      fullPath: '/$org/reports'
+      preLoaderRoute: typeof OrgReportsRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/settings': {
+      id: '/$org/settings'
+      path: '/settings'
+      fullPath: '/$org/settings'
+      preLoaderRoute: typeof OrgSettingsRouteImport
       parentRoute: typeof OrgRouteRoute
     }
     '/$org/soon': {
@@ -226,7 +359,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface OrgRouteRouteChildren {
+  OrgAgentsRoute: typeof OrgAgentsRoute
+  OrgBranchesRoute: typeof OrgBranchesRoute
+  OrgChangelogRoute: typeof OrgChangelogRoute
+  OrgCheckInRoute: typeof OrgCheckInRoute
+  OrgInboxRoute: typeof OrgInboxRoute
   OrgProductsRoute: typeof OrgProductsRoute
+  OrgReportsRoute: typeof OrgReportsRoute
+  OrgSettingsRoute: typeof OrgSettingsRoute
   OrgSoonRoute: typeof OrgSoonRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
@@ -237,7 +377,14 @@ interface OrgRouteRouteChildren {
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
+  OrgAgentsRoute: OrgAgentsRoute,
+  OrgBranchesRoute: OrgBranchesRoute,
+  OrgChangelogRoute: OrgChangelogRoute,
+  OrgCheckInRoute: OrgCheckInRoute,
+  OrgInboxRoute: OrgInboxRoute,
   OrgProductsRoute: OrgProductsRoute,
+  OrgReportsRoute: OrgReportsRoute,
+  OrgSettingsRoute: OrgSettingsRoute,
   OrgSoonRoute: OrgSoonRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,

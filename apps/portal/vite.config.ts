@@ -28,7 +28,9 @@ export default defineConfig(({ command }) => ({
       inspectorPort: false,
       ...(command === "serve" ? { config: { vars: localVars() } } : {}),
     }),
-    tanstackStart(),
+    // Route generation renames its temp file atomically. Keep it on the same
+    // mounted filesystem as routeTree.gen.ts in Docker development.
+    tanstackStart({ router: { tmpDir: "./src/.tanstack/tmp" } }),
     viteReact(),
   ],
 }));
