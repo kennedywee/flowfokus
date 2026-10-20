@@ -19,8 +19,19 @@ function localVars(): Record<string, string> {
 }
 
 export default defineConfig(({ command }) => ({
-  // Gym sites run on <slug>.localhost in development.
-  server: { port: 3002, strictPort: true, allowedHosts: [".localhost"] },
+  // Match the configured gym base domains without disabling Vite's host check.
+  server: {
+    port: 3002,
+    strictPort: true,
+    allowedHosts: [
+      ".localhost",
+      ...(process.env.SITE_BASE_DOMAINS ?? "")
+        .split(",")
+        .map((domain) => domain.trim())
+        .filter(Boolean)
+        .map((domain) => `.${domain}`),
+    ],
+  },
   preview: { port: 3002, strictPort: true },
   plugins: [
     cloudflare({

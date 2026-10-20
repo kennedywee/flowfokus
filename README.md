@@ -43,6 +43,40 @@ Rebuild after changing dependencies, Dockerfiles, or web configuration outside `
 docker compose up -d --build
 ```
 
+## Access Docker apps through Tailscale
+
+The default ports accept connections only from this computer. To also accept
+connections through its Tailscale IPv4 address, add these lines to the root
+`.env` file. Replace the address with the output of `tailscale ip -4`:
+
+```dotenv
+COMPOSE_FILE=compose.yaml:compose.tailscale.yaml
+FLOWFOKUS_TAILSCALE_IP=100.89.45.88
+```
+
+Apply the settings on this Linux computer:
+
+```sh
+docker compose up -d --build portal site
+```
+
+Open `http://100.89.45.88:3001` on a device connected to your tailnet. Demo access
+accepts this exact address only in development. This is an unauthenticated demo;
+devices that your Tailscale access rules permit can use its sample data.
+Rails and PostgreSQL remain bound to localhost. Local frontend URLs still work.
+
+The gym site needs a hostname to select the organization. On your Mac, add this
+line to `/etc/hosts` with `sudo nano /etc/hosts`:
+
+```text
+100.89.45.88 chainsaw.flowfokus.test
+```
+
+Then open `http://chainsaw.flowfokus.test:3002`. Keep `<slug>.localhost` for access
+from the Linux computer. Tailscale must be running before starting these ports.
+To disable remote access, remove the two settings from `.env` and run
+`docker compose up -d portal site` again. Production builds still refuse demo access.
+
 ## Run apps on the host
 
 Install the versions in `mise.toml`, then run:

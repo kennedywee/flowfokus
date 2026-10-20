@@ -13,6 +13,7 @@ export interface PortalEnv {
   API_BASE_URL?: string;
   FLOWFOKUS_DEMO_MODE?: string;
   FLOWFOKUS_DEMO_TOKEN?: string;
+  FLOWFOKUS_TAILSCALE_IP?: string;
   WORKER_SECRET?: string;
   WORKOS_CLIENT_ID?: string;
   WORKOS_API_KEY?: string;
@@ -28,7 +29,7 @@ export type UnavailableReason =
   | "sign_in_not_integrated"
   /** Demo mode is on, but the token is missing or too short. */
   | "demo_token_invalid"
-  /** Demo mode is on, but the request did not come from a local host name. */
+  /** Demo mode is on, but the host is neither local nor the configured Tailscale IP. */
   | "demo_not_local";
 
 export type StaffAccess =
@@ -70,9 +71,16 @@ function workosConfigured(env: PortalEnv): boolean {
 
 export function resolveStaffAccess({ dev, env, hostname }: AccessInput): StaffAccess {
   // Demo access needs all three: a development build, the explicit flag, and a
-  // local host name. A production build never reaches this branch.
+  // local host name or the explicitly configured Tailscale IP.
+  // A production build never reaches this branch.
   if (dev && env.FLOWFOKUS_DEMO_MODE === "true") {
-    if (!isLoopbackHostname(hostname)) return { kind: "unavailable", reason: "demo_not_local" };
+    const tailscaleIp = env.FLOWFOKUS_TAILSCALE_IP ?? "";
+    // Tailscale IPv4 addresses are in 100.64.0.0/10. Accept one exact address.
+    const octet = "(?:25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)";
+    const isTailscaleIp = new RegExp(`^100\\.(?:6[4-9]|[7-9]\\d|1[01]\\d|12[0-7])\\.${octet}\\.${octet}$`).test(tailscaleIp);
+    if (!isLoopbackHostname(hostname) && !(isTailscaleIp && hostname === tailscaleIp)) {
+      return { kind: "unavailable", reason: "demo_not_local" };
+    }
     const token = env.FLOWFOKUS_DEMO_TOKEN ?? "";
     if (token.length < MIN_DEMO_TOKEN_LENGTH) {
       return { kind: "unavailable", reason: "demo_token_invalid" };

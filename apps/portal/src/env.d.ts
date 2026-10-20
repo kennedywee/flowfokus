@@ -6,6 +6,7 @@ declare module "cloudflare:workers" {
     API_BASE_URL?: string;
     FLOWFOKUS_DEMO_MODE?: string;
     FLOWFOKUS_DEMO_TOKEN?: string;
+    FLOWFOKUS_TAILSCALE_IP?: string;
     WORKER_SECRET?: string;
     WORKOS_CLIENT_ID?: string;
     WORKOS_API_KEY?: string;

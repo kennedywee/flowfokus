@@ -7,7 +7,7 @@ import { defineConfig } from "vite";
  * Local-only Worker variables taken from the shell, for `scripts/dev`.
  * Used by `vite dev` only. Production builds never read them.
  */
-const LOCAL_VARS = ["API_BASE_URL", "FLOWFOKUS_DEMO_MODE", "FLOWFOKUS_DEMO_TOKEN", "WORKER_SECRET"] as const;
+const LOCAL_VARS = ["API_BASE_URL", "FLOWFOKUS_DEMO_MODE", "FLOWFOKUS_DEMO_TOKEN", "FLOWFOKUS_TAILSCALE_IP", "WORKER_SECRET"] as const;
 
 function localVars(): Record<string, string> {
   const vars: Record<string, string> = {};
