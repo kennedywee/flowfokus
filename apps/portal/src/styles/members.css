@@ -1,1 +1,164 @@
 /* Screen styles: members. Add rules here, not in components.css. */
+
+/* ---------- Shared by the list and the detail page ---------- */
+
+.members-page .members-state,
+.member-page .member-state {
+  padding: var(--space-5) var(--space-6) var(--space-6);
+}
+.members-page .members-state .empty,
+.member-page .member-state .empty {
+  border-style: dashed;
+}
+
+/* ---------- Members list ---------- */
+
+/* Add form: two fields and the button in one row when there is room. */
+.members-page .members-add {
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .members-page .members-add {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+  /* Line the button up with the inputs: label height (16px) plus the field gap (8px). */
+  .members-page .members-add__submit {
+    padding-top: var(--space-6);
+  }
+}
+.members-page .members-errors {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
+
+/* The pager closes the card, so the table above it keeps square corners. */
+.members-page .plate__body--flush .table-wrap:has(+ .pager) {
+  border-radius: 0;
+}
+
+.members-page .members-toolbar {
+  padding: 0 var(--space-6) var(--space-4);
+}
+.members-page .members-count {
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.members-page .members-search {
+  display: flex;
+  flex: 0 1 340px;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.members-page .members-search .search-field {
+  flex: 1 1 auto;
+}
+
+.members-page .members-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.members-page .members-email {
+  overflow-wrap: anywhere;
+}
+.members-page .members-added {
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* Pagination, from Paper "Components II": range on the left, 32px page buttons on the right. */
+.members-page .pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--color-line);
+  background: var(--color-well);
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+.members-page .pager__range {
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.members-page .pager__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.members-page .pager__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 16px;
+  cursor: pointer;
+}
+.members-page .pager__button:hover:not(:disabled, [aria-current="page"]) {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.members-page .pager__button[aria-current="page"] {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-weight: var(--font-weight-medium);
+  cursor: default;
+}
+.members-page .pager__button:has(svg) {
+  border-color: var(--color-line-strong);
+}
+.members-page .pager__button:disabled {
+  color: var(--color-ink-4);
+  cursor: not-allowed;
+}
+.members-page .pager__button svg {
+  width: 14px;
+  height: 14px;
+}
+.members-page .pager__gap {
+  display: inline-flex;
+  justify-content: center;
+  width: 24px;
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+/* ---------- Member detail ---------- */
+
+.member-page .facts dd .muted {
+  font-weight: var(--font-weight-regular);
+}
+.member-page time {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.member-page .member-date {
+  white-space: nowrap;
+}
+/* Rights sit side by side when the card is wide enough. */
+.member-page .rights {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+}
