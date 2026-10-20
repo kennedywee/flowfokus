@@ -11,7 +11,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "theme-color", content: "#eef0f2" },
-      { title: "Hydraflow staff portal" },
+      { title: "Flowfokus staff portal" },
     ],
     links: [
       { rel: "stylesheet", href: legendFont },

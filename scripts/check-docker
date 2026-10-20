@@ -4,9 +4,9 @@ cd "$(dirname "$0")/.."
 docker compose up -d --wait db
 docker compose build server portal site
 docker compose run --rm --no-deps \
-  -e RAILS_ENV=test -e HYDRAFLOW_DEMO_MODE=false \
-  -e DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
-  -e TEST_DATABASE_URL=postgres://hydraflow:hydraflow@db:5432/hydraflow_test \
+  -e RAILS_ENV=test -e FLOWFOKUS_DEMO_MODE=false \
+  -e DATABASE_URL=postgres://flowfokus:flowfokus@db:5432/flowfokus_test \
+  -e TEST_DATABASE_URL=postgres://flowfokus:flowfokus@db:5432/flowfokus_test \
   server bash -c 'bin/rails db:prepare && bundle exec rspec'
 docker compose run --rm --no-deps portal sh -c \
   'bun run test:tooling && bun run --cwd packages/api check:generated && bun run --cwd packages/api typecheck && bun run --cwd apps/portal test && bun run --cwd apps/portal typecheck && bun run --cwd apps/portal build && node scripts/worker-artifacts.mjs --app portal --clean && node scripts/worker-artifacts.mjs --app portal'

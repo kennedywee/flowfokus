@@ -1,12 +1,12 @@
 require "rails_helper"
 
-RSpec.describe Hydraflow::DemoIdentity do
-  let(:token) { "hydraflow-local-demo-token" }
-  let(:enabled_env) { { "HYDRAFLOW_DEMO_MODE" => "true", "HYDRAFLOW_DEMO_TOKEN" => token } }
+RSpec.describe Flowfokus::DemoIdentity do
+  let(:token) { "flowfokus-local-demo-token" }
+  let(:enabled_env) { { "FLOWFOKUS_DEMO_MODE" => "true", "FLOWFOKUS_DEMO_TOKEN" => token } }
 
   it "is off unless explicitly requested" do
     expect(described_class.enabled?(env: {}, rails_env: "development")).to be(false)
-    expect(described_class.enabled?(env: { "HYDRAFLOW_DEMO_MODE" => "1" }, rails_env: "development")).to be(false)
+    expect(described_class.enabled?(env: { "FLOWFOKUS_DEMO_MODE" => "1" }, rails_env: "development")).to be(false)
   end
 
   it "is available in development and test" do
@@ -22,7 +22,7 @@ RSpec.describe Hydraflow::DemoIdentity do
   end
 
   it "requires a long token" do
-    expect { described_class.verify_environment!(env: { "HYDRAFLOW_DEMO_MODE" => "true", "HYDRAFLOW_DEMO_TOKEN" => "short" }, rails_env: "test") }
+    expect { described_class.verify_environment!(env: { "FLOWFOKUS_DEMO_MODE" => "true", "FLOWFOKUS_DEMO_TOKEN" => "short" }, rails_env: "test") }
       .to raise_error(described_class::TokenError)
   end
 

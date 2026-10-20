@@ -21,19 +21,19 @@ module Authentication
       token = bearer_token
       fail_auth! :unauthorized, "unauthenticated", "Send Authorization: Bearer <token>." unless token
 
-      if (claims = Hydraflow::DemoIdentity.claims_for(token))
+      if (claims = Flowfokus::DemoIdentity.claims_for(token))
         claims
-      elsif Hydraflow::WorkosTokens.configured?
-        Hydraflow::WorkosTokens.verify!(token)
-      elsif Hydraflow::DemoIdentity.enabled?
+      elsif Flowfokus::WorkosTokens.configured?
+        Flowfokus::WorkosTokens.verify!(token)
+      elsif Flowfokus::DemoIdentity.enabled?
         fail_auth! :unauthorized, "invalid_token", "The Bearer token is not valid."
       else
         fail_auth! :service_unavailable, "auth_not_configured",
-          "Authentication is not configured. Set up WorkOS, or set HYDRAFLOW_DEMO_MODE=true in local development."
+          "Authentication is not configured. Set up WorkOS, or set FLOWFOKUS_DEMO_MODE=true in local development."
       end
-    rescue Hydraflow::WorkosTokens::Unavailable => error
+    rescue Flowfokus::WorkosTokens::Unavailable => error
       fail_auth! :service_unavailable, "auth_unavailable", error.message
-    rescue Hydraflow::DemoIdentity::ProductionError, Hydraflow::DemoIdentity::TokenError => error
+    rescue Flowfokus::DemoIdentity::ProductionError, Flowfokus::DemoIdentity::TokenError => error
       # Boot already refuses these settings. This guard keeps a request from ever passing.
       fail_auth! :service_unavailable, "auth_not_configured", error.message
     end

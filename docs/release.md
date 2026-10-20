@@ -73,12 +73,12 @@ Production runs `v1.0.0`. `master` has work that cannot ship yet.
 | --- | --- | --- |
 | `apps/server` | VPS, as a Docker container | Server image from GHCR |
 | PostgreSQL | Reached by the server through `DATABASE_URL` | — |
-| `apps/portal` | Cloudflare Worker on `portal.hydraflow.com` | Worker bundle with static assets |
-| `apps/site` | Cloudflare Worker on the route `*.hydraflow.com/*` (custom domains later) | Same |
+| `apps/portal` | Cloudflare Worker on `portal.flowfokus.com` | Worker bundle with static assets |
+| `apps/site` | Cloudflare Worker on the route `*.flowfokus.com/*` (custom domains later) | Same |
 
-The Workers call Rails at `api.hydraflow.com`. The mobile app and WorkOS webhooks use the same host. Only Cloudflare may reach the VPS. Custom domains, when added, need Cloudflare custom hostnames with certificates.
+The Workers call Rails at `api.flowfokus.com`. The mobile app and WorkOS webhooks use the same host. Only Cloudflare may reach the VPS. Custom domains, when added, need Cloudflare custom hostnames with certificates.
 
-The `portal.hydraflow.com` route takes precedence over the wildcard route, so the site Worker never serves the portal host. Reserved slugs keep `api`, `portal`, and `www` away from gyms.
+The `portal.flowfokus.com` route takes precedence over the wildcard route, so the site Worker never serves the portal host. Reserved slugs keep `api`, `portal`, and `www` away from gyms.
 
 Web apps deploy as a new version of each Worker from the released bundle. Only Worker variables and secrets differ per environment. Rollback restores the previous Worker version.
 

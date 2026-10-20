@@ -2,7 +2,7 @@
  * Input checks for server functions. They reject malformed input before it
  * reaches Rails. They do not hold business rules: Rails validates every write.
  */
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

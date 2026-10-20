@@ -210,7 +210,7 @@ export interface paths {
         /**
          * Record a manual cash or bank-transfer payment. Needs payments:create.
          * @description Partial payments are allowed. A payment above the balance returns 422 `overpayment`.
-         *     Hydraflow does not move money; this records money received by staff.
+         *     Flowfokus does not move money; this records money received by staff.
          *     Returns the updated sale.
          */
         post: operations["createStaffSalePayment"];

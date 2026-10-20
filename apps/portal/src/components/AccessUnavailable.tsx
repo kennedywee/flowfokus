@@ -12,7 +12,7 @@ const COPY: Record<UnavailableReason, { title: string; body: string }> = {
   },
   demo_token_invalid: {
     title: "Local demo is not set up",
-    body: "HYDRAFLOW_DEMO_MODE is on, but HYDRAFLOW_DEMO_TOKEN is missing or shorter than 16 characters. Check apps/portal/.dev.vars.",
+    body: "FLOWFOKUS_DEMO_MODE is on, but FLOWFOKUS_DEMO_TOKEN is missing or shorter than 16 characters. Check apps/portal/.dev.vars.",
   },
   demo_not_local: {
     title: "Local demo works on this computer only",

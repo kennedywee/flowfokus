@@ -27,7 +27,7 @@ function Home() {
       <div className="entry__panel">
         <p className="wordmark">
           <Waves aria-hidden="true" />
-          Hydraflow
+          Flowfokus
         </p>
         <div className="page-head__text">
           <h1>Staff portal</h1>

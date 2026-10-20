@@ -1,13 +1,13 @@
 /**
  * Server functions for the staff portal. Each one maps to one fixed `/staff/*`
  * endpoint. The browser can call only these; it cannot choose an upstream path,
- * a token, or any `Hydraflow-*` header.
+ * a token, or any `Flowfokus-*` header.
  *
  * Reads use GET. Writes use POST with a JSON body, checked by the request
  * middleware and the CSRF middleware in `src/start.ts`.
  */
 import { createServerFn } from "@tanstack/react-start";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { toPublicAccess, type PublicAccess } from "../server/access";
 import { callStaff, currentStaffAccess } from "../server/rails";
 import type { Result } from "./result";

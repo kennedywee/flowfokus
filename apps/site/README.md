@@ -19,13 +19,13 @@ Open `http://chainsaw.localhost:3002`. Browsers send every `*.localhost` name to
 
 | Host | Result |
 | --- | --- |
-| `<slug>.hydraflow.com` | That gym. Rails returns `404` if it does not exist or is not published. |
+| `<slug>.flowfokus.com` | That gym. Rails returns `404` if it does not exist or is not published. |
 | `<slug>.localhost:3002` | That gym, in development builds only. |
 | `localhost:3002` | Setup instructions, in development builds only. |
 | Reserved slug (`portal`, `api`, `www`, `admin`, `auth`, `login`, …) | `404` |
 | Nested, malformed, IP, or other domain | `404` |
 
-`SITE_BASE_DOMAINS` (comma-separated, default `hydraflow.com`) sets the production base domains. To try a production build on your machine with `bun run preview`, set `SITE_BASE_DOMAINS=hydraflow.com,localhost` in `.dev.vars`.
+`SITE_BASE_DOMAINS` (comma-separated, default `flowfokus.com`) sets the production base domains. To try a production build on your machine with `bun run preview`, set `SITE_BASE_DOMAINS=flowfokus.com,localhost` in `.dev.vars`.
 
 ## Configuration
 
@@ -33,7 +33,7 @@ Open `http://chainsaw.localhost:3002`. Browsers send every `*.localhost` name to
 | --- | --- | --- |
 | `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:3000`. Production has no default; without it, the site shows a "cannot load" page with status 503. |
 | `SITE_BASE_DOMAINS` | Variable | Gym site base domains. Set in `wrangler.jsonc`. |
-| `WORKER_SECRET` | Secret | Optional. Sent as `Hydraflow-Worker-Secret` with `Hydraflow-Client-IP`. |
+| `WORKER_SECRET` | Secret | Optional. Sent as `Flowfokus-Worker-Secret` with `Flowfokus-Client-IP`. |
 
 The site needs no sign-in credential in Sprint 1.
 

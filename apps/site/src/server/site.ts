@@ -6,7 +6,7 @@
  */
 import { env } from "cloudflare:workers";
 import { getRequest, setResponseStatus } from "@tanstack/react-start/server";
-import { createHydraflowClient, isErrorBody, type HydraflowClient, type Schemas } from "@hydraflow/api";
+import { createFlowfokusClient, isErrorBody, type FlowfokusClient, type Schemas } from "@flowfokus/api";
 import { parseBaseDomains, resolveSiteHost, type HostResolution } from "./host";
 
 const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:3000";
@@ -26,11 +26,11 @@ export function currentHost(): HostResolution {
   });
 }
 
-function publicClient(slug: string): HydraflowClient | null {
+function publicClient(slug: string): FlowfokusClient | null {
   const baseUrl = env.API_BASE_URL?.trim() || (import.meta.env.DEV ? DEFAULT_LOCAL_API_BASE_URL : "");
   if (!baseUrl) return null;
   const clientIp = getRequest().headers.get("CF-Connecting-IP") ?? undefined;
-  return createHydraflowClient({
+  return createFlowfokusClient({
     baseUrl,
     organization: slug,
     ...(env.WORKER_SECRET ? { workerSecret: env.WORKER_SECRET, clientIp } : {}),

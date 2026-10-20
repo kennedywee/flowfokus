@@ -9,8 +9,8 @@ RSpec.describe "Production boot and container" do
       "RAILS_ENV" => "production",
       "SECRET_KEY_BASE" => "0" * 64,
       # Boot must not need a reachable database.
-      "DATABASE_URL" => "postgres://nobody:nothing@127.0.0.1:1/hydraflow_production",
-      "HYDRAFLOW_DEMO_TOKEN" => "hydraflow-local-demo-token",
+      "DATABASE_URL" => "postgres://nobody:nothing@127.0.0.1:1/flowfokus_production",
+      "FLOWFOKUS_DEMO_TOKEN" => "flowfokus-local-demo-token",
       "BOOTSNAP_CACHE_DIR" => Rails.root.join("tmp/cache/production-boot").to_s
     }
   end
@@ -20,14 +20,14 @@ RSpec.describe "Production boot and container" do
   end
 
   it "refuses to boot with demo mode" do
-    output, status = boot(production_env.merge("HYDRAFLOW_DEMO_MODE" => "true"))
+    output, status = boot(production_env.merge("FLOWFOKUS_DEMO_MODE" => "true"))
 
     expect(status).not_to be_success
-    expect(output).to include("HYDRAFLOW_DEMO_MODE=true is not allowed in production")
+    expect(output).to include("FLOWFOKUS_DEMO_MODE=true is not allowed in production")
   end
 
   it "boots without demo mode" do
-    output, status = boot(production_env.merge("HYDRAFLOW_DEMO_MODE" => "false"))
+    output, status = boot(production_env.merge("FLOWFOKUS_DEMO_MODE" => "false"))
 
     expect(status).to be_success, output
     expect(output).to include("booted")
@@ -47,7 +47,7 @@ RSpec.describe "Production boot and container" do
 
     it "pins production settings and a liveness health check" do
       expect(dockerfile).to include('RAILS_ENV="production"')
-      expect(dockerfile).to include('HYDRAFLOW_DEMO_MODE="false"')
+      expect(dockerfile).to include('FLOWFOKUS_DEMO_MODE="false"')
       expect(dockerfile).to match(%r{HEALTHCHECK .*\n.*127\.0\.0\.1:3000/up})
       expect(dockerfile).to include("USER 1000:1000")
     end

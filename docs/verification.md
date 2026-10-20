@@ -10,9 +10,9 @@ Verified locally on 16 October 2026. Supporting services run in Docker. All appl
 - `bash scripts/check-docker`: Rails specs, frontend tests, generated API types, TypeScript checks, and both Worker builds pass inside containers.
 - `bun run contract:check`: generated types match the committed OpenAPI contract.
 - `bun run smoke`: public organization, member creation, denied access, sale retry, partial payments, payment retry, fulfillment retry, granted check-in, and single consumption pass against the running API.
-- `docker build -t hydraflow-server:candidate apps/server`: the production API image builds.
+- `docker build -t flowfokus-server:candidate apps/server`: the production API image builds.
 - The `worker-build` targets in `apps/portal/Dockerfile` and `apps/site/Dockerfile` build independently and contain no local environment files.
-- `bash scripts/check-production-image hydraflow-server:candidate`: production rejects demo mode, boots without a database connection, and refuses protected requests when authentication is unavailable.
+- `bash scripts/check-production-image flowfokus-server:candidate`: production rejects demo mode, boots without a database connection, and refuses protected requests when authentication is unavailable.
 - Workflow syntax and shell checks pass. GitHub-hosted CI and release workflows have not been run.
 
 The test run includes 97 Rails examples, 55 portal tests, 42 gym-site tests, and 3 tooling tests. Rails tests cover real response contracts, tenant isolation, permissions, immutable purchase history, partial payments, renewal ordering, concurrent writes, and entitlement usage.

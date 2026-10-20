@@ -20,8 +20,8 @@ export const Route = createFileRoute("/$org")({
       {
         title:
           loaderData?.organization?.ok === true
-            ? `${loaderData.organization.data.name} · Hydraflow staff`
-            : "Hydraflow staff portal",
+            ? `${loaderData.organization.data.name} · Flowfokus staff`
+            : "Flowfokus staff portal",
       },
     ],
   }),

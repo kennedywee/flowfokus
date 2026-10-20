@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { formatWhen, saleState, saleStateLabel } from "../lib/format";
 import { useOrganization } from "../lib/organization";
 import { Money, Status } from "./ui";

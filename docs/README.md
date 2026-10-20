@@ -1,6 +1,6 @@
-# Hydraflow
+# Flowfokus
 
-Hydraflow is a membership platform for service businesses, such as gyms. It sells memberships, delivers their benefits, and records how members use them.
+Flowfokus is a membership platform for service businesses, such as gyms. It sells memberships, delivers their benefits, and records how members use them.
 
 These documents describe the design. Implementation starts with [Sprint 1](sprint-1.md). The current deployment boundary is in [Deployment candidate](deployment.md).
 

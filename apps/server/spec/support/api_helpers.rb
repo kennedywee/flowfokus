@@ -12,7 +12,7 @@ module ApiHelpers
 
   def api(method, path, organization: "chainsaw", token: EnvHelpers::DEMO_TOKEN, body: nil, key: nil, headers: {})
     request_headers = { "Accept" => "application/json" }
-    request_headers["Hydraflow-Organization"] = organization if organization
+    request_headers["Flowfokus-Organization"] = organization if organization
     request_headers["Authorization"] = "Bearer #{token}" if token
     request_headers["Idempotency-Key"] = key if key
     if body

@@ -5,11 +5,11 @@ const base = new URL(process.env.API_BASE_URL || 'http://127.0.0.1:3000')
 if (!['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) {
   throw new Error('This smoke workflow creates demo records. API_BASE_URL must be local.')
 }
-const slug = process.env.HYDRAFLOW_SMOKE_ORGANIZATION || 'chainsaw'
+const slug = process.env.FLOWFOKUS_SMOKE_ORGANIZATION || 'chainsaw'
 const headers = {
   'Content-Type': 'application/json',
-  'Hydraflow-Organization': slug,
-  Authorization: `Bearer ${process.env.HYDRAFLOW_DEMO_TOKEN || 'hydraflow-local-demo-token'}`,
+  'Flowfokus-Organization': slug,
+  Authorization: `Bearer ${process.env.FLOWFOKUS_DEMO_TOKEN || 'flowfokus-local-demo-token'}`,
 }
 async function call(path, { body, key, status, method = body ? 'POST' : 'GET' } = {}) {
   const response = await fetch(new URL(path, base), {

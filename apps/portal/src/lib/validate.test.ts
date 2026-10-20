@@ -29,7 +29,7 @@ describe("write inputs", () => {
       price_id: id,
       location_id: id,
       Authorization: "Bearer stolen",
-      "Hydraflow-Organization": "ironworks",
+      "Flowfokus-Organization": "ironworks",
     } as never);
     expect(Object.keys(input).sort()).toEqual(["idempotencyKey", "location_id", "member_id", "price_id", "slug"]);
   });

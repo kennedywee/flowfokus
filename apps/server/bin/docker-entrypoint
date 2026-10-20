@@ -1,5 +1,5 @@
 #!/bin/bash -e
 # Production entrypoint. It never migrates or seeds the database.
 # Run bin/rails db:migrate as a separate, explicit release step.
-# Rails refuses to boot when HYDRAFLOW_DEMO_MODE=true in production.
+# Rails refuses to boot when FLOWFOKUS_DEMO_MODE=true in production.
 exec "${@}"

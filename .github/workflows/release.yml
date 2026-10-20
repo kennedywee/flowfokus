@@ -24,16 +24,16 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: hydraflow
-          POSTGRES_PASSWORD: hydraflow
-          POSTGRES_DB: hydraflow_test
+          POSTGRES_USER: flowfokus
+          POSTGRES_PASSWORD: flowfokus
+          POSTGRES_DB: flowfokus_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U hydraflow -d hydraflow_test"
+          --health-cmd "pg_isready -U flowfokus -d flowfokus_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      TEST_DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
-      DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      TEST_DATABASE_URL: postgres://flowfokus:flowfokus@127.0.0.1:5432/flowfokus_test
+      DATABASE_URL: postgres://flowfokus:flowfokus@127.0.0.1:5432/flowfokus_test
       RAILS_ENV: test
       CLOUDFLARE_SEND_METRICS: "false"
       WRANGLER_SEND_METRICS: "false"
@@ -68,10 +68,10 @@ jobs:
       - name: Package the server image
         run: |
           mkdir -p release
-          docker build -t "hydraflow-server:${GITHUB_SHA}" --label "org.opencontainers.image.revision=${GITHUB_SHA}" apps/server
-          bash scripts/check-production-image "hydraflow-server:${GITHUB_SHA}"
-          docker save "hydraflow-server:${GITHUB_SHA}" | gzip > release/server-image.tar.gz
-          docker image inspect "hydraflow-server:${GITHUB_SHA}" --format '{{json .}}' > release/server-image.json
+          docker build -t "flowfokus-server:${GITHUB_SHA}" --label "org.opencontainers.image.revision=${GITHUB_SHA}" apps/server
+          bash scripts/check-production-image "flowfokus-server:${GITHUB_SHA}"
+          docker save "flowfokus-server:${GITHUB_SHA}" | gzip > release/server-image.tar.gz
+          docker image inspect "flowfokus-server:${GITHUB_SHA}" --format '{{json .}}' > release/server-image.json
       - name: Package Worker builds and manifest
         run: |
           tar -czf release/portal.tar.gz -C apps/portal dist
@@ -80,7 +80,7 @@ jobs:
           node scripts/release-manifest.mjs
       - uses: actions/upload-artifact@v4
         with:
-          name: hydraflow-candidate-${{ github.sha }}
+          name: flowfokus-candidate-${{ github.sha }}
           path: release/
           if-no-files-found: error
           retention-days: 30

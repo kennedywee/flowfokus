@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
-# Production image for the Hydraflow Rails API.
-# Build:  docker build -t hydraflow-server apps/server
-# Run:    docker run -p 3000:3000 -e DATABASE_URL=... -e SECRET_KEY_BASE=... hydraflow-server
+# Production image for the Flowfokus Rails API.
+# Build:  docker build -t flowfokus-server apps/server
+# Run:    docker run -p 3000:3000 -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server
 # Migrate as a separate release step (never on boot):
-#         docker run --rm -e DATABASE_URL=... -e SECRET_KEY_BASE=... hydraflow-server bin/rails db:migrate
+#         docker run --rm -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server bin/rails db:migrate
 # Local development uses Dockerfile.dev instead.
 
 ARG RUBY_VERSION=3.4.5
@@ -21,7 +21,7 @@ ENV RAILS_ENV="production" \
     BUNDLE_WITHOUT="development:test" \
     LD_PRELOAD="libjemalloc.so.2" \
     RAILS_LOG_TO_STDOUT="true" \
-    HYDRAFLOW_DEMO_MODE="false"
+    FLOWFOKUS_DEMO_MODE="false"
 
 FROM base AS build
 

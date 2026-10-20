@@ -1,6 +1,6 @@
 # Benefit Delivery Cycle
 
-Hydraflow's domain has exactly four stages:
+Flowfokus's domain has exactly four stages:
 
 **Product → Purchase → Fulfillment → Entitlement**
 
@@ -8,7 +8,7 @@ Hydraflow's domain has exactly four stages:
 | --- | --- | --- |
 | Product | What the business offers. | Product, Price, ProductBenefit |
 | Purchase | What the customer bought. | Sale, SaleLineItem, Payment, Refund |
-| Fulfillment | How Hydraflow delivers it. | Fulfillment, Membership, MembershipPeriod, BenefitGrant |
+| Fulfillment | How Flowfokus delivers it. | Fulfillment, Membership, MembershipPeriod, BenefitGrant |
 | Entitlement | What the member can now use. | Entitlement, EntitlementUsage, CheckIn |
 
 Catalog records grant nothing. A purchase grants nothing until it is fulfilled. Usage belongs to the Entitlement stage; it is not a fifth stage. Future reservations also join the Entitlement stage.

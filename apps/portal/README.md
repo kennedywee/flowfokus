@@ -1,6 +1,6 @@
 # Staff portal
 
-The staff portal for Hydraflow. TanStack Start (React) on Cloudflare Workers. It is the backend for frontend (BFF): the browser talks only to this app, and this app calls the Rails API from server code.
+The staff portal for Flowfokus. TanStack Start (React) on Cloudflare Workers. It is the backend for frontend (BFF): the browser talks only to this app, and this app calls the Rails API from server code.
 
 ## Run locally
 
@@ -22,9 +22,9 @@ Worker variables and secrets. Local values go in `.dev.vars`, which is never com
 | Name | Where | Purpose |
 | --- | --- | --- |
 | `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:3000`. Production has no default; without it, every call fails closed. |
-| `WORKER_SECRET` | Secret | Optional. Sent as `Hydraflow-Worker-Secret` with `Hydraflow-Client-IP`. |
-| `HYDRAFLOW_DEMO_MODE` | Local only | `true` turns on the local demo actor. |
-| `HYDRAFLOW_DEMO_TOKEN` | Local only | The demo Bearer value. At least 16 characters. Must match Rails. |
+| `WORKER_SECRET` | Secret | Optional. Sent as `Flowfokus-Worker-Secret` with `Flowfokus-Client-IP`. |
+| `FLOWFOKUS_DEMO_MODE` | Local only | `true` turns on the local demo actor. |
+| `FLOWFOKUS_DEMO_TOKEN` | Local only | The demo Bearer value. At least 16 characters. Must match Rails. |
 | `WORKOS_*` | Next sprint | WorkOS AuthKit is not integrated yet. With these set, the portal still reports sign-in as unavailable. |
 
 ## Local demo access
@@ -32,7 +32,7 @@ Worker variables and secrets. Local values go in `.dev.vars`, which is never com
 Demo access is opt-in and local only. All of these must hold:
 
 1. A development build (`vite dev`). Production builds do not contain the demo code path at all.
-2. `HYDRAFLOW_DEMO_MODE=true` and a demo token of at least 16 characters.
+2. `FLOWFOKUS_DEMO_MODE=true` and a demo token of at least 16 characters.
 3. The request host is `localhost`, `*.localhost`, or a loopback address.
 
 The Worker attaches the demo Bearer token on the server. The browser never sees it. Rails maps it to the fixed seeded actor (Demo Owner, Chainsaw). The portal labels every demo page **Local demo**.
@@ -41,7 +41,7 @@ Without demo access, the portal shows sign-in as unavailable and turns off every
 
 ## Request boundary
 
-- The browser calls only fixed server functions in `src/lib/staff.functions.ts`. Each one calls one `/staff/*` endpoint through `@hydraflow/api`. There is no general proxy. The browser cannot choose an upstream path, a token, or a `Hydraflow-*` header.
+- The browser calls only fixed server functions in `src/lib/staff.functions.ts`. Each one calls one `/staff/*` endpoint through `@flowfokus/api`. There is no general proxy. The browser cannot choose an upstream path, a token, or a `Flowfokus-*` header.
 - Reads are GET. Writes are POST with `application/json`; other methods and content types get `405` or `415`. `createCsrfMiddleware()` rejects cross-site calls.
 - Sales, payments, and check-ins send an `Idempotency-Key`. The form keeps the key for retries and renews it after success or after an edit.
 - Every response carries `Cache-Control: private, no-store`, a Content Security Policy with a per-response script nonce, and frame, referrer, and content-type headers.

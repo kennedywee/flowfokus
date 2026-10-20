@@ -1,4 +1,4 @@
-import { formatMoney } from "@hydraflow/api";
+import { formatMoney } from "@flowfokus/api";
 
 export { formatMoney };
 

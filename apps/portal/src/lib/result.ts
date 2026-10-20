@@ -1,4 +1,4 @@
-import type { ErrorCode } from "@hydraflow/api";
+import type { ErrorCode } from "@flowfokus/api";
 
 /** Codes from Rails, plus the few failures that happen before Rails answers. */
 export type FailureCode =

@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process'
 
 const script = fileURLToPath(new URL('./worker-artifacts.mjs', import.meta.url))
 function fixture(t) {
-  const root = mkdtempSync(join(tmpdir(), 'hydraflow-artifacts-'))
+  const root = mkdtempSync(join(tmpdir(), 'flowfokus-artifacts-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   for (const app of ['portal', 'site']) mkdirSync(join(root, `apps/${app}/dist/server`), { recursive: true })
   return root

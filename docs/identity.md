@@ -22,11 +22,11 @@ Columns: `workos_id` (unique), `email`, `first_name`, `last_name`.
 
 ### Organization
 
-The business tenant. Hydraflow uses `Organization`, not `Account`. Has many locations, members, products, sales, and organization memberships.
+The business tenant. Flowfokus uses `Organization`, not `Account`. Has many locations, members, products, sales, and organization memberships.
 
 Columns: `workos_id` (unique), `name`, `slug` (unique), `timezone`, `currency`.
 
-The slug is also the gym site subdomain: `chainsaw` serves `chainsaw.hydraflow.com`.
+The slug is also the gym site subdomain: `chainsaw` serves `chainsaw.flowfokus.com`.
 
 ### OrganizationDomain (deferred)
 
@@ -60,8 +60,8 @@ Users sign in through WorkOS AuthKit. Staff use the staff portal. Members use th
 
 | Area | Host | Requires |
 | --- | --- | --- |
-| Staff portal | `portal.hydraflow.com/<slug>` | A session for that organization, an active WorkOS membership, and the needed permissions. |
-| Member area | `<slug>.hydraflow.com/…`; later a verified custom domain and the mobile app | A session and a `Member` in the host's organization linked to the user. |
+| Staff portal | `portal.flowfokus.com/<slug>` | A session for that organization, an active WorkOS membership, and the needed permissions. |
+| Member area | `<slug>.flowfokus.com/…`; later a verified custom domain and the mobile app | A session and a `Member` in the host's organization linked to the user. |
 
 Staff choose an organization in the staff portal. For members, the host decides the organization. AuthKit remembers the user, so moving between hosts rarely asks for a password. [Authentication](authentication.md) describes the sign-in flow.
 

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hydraflow app interaction with auth</title>
+<title>Flowfokus app interaction with auth</title>
 <style>
 :root{color-scheme:light dark;--background:#fff;--foreground:#111827;--card:#f8fafc;--card-foreground:#111827;--muted-foreground:#6b7280;--border:#d1d5db;--primary:#2563eb;--primary-foreground:#fff;--code-background:#eef2f7;--code-foreground:#111827;--chart-1:#2563eb;--radius:10px;--font-sans:system-ui,sans-serif;--font-mono:ui-monospace,monospace}
 @media (prefers-color-scheme:dark){:root{--background:#0b0f17;--foreground:#e5e7eb;--card:#111827;--card-foreground:#e5e7eb;--muted-foreground:#9ca3af;--border:#374151;--primary:#3b82f6;--code-background:#1f2937;--code-foreground:#e5e7eb;--chart-1:#60a5fa}}
@@ -48,7 +48,7 @@ ul.never li{margin:3px 0}
 <div class="tabs" role="tablist" id="tabs"></div>
 
 <div class="scroll"><svg viewBox="0 0 900 530" role="img" aria-labelledby="svgt">
-<title id="svgt">Hydraflow apps: browsers talk to TanStack Start Workers, which call Rails with Bearer tokens. Mobile calls Rails directly. WorkOS handles sign-in and sends webhooks to Rails.</title>
+<title id="svgt">Flowfokus apps: browsers talk to TanStack Start Workers, which call Rails with Bearer tokens. Mobile calls Rails directly. WorkOS handles sign-in and sends webhooks to Rails.</title>
 <defs>
 <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted-foreground)" fill-opacity=".6"/></marker>
 <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--hl)"/></marker>
@@ -79,14 +79,14 @@ ul.never li{margin:3px 0}
 <text id="l6" class="lbl" x="548" y="110" transform="rotate(90 548 110)">code · refresh</text>
 <text id="l3" class="lbl" x="562" y="190" text-anchor="middle">Bearer + org + secret</text>
 <text id="l4" class="lbl" x="562" y="362" text-anchor="middle">Bearer + org + secret</text>
-<text id="l7" class="lbl" x="420" y="476" text-anchor="middle">Bearer + org · api.hydraflow.com/member</text>
+<text id="l7" class="lbl" x="420" y="476" text-anchor="middle">Bearer + org · api.flowfokus.com/member</text>
 <text id="l8" class="lbl" x="22" y="300" transform="rotate(-90 22 300)" text-anchor="middle">PKCE</text>
 <text id="l9" class="lbl" x="670" y="34" text-anchor="middle">signed webhooks</text>
 <text id="l10" class="lbl" x="788" y="360">SQL</text>
 
 <!-- nodes -->
-<g class="node" id="n-staff"><rect x="20" y="160" width="180" height="64" rx="10"/><text class="t" x="110" y="187" text-anchor="middle">Staff browser</text><text class="s" x="110" y="206" text-anchor="middle">portal.hydraflow.com</text></g>
-<g class="node" id="n-member"><rect x="20" y="300" width="180" height="64" rx="10"/><text class="t" x="110" y="327" text-anchor="middle">Member browser</text><text class="s" x="110" y="346" text-anchor="middle">chainsaw.hydraflow.com</text></g>
+<g class="node" id="n-staff"><rect x="20" y="160" width="180" height="64" rx="10"/><text class="t" x="110" y="187" text-anchor="middle">Staff browser</text><text class="s" x="110" y="206" text-anchor="middle">portal.flowfokus.com</text></g>
+<g class="node" id="n-member"><rect x="20" y="300" width="180" height="64" rx="10"/><text class="t" x="110" y="327" text-anchor="middle">Member browser</text><text class="s" x="110" y="346" text-anchor="middle">chainsaw.flowfokus.com</text></g>
 <g class="node" id="n-mobile"><rect x="20" y="450" width="180" height="64" rx="10"/><text class="t" x="110" y="477" text-anchor="middle">Mobile app</text><text class="s" x="110" y="496" text-anchor="middle">deferred · Keychain</text></g>
 <g class="node" id="n-pw"><rect x="300" y="160" width="200" height="64" rx="10"/><text class="t" x="400" y="187" text-anchor="middle">Portal Worker</text><text class="s" x="400" y="206" text-anchor="middle">TanStack Start + AuthKit SDK</text></g>
 <g class="node" id="n-sw"><rect x="300" y="300" width="200" height="64" rx="10"/><text class="t" x="400" y="327" text-anchor="middle">Site Worker</text><text class="s" x="400" y="346" text-anchor="middle">TanStack Start + AuthKit SDK</text></g>
@@ -103,9 +103,9 @@ ul.never li{margin:3px 0}
 <thead><tr><th>Link</th><th>Credential</th></tr></thead>
 <tbody>
 <tr><td>Browser → its Worker</td><td>Encrypted <code>__Host-hf_session</code> cookie. <code>HttpOnly</code>, host-only, <code>SameSite=Lax</code>.</td></tr>
-<tr><td>Worker → Rails</td><td><code>Authorization: Bearer</code> WorkOS access token, plus <code>Hydraflow-Organization</code>, <code>Hydraflow-Client-IP</code> and <code>Hydraflow-Worker-Secret</code>, all set by the Worker.</td></tr>
+<tr><td>Worker → Rails</td><td><code>Authorization: Bearer</code> WorkOS access token, plus <code>Flowfokus-Organization</code>, <code>Flowfokus-Client-IP</code> and <code>Flowfokus-Worker-Secret</code>, all set by the Worker.</td></tr>
 <tr><td>Worker ↔ WorkOS</td><td>API key (Worker secret). Code exchange, refresh, organization switch.</td></tr>
-<tr><td>Mobile → Rails</td><td><code>Authorization: Bearer</code> from PKCE sign-in, plus <code>Hydraflow-Organization</code>.</td></tr>
+<tr><td>Mobile → Rails</td><td><code>Authorization: Bearer</code> from PKCE sign-in, plus <code>Flowfokus-Organization</code>.</td></tr>
 <tr><td>WorkOS → Rails</td><td>Signed webhooks. Rails verifies them and syncs idempotently.</td></tr>
 </tbody></table>
 
@@ -121,29 +121,29 @@ ul.never li{margin:3px 0}
 <script>
 const S={
  staff:{name:"Staff signs in",steps:[
-  {t:"Staff opens the portal",b:"The browser requests <code>portal.hydraflow.com/chainsaw</code>. There is no session cookie yet.",e:["e1"],n:["n-staff","n-pw"]},
-  {t:"Redirect to AuthKit",b:"The Portal Worker redirects the browser to the WorkOS AuthKit page with <code>redirect_uri=portal.hydraflow.com/callback</code>.",e:["e11"],n:["n-staff","n-workos"]},
-  {t:"Callback on the portal's own host",b:"After sign-in, AuthKit sends the browser to <code>portal.hydraflow.com/callback?code=…</code>.",e:["e1"],n:["n-staff","n-pw"]},
+  {t:"Staff opens the portal",b:"The browser requests <code>portal.flowfokus.com/chainsaw</code>. There is no session cookie yet.",e:["e1"],n:["n-staff","n-pw"]},
+  {t:"Redirect to AuthKit",b:"The Portal Worker redirects the browser to the WorkOS AuthKit page with <code>redirect_uri=portal.flowfokus.com/callback</code>.",e:["e11"],n:["n-staff","n-workos"]},
+  {t:"Callback on the portal's own host",b:"After sign-in, AuthKit sends the browser to <code>portal.flowfokus.com/callback?code=…</code>.",e:["e1"],n:["n-staff","n-pw"]},
   {t:"Worker exchanges the code",b:"The Worker exchanges the code with its API key and gets an access token and a refresh token.",e:["e5"],n:["n-pw","n-workos"]},
   {t:"Session cookie set",b:"The Worker stores both tokens in the encrypted <code>__Host-hf_session</code> cookie. Browser JavaScript can't read it.",e:["e1"],n:["n-staff","n-pw"]},
   {t:"Switch to the organization",b:"<code>switchToOrganization()</code> refreshes the session for Chainsaw. The new access token carries the organization, role and permissions.",e:["e5"],n:["n-pw","n-workos"]},
-  {t:"Worker calls Rails",b:"Server rendering calls <code>/staff/…</code> with <code>Bearer &lt;access token&gt;</code>, <code>Hydraflow-Organization: chainsaw</code> (from the URL) and the Worker secret.",e:["e3"],n:["n-pw","n-rails"]},
+  {t:"Worker calls Rails",b:"Server rendering calls <code>/staff/…</code> with <code>Bearer &lt;access token&gt;</code>, <code>Flowfokus-Organization: chainsaw</code> (from the URL) and the Worker secret.",e:["e3"],n:["n-pw","n-rails"]},
   {t:"Rails authorizes",b:"Rails verifies the JWT. The <code>/staff</code> path means staff audience, so Rails checks that the token's organization matches the slug, then checks permissions. Then it reads data.",e:["e10"],n:["n-rails","n-pg"]},
   {t:"Page returned",b:"The Worker renders the page with the data and returns HTML. The token stayed on the server.",e:["e1"],n:["n-staff","n-pw"]}]},
  member:{name:"Member uses gym site",steps:[
-  {t:"Member opens the member area",b:"The browser requests <code>chainsaw.hydraflow.com/account</code> and sends its own host's session cookie.",e:["e2"],n:["n-member","n-sw"]},
-  {t:"No cookie? Sign in",b:"Without a session, the Site Worker redirects to AuthKit with <code>redirect_uri=chainsaw.hydraflow.com/callback</code>, which matches the <code>*.hydraflow.com</code> wildcard. The callback and cookie work as for staff.",e:["e12","e6"],n:["n-member","n-workos","n-sw"]},
+  {t:"Member opens the member area",b:"The browser requests <code>chainsaw.flowfokus.com/account</code> and sends its own host's session cookie.",e:["e2"],n:["n-member","n-sw"]},
+  {t:"No cookie? Sign in",b:"Without a session, the Site Worker redirects to AuthKit with <code>redirect_uri=chainsaw.flowfokus.com/callback</code>, which matches the <code>*.flowfokus.com</code> wildcard. The callback and cookie work as for staff.",e:["e12","e6"],n:["n-member","n-workos","n-sw"]},
   {t:"Session checked and refreshed",b:"<code>authkitMiddleware()</code> decrypts the cookie. If the access token is near expiry, it refreshes it with WorkOS.",e:["e6"],n:["n-sw","n-workos"]},
-  {t:"Worker calls Rails",b:"The Worker calls <code>/member/…</code> with <code>Bearer</code>, <code>Hydraflow-Organization: chainsaw</code> (from its host) and the Worker secret.",e:["e4"],n:["n-sw","n-rails"]},
+  {t:"Worker calls Rails",b:"The Worker calls <code>/member/…</code> with <code>Bearer</code>, <code>Flowfokus-Organization: chainsaw</code> (from its host) and the Worker secret.",e:["e4"],n:["n-sw","n-rails"]},
   {t:"Rails authorizes",b:"The <code>/member</code> path means member audience. Rails finds Chainsaw from the slug, ignores staff permissions, and requires a <code>Member</code> for this user in Chainsaw.",e:["e10"],n:["n-rails","n-pg"]},
-  {t:"Browser action",b:"A purchase posts JSON to <code>chainsaw.hydraflow.com/api/…</code>. CSRF middleware checks it, and the catch-all route forwards it to <code>/member/…</code> with the Bearer token. The Site Worker never forwards <code>/staff/*</code>.",e:["e2","e4"],n:["n-member","n-sw","n-rails"]}]},
+  {t:"Browser action",b:"A purchase posts JSON to <code>chainsaw.flowfokus.com/api/…</code>. CSRF middleware checks it, and the catch-all route forwards it to <code>/member/…</code> with the Bearer token. The Site Worker never forwards <code>/staff/*</code>.",e:["e2","e4"],n:["n-member","n-sw","n-rails"]}]},
  mobile:{name:"Mobile app (later)",steps:[
   {t:"PKCE sign-in",b:"The app opens AuthKit with a PKCE challenge. It holds no client secret.",e:["e8"],n:["n-mobile","n-workos"]},
   {t:"Tokens in secure storage",b:"The app exchanges the code with its verifier and keeps the tokens in Keychain or Keystore.",e:["e8"],n:["n-mobile","n-workos"]},
-  {t:"Direct API call",b:"The app calls <code>api.hydraflow.com/member/…</code> with <code>Bearer</code> and <code>Hydraflow-Organization</code> for the chosen gym. There is no Worker in between.",e:["e7"],n:["n-mobile","n-rails"]},
+  {t:"Direct API call",b:"The app calls <code>api.flowfokus.com/member/…</code> with <code>Bearer</code> and <code>Flowfokus-Organization</code> for the chosen gym. There is no Worker in between.",e:["e7"],n:["n-mobile","n-rails"]},
   {t:"Same checks as the web",b:"Rails verifies the JWT the same way and requires a <code>Member</code> in that gym.",e:["e10"],n:["n-rails","n-pg"]}]},
  sync:{name:"WorkOS sync",steps:[
-  {t:"Change in WorkOS",b:"An admin changes a staff role, or an invitation is accepted. WorkOS sends a signed webhook to <code>api.hydraflow.com</code>.",e:["e9"],n:["n-workos","n-rails"]},
+  {t:"Change in WorkOS",b:"An admin changes a staff role, or an invitation is accepted. WorkOS sends a signed webhook to <code>api.flowfokus.com</code>.",e:["e9"],n:["n-workos","n-rails"]},
   {t:"Rails syncs",b:"Rails verifies the signature and updates its local users, organizations and memberships. Duplicates and out-of-order events are safe.",e:["e10"],n:["n-rails","n-pg"]},
   {t:"New claims on refresh",b:"The next session refresh in the Portal Worker returns a token with the new permissions. Until then the old token stays valid (the stale sessions question).",e:["e5"],n:["n-pw","n-workos"]}]}
 };

@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ShoppingBag } from "lucide-react";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { CheckInPanel } from "../../../components/CheckInPanel";
 import { SalesTable } from "../../../components/SalesTable";
 import { Empty, FailureNotice, Lamp, Notice, PageHead, Plate, SkeletonRows, Status } from "../../../components/ui";

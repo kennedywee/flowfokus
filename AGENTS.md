@@ -13,7 +13,7 @@ Read `docs/architecture.md`, `docs/monorepo.md`, and `docs/sprint-1.md` before i
 - Each app owns its Dockerfiles and image. Do not combine portal and site in one image.
 - Keep database preparation explicit. Do not add a database setup service to Compose.
 - Compose is for local development only. Keep PostgreSQL readiness, and verify app endpoints in smoke checks.
-- Use explicit local container names: `hydraflow-<service>`, without numbered suffixes.
+- Use explicit local container names: `flowfokus-<service>`, without numbered suffixes.
 - Mount development source for Rails reloading and Vite hot updates. Code edits must not require rebuilding images.
 - Keep credentials on the server. No browser storage for access tokens.
 - Update the OpenAPI contract, generate types, and check real API responses.

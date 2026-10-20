@@ -1,5 +1,5 @@
 module EnvHelpers
-  DEMO_TOKEN = "hydraflow-test-demo-token".freeze
+  DEMO_TOKEN = "flowfokus-test-demo-token".freeze
 
   # Sets environment variables for the block and restores them afterwards.
   def with_env(values)
@@ -18,8 +18,8 @@ RSpec.configure do |config|
   config.around(:each, type: :request) do |example|
     demo = example.metadata.fetch(:demo, true)
     with_env(
-      "HYDRAFLOW_DEMO_MODE" => demo ? "true" : nil,
-      "HYDRAFLOW_DEMO_TOKEN" => demo ? EnvHelpers::DEMO_TOKEN : nil,
+      "FLOWFOKUS_DEMO_MODE" => demo ? "true" : nil,
+      "FLOWFOKUS_DEMO_TOKEN" => demo ? EnvHelpers::DEMO_TOKEN : nil,
       "WORKOS_CLIENT_ID" => example.metadata[:workos] ? "client_test_123" : nil
     ) { example.run }
   end

@@ -1,4 +1,4 @@
-# Money staff received toward a sale. Cash or bank transfer only; Hydraflow
+# Money staff received toward a sale. Cash or bank transfer only; Flowfokus
 # does not move money. Payments never change after they are recorded.
 class Payment < ApplicationRecord
   include TenantOwned

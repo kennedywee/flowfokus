@@ -1,16 +1,16 @@
 openapi: 3.0.3
 info:
-  title: Hydraflow API
+  title: Flowfokus API
   version: 0.1.0
   description: |
-    Rails API for Hydraflow. Web apps call it from server code only.
+    Rails API for Flowfokus. Web apps call it from server code only.
 
     - Success bodies use `{ "data": ... }`.
     - Error bodies use `{ "error": { "code", "message", "details"? } }`.
-    - Organization-scoped paths need the `Hydraflow-Organization` header with the gym slug
+    - Organization-scoped paths need the `Flowfokus-Organization` header with the gym slug
       (the `organizationHeader` scheme).
     - `/staff/*` paths need `Authorization: Bearer <token>`. In Sprint 1 only the
-      local demo token works, and only when `HYDRAFLOW_DEMO_MODE=true` in development or test.
+      local demo token works, and only when `FLOWFOKUS_DEMO_MODE=true` in development or test.
     - Money uses integer minor units with an ISO 4217 currency code.
     - Times are UTC ISO 8601 strings.
 servers:
@@ -427,7 +427,7 @@ paths:
       summary: Record a manual cash or bank-transfer payment. Needs payments:create.
       description: |
         Partial payments are allowed. A payment above the balance returns 422 `overpayment`.
-        Hydraflow does not move money; this records money received by staff.
+        Flowfokus does not move money; this records money received by staff.
         Returns the updated sale.
       security:
         - bearerAuth: []
@@ -636,7 +636,7 @@ components:
     organizationHeader:
       type: apiKey
       in: header
-      name: Hydraflow-Organization
+      name: Flowfokus-Organization
       description: |
         Gym slug, for example `chainsaw`. Required on every `/public/*`, `/staff/*`, and
         `/member/*` call. It selects the organization; it never grants access by itself.

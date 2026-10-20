@@ -18,15 +18,15 @@ For a fully containerized local demo, follow [Run with Docker](../README.md#run-
 Every app has its own Dockerfile and image. Compose uses the server's `Dockerfile.dev` and the web apps' `development` targets. The server's default `Dockerfile` builds the production API. Each web app's `worker-build` target builds only its own Cloudflare bundle, using the repository root as the build context:
 
 ```sh
-docker build --target worker-build -f apps/portal/Dockerfile -t hydraflow-portal:bundle .
-docker build --target worker-build -f apps/site/Dockerfile -t hydraflow-site:bundle .
+docker build --target worker-build -f apps/portal/Dockerfile -t flowfokus-portal:bundle .
+docker build --target worker-build -f apps/site/Dockerfile -t flowfokus-site:bundle .
 ```
 
 ```sh
 mise install
 bun run setup
 bun run check
-docker build -t hydraflow-server:local apps/server
+docker build -t flowfokus-server:local apps/server
 ```
 
 With the apps running through `bun run dev`, run `bun run smoke` in another terminal. This creates a test member and records a sale, partial payments, fulfillment, and check-ins in the local demo database. It checks retries as well as successful access. It refuses a remote API URL.
@@ -42,7 +42,7 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
 4. Run `bin/rails db:migrate` in the API image as a separate release step.
 5. Start the image through the hosting platform. The Dockerfile defines the server command.
-6. Check `/up`, `/ready`, and the public organization endpoint with `Hydraflow-Organization: <slug>`.
+6. Check `/up`, `/ready`, and the public organization endpoint with `Flowfokus-Organization: <slug>`.
 
 Configure a loopback binding and TLS reverse proxy on the VPS. Permit only Cloudflare to reach the VPS. The process never migrates on boot. Do not seed demo records in production. Hosting configuration waits for Sprint 2; Compose is local only.
 
@@ -66,4 +66,4 @@ Verify AuthKit on Workers, CSRF checks, organization switching, revoked access, 
 
 ## Release lab patterns
 
-The [monorepo release lab](https://github.com/kennedywee/monorepo-release-lab) informed the Docker startup, one-tag candidate packaging, source-commit tracking, SHA-256 artifact checks, and separation between building and deploying. Hydraflow keeps PostgreSQL and Cloudflare Workers from its own accepted architecture. It does not copy the lab's SQLite or static-app hosting.
+The [monorepo release lab](https://github.com/kennedywee/monorepo-release-lab) informed the Docker startup, one-tag candidate packaging, source-commit tracking, SHA-256 artifact checks, and separation between building and deploying. Flowfokus keeps PostgreSQL and Cloudflare Workers from its own accepted architecture. It does not copy the lab's SQLite or static-app hosting.

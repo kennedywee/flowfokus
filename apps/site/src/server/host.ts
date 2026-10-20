@@ -1,7 +1,7 @@
 /**
  * Chooses the gym from the request host. Pure functions; server code only.
  *
- * - `<slug>.hydraflow.com` and, in development, `<slug>.localhost` name a gym.
+ * - `<slug>.flowfokus.com` and, in development, `<slug>.localhost` name a gym.
  * - Plain `localhost` in development shows setup instructions.
  * - Every other host is rejected. Hosts are never mapped to a default gym.
  */
@@ -23,7 +23,7 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "dev",
   "docs",
   "help",
-  "hydraflow",
+  "flowfokus",
   "localhost",
   "login",
   "logout",
@@ -57,7 +57,7 @@ export type HostResolution =
   | { kind: "rejected"; reason: "malformed" | "reserved" | "unknown_domain" };
 
 export interface HostOptions {
-  /** Base domains for gym sites, for example `["hydraflow.com"]`. */
+  /** Base domains for gym sites, for example `["flowfokus.com"]`. */
   baseDomains: readonly string[];
   /** True in development. Adds `localhost` as a base domain. */
   allowLocalhost: boolean;
@@ -92,7 +92,7 @@ export function resolveSiteHost(host: string | null | undefined, options: HostOp
     if (!name.endsWith(`.${base}`)) continue;
 
     const slug = name.slice(0, -(base.length + 1));
-    // One label only: `a.b.hydraflow.com` is not a gym.
+    // One label only: `a.b.flowfokus.com` is not a gym.
     if (!SLUG.test(slug)) return { kind: "rejected", reason: "malformed" };
     if (RESERVED_SLUGS.has(slug)) return { kind: "rejected", reason: "reserved" };
     return { kind: "gym", slug };
@@ -100,11 +100,11 @@ export function resolveSiteHost(host: string | null | undefined, options: HostOp
   return { kind: "rejected", reason: "unknown_domain" };
 }
 
-/** Parses `SITE_BASE_DOMAINS`, a comma-separated list. Defaults to `hydraflow.com`. */
+/** Parses `SITE_BASE_DOMAINS`, a comma-separated list. Defaults to `flowfokus.com`. */
 export function parseBaseDomains(value: string | undefined): string[] {
-  const domains = (value ?? "hydraflow.com")
+  const domains = (value ?? "flowfokus.com")
     .split(",")
     .map((domain) => normalizeHost(domain))
     .filter((domain): domain is string => domain !== null);
-  return domains.length ? domains : ["hydraflow.com"];
+  return domains.length ? domains : ["flowfokus.com"];
 }

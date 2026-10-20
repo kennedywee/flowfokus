@@ -4,7 +4,7 @@ abort "db/seeds.rb is local demo data and does not run in production." if Rails.
 # Specs build their own data. bin/rails db:prepare seeds new databases, so skip test.
 return if Rails.env.test?
 
-demo = Hydraflow::DemoIdentity
+demo = Flowfokus::DemoIdentity
 
 ActiveRecord::Base.transaction do
   owner = User.find_or_initialize_by(workos_id: demo::USER[:workos_id])

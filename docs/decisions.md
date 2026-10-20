@@ -18,9 +18,9 @@ Status of each design decision. The rules themselves live in the linked document
 | Migrations stay backward compatible. No migration on boot. | [Release](release.md#server-deployment) |
 | PostgreSQL. | [Architecture](architecture.md#technology) |
 | Rails API on a VPS. Staff portal and gym sites are TanStack Start apps on Cloudflare Workers. | [Release](release.md#hosting) |
-| Hosts: `api.hydraflow.com`, `portal.hydraflow.com` (staff), `<slug>.hydraflow.com` (gym site). | [Authentication](authentication.md#hosts) |
+| Hosts: `api.flowfokus.com`, `portal.flowfokus.com` (staff), `<slug>.flowfokus.com` (gym site). | [Authentication](authentication.md#hosts) |
 | TanStack Start is the BFF. Encrypted, host-only session cookie from the WorkOS TanStack Start SDK. Start calls Rails with Bearer tokens. Rails accepts Bearer tokens only. | [Authentication](authentication.md#design-tanstack-start-is-the-bff) |
-| API areas by path: `/staff`, `/member`, `/public`. The gym is named by the `Hydraflow-Organization` header. Rails never reads host headers. | [Authentication](authentication.md#api-areas) |
+| API areas by path: `/staff`, `/member`, `/public`. The gym is named by the `Flowfokus-Organization` header. Rails never reads host headers. | [Authentication](authentication.md#api-areas) |
 | Workers send a shared secret. Rails trusts the forwarded client IP only with it. | [Authentication](authentication.md#worker-secret-and-client-ip) |
 | Local gym sites run on `<slug>.localhost`. | [Monorepo](monorepo.md#local-development) |
 | Mobile, when built, uses WorkOS PKCE and Bearer tokens. | [Authentication](authentication.md#mobile) |
@@ -31,7 +31,7 @@ Status of each design decision. The rules themselves live in the linked document
 | WorkOS sync is verified, idempotent, and order-safe. | [Identity](identity.md#workos-sync) |
 | WorkOS RBAC without Pundit. No local role tables. | [Authorization](authorization.md#permissions) |
 | Permissions, tenant scope, and business rules are separate checks. | [Authorization](authorization.md) |
-| Staff management through Hydraflow UI and WorkOS API. | [Authorization](authorization.md#staff-management) |
+| Staff management through Flowfokus UI and WorkOS API. | [Authorization](authorization.md#staff-management) |
 | Four-stage Benefit Delivery Cycle. Memberships first. | [Benefit Delivery Cycle](benefit-delivery-cycle.md) |
 | Products have many immutable prices. | [Models](models.md#product-stage) |
 | Start-inclusive, end-exclusive time boundaries. | [Models](models.md#shared-rules) |
@@ -68,11 +68,11 @@ Not yet confirmed.
 | Topic | Question |
 | --- | --- |
 | Signed-in previews | Do PR previews need sign-in? If yes, which preview host names? |
-| Sign-in branding | Can the AuthKit page show the gym's brand on its gym site, or only Hydraflow's? |
+| Sign-in branding | Can the AuthKit page show the gym's brand on its gym site, or only Flowfokus's? |
 | Member sign-up | Can a new customer create their own member record from the gym site? |
 | Sign-out scope | Does signing out on one host end the WorkOS session everywhere? |
 | SDK on Workers | Does `@workos/authkit-tanstack-react-start` run on Cloudflare Workers with `nodejs_compat`? |
-| Astro | Which pages, if any, use Astro? A Hydraflow marketing site, or gym site public pages? |
+| Astro | Which pages, if any, use Astro? A Flowfokus marketing site, or gym site public pages? |
 | Database host | Does PostgreSQL run on the VPS or as a managed service? |
 | Mobile scope | In which release does the mobile app become part of the plan? |
 
@@ -104,7 +104,7 @@ Not yet confirmed.
 
 ## Deferred
 
-Standalone passes, classes, events, reservations, waitlists, recurring billing, a native mobile app, and a Hydraflow staging environment.
+Standalone passes, classes, events, reservations, waitlists, recurring billing, a native mobile app, and a Flowfokus staging environment.
 
 Custom gym site domains are deferred. The BFF design already supports them. When they arrive, add `OrganizationDomain`, domain verification, Cloudflare custom hostnames, a WorkOS redirect URI per domain (or a central callback with a handoff code), and a domain lookup in the host resolver. See [Authentication](authentication.md#custom-domains-deferred). Decide then how a gym verifies its domain and who pays for custom hostnames.
 

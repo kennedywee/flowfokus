@@ -10,12 +10,12 @@ web
 
 - **Front-desk staff** (confirmed). They work at a gym's front desk on a laptop or tablet. They create members, sell memberships, record cash or bank-transfer payments, deliver access, and check members in. A customer often waits in front of them, so tasks must be quick and errors must be clear.
 - **Gym owners and managers** (confirmed). They use the same staff portal. They review members, sales that still have a balance, and sales that wait for fulfillment. They have more time but need accurate facts.
-- **The public** (from docs). They visit a gym's site at `<slug>.hydraflow.com` to see the gym's locations and membership offers.
+- **The public** (from docs). They visit a gym's site at `<slug>.flowfokus.com` to see the gym's locations and membership offers.
 - **Members** (from docs, deferred). The signed-in member area on the gym site is not available in Sprint 1.
 
 ## Product Purpose
 
-Hydraflow is a membership platform for service businesses, starting with gyms. It records the full Benefit Delivery Cycle: an offer is sold, paid, fulfilled into a membership period with entitlements, and used at check-in. Success in Sprint 1: a developer starts three apps and completes the workflow end to end with real data in PostgreSQL.
+Flowfokus is a membership platform for service businesses, starting with gyms. It records the full Benefit Delivery Cycle: an offer is sold, paid, fulfilled into a membership period with entitlements, and used at check-in. Success in Sprint 1: a developer starts three apps and completes the workflow end to end with real data in PostgreSQL.
 
 ## Positioning
 
@@ -23,8 +23,8 @@ Every right a member uses traces back to a purchase. Sale, payment, fulfillment,
 
 ## Operating Context
 
-- Staff portal: one build at `portal.hydraflow.com`. Staff choose the organization in the URL, `/<slug>/…`.
-- Gym site: one build serves every gym. The host chooses the gym, `<slug>.hydraflow.com` or `<slug>.localhost:3002` in development.
+- Staff portal: one build at `portal.flowfokus.com`. Staff choose the organization in the URL, `/<slug>/…`.
+- Gym site: one build serves every gym. The host chooses the gym, `<slug>.flowfokus.com` or `<slug>.localhost:3002` in development.
 - Both web apps are TanStack Start on Cloudflare Workers. They are the backend for frontend. The browser never calls Rails and never holds an access token.
 - Money is integer minor units with a currency. Times are UTC and display in the organization's time zone.
 - Seed gyms: Chainsaw Gym (Bangsar, Mont Kiara, MYR), Ironworks Fitness (Penang, MYR).
@@ -47,7 +47,7 @@ Rails owns all business rules. The web apps only help users fill forms and show 
 
 ## Brand Commitments
 
-- Product name: Hydraflow. Gym sites carry the gym's own name.
+- Product name: Flowfokus. Gym sites carry the gym's own name.
 - Voice: short sentences, familiar words, active voice (from the working agreement).
 
 ## Evidence on Hand

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { Empty, FailureNotice, Field, PageHead, Plate, SkeletonRows, SubmitButton, describedBy } from "../../../components/ui";
 import { formatDuration, formatMoney, formatUsage } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";

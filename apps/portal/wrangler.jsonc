@@ -1,10 +1,10 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
-  "name": "hydraflow-portal",
+  "name": "flowfokus-portal",
   "main": "@tanstack/react-start/server-entry",
   "compatibility_date": "2026-10-16",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true }
   // Set API_BASE_URL as a variable and WORKER_SECRET as a secret per environment.
-  // Never set HYDRAFLOW_DEMO_MODE outside local development. Production builds ignore it.
+  // Never set FLOWFOKUS_DEMO_MODE outside local development. Production builds ignore it.
 }

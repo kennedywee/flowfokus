@@ -1,9 +1,9 @@
-# Resolves the organization named by the Hydraflow-Organization header.
+# Resolves the organization named by the Flowfokus-Organization header.
 # The slug only chooses which organization to check. It never grants access.
 module OrganizationScoped
   extend ActiveSupport::Concern
 
-  HEADER = "Hydraflow-Organization".freeze
+  HEADER = "Flowfokus-Organization".freeze
 
   private
     def organization_slug

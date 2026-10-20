@@ -1,21 +1,21 @@
-module Hydraflow
+module Flowfokus
   # Local-only demo actor. A fixed seeded identity with fixed permissions.
   #
-  # The portal server sends HYDRAFLOW_DEMO_TOKEN as its Bearer value. The token
+  # The portal server sends FLOWFOKUS_DEMO_TOKEN as its Bearer value. The token
   # maps to the constants below; a caller can never choose its own claims.
   # Demo mode is available only in development and test. Production refuses to boot.
   module DemoIdentity
     class ProductionError < StandardError; end
     class TokenError < StandardError; end
 
-    ENABLE_VARIABLE = "HYDRAFLOW_DEMO_MODE".freeze
-    TOKEN_VARIABLE = "HYDRAFLOW_DEMO_TOKEN".freeze
+    ENABLE_VARIABLE = "FLOWFOKUS_DEMO_MODE".freeze
+    TOKEN_VARIABLE = "FLOWFOKUS_DEMO_TOKEN".freeze
     ALLOWED_ENVIRONMENTS = %w[development test].freeze
     MIN_TOKEN_LENGTH = 16
 
     USER = {
       workos_id: "user_demo_chainsaw_owner",
-      email: "demo.owner@hydraflow.test",
+      email: "demo.owner@flowfokus.test",
       first_name: "Demo",
       last_name: "Owner"
     }.freeze

@@ -2,18 +2,18 @@
 set -euo pipefail
 image="${1:?Usage: scripts/check-production-image IMAGE}"
 common=(--rm -e RAILS_ENV=production -e SECRET_KEY_BASE=local-image-verification-only-000000000000000000000000000000000000 \
-  -e DATABASE_URL=postgres://nobody:nothing@127.0.0.1:1/hydraflow_production \
-  -e HYDRAFLOW_DEMO_TOKEN=hydraflow-local-demo-token)
+  -e DATABASE_URL=postgres://nobody:nothing@127.0.0.1:1/flowfokus_production \
+  -e FLOWFOKUS_DEMO_TOKEN=flowfokus-local-demo-token)
 
-if output="$(docker run "${common[@]}" -e HYDRAFLOW_DEMO_MODE=true "$image" bin/rails runner 'puts :unexpected_boot' 2>&1)"; then
+if output="$(docker run "${common[@]}" -e FLOWFOKUS_DEMO_MODE=true "$image" bin/rails runner 'puts :unexpected_boot' 2>&1)"; then
   echo "Production image incorrectly accepted demo mode." >&2
   exit 1
 fi
-if [[ "$output" != *"HYDRAFLOW_DEMO_MODE=true is not allowed in production"* ]]; then
+if [[ "$output" != *"FLOWFOKUS_DEMO_MODE=true is not allowed in production"* ]]; then
   echo "Production image failed for a reason other than the demo guard:" >&2
   echo "$output" >&2
   exit 1
 fi
 
-docker run "${common[@]}" -e HYDRAFLOW_DEMO_MODE=false "$image" bin/rails runner \
-  'require "rack/mock"; request = Rack::MockRequest.env_for("https://api.hydraflow.test/staff/organization", "HTTP_AUTHORIZATION" => "Bearer hydraflow-local-demo-token", "HTTP_HYDRAFLOW_ORGANIZATION" => "chainsaw"); status, _, body = Rails.application.call(request); body.close if body.respond_to?(:close); abort "Expected protected endpoint to fail closed, got #{status}" unless status == 503; puts "PASS: production boots without a database, rejects demo mode, and refuses protected demo requests."'
+docker run "${common[@]}" -e FLOWFOKUS_DEMO_MODE=false "$image" bin/rails runner \
+  'require "rack/mock"; request = Rack::MockRequest.env_for("https://api.flowfokus.test/staff/organization", "HTTP_AUTHORIZATION" => "Bearer flowfokus-local-demo-token", "HTTP_FLOWFOKUS_ORGANIZATION" => "chainsaw"); status, _, body = Rails.application.call(request); body.close if body.respond_to?(:close); abort "Expected protected endpoint to fail closed, got #{status}" unless status == 503; puts "PASS: production boots without a database, rejects demo mode, and refuses protected demo requests."'

@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#eef0f2" },
-      { title: loaderData?.kind === "gym" ? loaderData.organization.name : "Hydraflow gym site" },
+      { title: loaderData?.kind === "gym" ? loaderData.organization.name : "Flowfokus gym site" },
       ...(loaderData?.kind === "gym" ? [] : [{ name: "robots", content: "noindex" }]),
     ],
     links: [
@@ -84,7 +84,7 @@ function GymFrame({ name, children }: { name: string; children: ReactNode }) {
         {children}
       </main>
       <footer className="footer">
-        <div className="wrap">Memberships and check-in run on Hydraflow.</div>
+        <div className="wrap">Memberships and check-in run on Flowfokus.</div>
       </footer>
     </div>
   );
@@ -113,8 +113,8 @@ function HostMessage({ page }: { page: Exclude<SitePage, { kind: "gym" }> }) {
       <Message title="This address is not a gym site">
         <p>
           {page.reason === "reserved"
-            ? "This name is reserved by Hydraflow and cannot be a gym."
-            : "Gym sites use an address like chainsaw.hydraflow.com. Check the address and try again."}
+            ? "This name is reserved by Flowfokus and cannot be a gym."
+            : "Gym sites use an address like chainsaw.flowfokus.com. Check the address and try again."}
         </p>
       </Message>
     );

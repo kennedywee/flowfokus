@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { normalizeHost, parseBaseDomains, resolveSiteHost } from "./host";
 
-const production = { baseDomains: ["hydraflow.com"], allowLocalhost: false };
-const development = { baseDomains: ["hydraflow.com"], allowLocalhost: true };
+const production = { baseDomains: ["flowfokus.com"], allowLocalhost: false };
+const development = { baseDomains: ["flowfokus.com"], allowLocalhost: true };
 
 describe("resolveSiteHost", () => {
   test.each([
-    ["chainsaw.hydraflow.com", "chainsaw"],
-    ["Chainsaw.Hydraflow.com", "chainsaw"],
-    ["chainsaw.hydraflow.com.", "chainsaw"],
-    ["iron-works.hydraflow.com:443", "iron-works"],
+    ["chainsaw.flowfokus.com", "chainsaw"],
+    ["Chainsaw.Flowfokus.com", "chainsaw"],
+    ["chainsaw.flowfokus.com.", "chainsaw"],
+    ["iron-works.flowfokus.com:443", "iron-works"],
   ])("production %s → gym %s", (host, slug) => {
     expect(resolveSiteHost(host, production)).toEqual({ kind: "gym", slug });
   });
@@ -28,22 +28,22 @@ describe("resolveSiteHost", () => {
   });
 
   test.each(["portal", "api", "www", "admin", "auth", "login", "staff"])("reserved %s is rejected", (slug) => {
-    expect(resolveSiteHost(`${slug}.hydraflow.com`, production)).toEqual({ kind: "rejected", reason: "reserved" });
+    expect(resolveSiteHost(`${slug}.flowfokus.com`, production)).toEqual({ kind: "rejected", reason: "reserved" });
     expect(resolveSiteHost(`${slug}.localhost:3002`, development)).toEqual({ kind: "rejected", reason: "reserved" });
   });
 
   test.each([
-    ["hydraflow.com", "unknown_domain"],
+    ["flowfokus.com", "unknown_domain"],
     ["chainsaw.example.com", "unknown_domain"],
-    ["chainsaw.hydraflow.com.evil.com", "unknown_domain"],
-    ["evilhydraflow.com", "unknown_domain"],
+    ["chainsaw.flowfokus.com.evil.com", "unknown_domain"],
+    ["evilflowfokus.com", "unknown_domain"],
     ["127.0.0.1:3002", "unknown_domain"],
-    ["a.b.hydraflow.com", "malformed"],
-    ["-chainsaw.hydraflow.com", "malformed"],
-    ["chain_saw.hydraflow.com", "malformed"],
-    ["chainsaw..hydraflow.com", "malformed"],
+    ["a.b.flowfokus.com", "malformed"],
+    ["-chainsaw.flowfokus.com", "malformed"],
+    ["chain_saw.flowfokus.com", "malformed"],
+    ["chainsaw..flowfokus.com", "malformed"],
     ["[::1]:3002", "malformed"],
-    ["chainsaw.hydraflow.com:99999x", "malformed"],
+    ["chainsaw.flowfokus.com:99999x", "malformed"],
     ["", "malformed"],
   ])("%s is rejected as %s", (host, reason) => {
     expect(resolveSiteHost(host, development)).toEqual({ kind: "rejected", reason } as never);
@@ -61,8 +61,8 @@ describe("helpers", () => {
   });
 
   test("parseBaseDomains reads a list and has a safe default", () => {
-    expect(parseBaseDomains(undefined)).toEqual(["hydraflow.com"]);
-    expect(parseBaseDomains("hydraflow.com, Example.org")).toEqual(["hydraflow.com", "example.org"]);
-    expect(parseBaseDomains(" , ")).toEqual(["hydraflow.com"]);
+    expect(parseBaseDomains(undefined)).toEqual(["flowfokus.com"]);
+    expect(parseBaseDomains("flowfokus.com, Example.org")).toEqual(["flowfokus.com", "example.org"]);
+    expect(parseBaseDomains(" , ")).toEqual(["flowfokus.com"]);
   });
 });

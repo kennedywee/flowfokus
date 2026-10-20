@@ -1,4 +1,4 @@
-# Hydraflow
+# Flowfokus
 
 A membership platform for service businesses. The Rails API owns business rules. The staff portal and gym site use TanStack Start on Cloudflare Workers.
 

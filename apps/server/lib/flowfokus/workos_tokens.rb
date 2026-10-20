@@ -1,4 +1,4 @@
-module Hydraflow
+module Flowfokus
   # WorkOS access token verification.
   #
   # NOT IMPLEMENTED in Sprint 1. JWT/JWKS verification, organization claims, and

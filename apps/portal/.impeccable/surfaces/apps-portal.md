@@ -5,7 +5,7 @@ primary_target: "apps/portal"
 related_targets: ["apps/site"]
 ---
 
-# Surface brief: Hydraflow web apps (portal + site)
+# Surface brief: Flowfokus web apps (portal + site)
 
 Scope: `apps/portal` (staff portal, Operate mode) and `apps/site` (gym site, Persuade mode for public pages). One visual world for both.
 

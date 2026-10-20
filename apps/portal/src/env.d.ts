@@ -4,8 +4,8 @@
 declare module "cloudflare:workers" {
   export const env: {
     API_BASE_URL?: string;
-    HYDRAFLOW_DEMO_MODE?: string;
-    HYDRAFLOW_DEMO_TOKEN?: string;
+    FLOWFOKUS_DEMO_MODE?: string;
+    FLOWFOKUS_DEMO_TOKEN?: string;
     WORKER_SECRET?: string;
     WORKOS_CLIENT_ID?: string;
     WORKOS_API_KEY?: string;

@@ -1,4 +1,4 @@
-import { formatMoney, type Schemas } from "@hydraflow/api";
+import { formatMoney, type Schemas } from "@flowfokus/api";
 import type { Failure } from "./result";
 
 export { formatMoney };
@@ -80,7 +80,7 @@ export function failureMessage(error: Failure): string {
     case "api_not_configured":
       return "The API address is not configured for this portal.";
     case "api_unreachable":
-      return "The Hydraflow API did not respond. Check that Rails is running, then try again.";
+      return "The Flowfokus API did not respond. Check that Rails is running, then try again.";
     case "organization_mismatch":
       return "You do not have staff access to this organization.";
     case "forbidden":

@@ -6,12 +6,12 @@ How staff and members sign in. Who they are and what they can access is in [Iden
 
 | Host | App | Users |
 | --- | --- | --- |
-| `api.hydraflow.com` | Rails API (`apps/server`) | Web app servers, mobile app, WorkOS webhooks |
-| `portal.hydraflow.com` | Staff portal (`apps/portal`) | Staff of every organization |
-| `<slug>.hydraflow.com`, for example `chainsaw.hydraflow.com` | Gym site (`apps/site`) | The public and members of that organization |
+| `api.flowfokus.com` | Rails API (`apps/server`) | Web app servers, mobile app, WorkOS webhooks |
+| `portal.flowfokus.com` | Staff portal (`apps/portal`) | Staff of every organization |
+| `<slug>.flowfokus.com`, for example `chainsaw.flowfokus.com` | Gym site (`apps/site`) | The public and members of that organization |
 | The organization's own domain, for example `chainsawgym.com`. **Deferred.** | Gym site (`apps/site`) | The public and members of that organization |
 
-Every host points to the same shared infrastructure: one Rails API, one PostgreSQL database, and one build of each web app. A custom domain is only a DNS record that the gym points at Hydraflow's Cloudflare. Gyms run no servers.
+Every host points to the same shared infrastructure: one Rails API, one PostgreSQL database, and one build of each web app. A custom domain is only a DNS record that the gym points at Flowfokus's Cloudflare. Gyms run no servers.
 
 ## Design: TanStack Start is the BFF
 
@@ -19,15 +19,15 @@ Each web app is a TanStack Start app on Cloudflare Workers. It is the backend fo
 
 ```mermaid
 flowchart LR
-  staff["Staff browser<br/>portal.hydraflow.com"] -->|"session cookie"| pw
-  member["Member browser<br/>chainsaw.hydraflow.com"] -->|"session cookie"| sw
+  staff["Staff browser<br/>portal.flowfokus.com"] -->|"session cookie"| pw
+  member["Member browser<br/>chainsaw.flowfokus.com"] -->|"session cookie"| sw
   subgraph cf["Cloudflare Workers (BFF)"]
     pw["Portal Worker<br/>TanStack Start + AuthKit SDK"]
     sw["Site Worker<br/>TanStack Start + AuthKit SDK"]
   end
   pw & sw <-->|"code exchange, refresh"| workos["WorkOS AuthKit"]
   staff & member -.->|"sign-in page"| workos
-  pw & sw -->|"Bearer + organization + worker secret"| rails["Rails API<br/>api.hydraflow.com"]
+  pw & sw -->|"Bearer + organization + worker secret"| rails["Rails API<br/>api.flowfokus.com"]
   mobile["Mobile app"] -->|"Bearer + gym slug"| rails
   mobile -.->|"PKCE sign-in"| workos
   workos -->|"signed webhooks"| rails
@@ -39,9 +39,9 @@ An interactive version with step-by-step flows is in [diagrams/authentication.ht
 | Link | Credential |
 | --- | --- |
 | Browser → its Worker | Encrypted `__Host-hf_session` cookie. `HttpOnly`, host-only. Browser JavaScript cannot read it. |
-| Worker → Rails | `Authorization: Bearer <WorkOS access token>`, taken from the session on the server. Plus `Hydraflow-Organization`, `Hydraflow-Client-IP`, and `Hydraflow-Worker-Secret`. |
+| Worker → Rails | `Authorization: Bearer <WorkOS access token>`, taken from the session on the server. Plus `Flowfokus-Organization`, `Flowfokus-Client-IP`, and `Flowfokus-Worker-Secret`. |
 | Worker ↔ WorkOS | API key (Worker secret). Code exchange, refresh, organization switch. |
-| Mobile → Rails | `Authorization: Bearer <WorkOS access token>` from secure storage, plus `Hydraflow-Organization` with the chosen gym's slug |
+| Mobile → Rails | `Authorization: Bearer <WorkOS access token>` from secure storage, plus `Flowfokus-Organization` with the chosen gym's slug |
 | WorkOS → Rails | Signed webhooks. See [Identity](identity.md#workos-sync). |
 
 Never:
@@ -114,8 +114,8 @@ Registered WorkOS redirect URIs:
 
 | URI | Note |
 | --- | --- |
-| `https://portal.hydraflow.com/callback` | Default. A wildcard cannot be the default. |
-| `https://*.hydraflow.com/callback` | All gym sites. WorkOS allows one leftmost wildcard in production. |
+| `https://portal.flowfokus.com/callback` | Default. A wildcard cannot be the default. |
+| `https://*.flowfokus.com/callback` | All gym sites. WorkOS allows one leftmost wildcard in production. |
 | `http://localhost:<portal port>/callback` | Development: staff portal |
 | `http://*.localhost:<site port>/callback` | Development: gym sites, for example `chainsaw.localhost` |
 
@@ -131,14 +131,14 @@ sequenceDiagram
   participant S as Site Worker
   participant W as WorkOS
   participant R as Rails
-  B->>S: GET chainsaw.hydraflow.com/account + cookie
+  B->>S: GET chainsaw.flowfokus.com/account + cookie
   S->>S: authkitMiddleware decrypts the cookie
   opt Access token near expiry
     S->>W: Refresh
     W-->>S: New tokens
     S-->>B: Updated cookie
   end
-  S->>R: GET /member/… Bearer + Hydraflow-Organization: chainsaw
+  S->>R: GET /member/… Bearer + Flowfokus-Organization: chainsaw
   R->>R: Verify JWT, find organization, find Member
   R-->>S: JSON
   S-->>B: Rendered page
@@ -149,11 +149,11 @@ A browser action, such as a purchase, sends JSON to `/api/…` on the same host.
 ## Sign-out
 
 1. The user selects **Sign out**. The browser sends a `POST` to `/sign-out` on the same host. It is not a `GET`, so other sites cannot sign users out with a link. The CSRF middleware checks it.
-2. Start calls the SDK's `signOut()` with a return URL on the same host, for example `https://chainsaw.hydraflow.com/`.
+2. Start calls the SDK's `signOut()` with a return URL on the same host, for example `https://chainsaw.flowfokus.com/`.
 3. The SDK deletes the session cookie and redirects to WorkOS. WorkOS ends the session.
 4. WorkOS redirects the browser to the return URL.
 
-Register the return URLs as sign-out redirects in WorkOS: `https://portal.hydraflow.com/`, `https://*.hydraflow.com/`, and the local URLs. Confirm that WorkOS accepts a wildcard here, as it does for redirect URIs.
+Register the return URLs as sign-out redirects in WorkOS: `https://portal.flowfokus.com/`, `https://*.flowfokus.com/`, and the local URLs. Confirm that WorkOS accepts a wildcard here, as it does for redirect URIs.
 
 Whether signing out on one host also ends the user's session on other hosts is an open question. See [Decisions](decisions.md#monorepo-and-release).
 
@@ -174,7 +174,7 @@ Rails uses the permissions in the access token. A changed role takes effect when
 
 ## API areas
 
-The API path names the area. The `Hydraflow-Organization` header names the gym by its slug.
+The API path names the area. The `Flowfokus-Organization` header names the gym by its slug.
 
 | Path | Area | Called by | Credential |
 | --- | --- | --- | --- |
@@ -185,8 +185,8 @@ The API path names the area. The `Hydraflow-Organization` header names the gym b
 
 Where the Worker gets the slug:
 
-- **Site Worker:** from its own host. `chainsaw.hydraflow.com` gives `chainsaw`. Unknown hosts get `404`.
-- **Portal Worker:** from the URL. `portal.hydraflow.com/chainsaw/…` gives `chainsaw`.
+- **Site Worker:** from its own host. `chainsaw.flowfokus.com` gives `chainsaw`. Unknown hosts get `404`.
+- **Portal Worker:** from the URL. `portal.flowfokus.com/chainsaw/…` gives `chainsaw`.
 
 Each Worker forwards only its own areas. The Site Worker forwards `/member/*` and `/public/*`. The Portal Worker forwards `/staff/*`. A bug or XSS on a gym site then cannot reach staff endpoints, even for a user who is also staff.
 
@@ -195,8 +195,8 @@ Each Worker forwards only its own areas. The Site Worker forwards `/member/*` an
 Rails sees every web request as coming from Cloudflare, not from the user. The Worker adds two headers:
 
 ```text
-Hydraflow-Client-IP: 203.0.113.7         # the browser's IP, from CF-Connecting-IP
-Hydraflow-Worker-Secret: <Worker secret>
+Flowfokus-Client-IP: 203.0.113.7         # the browser's IP, from CF-Connecting-IP
+Flowfokus-Worker-Secret: <Worker secret>
 ```
 
 A Rails middleware checks the secret before the app runs:
@@ -207,13 +207,13 @@ class WorkerRequest
 
   def call(env)
     request = ActionDispatch::Request.new(env)
-    secret  = request.headers["Hydraflow-Worker-Secret"].to_s
+    secret  = request.headers["Flowfokus-Worker-Secret"].to_s
 
     if ActiveSupport::SecurityUtils.secure_compare(secret, ENV.fetch("WORKER_SECRET"))
-      env["hydraflow.worker"]    = true
-      env["hydraflow.client_ip"] = request.headers["Hydraflow-Client-IP"]
+      env["flowfokus.worker"]    = true
+      env["flowfokus.client_ip"] = request.headers["Flowfokus-Client-IP"]
     else
-      env["hydraflow.client_ip"] = request.remote_ip
+      env["flowfokus.client_ip"] = request.remote_ip
     end
 
     @app.call(env)
@@ -221,7 +221,7 @@ class WorkerRequest
 end
 ```
 
-- With a valid secret, Rails uses `Hydraflow-Client-IP` for rate limits and audit logs.
+- With a valid secret, Rails uses `Flowfokus-Client-IP` for rate limits and audit logs.
 - Without it, Rails ignores that header and uses the connection's IP. Mobile requests take this path.
 - The secret only proves that a request came from our Worker. It never replaces the Bearer token.
 - `WORKER_SECRET` is a Worker secret and a Rails environment variable. Rotate it by accepting the old and new values for one deploy.
@@ -230,7 +230,7 @@ end
 
 - Server code calls Rails through the typed client in `packages/api`. The base URL is a Worker variable.
 - Use one catch-all route, for example `src/routes/api/$.ts`, for calls the browser starts. It adds the Bearer token and forwards the request to Rails. Do not write a server function for every endpoint.
-- Start always sets the `Hydraflow-*` headers itself. It never copies them from the browser.
+- Start always sets the `Flowfokus-*` headers itself. It never copies them from the browser.
 - The access token never reaches the browser. Do not use the SDK's client-side `useAccessToken()`. Never put the token in page data, server function responses, or `localStorage`.
 - Start contains no business rules and no database access.
 
@@ -238,11 +238,11 @@ end
 
 | | Staff | Member |
 | --- | --- | --- |
-| Signs in at | `portal.hydraflow.com` | The member area of the gym site |
+| Signs in at | `portal.flowfokus.com` | The member area of the gym site |
 | WorkOS session | Organization-specific. Carries role and permissions. | User only. Members have no WorkOS membership. |
 | Access comes from | Active WorkOS membership and its permissions | A `Member` record in the gym's organization |
 | Organization chosen by | The staff member, in the portal URL | The gym site host, or the gym chosen in the mobile app |
-| Staff URL | `portal.hydraflow.com/<slug>/…` | — |
+| Staff URL | `portal.flowfokus.com/<slug>/…` | — |
 | API area | `/staff/*` | `/member/*` |
 | `Current` | `user`, `organization`, `permissions` | `user`, `organization`, `member` |
 
@@ -263,7 +263,7 @@ end
 
 Alice is staff at Chainsaw and also a member there.
 
-- She uses `portal.hydraflow.com` as staff and `chainsaw.hydraflow.com` as a member.
+- She uses `portal.flowfokus.com` as staff and `chainsaw.flowfokus.com` as a member.
 - Each host has its own cookie. Both lead to the same WorkOS identity.
 - AuthKit remembers her. Signing in on the second host usually needs no password.
 - Her member session never grants staff permissions. Her staff session never works on a gym site.
@@ -275,7 +275,7 @@ WorkOS supports native apps as a public client with PKCE. The app holds no clien
 1. The app opens AuthKit with a PKCE challenge.
 2. AuthKit redirects back to the app. The app exchanges the code with its verifier.
 3. The app keeps tokens in secure storage (Keychain or Keystore).
-4. The app calls `api.hydraflow.com/member/…` with `Authorization: Bearer <access token>` and `Hydraflow-Organization` set to the chosen gym's slug.
+4. The app calls `api.flowfokus.com/member/…` with `Authorization: Bearer <access token>` and `Flowfokus-Organization` set to the chosen gym's slug.
 
 Mobile is the member area as an app. Rails checks the `Member` record as on the web.
 
@@ -283,11 +283,11 @@ Mobile is the member area as an app. Rails checks the `Member` record as on the 
 
 - Accept Bearer tokens only. Verify each token against the WorkOS JWKS. Rails sets no cookies.
 - Decide the audience from the API path, never from the host:
-  - `/staff/*`: the token's organization claim must match `Hydraflow-Organization`. Otherwise `403`.
+  - `/staff/*`: the token's organization claim must match `Flowfokus-Organization`. Otherwise `403`.
   - `/member/*`: ignore the token's staff permissions. Require a `Member` in that organization.
   - `/public/*`: no token. Return only public data for that organization.
 - The slug only chooses which organization to check. It never grants access by itself.
-- Trust `Hydraflow-Client-IP` only with a valid Worker secret. See [Worker secret and client IP](#worker-secret-and-client-ip).
+- Trust `Flowfokus-Client-IP` only with a valid Worker secret. See [Worker secret and client IP](#worker-secret-and-client-ip).
 - Only Cloudflare may reach the VPS, as defense in depth.
 
 ## Security rules
@@ -304,7 +304,7 @@ Mobile is the member area as an app. Rails checks the `Member` record as on the 
 
 ## Custom domains (deferred)
 
-A custom domain is cross-site to `*.hydraflow.com`, but the design does not change: Start runs on the custom host and sets its own cookie there. Each custom domain needs:
+A custom domain is cross-site to `*.flowfokus.com`, but the design does not change: Start runs on the custom host and sets its own cookie there. Each custom domain needs:
 
 - A Cloudflare custom hostname with a certificate.
 - A registered WorkOS redirect URI, added through the WorkOS API when the gym verifies its domain. As an alternative, a central callback with a one-time handoff code.

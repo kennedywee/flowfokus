@@ -18,7 +18,7 @@ done
   cd apps/server
   bundle install
   bin/rails db:prepare
-  HYDRAFLOW_DEMO_MODE=true HYDRAFLOW_DEMO_TOKEN="${HYDRAFLOW_DEMO_TOKEN:-hydraflow-local-demo-token}" bin/rails db:seed
+  FLOWFOKUS_DEMO_MODE=true FLOWFOKUS_DEMO_TOKEN="${FLOWFOKUS_DEMO_TOKEN:-flowfokus-local-demo-token}" bin/rails db:seed
   RAILS_ENV=test DATABASE_URL="$TEST_DATABASE_URL" bin/rails db:prepare
 )
 echo "Setup complete. Run bun run dev in this directory."

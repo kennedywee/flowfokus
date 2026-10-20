@@ -1,4 +1,4 @@
-# Hydraflow API notes (Sprint 1)
+# Flowfokus API notes (Sprint 1)
 
 `openapi.yaml` is the source of truth. This page is a short reference for the web apps.
 
@@ -6,7 +6,7 @@
 
 - Base URL in development: `http://localhost:3000`.
 - Call Rails from server code only. Never from the browser.
-- Send `Hydraflow-Organization: <slug>` on every `/public/*`, `/staff/*`, and `/member/*` call.
+- Send `Flowfokus-Organization: <slug>` on every `/public/*`, `/staff/*`, and `/member/*` call.
 - Send `Authorization: Bearer <token>` on `/staff/*` and `/member/*`.
 - Send `Content-Type: application/json` on writes. Bodies are flat objects (no `{ member: {...} }` wrapper).
 - Send `Idempotency-Key: <uuid>` on `POST /staff/sales`, `POST /staff/sales/:id/payments`, and `POST /staff/check_ins`. Reuse the same key only to retry the same request.
@@ -18,12 +18,12 @@
 
 | Variable | Example | Effect |
 | --- | --- | --- |
-| `HYDRAFLOW_DEMO_MODE` | `true` | Turns on the demo actor. Development and test only. Rails refuses to boot with it in production. |
-| `HYDRAFLOW_DEMO_TOKEN` | `hydraflow-local-demo-token` | The Bearer value the portal server sends. At least 16 characters. |
+| `FLOWFOKUS_DEMO_MODE` | `true` | Turns on the demo actor. Development and test only. Rails refuses to boot with it in production. |
+| `FLOWFOKUS_DEMO_TOKEN` | `flowfokus-local-demo-token` | The Bearer value the portal server sends. At least 16 characters. |
 
-- The demo token maps to fixed claims: seeded user `Demo Owner <demo.owner@hydraflow.test>`, organization `chainsaw`, all Sprint 1 permissions.
+- The demo token maps to fixed claims: seeded user `Demo Owner <demo.owner@flowfokus.test>`, organization `chainsaw`, all Sprint 1 permissions.
 - The browser cannot choose the claims. The portal server keeps the token.
-- The demo token works only for `Hydraflow-Organization: chainsaw`. Other slugs give `403 organization_mismatch`.
+- The demo token works only for `Flowfokus-Organization: chainsaw`. Other slugs give `403 organization_mismatch`.
 - The demo actor is staff only. `/member/*` gives `403`.
 - Without demo mode and without WorkOS, protected calls give `503 auth_not_configured`. A missing token always gives `401 unauthenticated`.
 - WorkOS JWT verification is **not** implemented in Sprint 1. A configured WorkOS still gives `503 auth_unavailable`.
@@ -139,13 +139,13 @@ Body references to another organization's member, price, or location return `422
 
 ## Shared client
 
-`@hydraflow/api` (`packages/api`) exports generated types and a typed client built on `openapi-fetch`:
+`@flowfokus/api` (`packages/api`) exports generated types and a typed client built on `openapi-fetch`:
 
 ```ts
-import { createHydraflowClient, type Schemas } from "@hydraflow/api";
+import { createFlowfokusClient, type Schemas } from "@flowfokus/api";
 
-const api = createHydraflowClient({
-  baseUrl: process.env.HYDRAFLOW_API_URL!,
+const api = createFlowfokusClient({
+  baseUrl: process.env.FLOWFOKUS_API_URL!,
   organization: "chainsaw",
   token: serverSideToken,           // never sent to the browser
 });
@@ -169,5 +169,5 @@ Regenerate types with `bun run --cwd packages/api generate` after editing `opena
 - Schema format is `db/schema.rb` (project preference). Triggers use the Fx gem.
 - `RAILS_DEVELOPMENT_HOSTS=server` works with no app change; Rails 8.1 reads it in development.
 - Production image: `apps/server/Dockerfile`. `apps/server/Dockerfile.dev` belongs to the coordinator.
-- `@hydraflow/api` needs `openapi-fetch` at runtime and `openapi-typescript` and `typescript` 5.x
+- `@flowfokus/api` needs `openapi-fetch` at runtime and `openapi-typescript` and `typescript` 5.x
   (peer range of `openapi-typescript`) for generation and type checks. No other packages.

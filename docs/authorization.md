@@ -77,13 +77,13 @@ Enforce invariants of sensitive operations inside a database transaction.
 
 ## Staff management
 
-Hydraflow has its own staff screens. They call the WorkOS API. WorkOS stays the authority.
+Flowfokus has its own staff screens. They call the WorkOS API. WorkOS stays the authority.
 
 Users with `staff:manage` can invite staff, change roles, remove access, and create custom roles.
 
-1. The admin makes a change in Hydraflow.
+1. The admin makes a change in Flowfokus.
 2. Rails rejects privilege escalation and changes that break ownership rules.
-3. Hydraflow calls WorkOS.
+3. Flowfokus calls WorkOS.
 4. A WorkOS event updates the local copy. See [Identity](identity.md#workos-sync).
 
 Existing sessions can hold old permission claims after a role change. The design must account for this.

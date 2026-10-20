@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { formatDuration, formatMoney, formatUsage, listNames } from "../lib/format";
 import { useGym } from "../lib/site";
 

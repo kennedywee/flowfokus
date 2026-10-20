@@ -2,12 +2,12 @@
  * The only path from the portal Worker to Rails. Server code only.
  *
  * - Calls `/staff/*` through the shared typed client.
- * - Sets `Authorization` and every `Hydraflow-*` header here. Nothing is
+ * - Sets `Authorization` and every `Flowfokus-*` header here. Nothing is
  *   copied from the browser request.
  */
 import { env } from "cloudflare:workers";
 import { getRequest } from "@tanstack/react-start/server";
-import { createHydraflowClient, isErrorBody, type HydraflowClient } from "@hydraflow/api";
+import { createFlowfokusClient, isErrorBody, type FlowfokusClient } from "@flowfokus/api";
 import type { Failure, Result } from "../lib/result";
 import { resolveApiBaseUrl, resolveProductionAccess, resolveStaffAccess, type PortalEnv, type StaffAccess } from "./access";
 
@@ -31,7 +31,7 @@ function failure(status: number, code: Failure["code"], message: string): { ok: 
   return { ok: false, error: { status, code, message } };
 }
 
-function staffClient(slug: string): { ok: true; api: HydraflowClient } | { ok: false; error: Failure } {
+function staffClient(slug: string): { ok: true; api: FlowfokusClient } | { ok: false; error: Failure } {
   const access = currentStaffAccess();
   if (access.kind !== "demo") {
     return failure(503, "access_unavailable", "Staff sign-in is not available. Protected actions are turned off.");
@@ -42,7 +42,7 @@ function staffClient(slug: string): { ok: true; api: HydraflowClient } | { ok: f
 
   const request = getRequest();
   const clientIp = request.headers.get("CF-Connecting-IP") ?? undefined;
-  const api = createHydraflowClient({
+  const api = createFlowfokusClient({
     baseUrl,
     organization: slug,
     token: access.token,
@@ -63,7 +63,7 @@ interface ApiOutcome<T> {
  */
 export async function callStaff<T>(
   slug: string,
-  run: (api: HydraflowClient) => Promise<ApiOutcome<T>>,
+  run: (api: FlowfokusClient) => Promise<ApiOutcome<T>>,
 ): Promise<Result<T>> {
   const client = staffClient(slug);
   if (!client.ok) return client;
@@ -72,7 +72,7 @@ export async function callStaff<T>(
   try {
     outcome = await run(client.api);
   } catch {
-    return failure(502, "api_unreachable", "The Hydraflow API did not respond. Try again in a moment.");
+    return failure(502, "api_unreachable", "The Flowfokus API did not respond. Try again in a moment.");
   }
 
   if (outcome.data !== undefined) return { ok: true, data: outcome.data.data };

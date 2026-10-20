@@ -7,7 +7,7 @@ This design follows the [monorepo-release-lab](https://github.com/kennedywee/mon
 ## Layout
 
 ```text
-hydraflow/
+flowfokus/
 ├── apps/
 │   ├── server/     # Rails 8 API. Owns openapi.yaml.
 │   ├── portal/     # Staff portal (TanStack Start)
@@ -79,7 +79,7 @@ What these checks cannot catch:
 
 - Portal and site read settings from Worker variables and secrets: the Rails URL and the WorkOS settings. The same build works in every environment.
 - The browser calls only its own host. Start calls Rails from the server with a Bearer token.
-- Mobile calls `api.hydraflow.com`. It compiles this URL into the build. Each environment needs its own mobile build.
+- Mobile calls `api.flowfokus.com`. It compiles this URL into the build. Each environment needs its own mobile build.
 - The server reads its settings from environment variables.
 
 ## Local development

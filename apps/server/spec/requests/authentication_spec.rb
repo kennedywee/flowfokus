@@ -12,8 +12,8 @@ RSpec.describe "Authentication and permissions" do
       expect(response).to have_http_status(:ok)
       expect(data["slug"]).to eq("chainsaw")
       expect(data["locations"].map { _1["name"] }).to eq([ "Bangsar" ])
-      expect(data["actor"]).to include("demo" => true, "email" => "demo.owner@hydraflow.test")
-      expect(data["actor"]["permissions"]).to match_array(Hydraflow::DemoIdentity::PERMISSIONS)
+      expect(data["actor"]).to include("demo" => true, "email" => "demo.owner@flowfokus.test")
+      expect(data["actor"]["permissions"]).to match_array(Flowfokus::DemoIdentity::PERMISSIONS)
       expect(response.headers["Cache-Control"]).to include("no-store")
     end
 
@@ -99,11 +99,11 @@ RSpec.describe "Authentication and permissions" do
 
     context "with limited permissions" do
       before do
-        claims = Hydraflow::IdentityClaims.new(
+        claims = Flowfokus::IdentityClaims.new(
           user_workos_id: demo_user.workos_id, organization_workos_id: chainsaw.workos_id,
           permissions: %w[members:read], demo: true
         )
-        allow(Hydraflow::DemoIdentity).to receive(:claims_for).and_return(claims)
+        allow(Flowfokus::DemoIdentity).to receive(:claims_for).and_return(claims)
       end
 
       it "allows granted permissions" do

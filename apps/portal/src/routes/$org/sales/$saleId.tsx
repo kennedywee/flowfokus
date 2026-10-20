@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { PackageCheck } from "lucide-react";
-import type { Schemas } from "@hydraflow/api";
+import type { Schemas } from "@flowfokus/api";
 import { Empty, FailureNotice, Field, Lamp, Notice, PageHead, Plate, SkeletonRows, Status, SubmitButton, Time, describedBy } from "../../../components/ui";
 import {
   PAYMENT_METHOD_LABEL,
@@ -228,7 +228,7 @@ function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
   return (
     <form className="form payment-form" onSubmit={onSubmit} noValidate aria-labelledby="payment-heading">
       <h3 id="payment-heading">Record a payment</h3>
-      <p className="field__hint">Record money already received at the desk. Hydraflow does not charge cards.</p>
+      <p className="field__hint">Record money already received at the desk. Flowfokus does not charge cards.</p>
       <div className="form-row">
         <Field id="payment-amount" label={`Amount (${sale.currency})`} hint={amountHint} error={amountError}>
           <input

@@ -11,8 +11,8 @@ const MIN_DEMO_TOKEN_LENGTH = 16;
 
 export interface PortalEnv {
   API_BASE_URL?: string;
-  HYDRAFLOW_DEMO_MODE?: string;
-  HYDRAFLOW_DEMO_TOKEN?: string;
+  FLOWFOKUS_DEMO_MODE?: string;
+  FLOWFOKUS_DEMO_TOKEN?: string;
   WORKER_SECRET?: string;
   WORKOS_CLIENT_ID?: string;
   WORKOS_API_KEY?: string;
@@ -71,9 +71,9 @@ function workosConfigured(env: PortalEnv): boolean {
 export function resolveStaffAccess({ dev, env, hostname }: AccessInput): StaffAccess {
   // Demo access needs all three: a development build, the explicit flag, and a
   // local host name. A production build never reaches this branch.
-  if (dev && env.HYDRAFLOW_DEMO_MODE === "true") {
+  if (dev && env.FLOWFOKUS_DEMO_MODE === "true") {
     if (!isLoopbackHostname(hostname)) return { kind: "unavailable", reason: "demo_not_local" };
-    const token = env.HYDRAFLOW_DEMO_TOKEN ?? "";
+    const token = env.FLOWFOKUS_DEMO_TOKEN ?? "";
     if (token.length < MIN_DEMO_TOKEN_LENGTH) {
       return { kind: "unavailable", reason: "demo_token_invalid" };
     }

@@ -20,18 +20,18 @@ jobs:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_USER: hydraflow
-          POSTGRES_PASSWORD: hydraflow
-          POSTGRES_DB: hydraflow_test
+          POSTGRES_USER: flowfokus
+          POSTGRES_PASSWORD: flowfokus
+          POSTGRES_DB: flowfokus_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U hydraflow -d hydraflow_test"
+          --health-cmd "pg_isready -U flowfokus -d flowfokus_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
-      TEST_DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
-      DATABASE_URL: postgres://hydraflow:hydraflow@127.0.0.1:5432/hydraflow_test
+      TEST_DATABASE_URL: postgres://flowfokus:flowfokus@127.0.0.1:5432/flowfokus_test
+      DATABASE_URL: postgres://flowfokus:flowfokus@127.0.0.1:5432/flowfokus_test
       RAILS_ENV: test
       CLOUDFLARE_SEND_METRICS: "false"
       WRANGLER_SEND_METRICS: "false"
@@ -58,9 +58,9 @@ jobs:
           if [[ -n "$stable_tag" ]]; then BASE_SHA="$stable_tag"; fi
           bash scripts/contract-diff "$BASE_SHA"
       - name: Build API image
-        run: docker build -t hydraflow-server:ci apps/server
+        run: docker build -t flowfokus-server:ci apps/server
       - name: Verify production image boundary
-        run: bash scripts/check-production-image hydraflow-server:ci
+        run: bash scripts/check-production-image flowfokus-server:ci
       - uses: actions/upload-artifact@v4
         with:
           name: worker-builds-${{ github.sha }}

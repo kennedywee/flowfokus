@@ -81,11 +81,11 @@ RSpec.describe "Tenant isolation" do
 
   it "applies the same rules to staff of the other organization" do
     member
-    claims = Hydraflow::IdentityClaims.new(
+    claims = Flowfokus::IdentityClaims.new(
       user_workos_id: demo_user.workos_id, organization_workos_id: ironworks.workos_id,
-      permissions: Hydraflow::DemoIdentity::PERMISSIONS, demo: true
+      permissions: Flowfokus::DemoIdentity::PERMISSIONS, demo: true
     )
-    allow(Hydraflow::DemoIdentity).to receive(:claims_for).and_return(claims)
+    allow(Flowfokus::DemoIdentity).to receive(:claims_for).and_return(claims)
 
     api :get, "/staff/members/#{member.id}", organization: "ironworks"
     expect(response).to have_http_status(:not_found)

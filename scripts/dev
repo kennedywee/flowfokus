@@ -3,8 +3,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
 docker compose up -d --wait db
-export HYDRAFLOW_DEMO_MODE="${HYDRAFLOW_DEMO_MODE:-true}"
-export HYDRAFLOW_DEMO_TOKEN="${HYDRAFLOW_DEMO_TOKEN:-hydraflow-local-demo-token}"
+export FLOWFOKUS_DEMO_MODE="${FLOWFOKUS_DEMO_MODE:-true}"
+export FLOWFOKUS_DEMO_TOKEN="${FLOWFOKUS_DEMO_TOKEN:-flowfokus-local-demo-token}"
 
 set -m
 pids=()

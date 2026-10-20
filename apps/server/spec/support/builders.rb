@@ -1,8 +1,8 @@
 # Small record builders. Each spec states the data it depends on.
 module Builders
   def demo_user
-    User.find_or_create_by!(workos_id: Hydraflow::DemoIdentity::USER[:workos_id]) do |user|
-      user.assign_attributes(Hydraflow::DemoIdentity::USER.except(:workos_id))
+    User.find_or_create_by!(workos_id: Flowfokus::DemoIdentity::USER[:workos_id]) do |user|
+      user.assign_attributes(Flowfokus::DemoIdentity::USER.except(:workos_id))
     end
   end
 
@@ -12,7 +12,7 @@ module Builders
 
   def chainsaw
     @chainsaw ||= Organization.find_by(slug: "chainsaw") ||
-      create_organization(slug: "chainsaw", workos_id: Hydraflow::DemoIdentity::ORGANIZATION_WORKOS_ID)
+      create_organization(slug: "chainsaw", workos_id: Flowfokus::DemoIdentity::ORGANIZATION_WORKOS_ID)
   end
 
   def ironworks
