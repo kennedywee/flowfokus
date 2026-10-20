@@ -629,8 +629,18 @@
 
 .page {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
+}
+
+/* Keep headers in place; center the working content in the main area. */
+.page > * {
+  width: 100%;
+  min-width: 0;
   max-width: 1200px;
+}
+.page > :not(.page-head) {
+  justify-self: center;
 }
 
 /* Page header: title, description, and actions on the right. */
