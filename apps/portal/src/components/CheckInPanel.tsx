@@ -1,18 +1,22 @@
-import { useState, type FormEvent } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { useRef, useState, type FormEvent } from "react";
+import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { DENIAL, formatTime } from "../lib/format";
 import { useAction, useIdempotencyKey } from "../lib/hooks";
 import { useLocationName, useOrganization } from "../lib/organization";
 import { createCheckIn } from "../lib/staff.functions";
-import { Field, FailureNotice, Lamp, SubmitButton, describedBy } from "./ui";
+import { Combobox } from "./Combobox";
+import { Field, FailureNotice, Lamp, SubmitButton, buttonClass } from "./ui";
 
 type Input = Parameters<typeof createCheckIn>[0]["data"];
 const sendCheckIn = (input: Input) => createCheckIn({ data: input });
 
+const MEMBER_FIELD = "check-in-member";
+
 /**
- * Checks a member in at a location and lights the answer. Rails decides the
- * result; this panel only shows it, with the reason for a denial.
+ * Checks a member in at a location and shows the answer. Rails decides the
+ * result; this panel only shows it, with the reason and the next step for a
+ * denial. After each result, focus goes back to the member field.
  */
 export function CheckInPanel({
   members,
@@ -28,16 +32,22 @@ export function CheckInPanel({
   const router = useRouter();
   const [key, renewKey] = useIdempotencyKey();
   const action = useAction(sendCheckIn);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const [memberId, setMemberId] = useState(fixedMember?.id ?? "");
+  const [memberId, setMemberId] = useState<string | null>(fixedMember?.id ?? null);
   const [locationId, setLocationId] = useState(organization.locations[0]?.id ?? "");
   const [memberError, setMemberError] = useState<string | undefined>();
   const [fresh, setFresh] = useState(false);
+
+  function focusMember() {
+    formRef.current?.querySelector<HTMLElement>(`#${MEMBER_FIELD}`)?.focus();
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!memberId) {
       setMemberError("Choose the member who is checking in.");
+      focusMember();
       return;
     }
     setMemberError(undefined);
@@ -52,6 +62,11 @@ export function CheckInPanel({
       renewKey();
       setFresh(true);
       void router.invalidate();
+      // Ready for the next person. The result stays on screen until the next pick.
+      if (!fixedMember) {
+        setMemberId(null);
+        focusMember();
+      }
     }
   }
 
@@ -66,92 +81,170 @@ export function CheckInPanel({
   const checkIn = action.data;
   const state = checkIn ? checkIn.result : "off";
   const noLocations = organization.locations.length === 0;
+  const manyLocations = organization.locations.length > 1;
+  const denial = checkIn?.result === "denied" && checkIn.denial_reason ? DENIAL[checkIn.denial_reason] : null;
 
   return (
-    <form className="form" onSubmit={onSubmit} noValidate aria-label="Check in">
-      <div className="form-row">
-        {fixedMember ? null : (
-          <Field id="check-in-member" label="Member" error={memberError}>
+    <form className="form checkin" ref={formRef} onSubmit={onSubmit} noValidate aria-label="Check in">
+      {fixedMember ? null : (
+        <Combobox
+          id={MEMBER_FIELD}
+          label="Member"
+          options={(members ?? []).map((member) => ({ value: member.id, label: member.name, detail: member.email }))}
+          value={memberId}
+          onChange={(value) => {
+            setMemberId(value);
+            setMemberError(undefined);
+            onChange();
+          }}
+          placeholder="Type a name or email"
+          hint="Press Enter to choose a member, then Enter again to check in."
+          emptyText="No member matches. Check the spelling, or add the member on the Members page."
+          error={memberError}
+        />
+      )}
+
+      <div className="checkin__submit">
+        {manyLocations ? (
+          <Field id="check-in-location" label="Location">
             <select
-              id="check-in-member"
+              id="check-in-location"
               className="select"
-              value={memberId}
+              value={locationId}
               onChange={(event) => {
-                setMemberId(event.target.value);
-                setMemberError(undefined);
+                setLocationId(event.target.value);
                 onChange();
               }}
-              aria-invalid={memberError ? true : undefined}
-              aria-describedby={describedBy("check-in-member", undefined, memberError)}
             >
-              <option value="">Choose a member</option>
-              {(members ?? []).map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} · {member.email}
+              {organization.locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
                 </option>
               ))}
             </select>
           </Field>
-        )}
-        <Field id="check-in-location" label="Location">
-          <select
-            id="check-in-location"
-            className="select"
-            value={locationId}
-            onChange={(event) => {
-              setLocationId(event.target.value);
-              onChange();
-            }}
-            disabled={noLocations}
-          >
-            {organization.locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
-
-      <div className="actions">
+        ) : null}
         <SubmitButton pending={action.pending} pendingLabel="Checking…" disabled={noLocations} large>
           Check in{fixedMember ? ` ${fixedMember.name.split(" ")[0]}` : ""}
         </SubmitButton>
+        {!manyLocations && !noLocations ? <p className="checkin__where">at {locationName(locationId)}</p> : null}
       </div>
 
       {action.error ? <FailureNotice error={action.error} title="Check-in was not recorded" /> : null}
 
-      <div className="result" data-state={state} data-fresh={fresh} role="status" aria-live="polite">
-        <Lamp state={state} />
-        {checkIn ? (
-          checkIn.result === "granted" ? (
-            <>
-              <p className="result__title">Access granted</p>
-              <p className="result__detail">
-                {checkIn.member.name} at {locationName(checkIn.location_id)},{" "}
-                <time dateTime={checkIn.checked_in_at}>{formatTime(checkIn.checked_in_at, organization.timezone)}</time>.
-              </p>
-            </>
+      <div role="status" aria-live="polite" aria-atomic="true">
+        <div className="result" data-state={state} data-fresh={fresh}>
+          <Lamp state={state} />
+          {checkIn ? (
+            checkIn.result === "granted" ? (
+              <>
+                <p className="result__title">Access granted</p>
+                <p className="result__detail">{checkIn.member.name} may go in.</p>
+                <dl className="facts result__facts">
+                  <div>
+                    <dt>Member</dt>
+                    <dd>{checkIn.member.name}</dd>
+                  </div>
+                  <div>
+                    <dt>Location</dt>
+                    <dd>{locationName(checkIn.location_id)}</dd>
+                  </div>
+                  <div>
+                    <dt>Time</dt>
+                    <dd>
+                      <time dateTime={checkIn.checked_in_at}>{formatTime(checkIn.checked_in_at, organization.timezone)}</time>
+                    </dd>
+                  </div>
+                  {checkIn.entitlement_id ? (
+                    <div>
+                      <dt>Right used</dt>
+                      <dd>
+                        <code>{checkIn.entitlement_id.slice(0, 8)}</code>
+                      </dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </>
+            ) : (
+              <>
+                <p className="result__title">Denied: {denial ? denial.title : "No reason given"}</p>
+                <p className="result__detail">
+                  {checkIn.member.name} at {locationName(checkIn.location_id)}. {denial?.next} Nothing was used.
+                </p>
+              </>
+            )
           ) : (
             <>
-              <p className="result__title">Denied: {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : "No reason given"}</p>
+              <p className="result__title">Ready</p>
               <p className="result__detail">
-                {checkIn.member.name} at {locationName(checkIn.location_id)}.{" "}
-                {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].next : null} Nothing was used.
+                {noLocations
+                  ? "This organization has no locations, so check-in is not possible."
+                  : "The result shows here. A denial always names its reason."}
               </p>
             </>
-          )
-        ) : (
-          <>
-            <p className="result__title">Ready</p>
-            <p className="result__detail">
-              {noLocations
-                ? "This organization has no locations, so check-in is not possible."
-                : "The result shows here. A denial always names its reason."}
-            </p>
-          </>
-        )}
+          )}
+        </div>
       </div>
+
+      {checkIn ? <NextSteps checkIn={checkIn} slug={organization.slug} /> : null}
     </form>
+  );
+}
+
+/** Links for what staff can do after a result. A denial gets the fix first. */
+function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: string }) {
+  const member = (
+    <Link
+      to="/$org/members/$memberId"
+      params={{ org: slug, memberId: checkIn.member.id }}
+      className={buttonClass({ variant: "ghost" })}
+    >
+      Open {checkIn.member.name}
+    </Link>
+  );
+
+  if (checkIn.result === "granted") return <div className="actions checkin__next">{member}</div>;
+
+  return (
+    <div className="actions checkin__next">
+      {checkIn.denial_reason === "no_entitlement" ? (
+        <>
+          <Link
+            to="/$org/sales/new"
+            params={{ org: slug }}
+            search={{ member: checkIn.member.id }}
+            className={buttonClass({ variant: "secondary" })}
+          >
+            Sell a membership
+          </Link>
+          <Link
+            to="/$org/sales"
+            params={{ org: slug }}
+            search={{ view: "due" }}
+            className={buttonClass({ variant: "secondary" })}
+          >
+            Record a payment
+          </Link>
+          <Link
+            to="/$org/sales"
+            params={{ org: slug }}
+            search={{ view: "deliver" }}
+            className={buttonClass({ variant: "secondary" })}
+          >
+            Deliver a paid sale
+          </Link>
+        </>
+      ) : checkIn.denial_reason === "usage_limit_reached" ? (
+        <Link
+          to="/$org/sales/new"
+          params={{ org: slug }}
+          search={{ member: checkIn.member.id }}
+          className={buttonClass({ variant: "secondary" })}
+        >
+          Sell a renewal
+        </Link>
+      ) : null}
+      {member}
+    </div>
   );
 }

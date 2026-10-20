@@ -1,1 +1,31 @@
-/* Screen styles: products. Add rules here, not in components.css. */
+/* Screen styles: offers. Scoped under .offers-page so nothing leaks. */
+
+.offers-page .offer__meta {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+}
+.offers-page .offer__description {
+  color: var(--color-ink-2);
+  max-width: 60ch;
+}
+.offers-page .offer__benefits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.offers-page .offer__empty {
+  margin: 0;
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
+}
+/* The term is a number, so it reads in mono beside the amount. */
+.offers-page .offer__term {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.offers-page .num {
+  font-size: var(--text-md);
+}

@@ -1,1 +1,142 @@
-/* Screen styles: overview. Add rules here, not in components.css. */
+/* Screen styles: front desk overview. Scoped under .desk-page so nothing leaks. */
+
+/* Stat tiles: a small caps label, a mono readout, and a note. */
+.desk-page .desk-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+}
+.desk-page .desk-tile {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  padding: var(--space-5) 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-xl);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.desk-page a.desk-tile {
+  transition:
+    background-color 120ms var(--ease-out),
+    border-color 120ms var(--ease-out);
+}
+.desk-page a.desk-tile:hover {
+  background: var(--color-well);
+  border-color: var(--color-line-strong);
+  color: var(--color-ink);
+}
+.desk-page .desk-tile[data-tone="warning"] {
+  border-color: var(--color-warning-line);
+}
+.desk-page .desk-tile[data-tone="info"] {
+  border-color: var(--color-accent-line);
+}
+.desk-page .desk-tile__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--tracking-caps);
+  line-height: 14px;
+  text-transform: uppercase;
+}
+.desk-page .desk-tile__label svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+.desk-page .desk-tile[data-tone="warning"] .desk-tile__label {
+  color: var(--color-warning);
+}
+.desk-page .desk-tile[data-tone="info"] .desk-tile__label {
+  color: var(--color-accent);
+}
+.desk-page .desk-tile__value {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum";
+  font-size: var(--text-readout);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.04em;
+  line-height: 64px;
+}
+.desk-page .desk-tile[data-tone="warning"] .desk-tile__value {
+  color: var(--color-warning);
+}
+.desk-page .desk-tile__note {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 16px;
+}
+.desk-page .desk-tile__note b {
+  font-family: var(--font-mono);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-ink);
+}
+.desk-page .desk-tile__go {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.desk-page .desk-tile__go svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Recent check-ins: avatar, member and place, then result and time. */
+.desk-page .desk-recent {
+  display: grid;
+  margin: 0;
+  padding: 0 0 var(--space-2);
+  list-style: none;
+}
+.desk-page .desk-recent li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--color-line);
+}
+.desk-page .desk-recent li:first-child {
+  border-top: 0;
+}
+.desk-page .desk-recent .avatar {
+  --size: 32px;
+  background: var(--color-avatar);
+  color: var(--color-ink);
+}
+.desk-page .desk-recent__who {
+  display: grid;
+  min-width: 0;
+}
+.desk-page .desk-recent__who .cell-title {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.desk-page .desk-recent__reason {
+  color: var(--color-critical);
+}
+.desk-page .desk-recent__when {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+}
+.desk-page .desk-recent__when time {
+  color: var(--color-ink-3);
+  font-size: 11px;
+  line-height: 14px;
+  white-space: nowrap;
+}
