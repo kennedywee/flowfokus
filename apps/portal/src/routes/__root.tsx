@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import legendFont from "@fontsource/barlow-semi-condensed/600.css?url";
+import sansFont from "@fontsource-variable/geist/index.css?url";
+import monoFont from "@fontsource-variable/geist-mono/index.css?url";
+import { ToastProvider } from "../components/Toast";
+import { Wordmark, buttonClass } from "../components/ui";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -10,11 +13,13 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "robots", content: "noindex, nofollow" },
-      { name: "theme-color", content: "#eef0f2" },
+      { name: "color-scheme", content: "dark" },
+      { name: "theme-color", content: "#000000" },
       { title: "Flowfokus staff portal" },
     ],
     links: [
-      { rel: "stylesheet", href: legendFont },
+      { rel: "stylesheet", href: sansFont },
+      { rel: "stylesheet", href: monoFont },
       { rel: "stylesheet", href: appCss },
     ],
   }),
@@ -37,7 +42,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ToastProvider>{children}</ToastProvider>
         <Scripts />
       </body>
     </html>
@@ -48,11 +53,16 @@ function NotFound() {
   return (
     <main className="entry">
       <div className="entry__panel">
-        <h1>Page not found</h1>
-        <p>This address does not match a portal page.</p>
-        <p>
-          <Link to="/">Go to the organization list</Link>
-        </p>
+        <Wordmark />
+        <div className="entry__text">
+          <h1>Page not found</h1>
+          <p>This address does not match a portal page. Check the address, or go back to the organization list.</p>
+        </div>
+        <div className="actions">
+          <Link to="/" className={buttonClass({ variant: "secondary" })}>
+            Go to the organization list
+          </Link>
+        </div>
       </div>
     </main>
   );

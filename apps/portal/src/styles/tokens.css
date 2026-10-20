@@ -1,0 +1,128 @@
+/*
+ * Flowfokus staff portal: design tokens.
+ * Source: the Paper file "Flowfokus", page "Design System", 01 Foundations.
+ * Black glass, hairline borders, light only where the system reports state.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces, from the page outward. */
+  --color-page: #000000;
+  --color-surface: #0b0b0c;
+  --color-sidebar: #060607;
+  --color-well: #131315;
+  --color-control: #1a1a1d;
+  --color-hover: #232327;
+  --color-overlay: #141416;
+
+  /* Lines. `field-line` is for form controls only: it meets 3:1 (WCAG 1.4.11). */
+  --color-line: #1e1e21;
+  --color-line-strong: #2c2c30;
+  --color-field-line: #6b6b72;
+
+  /* Ink. Use ink-4 for disabled and decorative marks only, never for text. */
+  --color-ink: #f2f2ee;
+  --color-ink-2: #a3a3aa;
+  --color-ink-3: #83838b;
+  --color-ink-4: #4a4a50;
+  --color-on-ink: #000000;
+
+  --color-accent: #7088ff;
+  --color-accent-wash: #161a33;
+  --color-accent-line: #262d5c;
+  --color-focus: #7088ff;
+
+  --color-good: #3dd68c;
+  --color-good-wash: #0f2a1e;
+  --color-good-line: #1b4a34;
+  --color-warning: #f5a524;
+  --color-warning-wash: #1a1407;
+  --color-warning-line: #3a2c0e;
+  --color-critical: #f2555a;
+  --color-critical-wash: #1a0d0e;
+  --color-critical-line: #3a1a1c;
+  --color-critical-wash-strong: #2a1214;
+  --color-critical-line-strong: #4a1e21;
+  --color-info: var(--color-accent);
+  --color-info-wash: var(--color-accent-wash);
+  --color-info-line: var(--color-accent-line);
+
+  --color-series-1: #9085e9;
+  --color-series-2: #199e70;
+  --color-series-3: #c98500;
+  --color-series-4: #d55181;
+  --color-series-5: #3987e5;
+
+  /* Type. */
+  --font-sans: "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-readout: 64px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --tracking-tight: -0.02em;
+  --tracking-caps: 0.12em;
+
+  --leading-tight: 18px;
+  --leading-normal: 20px;
+  --leading-relaxed: 22px;
+
+  /* Space, on a 4px grid. `--spacing-*` repeats `--space-*` for Paper names. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-7: var(--space-7);
+  --spacing-8: var(--space-8);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Controls and focus. */
+  --control-height: 44px;
+  --control-height-small: 32px;
+  --focus-ring: 2px solid var(--color-focus);
+  --focus-offset: 2px;
+
+  /* Layout. */
+  --sidebar-width: 248px;
+  --rail-width: 72px;
+  --topbar-height: 56px;
+
+  --shadow-popover: 0 16px 40px rgb(0 0 0 / 0.5);
+  --shadow-dialog: 0 24px 64px rgb(0 0 0 / 0.6);
+  --shadow-toast: 0 12px 32px rgb(0 0 0 / 0.5);
+  --scrim: rgb(0 0 0 / 0.55);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  /* Avatars. Dark initials on the light avatar, light initials on the dark one. */
+  --color-avatar: #3e3e44;
+  --color-avatar-light: #cfcfd3;
+}
