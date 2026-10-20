@@ -22,7 +22,7 @@ export function Branches() {
     organization.locations.map((location, index) => ({
       id: location.id,
       name: location.name,
-      address: index === 0 ? "18, Jalan Telawi 3, Bangsar, Kuala Lumpur" : "8, Jalan Kiara, Mont Kiara, Kuala Lumpur",
+      address: location.address ?? "No address set",
       hours: "06:00–23:00",
       manager: index === 0 ? "Nadia Hassan" : "Daniel Koh",
       capacity: index === 0 ? 80 : 60,
@@ -137,8 +137,7 @@ export function Branches() {
             <div className="preview-branch-note">
               <MapPin aria-hidden="true" />
               <p>
-                The address and activity are sample details. Editing here does not change the organization’s saved
-                locations.
+                Locations come from your organization. Activity and editing use sample data until their APIs are available.
               </p>
             </div>
           </div>

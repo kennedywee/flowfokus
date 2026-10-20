@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
-import { FailureNotice, Pill, Wordmark, buttonClass, initials } from "../../components/ui";
+import { FailureNotice, Wordmark, buttonClass, initials } from "../../components/ui";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
 import { isSlug } from "../../lib/validate";
 
@@ -399,7 +399,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             </nav>
           </div>
           <div className="topbar__end">
-            {import.meta.env.DEV ? <span className="preview-global-badge"><Pill>Sample data</Pill></span> : null}
             {/* Visual only for now. The members page has the search. */}
             <Link to="/$org/members" params={{ org: data.slug }} className="topbar__search">
               <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
@@ -475,7 +474,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
               <>
                 <span className="demo-tag">Local demo access</span>
                 <span className="account__note">
-                  {import.meta.env.DEV ? "Frontend preview with sample records. A full reload resets your changes." : "This is not a real sign-in. Demo access is off in production."}
+                  This is not a real sign-in. Demo access is available only in development.
                 </span>
               </>
             ) : null}

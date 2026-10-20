@@ -5,17 +5,19 @@ export function PreviewPage({
   title,
   description,
   actions,
+  sample = true,
   children,
 }: {
   title: string;
   description: string;
   actions?: ReactNode;
+  sample?: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="page preview-page">
       <PageHead title={title} description={description}>
-        <Pill>Sample data</Pill>
+        {sample ? <Pill>Sample data</Pill> : null}
         {actions}
       </PageHead>
       {children}

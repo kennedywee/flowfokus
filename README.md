@@ -23,10 +23,10 @@ docker compose up
 
 Open the staff portal at `http://localhost:3001` and the gym site at `http://chainsaw.localhost:3002`. The API uses `http://127.0.0.1:3000`. The local demo requires no external credentials. It uses sample data and records manual payments; it does not collect money.
 
-The development staff portal now uses frontend sample records throughout. Member,
-sale, payment, delivery, and check-in actions change only the browser's preview
-data. A full reload restores the samples. The gym site still reads Rails. See
-[Frontend preview](docs/frontend-preview.md) for the screens and data sources.
+Portal screens with existing APIs use Rails records, including member creation,
+sales, payments, delivery, and check-in. New sections without APIs use clearly
+labelled frontend sample data. See [Frontend preview](docs/frontend-preview.md)
+for the current boundary.
 
 Docker publishes ports 3000–3002 on all IPv4 interfaces, including LAN and Tailscale. Portal demo access works on any host in development when demo mode is enabled. Production still refuses demo access. The gym site still selects the organization from its hostname.
 

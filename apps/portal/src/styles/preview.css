@@ -3,14 +3,10 @@
 .preview-page {
   --preview-panel-padding: 24px;
 }
-.preview-global-badge {
-  display: inline-flex;
-}
 .preview-page svg {
   flex-shrink: 0;
 }
 .preview-page .page-head__actions > .pill {
-  display: none;
   align-self: center;
 }
 .preview-page .preview-mono {
@@ -918,12 +914,6 @@
   }
 }
 @media (max-width: 767.98px) {
-  .preview-global-badge {
-    display: none;
-  }
-  .preview-page .page-head__actions > .pill {
-    display: inline-flex;
-  }
   .preview-page .preview-inbox {
     grid-template-columns: minmax(0, 1fr);
     min-height: 560px;

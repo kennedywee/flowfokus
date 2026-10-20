@@ -20,6 +20,7 @@ export function CheckIns() {
   );
   return (
     <PreviewPage
+      sample={false}
       title="Check-in"
       description="A clear answer for the person in front of you."
       actions={
@@ -27,7 +28,7 @@ export function CheckIns() {
           type="button"
           className={buttonClass({ variant: "secondary", size: "small" })}
           onClick={() =>
-            downloadCsv("sample-check-ins.csv", [
+            downloadCsv("check-ins.csv", [
               ["Member", "Location", "Time", "Result"],
               ...visible.map((visit) => [
                 visit.member.name,
@@ -44,14 +45,12 @@ export function CheckIns() {
       }
     >
       <div className="preview-checkin-layout">
-        <Plate title="Front desk" description="Choose a sample member to try the check-in flow." icon={<LogIn />}>
+        <Plate title="Front desk" description="Choose a member and location to record a visit." icon={<LogIn />}>
           {members.ok ? <CheckInPanel members={members.data} /> : <FailureNotice error={members.error} />}
-          <p className="preview-footnote">
-            Sample visits stay in this browser until a full reload. No access device is activated.
-          </p>
+
         </Plate>
         <Plate
-          title="Today’s visits"
+          title="Recent visits"
           description={`${records.filter((visit) => visit.result === "granted").length} granted · ${records.filter((visit) => visit.result === "denied").length} denied`}
           flush
         >
