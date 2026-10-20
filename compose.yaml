@@ -40,7 +40,7 @@ services:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
-      - "127.0.0.1:3001:3001"
+      - "0.0.0.0:3001:3001"
     depends_on:
       - server
 
@@ -58,7 +58,7 @@ services:
       - ./apps/site/src:/app/apps/site/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
-      - "127.0.0.1:3002:3002"
+      - "0.0.0.0:3002:3002"
     depends_on:
       - server
 
