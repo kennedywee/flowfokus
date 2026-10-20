@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as OrgProductsRouteImport } from './routes/$org/products'
+import { Route as OrgSoonRouteImport } from './routes/$org/soon'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
 import { Route as OrgSalesIndexRouteImport } from './routes/$org/sales/index'
@@ -37,6 +38,11 @@ const OrgIndexRoute = OrgIndexRouteImport.update({
 const OrgProductsRoute = OrgProductsRouteImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgSoonRoute = OrgSoonRouteImport.update({
+  id: '/soon',
+  path: '/soon',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgMembersIndexRoute = OrgMembersIndexRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/$org/products': typeof OrgProductsRoute
+  '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$org/products': typeof OrgProductsRoute
+  '/$org/soon': typeof OrgSoonRoute
   '/$org': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/$org/products': typeof OrgProductsRoute
+  '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/$org/products'
+    | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
     | '/$org/sales/$saleId'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$org/products'
+    | '/$org/soon'
     | '/$org'
     | '/$org/members/$memberId'
     | '/$org/sales/$saleId'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/$org/products'
+    | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
     | '/$org/sales/$saleId'
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgProductsRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/soon': {
+      id: '/$org/soon'
+      path: '/soon'
+      fullPath: '/$org/soon'
+      preLoaderRoute: typeof OrgSoonRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/members/': {
       id: '/$org/members/'
       path: '/members'
@@ -208,6 +227,7 @@ declare module '@tanstack/react-router' {
 
 interface OrgRouteRouteChildren {
   OrgProductsRoute: typeof OrgProductsRoute
+  OrgSoonRoute: typeof OrgSoonRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
   OrgSalesSaleIdRoute: typeof OrgSalesSaleIdRoute
@@ -218,6 +238,7 @@ interface OrgRouteRouteChildren {
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgProductsRoute: OrgProductsRoute,
+  OrgSoonRoute: OrgSoonRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
   OrgSalesSaleIdRoute: OrgSalesSaleIdRoute,
