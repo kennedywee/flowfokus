@@ -10,6 +10,8 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
+import markUrl from "../assets/flowfokus-mark.svg?url";
+import wordmarkUrl from "../assets/flowfokus-wordmark.svg?url";
 import { failureMessage, formatDateTime, formatMoney } from "../lib/format";
 import type { Failure } from "../lib/result";
 
@@ -362,25 +364,15 @@ export function Avatar({ name, size = 24 }: { name: string; size?: number }) {
 }
 
 /**
- * The Flowfokus mark and name. The mark is the logo from the Paper file. The name
- * is plain text in the mono face, because the drawn wordmark font is not shipped.
+ * The Flowfokus logo mark and the dot-matrix wordmark, both taken from the Paper
+ * file. The wordmark image names the brand for assistive technology. The mark is
+ * decoration.
  */
 export function Wordmark() {
   return (
     <span className="wordmark">
-      <svg className="wordmark__mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-        <rect width="16" height="16" rx="3.5" fill="#0A0A0B" />
-        <path
-          d="M10.6 8a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0M8.85 11.03a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0M5.35 11.03a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0M3.6 8a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0M5.35 4.97a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0M8.85 4.97a0.9 0.9 0 1 0 1.8 0a0.9 0.9 0 1 0 -1.8 0"
-          fill="#CFCFD3"
-        />
-        <path
-          d="M13.29 9.59a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M11.69 12.38a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M8.92 13.99a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M5.71 13.99a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M2.92 12.39a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M1.31 9.62a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M1.31 6.41a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M2.91 3.62a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M5.68 2.01a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M8.89 2.01a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M11.68 3.61a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M13.29 6.38a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0"
-          fill="#7C7C82"
-        />
-        <path d="M6.25 8a1.75 1.75 0 1 0 3.5 0a1.75 1.75 0 1 0 -3.5 0" fill="#FFFFFF" />
-      </svg>
-      <span className="wordmark__text">Flowfokus</span>
+      <img className="wordmark__mark" src={markUrl} width={22} height={22} alt="" />
+      <img className="wordmark__text" src={wordmarkUrl} width={104} height={13} alt="Flowfokus" />
     </span>
   );
 }
