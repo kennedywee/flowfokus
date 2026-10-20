@@ -255,6 +255,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             className="sidebar__collapse"
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-controls="app-sidebar"
+            aria-expanded={!collapsed}
             onClick={() => setCollapsed((value) => !value)}
           >
             <img className="sidebar__collapse-mark" src={markUrl} width={22} height={22} alt="" />
@@ -380,7 +381,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
           </>
         ) : null}
       </div>
-      {navOpen ? <div className="scrim" onClick={() => closeNav(true)} aria-hidden="true" /> : null}
+      <div className="scrim" data-open={navOpen} onClick={() => closeNav(true)} aria-hidden="true" />
       <div className="shell__main" inert={navOpen}>
         <header className="topbar">
           <div className="topbar__start">

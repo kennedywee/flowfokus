@@ -8,9 +8,14 @@
  */
 
 .shell {
+  --sidebar-motion: 220ms;
   min-height: 100dvh;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+.scrim {
+  display: none;
 }
 
 .shell__main {
@@ -257,7 +262,10 @@
   height: 18px;
   stroke-width: 1.75;
   color: var(--color-ink-3);
-  transition: color 150ms var(--ease-out);
+  transition: color 150ms var(--ease-out), transform 120ms var(--ease-out);
+}
+.nav-item:active svg {
+  transform: scale(0.92);
 }
 .nav-item:hover svg,
 .nav-item[aria-current="page"] svg {
@@ -1116,6 +1124,35 @@
 
 /* ---------- Phone: top bar and off-canvas sidebar ---------- */
 
+/* The page follows the rail, while labels return after there is room to read. */
+@media (min-width: 1181px) {
+  .shell {
+    transition: grid-template-columns var(--sidebar-motion) var(--ease-out);
+  }
+  .sidebar,
+  .sidebar__brand,
+  .nav,
+  .nav-group,
+  .nav-group__head,
+  .nav-list {
+    transition: gap var(--sidebar-motion) var(--ease-out);
+  }
+  .sidebar .wordmark__text,
+  .org-switch__text,
+  .org-switch__icon,
+  .nav-item__label {
+    opacity: 1;
+    transition: opacity 120ms var(--ease-out) 60ms;
+  }
+  .shell[data-collapsed="true"] .sidebar .wordmark__text,
+  .shell[data-collapsed="true"] .org-switch__text,
+  .shell[data-collapsed="true"] .org-switch__icon,
+  .shell[data-collapsed="true"] .nav-item__label {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+}
+
 @media (max-width: 767.98px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
@@ -1127,12 +1164,13 @@
     width: min(300px, 86vw);
     transform: translateX(-100%);
     visibility: hidden;
-    transition: transform 240ms var(--ease-out), visibility 0s linear 240ms;
+    transition: transform 180ms var(--ease-out), visibility 0s linear 180ms;
   }
   .sidebar[data-open="true"] {
     transform: none;
     visibility: visible;
     transition-delay: 0s;
+    transition-duration: var(--sidebar-motion), 0s;
   }
   .sidebar__close,
   .nav-toggle {
@@ -1151,6 +1189,17 @@
     inset: 0;
     z-index: 50;
     background: var(--scrim);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 180ms var(--ease-out), visibility 0s linear 180ms;
+  }
+  .scrim[data-open="true"] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-duration: var(--sidebar-motion), 0s;
+    transition-delay: 0s;
   }
   .topbar {
     padding-inline: var(--space-3) var(--space-4);
@@ -1185,6 +1234,17 @@
   }
   .nav-item {
     min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .shell *,
+  .shell *::after {
+    transition-delay: 0s;
+  }
+  .nav-item:active svg {
+    transform: none;
   }
 }
 
