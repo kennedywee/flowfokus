@@ -1,9 +1,32 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, createFileRoute, notFound, useRouterState } from "@tanstack/react-router";
-import { Building2, DoorOpen, Menu, Package, Receipt, Users, X, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Building2,
+  ChartColumn,
+  ChevronsUpDown,
+  Inbox,
+  LayoutGrid,
+  LogIn,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Plus,
+  Receipt,
+  Search,
+  Settings,
+  Sparkle,
+  Tag,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { FailureNotice, Wordmark, buttonClass, initials } from "../../components/ui";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
+import { SOON_PAGES, parseSoonPage, type SoonPage } from "../../lib/soon";
 import { isSlug } from "../../lib/validate";
 
 export const Route = createFileRoute("/$org")({
@@ -29,24 +52,33 @@ export const Route = createFileRoute("/$org")({
   component: OrganizationLayout,
 });
 
-type NavItem = {
-  to: "/$org" | "/$org/members" | "/$org/sales" | "/$org/products";
-  label: string;
-  icon: LucideIcon;
-  exact: boolean;
-  /** The path after the organization slug. */
-  path: string;
-};
+type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products";
 
-// Check-in is part of the Front desk page, so it has no entry of its own.
+/** A sidebar item. It opens a real page (`to`) or the placeholder page for `page`. */
+type NavItem = { label: string; icon: LucideIcon } & (
+  | { to: RoutedPath; exact: boolean; page?: undefined; path: string }
+  | { page: SoonPage; to?: undefined; exact?: undefined; path?: undefined }
+);
+
+// Sections with a `page` have no screen yet. They open the placeholder page.
 const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  { label: "Desk", items: [{ to: "/$org", label: "Front desk", icon: DoorOpen, exact: true, path: "" }] },
+  {
+    label: "Desk",
+    items: [
+      { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
+      { page: "inbox", label: "Inbox", icon: Inbox },
+      { page: "agents", label: "Agents", icon: Bot },
+      { page: "check-in", label: "Check-in", icon: LogIn },
+      { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
+      { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
+    ],
+  },
   {
     label: "Manage",
     items: [
-      { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
-      { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
-      { to: "/$org/products", label: "Offers", icon: Package, exact: false, path: "/products" },
+      { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
+      { page: "reports", label: "Reports", icon: ChartColumn },
+      { page: "settings", label: "Settings", icon: Settings },
     ],
   },
 ];
@@ -79,24 +111,56 @@ function OrganizationLayout() {
   return <Shell organization={organization.data} />;
 }
 
-type OrganizationData = Extract<ReturnType<typeof Route.useLoaderData>["organization"], { ok: true }>["data"];
+type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>, { ok: true }>["data"];
+
+/** The first letter of a name, for the organization avatar. */
+function firstLetter(name: string): string {
+  return (Array.from(name.trim())[0] ?? "?").toUpperCase();
+}
+
+/**
+ * The branch status ring from the Paper kit. Every branch uses the same one: the
+ * portal has no per-branch state yet, so the ring is decoration only.
+ */
+function BranchRing() {
+  const good = { stroke: "var(--color-good)" };
+  return (
+    <svg className="nav-item__ring" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8" fill="none" strokeWidth="1.75" style={good} />
+      <circle cx="12" cy="12" r="3.5" style={{ fill: "var(--color-good)" }} />
+    </svg>
+  );
+}
 
 function Shell({ organization: data }: { organization: OrganizationData }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const search = useRouterState({ select: (state) => state.location.search }) as Record<string, unknown>;
   const [navOpen, setNavOpen] = useState(false);
+  // The desktop rail. Kept in React state only, so a reload opens the full sidebar.
+  const [collapsed, setCollapsed] = useState(false);
+  const [showWhatsNew, setShowWhatsNew] = useState(true);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const restoreFocus = useRef(false);
 
   const base = `/${data.slug}`;
-  const current = NAV_GROUPS.flatMap((group) => group.items).find((item) =>
-    item.exact ? pathname.replace(/\/$/, "") === base : pathname.startsWith(`${base}${item.path}`),
+  const trimmed = pathname.replace(/\/$/, "");
+  const onSoon = trimmed === `${base}/soon`;
+  const soonPage = onSoon ? parseSoonPage(search.page) : undefined;
+  const routed = NAV_GROUPS.flatMap((group) => group.items).find(
+    (item) => item.to !== undefined && (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)),
   );
-  const atSectionRoot = current !== undefined && pathname.replace(/\/$/, "") === `${base}${current.path}`;
+  const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
+  const locationName = data.locations[0]?.name ?? data.name;
 
   function closeNav(returnFocus: boolean) {
     restoreFocus.current = returnFocus;
     setNavOpen(false);
+  }
+
+  // A link inside the open phone sidebar was used. Close it.
+  function onSidebarLink() {
+    if (navOpen) closeNav(true);
   }
 
   // Move focus into the sidebar when it opens, and back to the toggle when it closes.
@@ -131,67 +195,190 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
     };
   }, [navOpen]);
 
-  const locationCount = data.locations.length === 1 ? "1 location" : `${data.locations.length} locations`;
+  function renderItem(item: NavItem) {
+    // The router marks the active link (`aria-current="page"`). A section stays active on its detail pages.
+    const props = { className: "nav-item", "data-tooltip": item.label, onClick: onSidebarLink };
+    const content = (
+      <>
+        <item.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <span className="nav-item__label">{item.label}</span>
+      </>
+    );
+    return (
+      <li key={item.label}>
+        {item.page !== undefined ? (
+          <Link
+            to="/$org/soon"
+            params={{ org: data.slug }}
+            search={{ page: item.page }}
+            activeOptions={{ exact: true }}
+            {...props}
+          >
+            {content}
+          </Link>
+        ) : (
+          <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} {...props}>
+            {content}
+          </Link>
+        )}
+      </li>
+    );
+  }
+
+  // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
+  const crumb: { label: string; section?: RoutedPath } | null = onSoon
+    ? { label: soonPage ? SOON_PAGES[soonPage] : "Coming soon" }
+    : routed?.to === undefined
+      ? null
+      : routed.exact || atSectionRoot
+        ? { label: routed.label }
+        : { label: routed.label, section: routed.to };
 
   return (
-    <div className="shell">
+    <div className="shell" data-collapsed={collapsed}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <div className="sidebar" id="app-sidebar" data-open={navOpen}>
         <div className="sidebar__brand">
-          <Wordmark />
-          <button
-            ref={closeRef}
-            type="button"
-            className="sidebar__close"
-            onClick={() => closeNav(true)}
+          <Link
+            to="/$org"
+            params={{ org: data.slug }}
+            activeOptions={{ exact: true }}
+            className="sidebar__logo"
+            onClick={onSidebarLink}
           >
+            <Wordmark />
+          </Link>
+          <button
+            type="button"
+            className="sidebar__collapse"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-controls="app-sidebar"
+            onClick={() => setCollapsed((value) => !value)}
+          >
+            <img className="sidebar__collapse-mark" src={markUrl} width={22} height={22} alt="" />
+            <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+            <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          </button>
+          <button ref={closeRef} type="button" className="sidebar__close" onClick={() => closeNav(true)}>
             <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
             <span className="visually-hidden">Close navigation</span>
           </button>
         </div>
-        {/* Static text. The portal has no organization switcher; "All organizations" is in the account menu. */}
-        <div className="org-switch org-switch--static" data-tooltip={data.name}>
+        {/* The portal has no organization switcher. This opens the list of organizations. */}
+        <Link to="/" activeOptions={{ exact: true }} className="org-switch" data-tooltip={data.name} onClick={onSidebarLink}>
           <span className="org-switch__avatar" aria-hidden="true">
-            {initials(data.name)}
+            {firstLetter(data.name)}
           </span>
           <span className="org-switch__text">
             <span className="org-switch__name">{data.name}</span>
-            <span className="org-switch__meta">
-              {locationCount} · {data.currency}
-            </span>
+            <span className="org-switch__meta">{locationName}</span>
           </span>
-        </div>
+          <ChevronsUpDown className="org-switch__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <span className="visually-hidden">: switch organization</span>
+        </Link>
         <nav className="nav" aria-label="Staff pages">
           {NAV_GROUPS.map((group) => (
             <div className="nav-group" key={group.label}>
-              <p className="nav-group__label" id={`nav-${group.label.toLowerCase()}`}>
-                {group.label}
-              </p>
+              <div className="nav-group__head">
+                <p className="nav-group__label" id={`nav-${group.label.toLowerCase()}`}>
+                  {group.label}
+                </p>
+              </div>
               <ul className="nav-list" aria-labelledby={`nav-${group.label.toLowerCase()}`}>
-                {group.items.map((item) => (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      params={{ org: data.slug }}
-                      className="nav-item"
-                      data-tooltip={item.label}
-                      activeOptions={{ exact: item.exact }}
-                      activeProps={{ "aria-current": "page" }}
-                      onClick={() => {
-                        if (navOpen) closeNav(true);
-                      }}
-                    >
-                      <item.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                      <span className="nav-item__label">{item.label}</span>
-                    </Link>
-                  </li>
-                ))}
+                {group.items.map(renderItem)}
               </ul>
             </div>
           ))}
+          <div className="nav-group">
+            <div className="nav-group__head">
+              <p className="nav-group__label" id="nav-branches">
+                Branches
+              </p>
+              <Link
+                to="/$org/soon"
+                params={{ org: data.slug }}
+                search={{ page: "branches" }}
+                activeOptions={{ exact: true }}
+                className="nav-group__add"
+                onClick={onSidebarLink}
+              >
+                <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                <span className="visually-hidden">Add a branch</span>
+              </Link>
+            </div>
+            <ul className="nav-list" aria-labelledby="nav-branches">
+              {data.locations.map((location) => (
+                <li key={location.id}>
+                  <Link
+                    to="/$org/soon"
+                    params={{ org: data.slug }}
+                    search={{ page: "branches" }}
+                    hash={`branch-${location.id}`}
+                    activeOptions={{ exact: true, includeHash: true }}
+                    className="nav-item nav-item--branch"
+                    data-tooltip={location.name}
+                    onClick={onSidebarLink}
+                  >
+                    <BranchRing />
+                    <span className="nav-item__label">{location.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </nav>
+        {showWhatsNew ? (
+          <>
+            <aside className="whatsnew" aria-labelledby="whatsnew-title">
+              <div className="whatsnew__head">
+                <span className="whatsnew__tag">
+                  <span className="whatsnew__dot" aria-hidden="true" />
+                  What&rsquo;s new
+                </span>
+                <button type="button" className="whatsnew__dismiss" onClick={() => setShowWhatsNew(false)}>
+                  <X strokeWidth={2} aria-hidden="true" focusable="false" />
+                  <span className="visually-hidden">Hide what&rsquo;s new</span>
+                </button>
+              </div>
+              <div className="whatsnew__body">
+                <p className="whatsnew__title" id="whatsnew-title">
+                  New look for the staff portal
+                </p>
+                <p className="whatsnew__text">Same tasks, new dark design.</p>
+              </div>
+              <div className="whatsnew__foot">
+                <span className="whatsnew__version">v0.4</span>
+                <Link
+                  to="/$org/soon"
+                  params={{ org: data.slug }}
+                  search={{ page: "changelog" }}
+                  activeOptions={{ exact: true }}
+                  className="whatsnew__link"
+                  onClick={onSidebarLink}
+                >
+                  Changelog
+                  <ArrowRight strokeWidth={2} aria-hidden="true" focusable="false" />
+                </Link>
+              </div>
+            </aside>
+            {/* On the rail the card becomes one icon with a dot. */}
+            <Link
+              to="/$org/soon"
+              params={{ org: data.slug }}
+              search={{ page: "changelog" }}
+              activeOptions={{ exact: true }}
+              className="whatsnew-rail"
+              data-tooltip="What’s new"
+              onClick={onSidebarLink}
+            >
+              <Sparkle strokeWidth={1.75} aria-hidden="true" focusable="false" />
+              <span className="whatsnew-rail__dot" aria-hidden="true" />
+              <span className="visually-hidden">What&rsquo;s new</span>
+            </Link>
+          </>
+        ) : null}
       </div>
       {navOpen ? <div className="scrim" onClick={() => closeNav(true)} aria-hidden="true" /> : null}
       <div className="shell__main" inert={navOpen}>
@@ -211,33 +398,41 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             <nav className="breadcrumb" aria-label="Breadcrumb">
               <ol>
                 <li>
-                  {current ? (
-                    <Link to="/$org" params={{ org: data.slug }}>
-                      {data.name}
+                  {crumb && !routed?.exact ? (
+                    <Link to="/$org" params={{ org: data.slug }} activeOptions={{ exact: true }}>
+                      {locationName}
                     </Link>
+                  ) : crumb ? (
+                    <span>{locationName}</span>
                   ) : (
-                    <span aria-current="page">{data.name}</span>
+                    <span aria-current="page">{locationName}</span>
                   )}
                 </li>
-                {current && current.exact ? (
+                {crumb ? (
                   <li>
-                    <span aria-current="page">{current.label}</span>
-                  </li>
-                ) : current ? (
-                  <li>
-                    {atSectionRoot ? (
-                      <span aria-current="page">{current.label}</span>
-                    ) : (
-                      <Link to={current.to} params={{ org: data.slug }}>
-                        {current.label}
+                    {crumb.section ? (
+                      <Link to={crumb.section} params={{ org: data.slug }} activeOptions={{ exact: true }}>
+                        {crumb.label}
                       </Link>
+                    ) : (
+                      <span aria-current="page">{crumb.label}</span>
                     )}
                   </li>
                 ) : null}
               </ol>
             </nav>
           </div>
-          <AccountMenu actor={data.actor} />
+          <div className="topbar__end">
+            {/* Visual only for now. The members page has the search. */}
+            <Link to="/$org/members" params={{ org: data.slug }} className="topbar__search">
+              <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
+              <span className="topbar__search-label">Search</span>
+              <kbd className="topbar__kbd" aria-hidden="true">
+                ⌘K
+              </kbd>
+            </Link>
+            <AccountMenu actor={data.actor} />
+          </div>
         </header>
         <main className="main" id="main" tabIndex={-1}>
           <Outlet />
@@ -311,7 +506,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
           <hr className="account__rule" />
           <ul className="account__list">
             <li>
-              <Link to="/" className="account__item" onClick={() => setOpen(false)}>
+              <Link to="/" activeOptions={{ exact: true }} className="account__item" onClick={() => setOpen(false)}>
                 <Building2 strokeWidth={1.75} aria-hidden="true" focusable="false" />
                 All organizations
               </Link>

@@ -1,7 +1,9 @@
 /*
  * App shell: sidebar, top bar, account menu, page header, page grids, and the
  * standalone entry layout (organization chooser, blocked states, 404).
- * Wide: full sidebar (above 1180px). Tablet: icon rail (768px to 1180px).
+ * Wide: full sidebar (above 1180px), or the icon rail when staff collapse it.
+ * Tablet: icon rail (768px to 1180px). The rail rules are written once and used
+ * for both: see the rail section below.
  * Phone: top bar with a menu button that opens the sidebar (below 768px).
  */
 
@@ -42,26 +44,15 @@
 }
 
 .sidebar__brand {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-inline: var(--space-2);
 }
-
-.wordmark {
+.sidebar__logo {
   display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.wordmark__mark {
-  flex: none;
-  width: 22px;
-  height: 22px;
-}
-.wordmark__text {
-  flex: none;
-  width: 104px;
-  height: 13px;
+  border-radius: var(--radius-sm);
 }
 
 .sidebar__close,
@@ -69,7 +60,36 @@
   display: none;
 }
 
-/* Organization block. It is static text: the portal has no switcher API. */
+/* Collapse button. Open: a panel icon beside the logo. Rail: it is the logo, and shows the expand icon on hover. */
+.sidebar__collapse {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.sidebar__collapse:hover {
+  background: var(--color-control);
+  color: var(--color-ink);
+}
+.sidebar__collapse svg {
+  width: 18px;
+  height: 18px;
+}
+.sidebar__collapse-mark,
+.sidebar__collapse-open {
+  display: none;
+}
+
+/* Organization block. It opens the list of organizations: the portal has no switcher API. */
 .org-switch {
   position: relative;
   display: flex;
@@ -78,7 +98,7 @@
   padding: 10px var(--space-3);
   background: var(--color-control);
   border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   color: var(--color-ink);
   text-decoration: none;
   transition: background-color 150ms var(--ease-out);
@@ -86,9 +106,6 @@
 .org-switch:hover {
   background: var(--color-hover);
   color: var(--color-ink);
-}
-.org-switch--static:hover {
-  background: var(--color-control);
 }
 .org-switch__avatar {
   flex: none;
@@ -102,6 +119,7 @@
   color: var(--color-surface);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-semibold);
+  line-height: 16px;
 }
 .org-switch__text {
   flex: 1;
@@ -120,7 +138,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-ink-2);
+  color: var(--color-ink-3);
   font-size: var(--text-xs);
   line-height: 16px;
 }
@@ -133,16 +151,24 @@
 
 /* Navigation. */
 .nav {
-  display: grid;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   gap: 22px;
 }
 .nav-group {
   display: grid;
   gap: 2px;
 }
+.nav-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-3) var(--space-2);
+}
 .nav-group__label {
   margin: 0;
-  padding: 0 var(--space-3) var(--space-2);
+  /* Paper uses ink-4 here. It is text, so it takes ink-3 to reach 4.5:1. */
   color: var(--color-ink-3);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -150,6 +176,27 @@
   letter-spacing: var(--tracking-caps);
   line-height: 14px;
   text-transform: uppercase;
+}
+.nav-group__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-block: -5px;
+  margin-right: -4px;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-3);
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.nav-group__add:hover {
+  background: var(--color-control);
+  color: var(--color-ink);
+}
+.nav-group__add svg {
+  width: 16px;
+  height: 16px;
 }
 .nav-list {
   display: grid;
@@ -172,6 +219,13 @@
   text-decoration: none;
   transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
 }
+.nav-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .nav-item:hover {
   background: var(--color-control);
   color: var(--color-ink);
@@ -185,9 +239,116 @@
   width: 18px;
   height: 18px;
   stroke-width: 1.75;
+  color: var(--color-ink-3);
+  transition: color 150ms var(--ease-out);
 }
+.nav-item:hover svg,
 .nav-item[aria-current="page"] svg {
   color: var(--color-ink);
+}
+
+/* What's new. Pinned to the bottom of the sidebar. */
+.whatsnew {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--color-control);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+}
+.whatsnew__head,
+.whatsnew__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.whatsnew__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: var(--tracking-caps);
+  line-height: 14px;
+  text-transform: uppercase;
+}
+.whatsnew__dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+.whatsnew__dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: -5px -5px -5px 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.whatsnew__dismiss:hover {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.whatsnew__dismiss svg {
+  width: 14px;
+  height: 14px;
+}
+.whatsnew__body {
+  display: grid;
+  gap: var(--space-1);
+}
+.whatsnew__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 18px;
+}
+.whatsnew__text {
+  margin: 0;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.whatsnew__version {
+  /* Paper uses ink-4 here. It is text, so it takes ink-3 to reach 4.5:1. */
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 14px;
+}
+.whatsnew__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-decoration: none;
+}
+.whatsnew__link:hover {
+  color: var(--color-ink);
+}
+.whatsnew__link svg {
+  width: 12px;
+  height: 12px;
+}
+/* The rail form of the card. Only the rail shows it. */
+.whatsnew-rail {
+  display: none;
 }
 
 .scrim {
@@ -214,6 +375,49 @@
   align-items: center;
   gap: var(--space-3);
   min-width: 0;
+}
+.topbar__end {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: var(--space-3);
+}
+
+/* Search. A quiet button, not a field. It opens the members page for now. */
+.topbar__search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-height-small);
+  padding: 0 6px 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 16px;
+  text-decoration: none;
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.topbar__search:hover {
+  background: var(--color-control);
+  color: var(--color-ink);
+}
+.topbar__search svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.topbar__kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--color-control);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 5px;
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 14px;
 }
 
 .nav-toggle {
@@ -314,30 +518,32 @@
   color: var(--color-ink);
   font-size: 11px;
   font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.02em;
+  line-height: 14px;
   cursor: pointer;
   transition: border-color 150ms var(--ease-out);
 }
-.account__button:hover,
-.account__button[aria-expanded="true"] {
+.account__button:hover {
   border-color: var(--color-ink-3);
+}
+.account__button[aria-expanded="true"] {
+  border: 2px solid var(--color-ink-3);
 }
 .account__menu {
   position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
+  top: calc(100% + 8px);
+  right: -8px;
   z-index: 40;
   width: 288px;
   max-width: calc(100vw - 32px);
   padding: 6px;
   background: var(--color-overlay);
   border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   box-shadow: var(--shadow-popover);
 }
 .account__who {
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   padding: 10px 10px var(--space-3);
 }
 .account__name {
@@ -348,7 +554,7 @@
 .account__email {
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--color-ink-2);
+  color: var(--color-ink-3);
   font-size: var(--text-sm);
   line-height: 16px;
 }
@@ -366,7 +572,7 @@
 .account__list {
   display: grid;
   margin: 0;
-  padding: var(--space-1) 0 0;
+  padding: var(--space-1) 0;
   list-style: none;
 }
 .account__item {
@@ -521,24 +727,32 @@
   font-size: var(--text-sm);
 }
 
-/* ---------- Tablet: icon rail ---------- */
+/* ---------- Icon rail ---------- */
+/*
+ * The rail is 72px wide with icons only. It shows in two cases, and the rules
+ * are the same in both, so keep the two blocks below in step:
+ *  1. Tablet (768px to 1180px): always.
+ *  2. Wide (above 1180px): when staff collapse the sidebar (data-collapsed).
+ */
 
 @media (min-width: 768px) and (max-width: 1180px) {
   .shell {
     grid-template-columns: var(--rail-width) minmax(0, 1fr);
   }
-  .sidebar {
+  .shell .sidebar {
     align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-3);
+    gap: 10px;
+    /* Tooltips sit outside the 72px column. */
     overflow: visible;
   }
-  .sidebar__brand {
+  .shell .sidebar__brand {
+    justify-content: center;
     padding-inline: 0;
   }
-  .org-switch__text,
-  .org-switch__icon,
-  .nav-item__label {
+  .shell .sidebar .wordmark__text,
+  .shell .org-switch__text,
+  .shell .org-switch__icon,
+  .shell .nav-item__label {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -548,55 +762,122 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .org-switch {
+  .shell .sidebar .wordmark__mark {
+    width: 22px;
+    height: 22px;
+  }
+  .shell .sidebar__logo {
+    align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
   }
-  .nav {
-    gap: var(--space-3);
-    justify-items: center;
-  }
-  .nav-group {
-    justify-items: center;
-  }
-  .nav-group + .nav-group {
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--color-line);
-    width: 100%;
-  }
-  .nav-group__label {
+  .shell .whatsnew,
+  .shell .sidebar__collapse {
     display: none;
   }
-  .nav-item {
+  .shell .org-switch {
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     padding: 0;
   }
-  .nav-item svg {
-    width: 20px;
-    height: 20px;
+  .shell .nav {
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
   }
-  .topbar,
-  .main {
+  .shell .nav-group {
+    justify-items: center;
+    gap: 10px;
+  }
+  /* A section title becomes a hairline. The words stay for assistive technology. */
+  .shell .nav-group__head {
+    justify-content: center;
+    padding: 0;
+  }
+  .shell .nav-group__label {
+    width: 24px;
+    height: 1px;
+    overflow: hidden;
+    background: var(--color-line-strong);
+    font-size: 0;
+    line-height: 0;
+  }
+  .shell .nav-group__add {
+    display: none;
+  }
+  .shell .nav-list {
+    gap: 10px;
+    justify-items: center;
+  }
+  .shell .nav-item {
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+  .shell .nav-item--branch {
+    height: 36px;
+  }
+  /* What's new becomes one icon with a dot. */
+  .shell .whatsnew-rail {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    background: var(--color-control);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    color: var(--color-ink-2);
+    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  }
+  .shell .whatsnew-rail:hover {
+    background: var(--color-hover);
+    color: var(--color-ink);
+  }
+  .shell .whatsnew-rail svg {
+    width: 18px;
+    height: 18px;
+  }
+  .shell .whatsnew-rail__dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--color-control);
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-sizing: border-box;
+  }
+  .shell .topbar,
+  .shell .main {
     padding-inline: var(--space-6);
   }
 
   /* Tooltips. The visually hidden label names the link; this only shows it. */
-  .nav-item::after,
-  .org-switch::after {
+  .shell .nav-item::after,
+  .shell .org-switch::after,
+  .shell .whatsnew-rail::after {
     content: attr(data-tooltip);
     content: attr(data-tooltip) / "";
     position: absolute;
     left: calc(100% + 12px);
     top: 50%;
     z-index: 70;
-    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
     border: 1px solid var(--color-line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--color-overlay);
+    border-radius: 8px;
+    background: var(--color-tooltip);
     box-shadow: var(--shadow-popover);
     color: var(--color-ink);
     font-size: var(--text-sm);
@@ -607,12 +888,208 @@
     transform: translate(-4px, -50%);
     transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out);
   }
-  .nav-item:hover::after,
-  .nav-item:focus-visible::after,
-  .org-switch:hover::after,
-  .org-switch:focus-visible::after {
+  .shell .nav-item:hover::after,
+  .shell .nav-item:focus-visible::after,
+  .shell .org-switch:hover::after,
+  .shell .org-switch:focus-visible::after,
+  .shell .whatsnew-rail:hover::after,
+  .shell .whatsnew-rail:focus-visible::after {
     opacity: 1;
     transform: translate(0, -50%);
+  }
+}
+
+@media (min-width: 1181px) {
+  .shell[data-collapsed="true"] {
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  }
+  .shell[data-collapsed="true"] .sidebar {
+    align-items: center;
+    gap: 10px;
+    /* Tooltips sit outside the 72px column. */
+    overflow: visible;
+  }
+  .shell[data-collapsed="true"] .sidebar__brand {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .shell[data-collapsed="true"] .sidebar .wordmark__text,
+  .shell[data-collapsed="true"] .org-switch__text,
+  .shell[data-collapsed="true"] .org-switch__icon,
+  .shell[data-collapsed="true"] .nav-item__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .shell[data-collapsed="true"] .sidebar .wordmark__mark {
+    width: 22px;
+    height: 22px;
+  }
+  .shell[data-collapsed="true"] .sidebar__logo {
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+  }
+  .shell[data-collapsed="true"] .whatsnew {
+    display: none;
+  }
+  .shell[data-collapsed="true"] .org-switch {
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+  .shell[data-collapsed="true"] .nav {
+    flex: 1;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .shell[data-collapsed="true"] .nav-group {
+    justify-items: center;
+    gap: 10px;
+  }
+  /* A section title becomes a hairline. The words stay for assistive technology. */
+  .shell[data-collapsed="true"] .nav-group__head {
+    justify-content: center;
+    padding: 0;
+  }
+  .shell[data-collapsed="true"] .nav-group__label {
+    width: 24px;
+    height: 1px;
+    overflow: hidden;
+    background: var(--color-line-strong);
+    font-size: 0;
+    line-height: 0;
+  }
+  .shell[data-collapsed="true"] .nav-group__add {
+    display: none;
+  }
+  .shell[data-collapsed="true"] .nav-list {
+    gap: 10px;
+    justify-items: center;
+  }
+  .shell[data-collapsed="true"] .nav-item {
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+  .shell[data-collapsed="true"] .nav-item--branch {
+    height: 36px;
+  }
+  /* What's new becomes one icon with a dot. */
+  .shell[data-collapsed="true"] .whatsnew-rail {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    background: var(--color-control);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    color: var(--color-ink-2);
+    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  }
+  .shell[data-collapsed="true"] .whatsnew-rail:hover {
+    background: var(--color-hover);
+    color: var(--color-ink);
+  }
+  .shell[data-collapsed="true"] .whatsnew-rail svg {
+    width: 18px;
+    height: 18px;
+  }
+  .shell[data-collapsed="true"] .whatsnew-rail__dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border: 2px solid var(--color-control);
+    border-radius: 50%;
+    background: var(--color-accent);
+    box-sizing: border-box;
+  }
+  .shell[data-collapsed="true"] .topbar,
+  .shell[data-collapsed="true"] .main {
+    padding-inline: var(--space-6);
+  }
+
+  /* Tooltips. The visually hidden label names the link; this only shows it. */
+  .shell[data-collapsed="true"] .nav-item::after,
+  .shell[data-collapsed="true"] .org-switch::after,
+  .shell[data-collapsed="true"] .whatsnew-rail::after {
+    content: attr(data-tooltip);
+    content: attr(data-tooltip) / "";
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 8px;
+    background: var(--color-tooltip);
+    box-shadow: var(--shadow-popover);
+    color: var(--color-ink);
+    font-size: var(--text-sm);
+    line-height: 16px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-4px, -50%);
+    transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out);
+  }
+  .shell[data-collapsed="true"] .nav-item:hover::after,
+  .shell[data-collapsed="true"] .nav-item:focus-visible::after,
+  .shell[data-collapsed="true"] .org-switch:hover::after,
+  .shell[data-collapsed="true"] .org-switch:focus-visible::after,
+  .shell[data-collapsed="true"] .whatsnew-rail:hover::after,
+  .shell[data-collapsed="true"] .whatsnew-rail:focus-visible::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  /* The collapse button is the logo on the rail. Hover or focus shows the expand icon. */
+  .shell[data-collapsed="true"] .sidebar__logo {
+    display: none;
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse {
+    width: 40px;
+    height: 40px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse-close {
+    display: none;
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse-mark {
+    display: block;
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse:hover,
+  .shell[data-collapsed="true"] .sidebar__collapse:focus-visible {
+    background: var(--color-hover);
+    border-color: var(--color-line-strong);
+    color: var(--color-ink);
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse:hover .sidebar__collapse-mark,
+  .shell[data-collapsed="true"] .sidebar__collapse:focus-visible .sidebar__collapse-mark {
+    display: none;
+  }
+  .shell[data-collapsed="true"] .sidebar__collapse:hover .sidebar__collapse-open,
+  .shell[data-collapsed="true"] .sidebar__collapse:focus-visible .sidebar__collapse-open {
+    display: block;
   }
 }
 
@@ -640,6 +1117,13 @@
   .nav-toggle {
     display: inline-flex;
   }
+  /* The drawer is always the full sidebar, so it has no rail button. */
+  .sidebar__collapse {
+    display: none;
+  }
+  .whatsnew-rail {
+    display: none;
+  }
   .scrim {
     display: block;
     position: fixed;
@@ -661,6 +1145,22 @@
   }
   .breadcrumb a {
     max-width: 16ch;
+  }
+  .topbar__search {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+  .topbar__search-label,
+  .topbar__kbd {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .nav-item {
     min-height: 44px;

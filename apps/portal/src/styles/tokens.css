@@ -126,3 +126,8 @@
   --color-avatar: #3e3e44;
   --color-avatar-light: #cfcfd3;
 }
+
+:root {
+  /* Rail tooltip, from the Paper sidebar kit. */
+  --color-tooltip: #1e1e22;
+}

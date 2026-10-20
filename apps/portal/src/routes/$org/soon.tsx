@@ -19,7 +19,7 @@ function Soon() {
       <PageHead title={page ? SOON_PAGES[page] : "Coming soon"} />
       <Empty title={`${name} is not built yet`} icon={Hammer}>
         <p>The staff portal does not have this section yet. Daily work happens on the Overview page.</p>
-        <Link to="/$org" params={{ org }} className={buttonClass({ variant: "secondary" })}>
+        <Link to="/$org" params={{ org }} activeOptions={{ exact: true }} className={buttonClass({ variant: "secondary" })}>
           Back to Overview
         </Link>
       </Empty>
