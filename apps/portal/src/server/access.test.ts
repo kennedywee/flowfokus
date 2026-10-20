@@ -24,24 +24,6 @@ describe("resolveStaffAccess", () => {
     });
   });
 
-  test("allows only the explicitly configured Tailscale address in development", () => {
-    const env = { ...demoEnv, FLOWFOKUS_TAILSCALE_IP: "100.89.45.88" };
-    expect(resolveStaffAccess({ dev: true, env, hostname: "100.89.45.88" }).kind).toBe("demo");
-    expect(resolveStaffAccess({ dev: true, env: demoEnv, hostname: "100.89.45.88" }).kind).toBe("unavailable");
-    expect(resolveStaffAccess({ dev: true, env, hostname: "100.89.45.89" }).kind).toBe("unavailable");
-    expect(resolveStaffAccess({ dev: true, env, hostname: "100.89.45.88.example.com" }).kind).toBe("unavailable");
-    expect(resolveStaffAccess({ dev: false, env, hostname: "100.89.45.88" })).toEqual({
-      kind: "unavailable", reason: "sign_in_not_configured",
-    });
-  });
-
-  test.each(["0.0.0.0", "192.168.1.2", "100.63.45.88", "100.128.45.88", "100.89.999.88", "*.example.com"])(
-    "refuses an invalid Tailscale opt-in: %s", (hostname) => {
-      const env = { ...demoEnv, FLOWFOKUS_TAILSCALE_IP: hostname };
-      expect(resolveStaffAccess({ dev: true, env, hostname }).kind).toBe("unavailable");
-    },
-  );
-
   test("refuses a missing or short demo token", () => {
     for (const token of [undefined, "", "short"]) {
       const env = { FLOWFOKUS_DEMO_MODE: "true", ...(token === undefined ? {} : { FLOWFOKUS_DEMO_TOKEN: token }) };

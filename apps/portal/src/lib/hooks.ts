@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
 import type { Failure, Result } from "./result";
-import { createIdempotencyKey } from "./idempotency";
 
 /** A key for one write attempt. Keep it for retries; renew it after success. */
 export function useIdempotencyKey(): [string, () => void] {
-  const [key, setKey] = useState(createIdempotencyKey);
-  const renew = useCallback(() => setKey(createIdempotencyKey()), []);
+  const [key, setKey] = useState(() => globalThis.crypto.randomUUID());
+  const renew = useCallback(() => setKey(globalThis.crypto.randomUUID()), []);
   return [key, renew];
 }
 
