@@ -340,12 +340,15 @@ export function PageHead({ title, description, children }: { title: string; desc
   );
 }
 
-/** Up to two initials from a name. */
+/** Up to two initials from a name. Words that start with a digit or symbol are skipped. */
 export function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return "?";
-  const first = words[0]![0] ?? "";
-  const last = words.length > 1 ? (words[words.length - 1]![0] ?? "") : "";
+  const named = words.filter((word) => /^\p{L}/u.test(word));
+  // No word starts with a letter, so use the first character of the name.
+  if (named.length === 0) return (Array.from(words[0]!)[0] ?? "?").toUpperCase();
+  const first = Array.from(named[0]!)[0]!;
+  const last = named.length > 1 ? Array.from(named[named.length - 1]!)[0]! : "";
   return (first + last).toUpperCase();
 }
 

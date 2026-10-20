@@ -97,6 +97,9 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
   gap: var(--space-3);
 }
+.sale-page .meter + .timeline {
+  margin-top: var(--space-4);
+}
 .sale-page .readout {
   min-width: 0;
   padding: var(--space-4);

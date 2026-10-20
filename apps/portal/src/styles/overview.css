@@ -1,10 +1,19 @@
 /* Screen styles: front desk overview. Scoped under .desk-page so nothing leaks. */
 
 /* Stat tiles: a small caps label, a mono readout, and a note. */
+/* The column is the container. Two by two once it is wide enough, one column on phones. */
+.desk-page .stack {
+  container-type: inline-size;
+}
 .desk-page .desk-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
+}
+@container (min-width: 30rem) {
+  .desk-page .desk-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .desk-page .desk-tile {
   display: grid;

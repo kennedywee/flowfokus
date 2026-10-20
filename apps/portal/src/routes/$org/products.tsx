@@ -66,6 +66,12 @@ function Products() {
             ) : (
               <div className="offer__table table-wrap">
                 <table className="table">
+                  <colgroup>
+                    <col />
+                    <col className="offer__col-term" />
+                    <col className="offer__col-status" />
+                    <col className="offer__col-amount" />
+                  </colgroup>
                   <thead>
                     <tr>
                       <th scope="col">Price</th>

@@ -26,6 +26,25 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.offers-page .num {
+/* Every card's table shares one set of column widths, so the lanes line up down the page. */
+.offers-page .offer__table .table {
+  table-layout: fixed;
+  min-width: 34rem;
+}
+.offers-page .offer__col-term {
+  width: 9rem;
+}
+.offers-page .offer__col-status {
+  width: 10rem;
+}
+.offers-page .offer__col-amount {
+  width: 10rem;
+}
+/* Only the values read in mono. The header keeps the table header style. */
+.offers-page th.num {
+  font-family: inherit;
+  font-variant-numeric: normal;
+}
+.offers-page td.num {
   font-size: var(--text-md);
 }
