@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Schemas } from "@flowfokus/api";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, CircleAlert, CircleCheck, Clock, Users } from "lucide-react";
+import { ArrowRight, CircleAlert, CircleCheck, Clock, Plus, Users } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
 import { Avatar, Empty, FailureNotice, PageHead, Plate, SkeletonRows, Status, buttonClass } from "../../components/ui";
 import { DENIAL, formatWhen } from "../../lib/format";
@@ -65,7 +65,12 @@ function FrontDesk() {
 
   return (
     <div className="page desk-page">
-      <PageHead title="Front desk" description="Check members in. Then follow up on sales that need payment or delivery." />
+      <PageHead title="Overview" description="Check members in. Then follow up on sales that need payment or delivery.">
+        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonClass()}>
+          <Plus aria-hidden="true" strokeWidth={1.75} />
+          New sale
+        </Link>
+      </PageHead>
 
       <div className="grid-2 grid-2--wide-first">
         <div className="stack">
