@@ -1,7 +1,7 @@
 /* Screen styles: front desk overview. Scoped under .desk-page so nothing leaks. */
 
 /* Stat tiles: a small caps label, a mono readout, and a note. */
-/* The column is the container. Two by two once it is wide enough, one column on phones. */
+/* The column is the container. Two by two from about 420px, one column on phones. */
 .desk-page .stack {
   container-type: inline-size;
 }
@@ -10,7 +10,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
-@container (min-width: 30rem) {
+@container (min-width: 26rem) {
   .desk-page .desk-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
