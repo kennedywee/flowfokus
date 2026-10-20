@@ -8,7 +8,7 @@ export function SalesTable({ sales, showMember = true }: { sales: Schemas["Sale"
   const organization = useOrganization();
   return (
     <div className="table-wrap">
-      <table className="table table--stack">
+      <table className="table">
         <thead>
           <tr>
             <th scope="col">Sale</th>
@@ -53,10 +53,10 @@ export function SalesTable({ sales, showMember = true }: { sales: Schemas["Sale"
               <td>
                 <Status state={saleState(sale)}>{saleStateLabel(sale)}</Status>
               </td>
-              <td className="num" data-label="Total">
+              <td className="num">
                 <Money minor={sale.total_minor} currency={sale.currency} />
               </td>
-              <td className="num" data-label="Balance">
+              <td className="num">
                 <Money minor={sale.balance_minor} currency={sale.currency} />
               </td>
             </tr>

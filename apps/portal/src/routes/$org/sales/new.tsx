@@ -1,14 +1,32 @@
 import { useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Empty, FailureNotice, Field, PageHead, Plate, SkeletonRows, SubmitButton, describedBy } from "../../../components/ui";
-import { formatDuration, formatMoney, formatUsage } from "../../../lib/format";
+import { Combobox } from "../../../components/Combobox";
+import { RadioCards } from "../../../components/RadioCards";
+import { useToast } from "../../../components/Toast";
+import {
+  Empty,
+  FailureNotice,
+  Field,
+  Money,
+  Notice,
+  PageHead,
+  Plate,
+  SkeletonRows,
+  SubmitButton,
+  buttonClass,
+  describedBy,
+} from "../../../components/ui";
+import { failureMessage, formatDuration, formatMoney, formatUsage } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useLocationName, useOrganization } from "../../../lib/organization";
 import { createSale, listMembers, listProducts } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
+
+/** Up to this many offers show as cards. More than this show in a searchable list. */
+const OFFER_CARD_LIMIT = 6;
 
 export const Route = createFileRoute("/$org/sales/new")({
   validateSearch: (search: Record<string, unknown>): { member?: string } =>
@@ -24,9 +42,10 @@ export const Route = createFileRoute("/$org/sales/new")({
   component: NewSale,
 });
 
+/** A product with the prices that can be used for a new sale. */
 interface Offer {
   product: Schemas["StaffProduct"];
-  price: Schemas["Price"];
+  prices: Schemas["Price"][];
 }
 
 function NewSale() {
@@ -35,7 +54,7 @@ function NewSale() {
 
   if (!members.ok || !products.ok) {
     return (
-      <div className="page">
+      <div className="page new-sale-page">
         <PageHead title="New sale" />
         {!members.ok ? <FailureNotice error={members.error} title="Members did not load" /> : null}
         {!products.ok ? <FailureNotice error={products.error} title="Offers did not load" /> : null}
@@ -43,19 +62,20 @@ function NewSale() {
     );
   }
 
-  const offers: Offer[] = products.data.flatMap((product) =>
-    product.prices.filter((price) => price.available).map((price) => ({ product, price })),
-  );
+  const offers: Offer[] = products.data
+    .map((product) => ({ product, prices: product.prices.filter((price) => price.available) }))
+    .filter((offer) => offer.prices.length > 0);
 
   return (
-    <div className="page">
+    <div className="page new-sale-page">
       <PageHead
         title="New sale"
         description="One membership for one member. Record payment on the next screen. Partial payment is fine."
       />
       {members.data.length === 0 ? (
         <Empty title="Add a member first">
-          <Link to="/$org/members" params={{ org: organization.slug }} className="button button--quiet">
+          <p>A sale needs a member. Add one, then come back.</p>
+          <Link to="/$org/members" params={{ org: organization.slug }} className={buttonClass({ variant: "secondary", size: "small" })}>
             Add a member
           </Link>
         </Empty>
@@ -74,22 +94,30 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
   const organization = useOrganization();
   const locationName = useLocationName();
   const navigate = useNavigate();
+  const toast = useToast();
   const search = Route.useSearch();
   const [key, renewKey] = useIdempotencyKey();
   const action = useAction(sendSale);
 
   const preselected = members.some((member) => member.id === search.member) ? search.member : "";
   const [memberId, setMemberId] = useState(preselected ?? "");
+  const [productId, setProductId] = useState("");
   const [priceId, setPriceId] = useState("");
   const [locationId, setLocationId] = useState(organization.locations[0]?.id ?? "");
-  const [local, setLocal] = useState<{ member?: string; price?: string; location?: string }>({});
+  const [local, setLocal] = useState<{ member?: string; product?: string; price?: string; location?: string }>({});
 
   const server = action.error?.code === "validation_failed" ? action.error.details : undefined;
   const memberError = local.member ?? server?.member_id?.join(" ");
+  const productError = local.product;
   const priceError =
     local.price ?? server?.price_id?.join(" ") ?? (action.error?.code === "price_unavailable" ? action.error.message : undefined);
   const locationError = local.location ?? server?.location_id?.join(" ");
-  const chosen = offers.find((offer) => offer.price.id === priceId);
+
+  const member = members.find((item) => item.id === memberId);
+  const offer = offers.find((item) => item.product.id === productId);
+  const price = offer?.prices.find((item) => item.id === priceId);
+  const benefitsText = (product: Schemas["StaffProduct"]) =>
+    product.benefits.map((benefit) => `${formatUsage(benefit.usage_limit)}, ${locationName(benefit.location_id)}`).join("; ");
 
   /** Changed values are a new request, so they need a new key. */
   function edited() {
@@ -103,11 +131,12 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
     event.preventDefault();
     const errors = {
       member: memberId ? undefined : "Choose the member who is buying.",
-      price: priceId ? undefined : "Choose an offer.",
+      product: productId ? undefined : "Choose an offer.",
+      price: priceId ? undefined : productId ? "Choose a price." : undefined,
       location: locationId ? undefined : "Choose where the sale happens.",
     };
     setLocal(errors);
-    if (errors.member || errors.price || errors.location) return;
+    if (errors.member || errors.product || errors.price || errors.location) return;
 
     const result = await action.run({
       slug: organization.slug,
@@ -117,115 +146,182 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
       location_id: locationId,
     });
     if (result.ok) {
+      toast.show({
+        tone: "success",
+        title: "Sale recorded",
+        body: `${member?.name ?? "The member"} has not paid yet. Record payment next.`,
+      });
       void navigate({ to: "/$org/sales/$saleId", params: { org: organization.slug, saleId: result.data.id } });
     }
   }
 
-  const fieldErrorsShown = Boolean(memberError || priceError || locationError);
-  return (
-    <form className="grid-2 grid-2--wide-first" onSubmit={onSubmit} noValidate>
-      <Plate title="Offer">
-        <fieldset aria-describedby={priceError ? "offer-error" : undefined}>
-          <legend className="visually-hidden">Offer</legend>
-          <div className="choice-list">
-            {offers.map(({ product, price }) => (
-              <label key={price.id} className="choice">
-                <input
-                  type="radio"
-                  name="price"
-                  value={price.id}
-                  checked={priceId === price.id}
-                  onChange={() => {
-                    setPriceId(price.id);
-                    edited();
-                  }}
-                />
-                <span className="choice__title">
-                  {product.name}
-                  {product.published ? "" : " (staff only)"}
-                </span>
-                <span className="choice__price">{formatMoney(price.amount_minor, price.currency)}</span>
-                <span className="choice__meta">
-                  {price.label} · {formatDuration(price.duration_days)} ·{" "}
-                  {product.benefits
-                    .map((benefit) => `${formatUsage(benefit.usage_limit)}, ${locationName(benefit.location_id)}`)
-                    .join("; ")}
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        {priceError ? (
-          <p className="field__error" id="offer-error">
-            {priceError}
-          </p>
-        ) : null}
-      </Plate>
+  const fieldErrorsShown = Boolean(memberError || productError || priceError || locationError);
+  const showNotice =
+    action.error && !(action.error.code === "validation_failed" && fieldErrorsShown) && action.error.code !== "price_unavailable";
 
-      <Plate title="Sale">
-        <div className="form">
-          <Field id="sale-member" label="Member" error={memberError}>
-            <select
+  return (
+    <form className="new-sale-page__layout" onSubmit={onSubmit} noValidate>
+      <div className="stack">
+        <Plate title="Member" icon={<span className="new-sale-page__step">1</span>} description="Who is buying?">
+          <div className="form">
+            <Combobox
               id="sale-member"
-              className="select"
-              value={memberId}
-              onChange={(event) => {
-                setMemberId(event.target.value);
+              label="Member"
+              placeholder="Search by name or email"
+              emptyText="No member matches. Check the spelling, or add the member first."
+              options={members.map((item) => ({ value: item.id, label: item.name, detail: item.email }))}
+              value={memberId || null}
+              onChange={(value) => {
+                setMemberId(value ?? "");
+                setLocal((current) => ({ ...current, member: undefined }));
                 edited();
               }}
-              aria-invalid={memberError ? true : undefined}
-              aria-describedby={describedBy("sale-member", undefined, memberError)}
-            >
-              <option value="">Choose a member</option>
-              {members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.name} · {member.email}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field id="sale-location" label="Sold at" error={locationError}>
-            <select
-              id="sale-location"
-              className="select"
-              value={locationId}
-              onChange={(event) => {
-                setLocationId(event.target.value);
+              error={memberError}
+              invalid={Boolean(memberError)}
+              required
+            />
+            <Field id="sale-location" label="Sold at" error={locationError}>
+              <select
+                id="sale-location"
+                className="select"
+                value={locationId}
+                onChange={(event) => {
+                  setLocationId(event.target.value);
+                  setLocal((current) => ({ ...current, location: undefined }));
+                  edited();
+                }}
+                aria-invalid={locationError ? true : undefined}
+                aria-describedby={describedBy("sale-location", undefined, locationError)}
+              >
+                {organization.locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+        </Plate>
+
+        <Plate title="Offer" icon={<span className="new-sale-page__step">2</span>} description="What is the member buying?">
+          {offers.length > OFFER_CARD_LIMIT ? (
+            <Combobox
+              id="sale-offer"
+              label="Offer"
+              placeholder="Search offers"
+              emptyText="No offer matches. Check the spelling or clear the search."
+              options={offers.map(({ product }) => ({
+                value: product.id,
+                label: `${product.name}${product.published ? "" : " (staff only)"}`,
+                detail: benefitsText(product),
+              }))}
+              value={productId || null}
+              onChange={(value) => {
+                setProductId(value ?? "");
+                setPriceId("");
+                setLocal((current) => ({ ...current, product: undefined, price: undefined }));
                 edited();
               }}
-              aria-invalid={locationError ? true : undefined}
-              aria-describedby={describedBy("sale-location", undefined, locationError)}
-            >
-              {organization.locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <dl className="facts">
+              error={productError}
+              invalid={Boolean(productError)}
+              required
+            />
+          ) : (
+            <>
+              <RadioCards
+                name="product"
+                legend="Offer"
+                hideLegend
+                options={offers.map(({ product }) => ({
+                  value: product.id,
+                  title: `${product.name}${product.published ? "" : " (staff only)"}`,
+                  meta: benefitsText(product),
+                }))}
+                value={productId || null}
+                onChange={(value) => {
+                  setProductId(value);
+                  setPriceId("");
+                  setLocal((current) => ({ ...current, product: undefined, price: undefined }));
+                  edited();
+                }}
+                describedBy={productError ? "sale-offer-error" : undefined}
+              />
+              {productError ? (
+                <p className="field__error" id="sale-offer-error">
+                  {productError}
+                </p>
+              ) : null}
+            </>
+          )}
+        </Plate>
+
+        <Plate title="Price" icon={<span className="new-sale-page__step">3</span>} description="Which price and term?">
+          {offer ? (
+            <>
+              <RadioCards
+                name="price"
+                legend="Price"
+                hideLegend
+                options={offer.prices.map((item) => ({
+                  value: item.id,
+                  title: item.label,
+                  meta: formatDuration(item.duration_days),
+                  trailing: <Money minor={item.amount_minor} currency={item.currency} />,
+                }))}
+                value={priceId || null}
+                onChange={(value) => {
+                  setPriceId(value);
+                  setLocal((current) => ({ ...current, price: undefined }));
+                  edited();
+                }}
+                describedBy={priceError ? "sale-price-error" : undefined}
+              />
+              {priceError ? (
+                <p className="field__error" id="sale-price-error">
+                  {priceError}
+                </p>
+              ) : null}
+            </>
+          ) : (
+            <p className="field__hint">Choose an offer first. Its prices show here.</p>
+          )}
+        </Plate>
+      </div>
+
+      <div className="stack new-sale-page__summary">
+        <Plate title="Sale summary">
+          <div className="readout">
+            <span className="readout__label">Total</span>
+            <span className="readout__value">{price ? formatMoney(price.amount_minor, price.currency) : "—"}</span>
+          </div>
+          <dl className="facts facts--rows">
             <div>
-              <dt>Total</dt>
-              <dd className="money">{chosen ? formatMoney(chosen.price.amount_minor, chosen.price.currency) : "—"}</dd>
+              <dt>Member</dt>
+              <dd>{member?.name ?? "—"}</dd>
+            </div>
+            <div>
+              <dt>Offer</dt>
+              <dd>{offer?.product.name ?? "—"}</dd>
             </div>
             <div>
               <dt>Term</dt>
-              <dd>{chosen ? formatDuration(chosen.price.duration_days) : "—"}</dd>
+              <dd>{price ? formatDuration(price.duration_days) : "—"}</dd>
             </div>
           </dl>
-          <p className="field__hint">
-            The price and terms are saved with the sale. Later catalog changes do not affect it.
-          </p>
+          <p className="field__hint">The price and terms are saved with the sale. Later catalog changes do not affect it.</p>
+          {showNotice && action.error ? (
+            <Notice tone="error" title="The sale was not recorded" live>
+              <p>{failureMessage(action.error)}</p>
+              <p>Your choices are kept. Check them, then try again.</p>
+            </Notice>
+          ) : null}
           <div className="actions">
             <SubmitButton pending={action.pending} pendingLabel="Recording…" large>
               Record sale
             </SubmitButton>
           </div>
-          {action.error && !(action.error.code === "validation_failed" && fieldErrorsShown) && action.error.code !== "price_unavailable" ? (
-            <FailureNotice error={action.error} title="The sale was not recorded" />
-          ) : null}
-        </div>
-      </Plate>
+        </Plate>
+      </div>
     </form>
   );
 }

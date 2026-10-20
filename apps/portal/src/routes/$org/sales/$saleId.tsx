@@ -2,9 +2,27 @@ import { useState, type FormEvent } from "react";
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { PackageCheck } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
-import { Empty, FailureNotice, Field, Lamp, Notice, PageHead, Plate, SkeletonRows, Status, SubmitButton, Time, describedBy } from "../../../components/ui";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { RadioCards } from "../../../components/RadioCards";
+import { useToast } from "../../../components/Toast";
+import {
+  Empty,
+  FailureNotice,
+  Field,
+  Lamp,
+  Notice,
+  PageHead,
+  Plate,
+  SkeletonRows,
+  Status,
+  SubmitButton,
+  Time,
+  buttonClass,
+  describedBy,
+} from "../../../components/ui";
 import {
   PAYMENT_METHOD_LABEL,
+  failureMessage,
   formatDate,
   formatDuration,
   formatMoney,
@@ -37,10 +55,12 @@ function SalePage() {
   const sale = Route.useLoaderData();
   const organization = useOrganization();
   const locationName = useLocationName();
+  // The last payment this screen recorded. It stays visible after the form closes.
+  const [recorded, setRecorded] = useState<{ saleId: string; text: string } | null>(null);
 
   if (!sale.ok) {
     return (
-      <div className="page">
+      <div className="page sale-page">
         <Crumbs />
         <FailureNotice error={sale.error} title="This sale did not load" />
       </div>
@@ -50,7 +70,7 @@ function SalePage() {
   const data = sale.data;
   const line = data.line_item;
   return (
-    <div className="page">
+    <div className="page sale-page">
       <Crumbs />
       <PageHead
         title={`${line.product_name}, ${line.price_label}`}
@@ -67,22 +87,22 @@ function SalePage() {
         <Status state={saleState(data)}>{saleStateLabel(data)}</Status>
       </PageHead>
 
-      <div className="grid-2">
+      <div className="sale-page__layout">
         <Plate title="Payment">
-          <dl className="facts">
-            <div>
-              <dt>Total</dt>
-              <dd className="money">{formatMoney(data.total_minor, data.currency)}</dd>
+          <div className="sale-page__readouts">
+            <div className="readout">
+              <span className="readout__label">Total</span>
+              <span className="readout__value">{formatMoney(data.total_minor, data.currency)}</span>
             </div>
-            <div>
-              <dt>Paid</dt>
-              <dd className="money">{formatMoney(data.paid_minor, data.currency)}</dd>
+            <div className="readout">
+              <span className="readout__label">Paid</span>
+              <span className="readout__value">{formatMoney(data.paid_minor, data.currency)}</span>
             </div>
-            <div>
-              <dt>Balance</dt>
-              <dd className="money">{formatMoney(data.balance_minor, data.currency)}</dd>
+            <div className="readout">
+              <span className="readout__label">Balance</span>
+              <span className="readout__value">{formatMoney(data.balance_minor, data.currency)}</span>
             </div>
-          </dl>
+          </div>
           {data.total_minor > 0 ? (
             <div className="meter" data-state={data.balance_minor > 0 ? "due" : undefined}>
               <div
@@ -99,13 +119,20 @@ function SalePage() {
             </div>
           ) : null}
           <Payments sale={data} />
-          {data.balance_minor > 0 ? <PaymentForm sale={data} /> : null}
+          {recorded?.saleId === data.id ? (
+            <Notice tone="success" title="Payment recorded" live>
+              <p>{recorded.text}</p>
+            </Notice>
+          ) : null}
+          {data.balance_minor > 0 ? (
+            <PaymentForm sale={data} onRecorded={(text) => setRecorded({ saleId: data.id, text })} />
+          ) : null}
         </Plate>
 
         <div className="stack">
           <Delivery sale={data} />
           <Plate title="Purchased terms" description="Saved at purchase. Catalog changes never alter them.">
-            <dl className="facts">
+            <dl className="facts facts--rows">
               <div>
                 <dt>Price</dt>
                 <dd className="money">{formatMoney(line.unit_amount_minor, line.currency)}</dd>
@@ -172,9 +199,10 @@ function Payments({ sale }: { sale: Schemas["Sale"] }) {
   );
 }
 
-function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
+function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: (text: string) => void }) {
   const organization = useOrganization();
   const router = useRouter();
+  const toast = useToast();
   const [key, renewKey] = useIdempotencyKey();
   const action = useAction(sendPayment);
 
@@ -218,19 +246,40 @@ function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
       reference: reference.trim() || null,
     });
     if (result.ok) {
+      const done = result.data;
+      const text = `${formatMoney(minor, done.currency)} by ${PAYMENT_METHOD_LABEL[method].toLowerCase()}. Paid ${formatMoney(done.paid_minor, done.currency)} of ${formatMoney(done.total_minor, done.currency)}. Balance ${formatMoney(done.balance_minor, done.currency)}.`;
       renewKey();
       setReference("");
-      setAmount(minorToInput(result.data.balance_minor, result.data.currency));
+      setAmount(minorToInput(done.balance_minor, done.currency));
+      onRecorded(text);
+      toast.show({ tone: "success", title: "Payment recorded", body: text });
       void router.invalidate();
     }
   }
 
   return (
     <form className="form payment-form" onSubmit={onSubmit} noValidate aria-labelledby="payment-heading">
-      <h3 id="payment-heading">Record a payment</h3>
+      <h3 id="payment-heading">Record payment</h3>
       <p className="field__hint">Record money already received at the desk. Flowfokus does not charge cards.</p>
-      <div className="form-row">
-        <Field id="payment-amount" label={`Amount (${sale.currency})`} hint={amountHint} error={amountError}>
+      <RadioCards
+        name="method"
+        legend="Method"
+        columns={2}
+        options={[
+          { value: "cash", title: PAYMENT_METHOD_LABEL.cash, meta: "Received at the desk" },
+          { value: "bank_transfer", title: PAYMENT_METHOD_LABEL.bank_transfer, meta: "Add the bank reference" },
+        ]}
+        value={method}
+        onChange={(value) => {
+          setMethod(value as Schemas["PaymentMethod"]);
+          edited();
+        }}
+      />
+      <Field id="payment-amount" label="Amount" hint={amountHint} error={amountError}>
+        <div className="input-group">
+          <span className="input-group__affix" aria-hidden="true">
+            {sale.currency}
+          </span>
           <input
             id="payment-amount"
             className="input input--money"
@@ -245,28 +294,8 @@ function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
             aria-invalid={amountError ? true : undefined}
             aria-describedby={describedBy("payment-amount", amountHint, amountError)}
           />
-        </Field>
-        <fieldset className="field">
-          <legend>Method</legend>
-          <div className="choice-list choice-list--inline">
-            {(["cash", "bank_transfer"] as const).map((value) => (
-              <label key={value} className="choice choice--compact">
-                <input
-                  type="radio"
-                  name="method"
-                  value={value}
-                  checked={method === value}
-                  onChange={() => {
-                    setMethod(value);
-                    edited();
-                  }}
-                />
-                <span className="choice__title">{PAYMENT_METHOD_LABEL[value]}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      </div>
+        </div>
+      </Field>
       <Field id="payment-reference" label="Reference (optional)" hint="Receipt number or bank reference.">
         <input
           id="payment-reference"
@@ -281,14 +310,17 @@ function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
           aria-describedby="payment-reference-hint"
         />
       </Field>
+      {action.error && action.error.code !== "overpayment" && !server?.amount_minor ? (
+        <Notice tone="error" title="The payment was not recorded" live>
+          <p>{failureMessage(action.error)}</p>
+          <p>Nothing was saved. Check the details, then record the payment again.</p>
+        </Notice>
+      ) : null}
       <div className="actions">
         <SubmitButton pending={action.pending} pendingLabel="Recording…">
           Record payment
         </SubmitButton>
       </div>
-      {action.error && action.error.code !== "overpayment" && !(server?.amount_minor) ? (
-        <FailureNotice error={action.error} title="The payment was not recorded" />
-      ) : null}
     </form>
   );
 }
@@ -296,12 +328,24 @@ function PaymentForm({ sale }: { sale: Schemas["Sale"] }) {
 function Delivery({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
   const router = useRouter();
+  const toast = useToast();
   const action = useAction(sendFulfill);
+  const [confirming, setConfirming] = useState(false);
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function deliver() {
     const result = await action.run({ slug: organization.slug, saleId: sale.id });
-    if (result.ok) void router.invalidate();
+    setConfirming(false);
+    if (result.ok) {
+      const period = result.data.fulfillment?.membership_period;
+      toast.show({
+        tone: "success",
+        title: "Membership delivered",
+        body: period
+          ? `${sale.member.name} has access from ${formatDate(period.starts_at, organization.timezone)} until ${formatDate(period.ends_at, organization.timezone)}.`
+          : `${sale.member.name} now has access.`,
+      });
+      void router.invalidate();
+    }
   }
 
   if (sale.fulfillment) {
@@ -322,22 +366,53 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
   }
 
   const paid = sale.balance_minor === 0;
+  const reason = `Record the full payment first. ${formatMoney(sale.balance_minor, sale.currency)} is still due.`;
   return (
     <Plate title="Delivery">
-      <form className="form" onSubmit={onSubmit} noValidate>
+      <div className="form">
         <p>
           {paid
             ? "The sale is fully paid. Deliver it to create the membership period and its access rights."
-            : `Delivery opens when the sale is fully paid. ${formatMoney(sale.balance_minor, sale.currency)} is still due.`}
+            : "Delivery opens when the sale is fully paid."}
         </p>
-        <div className="actions">
-          <SubmitButton pending={action.pending} pendingLabel="Delivering…" disabled={!paid}>
-            <PackageCheck aria-hidden="true" />
+        <div className="sale-page__deliver">
+          <button
+            type="button"
+            className={buttonClass()}
+            disabled={!paid}
+            aria-describedby={paid ? undefined : "deliver-reason"}
+            onClick={() => setConfirming(true)}
+          >
+            <PackageCheck aria-hidden="true" strokeWidth={1.75} />
             Deliver membership
-          </SubmitButton>
+          </button>
+          {paid ? null : (
+            <p className="field__hint" id="deliver-reason">
+              {reason}
+            </p>
+          )}
         </div>
-        {action.error ? <FailureNotice error={action.error} title="The membership was not delivered" /> : null}
-      </form>
+        {action.error && !confirming ? (
+          <Notice tone="error" title="The membership was not delivered" live>
+            <p>{failureMessage(action.error)}</p>
+            <p>The payment is kept. Try to deliver again.</p>
+          </Notice>
+        ) : null}
+      </div>
+      <ConfirmDialog
+        open={confirming}
+        title="Deliver this membership?"
+        confirmLabel="Deliver membership"
+        pendingLabel="Delivering…"
+        pending={action.pending}
+        onConfirm={() => void deliver()}
+        onCancel={() => setConfirming(false)}
+      >
+        <p>
+          {sale.member.name} gets {sale.line_item.product_name}, {sale.line_item.price_label}, for{" "}
+          {formatDuration(sale.line_item.terms.duration_days)}. This creates the membership period and its access rights.
+        </p>
+      </ConfirmDialog>
     </Plate>
   );
 }

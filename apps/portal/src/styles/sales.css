@@ -1,1 +1,122 @@
-/* Screen styles: sales. Add rules here, not in components.css. */
+/*
+ * Screen styles: sales. Add rules here, not in components.css.
+ * Every rule is scoped to a page class so it cannot leak:
+ *   .sales-page ..... list
+ *   .new-sale-page .. new sale (three steps and a summary)
+ *   .sale-page ...... sale detail
+ */
+
+/* ---------- Sales list ---------- */
+
+/* The toolbar sits inside the flush card, above the table. */
+.sales-page__toolbar {
+  padding: 0 var(--space-6) var(--space-4);
+}
+.sales-page__count {
+  color: var(--color-ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  white-space: nowrap;
+}
+.sales-page__pad {
+  padding: 0 var(--space-6) var(--space-6);
+}
+/* Empty states inside the card run edge to edge under the toolbar. */
+.sales-page .plate__body--flush > .empty {
+  border-width: 1px 0 0;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+.sales-page .table th:first-child,
+.sales-page .table td:first-child {
+  padding-left: var(--space-6);
+}
+.sales-page .table th:last-child,
+.sales-page .table td:last-child {
+  padding-right: var(--space-6);
+}
+@media (max-width: 640px) {
+  .sales-page__toolbar,
+  .sales-page__pad {
+    padding-inline: var(--space-4);
+  }
+  .sales-page .toolbar .search-field {
+    flex: 1 1 100%;
+  }
+  .sales-page .table th:first-child,
+  .sales-page .table td:first-child {
+    padding-left: var(--space-4);
+  }
+  .sales-page .table th:last-child,
+  .sales-page .table td:last-child {
+    padding-right: var(--space-4);
+  }
+}
+
+/* ---------- New sale ---------- */
+
+.new-sale-page__layout {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+@media (min-width: 1180px) {
+  .new-sale-page__layout {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+  }
+  .new-sale-page__summary {
+    position: sticky;
+    top: calc(var(--topbar-height) + var(--space-6));
+  }
+}
+/* The step number sits in the card's icon tile. */
+.new-sale-page__step {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+.new-sale-page .readout__value {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Sale detail ---------- */
+
+.sale-page__layout {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+@media (min-width: 1180px) {
+  .sale-page__layout {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+.sale-page__readouts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--space-3);
+}
+.sale-page .readout {
+  min-width: 0;
+  padding: var(--space-4);
+}
+.sale-page .readout__value {
+  font-size: var(--text-xl);
+  line-height: 30px;
+  white-space: nowrap;
+}
+.sale-page .payment-form {
+  display: grid;
+  gap: var(--space-4);
+}
+/* The fulfil button and the reason it is off, side by side when there is room. */
+.sale-page__deliver {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+.sale-page__deliver .field__hint {
+  flex: 1 1 14rem;
+}
