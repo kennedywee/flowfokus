@@ -39,6 +39,22 @@ The Worker attaches the demo Bearer token on the server. The browser never sees 
 
 Without demo access, the portal shows sign-in as unavailable and turns off every staff page and action.
 
+## UI components
+
+The portal uses [shadcn/ui](https://ui.shadcn.com) components on [Base UI](https://base-ui.com) primitives, with Tailwind CSS v4. `components.json` holds the shadcn settings. Add a component with:
+
+```sh
+cd apps/portal && bunx shadcn@latest add <component>
+```
+
+Answer **no** when the CLI asks to overwrite an existing file: the files in `src/components/ui/` are edited for the portal.
+
+- **Behaviour from Base UI.** Focus, keyboard, ARIA, portals, and positioning come from the shadcn components.
+- **Look from our CSS.** Each component renders the portal classes in `src/styles/` (for example `.button`, `.plate`, `.dialog`, `.menu`). After adding a component, replace its Tailwind look with those classes or new ones built on the tokens in `tokens.css`.
+- **Layers.** `src/styles.css` loads Tailwind first, then our files into the `base` and `components` layers. Tailwind utilities on an element still win over our classes. Do not add rules outside a layer.
+- **Theme.** The shadcn variables (`--background`, `--primary`, and the others) point at our tokens. The portal is dark only.
+- **Helpers.** `src/components/ui.tsx` builds the portal patterns (status pills, notices, cards with a heading, fields with hints and errors) from the shadcn parts. Use them in pages.
+
 ## Request boundary
 
 - The browser calls only fixed server functions in `src/lib/staff.functions.ts`. Each one calls one `/staff/*` endpoint through `@flowfokus/api`. There is no general proxy. The browser cannot choose an upstream path, a token, or a `Flowfokus-*` header.

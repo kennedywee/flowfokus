@@ -25,7 +25,7 @@ flowfokus/
 | App | Users | Stack |
 | --- | --- | --- |
 | `apps/server` | All clients | Rails 8 API, RSpec |
-| `apps/portal` | Staff | TanStack Start (React), TanStack Query, WorkOS AuthKit SDK, on Cloudflare Workers |
+| `apps/portal` | Staff | TanStack Start (React), TanStack Query, WorkOS AuthKit SDK, Tailwind CSS v4, shadcn/ui on Base UI, on Cloudflare Workers |
 | `apps/site` | The public and members | Same as portal |
 | `apps/mobile` | Members | Expo (React Native). Deferred with the native app. |
 
