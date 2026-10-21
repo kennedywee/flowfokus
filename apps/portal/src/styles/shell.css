@@ -668,11 +668,6 @@
   color: var(--color-ink-4);
   cursor: not-allowed;
 }
-.switcher__soon {
-  margin-left: auto;
-  color: var(--color-ink-4);
-  font-size: var(--text-xs);
-}
 
 /* Account menu. A disclosure: a button, then a panel. */
 .account {

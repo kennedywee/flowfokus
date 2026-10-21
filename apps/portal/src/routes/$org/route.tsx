@@ -363,7 +363,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                   <button type="button" className="switcher__action" disabled>
                     <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
                     Create organization
-                    <span className="switcher__soon">Not available yet</span>
                   </button>
                 )}
               />
@@ -389,7 +388,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                     <button type="button" className="switcher__action" disabled>
                       <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
                       Add location
-                      <span className="switcher__soon">Not available yet</span>
                     </button>
                   )}
                 />
