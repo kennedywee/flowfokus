@@ -62,6 +62,15 @@
   display: inline-flex;
   border-radius: var(--radius-sm);
 }
+/* The sidebar logo is a little larger than the default wordmark. */
+.sidebar .wordmark__mark {
+  width: 26px;
+  height: 26px;
+}
+.sidebar .wordmark__text {
+  width: 120px;
+  height: 15px;
+}
 
 /* The mark and the wordmark: centred on one line, 10px apart. */
 .wordmark {
