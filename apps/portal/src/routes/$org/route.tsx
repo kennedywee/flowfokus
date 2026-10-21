@@ -243,13 +243,20 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
           <span className="visually-hidden">: switch organization</span>
         </Link>
         <nav className="nav" aria-label="Staff pages">
-          {NAV_GROUPS.map((group) => (
+          {/* The first group has no visible title. In the rail, later titles become dividers. */}
+          {NAV_GROUPS.map((group, index) => (
             <div className="nav-group" key={group.label}>
-              <div className="nav-group__head">
-                <p className="nav-group__label" id={`nav-${group.label.toLowerCase()}`}>
+              {index === 0 ? (
+                <p className="visually-hidden" id={`nav-${group.label.toLowerCase()}`}>
                   {group.label}
                 </p>
-              </div>
+              ) : (
+                <div className="nav-group__head">
+                  <p className="nav-group__label" id={`nav-${group.label.toLowerCase()}`}>
+                    {group.label}
+                  </p>
+                </div>
+              )}
               <ul className="nav-list" aria-labelledby={`nav-${group.label.toLowerCase()}`}>
                 {group.items.map(renderItem)}
               </ul>
