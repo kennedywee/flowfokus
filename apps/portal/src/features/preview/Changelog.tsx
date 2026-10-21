@@ -14,7 +14,7 @@ const updates = [
       "A desk assistant conversation with prepared replies",
       "A dedicated check-in screen and visit history",
       "Weekly reports with CSV export",
-      "Organization, team, and branch settings",
+      "Organization and team settings",
     ],
   },
   {
