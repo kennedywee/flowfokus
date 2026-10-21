@@ -16,7 +16,7 @@ status colors, and centered page column.
   organization list holds only the open organization until Rails has a list
   endpoint. The portal start, `/`, opens the demo organization; it has no page. The chosen desk location is an httpOnly cookie per organization. It
   sets the default location for check-in and new sales. Create organization and
-  Add location are shown disabled.
+  Add location are shown but do nothing yet.
 - Overview: membership counts, recent visits, and check-in.
 - Members: search, create, and view member records.
 - Sales: list and create sales, record payments, and deliver access.

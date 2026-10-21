@@ -358,7 +358,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                 searchLabel="Search organizations"
                 emptyText="No organization matches."
                 footer={() => (
-                  <button type="button" className="switcher__action" disabled>
+                  <button type="button" className="switcher__action">
                     <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
                     Create organization
                   </button>
@@ -383,7 +383,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                   searchLabel="Search locations"
                   emptyText="No location matches."
                   footer={() => (
-                    <button type="button" className="switcher__action" disabled>
+                    <button type="button" className="switcher__action">
                       <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
                       Add location
                     </button>
