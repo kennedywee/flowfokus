@@ -5,11 +5,16 @@ import {
   Bot,
   Building2,
   ChartColumn,
+  ChevronRight,
+  CircleHelp,
+  CircleUserRound,
   Inbox,
   LayoutGrid,
   LogIn,
+  LogOut,
   MapPin,
   Menu,
+  Monitor,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -439,8 +444,9 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
 }
 
 /**
- * The account menu. It states only what is true: access is the local demo, not a
- * real sign-in. There is no sign-out, because there is no session to end.
+ * The account menu, laid out like a full account menu. It states only what is
+ * true: help, theme choice, account settings, and sign-out need real sign-in,
+ * so they show disabled. The portal has one theme, dark.
  */
 function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
   const [open, setOpen] = useState(false);
@@ -464,6 +470,8 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
       document.removeEventListener("pointerdown", onPointerDown);
     };
   }, [open]);
+
+  const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
 
   return (
     <div
@@ -491,21 +499,49 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
             <span className="account__name">{actor.name}</span>
             <span className="account__email">{actor.email}</span>
             {actor.demo ? (
-              <>
+              <span className="account__demo">
                 <span className="demo-tag">Local demo access</span>
-                <span className="account__note">
-                  This is not a real sign-in. Demo access is available only in development.
+                <span className="account__note" id="account-demo-note">
+                  Help, settings, and sign-out arrive with real sign-in.
                 </span>
-              </>
+              </span>
             ) : null}
           </div>
           <hr className="account__rule" />
           <ul className="account__list">
             <li>
-              <Link to="/" activeOptions={{ exact: true }} className="account__item" onClick={() => setOpen(false)}>
-                <Building2 strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                All organizations
-              </Link>
+              <button type="button" className="account__item" disabled aria-describedby="account-demo-note">
+                <CircleHelp {...icon} />
+                Help &amp; feedback
+                <span className="account__meta">
+                  <ChevronRight {...icon} />
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" className="account__item" disabled>
+                <Monitor {...icon} />
+                Theme
+                <span className="account__meta">
+                  Dark
+                  <ChevronRight {...icon} />
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" className="account__item" disabled aria-describedby="account-demo-note">
+                <CircleUserRound {...icon} />
+                Account settings
+              </button>
+            </li>
+          </ul>
+          <hr className="account__rule" />
+          <ul className="account__list">
+            <li>
+              <button type="button" className="account__item" disabled aria-describedby="account-demo-note">
+                <LogOut {...icon} />
+                Sign out
+              </button>
             </li>
           </ul>
         </div>

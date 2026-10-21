@@ -732,6 +732,12 @@
   font-size: var(--text-sm);
   line-height: 16px;
 }
+.account__demo {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: var(--space-2);
+}
 .account__note {
   color: var(--color-ink-2);
   font-size: var(--text-xs);
@@ -753,16 +759,34 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-height: 36px;
   padding: 0 10px;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   color: var(--color-ink-2);
+  font: inherit;
   font-size: var(--text-sm);
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
 }
-.account__item:hover {
+.account__item:hover:not(:disabled) {
   background: var(--color-hover);
   color: var(--color-ink);
+}
+.account__item:disabled {
+  color: var(--color-ink-4);
+  cursor: not-allowed;
+}
+/* Right side of a row: the current value and a chevron for a submenu. */
+.account__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: var(--text-xs);
 }
 .account__item svg {
   flex: none;
