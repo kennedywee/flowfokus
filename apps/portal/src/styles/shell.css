@@ -61,7 +61,8 @@
   justify-content: space-between;
   min-height: var(--topbar-height);
   margin-inline: calc(-1 * var(--space-4));
-  padding-inline: calc(var(--space-4) + var(--space-2));
+  /* 23px puts the mark centre at x=36, the rail's icon column. */
+  padding-inline: 23px calc(var(--space-4) + var(--space-2));
   border-bottom: 1px solid var(--color-line);
 }
 .sidebar__logo {
@@ -204,7 +205,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-3) var(--space-2);
+  padding: 0 var(--space-3) var(--space-2) 11px;
 }
 .nav-group__label {
   margin: 0;
@@ -230,7 +231,8 @@
   align-items: center;
   gap: 10px;
   min-height: 36px;
-  padding: 0 var(--space-3);
+  /* 11px puts the icon centre at x=36, so icons stay still when the sidebar collapses. */
+  padding: 0 var(--space-3) 0 11px;
   border-radius: var(--radius-md);
   color: var(--color-ink-2);
   font-size: var(--text-base);
@@ -774,15 +776,18 @@
   .shell {
     grid-template-columns: var(--rail-width) minmax(0, 1fr);
   }
+  /*
+   * The rail keeps the open sidebar's vertical rhythm and icon column (x=36),
+   * so collapsing only hides labels. Nothing changes size or jumps.
+   */
   .shell .sidebar {
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
     /* Tooltips sit outside the 72px column. */
     overflow: visible;
   }
   .shell .sidebar__brand {
-    justify-content: center;
-    padding-inline: 0;
+    justify-content: flex-start;
+    padding-inline: var(--space-4);
   }
   .shell .sidebar .wordmark__text,
   .shell .org-switch__text,
@@ -797,10 +802,6 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .shell .sidebar .wordmark__mark {
-    width: 22px;
-    height: 22px;
-  }
   .shell .sidebar__logo {
     align-items: center;
     justify-content: center;
@@ -812,45 +813,43 @@
   .shell .sidebar__collapse {
     display: none;
   }
+  /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
   .shell .org-switch {
     justify-content: center;
     width: 40px;
     height: 40px;
+    margin-block: 7px;
     padding: 0;
   }
   .shell .nav {
     flex: 1;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
+    width: 40px;
   }
   .shell .nav-group {
     justify-items: center;
-    gap: 10px;
   }
   /* A section title becomes a hairline. The words stay for assistive technology. */
   .shell .nav-group__head {
     justify-content: center;
-    padding: 0;
+    padding: 0 0 var(--space-2);
   }
+  /* The hairline fills the title's 14px slot, drawn at its top edge. */
   .shell .nav-group__label {
     width: 24px;
     /* The global 68ch cap would be 0 here, because the font size is 0. */
     max-width: none;
-    height: 1px;
+    height: 14px;
     overflow: hidden;
-    background: var(--color-line-strong);
+    background: linear-gradient(var(--color-line-strong), var(--color-line-strong)) top / 100% 1px no-repeat;
     font-size: 0;
     line-height: 0;
   }
   .shell .nav-list {
-    gap: 10px;
     justify-items: center;
   }
   .shell .nav-item {
     justify-content: center;
     width: 40px;
-    height: 40px;
     padding: 0;
   }
   /* What's new becomes one icon with a dot. */
@@ -934,15 +933,18 @@
   .shell[data-collapsed="true"] {
     grid-template-columns: var(--rail-width) minmax(0, 1fr);
   }
+  /*
+   * The rail keeps the open sidebar's vertical rhythm and icon column (x=36),
+   * so collapsing only hides labels. Nothing changes size or jumps.
+   */
   .shell[data-collapsed="true"] .sidebar {
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
     /* Tooltips sit outside the 72px column. */
     overflow: visible;
   }
   .shell[data-collapsed="true"] .sidebar__brand {
-    justify-content: center;
-    padding-inline: 0;
+    justify-content: flex-start;
+    padding-inline: var(--space-4);
   }
   .shell[data-collapsed="true"] .sidebar .wordmark__text,
   .shell[data-collapsed="true"] .org-switch__text,
@@ -957,10 +959,6 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .shell[data-collapsed="true"] .sidebar .wordmark__mark {
-    width: 22px;
-    height: 22px;
-  }
   .shell[data-collapsed="true"] .sidebar__logo {
     align-items: center;
     justify-content: center;
@@ -971,45 +969,43 @@
   .shell[data-collapsed="true"] .whatsnew {
     display: none;
   }
+  /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
   .shell[data-collapsed="true"] .org-switch {
     justify-content: center;
     width: 40px;
     height: 40px;
+    margin-block: 7px;
     padding: 0;
   }
   .shell[data-collapsed="true"] .nav {
     flex: 1;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
+    width: 40px;
   }
   .shell[data-collapsed="true"] .nav-group {
     justify-items: center;
-    gap: 10px;
   }
   /* A section title becomes a hairline. The words stay for assistive technology. */
   .shell[data-collapsed="true"] .nav-group__head {
     justify-content: center;
-    padding: 0;
+    padding: 0 0 var(--space-2);
   }
+  /* The hairline fills the title's 14px slot, drawn at its top edge. */
   .shell[data-collapsed="true"] .nav-group__label {
     width: 24px;
     /* The global 68ch cap would be 0 here, because the font size is 0. */
     max-width: none;
-    height: 1px;
+    height: 14px;
     overflow: hidden;
-    background: var(--color-line-strong);
+    background: linear-gradient(var(--color-line-strong), var(--color-line-strong)) top / 100% 1px no-repeat;
     font-size: 0;
     line-height: 0;
   }
   .shell[data-collapsed="true"] .nav-list {
-    gap: 10px;
     justify-items: center;
   }
   .shell[data-collapsed="true"] .nav-item {
     justify-content: center;
     width: 40px;
-    height: 40px;
     padding: 0;
   }
   /* What's new becomes one icon with a dot. */

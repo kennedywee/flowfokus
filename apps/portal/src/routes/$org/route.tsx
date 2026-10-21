@@ -221,7 +221,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             aria-expanded={!collapsed}
             onClick={() => setCollapsed((value) => !value)}
           >
-            <img className="sidebar__collapse-mark" src={markUrl} width={22} height={22} alt="" />
+            <img className="sidebar__collapse-mark" src={markUrl} width={26} height={26} alt="" />
             <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.75} aria-hidden="true" focusable="false" />
             <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.75} aria-hidden="true" focusable="false" />
           </button>
