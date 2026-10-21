@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { PageHead, Pill } from "../../components/ui";
+import { Dialog, DialogBody, DialogContent, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
 
 export function PreviewPage({
   title,
@@ -79,6 +80,7 @@ export function Toggle({
   );
 }
 
+/** A sample form in a dialog. Mount it to open it; `onClose` asks the parent to unmount it. */
 export function PreviewDialog({
   title,
   onClose,
@@ -88,36 +90,20 @@ export function PreviewDialog({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  useEffect(() => {
-    const dialog = ref.current;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialog?.showModal();
-    return () => {
-      dialog?.close();
-      opener?.focus();
-    };
-  }, []);
+  useRestoreFocus();
   return (
-    <dialog
-      ref={ref}
-      className="dialog preview-dialog"
-      aria-labelledby={titleId}
-      onCancel={(event) => {
-        event.preventDefault();
-        onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
       }}
     >
-      <div className="dialog__body">
-        <h2 className="dialog__title" id={titleId}>
-          {title}
-        </h2>
-        {children}
-      </div>
-    </dialog>
+      <DialogContent className="preview-dialog">
+        <DialogBody>
+          <DialogTitle>{title}</DialogTitle>
+          {children}
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react";
@@ -22,6 +22,7 @@ import { createMember, listMembers } from "../../../lib/staff.functions";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogBody, DialogContent, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
 
 interface MembersSearch {
   q?: string;
@@ -244,16 +245,7 @@ function SearchForm({ initial }: { initial: string }) {
 }
 
 function AddMember({ onClose }: { onClose: () => void }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialog?.showModal();
-    return () => {
-      dialog?.close();
-      opener?.focus();
-    };
-  }, []);
+  useRestoreFocus();
   const organization = useOrganization();
   const router = useRouter();
   const toast = useToast();
@@ -292,83 +284,79 @@ function AddMember({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="dialog members-dialog"
-      aria-labelledby="add-member-title"
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!action.pending) onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !action.pending) onClose();
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !action.pending) onClose();
       }}
     >
-      <div className="dialog__body">
-        <h2 className="dialog__title" id="add-member-title">Add member</h2>
-        <form className="form" onSubmit={onSubmit} noValidate>
-          {fieldErrors.length ? (
-            <Notice tone="error" title="The member was not added" live>
-              <p>Fix {fieldErrors.length === 1 ? "this field" : "these fields"}, then select Add member.</p>
-              <ul className="members-errors">
-                {fieldErrors.map((item) => (
-                  <li key={item.id}>
-                    <a
-                      href={`#${item.id}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        focusField(item.id);
-                      }}
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </Notice>
-          ) : null}
-          <div className="members-add">
-            <Field id="member-name" label="Full name" error={nameError}>
-              <Input
-                id="member-name"
-                autoFocus
-                name="name"
-                autoComplete="off"
-                maxLength={200}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                aria-invalid={nameError ? true : undefined}
-                aria-describedby={describedBy("member-name", undefined, nameError)}
-              />
-            </Field>
-            <Field id="member-email" label="Email" error={emailError}>
-              <Input
-                id="member-email"
-                name="email"
-                type="email"
-                autoComplete="off"
-                maxLength={320}
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                aria-invalid={emailError ? true : undefined}
-                aria-describedby={describedBy("member-email", undefined, emailError)}
-              />
-            </Field>
-            <div className="members-add__submit">
-              <Button variant="ghost" type="button" disabled={action.pending} onClick={onClose}>
-                Cancel
-              </Button>
-              <SubmitButton pending={action.pending} pendingLabel="Adding…">
-                <UserPlus aria-hidden="true" />
-                Add member
-              </SubmitButton>
+      <DialogContent className="members-dialog">
+        <DialogBody>
+          <DialogTitle>Add member</DialogTitle>
+          <form className="form" onSubmit={onSubmit} noValidate>
+            {fieldErrors.length ? (
+              <Notice tone="error" title="The member was not added" live>
+                <p>Fix {fieldErrors.length === 1 ? "this field" : "these fields"}, then select Add member.</p>
+                <ul className="members-errors">
+                  {fieldErrors.map((item) => (
+                    <li key={item.id}>
+                      <a
+                        href={`#${item.id}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          focusField(item.id);
+                        }}
+                      >
+                        {item.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </Notice>
+            ) : null}
+            <div className="members-add">
+              <Field id="member-name" label="Full name" error={nameError}>
+                <Input
+                  id="member-name"
+                  autoFocus
+                  name="name"
+                  autoComplete="off"
+                  maxLength={200}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  aria-invalid={nameError ? true : undefined}
+                  aria-describedby={describedBy("member-name", undefined, nameError)}
+                />
+              </Field>
+              <Field id="member-email" label="Email" error={emailError}>
+                <Input
+                  id="member-email"
+                  name="email"
+                  type="email"
+                  autoComplete="off"
+                  maxLength={320}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={describedBy("member-email", undefined, emailError)}
+                />
+              </Field>
+              <div className="members-add__submit">
+                <Button variant="ghost" type="button" disabled={action.pending} onClick={onClose}>
+                  Cancel
+                </Button>
+                <SubmitButton pending={action.pending} pendingLabel="Adding…">
+                  <UserPlus aria-hidden="true" />
+                  Add member
+                </SubmitButton>
+              </div>
             </div>
-          </div>
-          {action.error && !fieldErrors.length ? (
-            <FailureNotice error={action.error} title="The member was not added" />
-          ) : null}
-        </form>
-      </div>
-    </dialog>
+            {action.error && !fieldErrors.length ? (
+              <FailureNotice error={action.error} title="The member was not added" />
+            ) : null}
+          </form>
+        </DialogBody>
+      </DialogContent>
+    </Dialog>
   );
 }

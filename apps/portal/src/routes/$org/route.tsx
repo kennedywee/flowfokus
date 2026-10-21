@@ -35,6 +35,15 @@ import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
 import { isSlug } from "../../lib/validate";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuHeader,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/$org")({
   beforeLoad: ({ params }) => {
@@ -435,100 +444,52 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
 }
 
 /**
- * The account menu. Help, theme choice, account settings, and sign-out look
- * and respond like menu items, but do nothing yet: they need real sign-in.
- * The portal has one theme, dark.
+ * The account menu, on the shadcn dropdown menu. Help, theme choice, account
+ * settings, and sign-out respond like menu items, but do nothing yet: they need
+ * real sign-in. The portal has one theme, dark.
  */
 function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
-  const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== "Escape") return;
-      setOpen(false);
-      button.current?.focus();
-    }
-    function onPointerDown(event: PointerEvent) {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [open]);
-
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+  // The items do nothing yet, so a click leaves the menu open.
+  const item = { closeOnClick: false } as const;
 
   return (
-    <div
-      className="account"
-      ref={root}
-      onBlur={(event) => {
-        // Close when focus leaves the menu, for example on Tab.
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
-      }}
-    >
-      <button
-        ref={button}
-        type="button"
-        className="account__button"
-        aria-expanded={open}
-        aria-controls="account-menu"
-        onClick={() => setOpen((value) => !value)}
-      >
+    <DropdownMenu>
+      <DropdownMenuTrigger className="account__button">
         <span aria-hidden="true">{initials(actor.name)}</span>
         <span className="visually-hidden">Account: {actor.name}</span>
-      </button>
-      {open ? (
-        <div className="account__menu" id="account-menu">
-          <div className="account__who">
-            <span className="account__name">{actor.name}</span>
-            <span className="account__email">{actor.email}</span>
-          </div>
-          <hr className="account__rule" />
-          <ul className="account__list">
-            <li>
-              <button type="button" className="account__item">
-                <CircleHelp {...icon} />
-                Help &amp; feedback
-                <span className="account__meta">
-                  <ChevronRight {...icon} />
-                </span>
-              </button>
-            </li>
-            <li>
-              <button type="button" className="account__item">
-                <Monitor {...icon} />
-                Theme
-                <span className="account__meta">
-                  Dark
-                  <ChevronRight {...icon} />
-                </span>
-              </button>
-            </li>
-            <li>
-              <button type="button" className="account__item">
-                <CircleUserRound {...icon} />
-                Account settings
-              </button>
-            </li>
-          </ul>
-          <hr className="account__rule" />
-          <ul className="account__list">
-            <li>
-              <button type="button" className="account__item">
-                <LogOut {...icon} />
-                Sign out
-              </button>
-            </li>
-          </ul>
-        </div>
-      ) : null}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuHeader>
+          <span className="menu__name">{actor.name}</span>
+          <span className="menu__email">{actor.email}</span>
+        </DropdownMenuHeader>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem {...item}>
+          <CircleHelp {...icon} />
+          Help &amp; feedback
+          <DropdownMenuShortcut>
+            <ChevronRight {...icon} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem {...item}>
+          <Monitor {...icon} />
+          Theme
+          <DropdownMenuShortcut>
+            Dark
+            <ChevronRight {...icon} />
+          </DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem {...item}>
+          <CircleUserRound {...icon} />
+          Account settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem {...item}>
+          <LogOut {...icon} />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

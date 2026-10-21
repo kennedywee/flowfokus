@@ -13,18 +13,18 @@
 
 /* ---------- Members list ---------- */
 
-/* Add form: shown only in the dialog opened from the page header. */
-.members-page .members-add {
+/* Add form: shown only in the dialog opened from the page header. The dialog renders in a portal, outside the page. */
+.members-dialog .members-add {
   display: grid;
   gap: var(--space-4);
   align-items: start;
 }
-.members-page .members-add__submit {
+.members-dialog .members-add__submit {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
 }
-.members-page .members-errors {
+.members-dialog .members-errors {
   margin: var(--space-1) 0 0;
   padding-left: var(--space-5);
 }

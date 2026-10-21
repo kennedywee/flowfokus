@@ -1,11 +1,21 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { ArrowRightLeft, TriangleAlert } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 /*
- * A confirm dialog: one short decision, in a native <dialog> opened with
- * showModal(). The browser traps focus, makes the page inert, and returns
- * focus to the button that opened it.
+ * A confirm dialog: one short decision, built on the shadcn alert dialog. Base
+ * UI traps focus, makes the page inert, and returns focus to the button that
+ * opened it.
  *
  *   <ConfirmDialog
  *     open={confirming}
@@ -19,10 +29,11 @@ import { Button } from "@/components/ui/button";
  *     <p>Cash from Marcus Ang. The balance becomes zero.</p>
  *   </ConfirmDialog>
  *
- * The parent owns `open`. Escape, the Cancel button, and a click on the
- * backdrop all call `onCancel`. While `pending` is true, all three are ignored.
- * Repeat the action and the amount in `confirmLabel`. Use tone="critical" for
- * actions that cannot be undone: focus then starts on Cancel.
+ * The parent owns `open`. Escape and the Cancel button call `onCancel`; a
+ * click outside does nothing, so the person must choose. While `pending` is
+ * true, both are ignored. Repeat the action and the amount in `confirmLabel`.
+ * Use tone="critical" for actions that cannot be undone: focus then starts on
+ * Cancel.
  */
 export function ConfirmDialog({
   open,
@@ -47,104 +58,50 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const opener = useRef<HTMLElement | null>(null);
-  const titleId = useId();
-  const bodyId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
   const critical = tone === "critical";
-
-  // Keep the latest values for the native event handlers below.
-  const state = useRef({ pending, onCancel });
-  state.current = { pending, onCancel };
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) {
-      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-      opener.current?.focus();
-      opener.current = null;
-    }
-  }, [open]);
-
-  // Close the dialog if the component unmounts while it is open.
-  useEffect(() => {
-    const dialog = ref.current;
-    return () => {
-      if (dialog?.open) dialog.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    function onCancelEvent(event: Event) {
-      // Take over Escape so the parent stays the source of truth.
-      event.preventDefault();
-      if (!state.current.pending) state.current.onCancel();
-    }
-    dialog.addEventListener("cancel", onCancelEvent);
-    return () => dialog.removeEventListener("cancel", onCancelEvent);
-  }, []);
 
   const Icon = critical ? TriangleAlert : ArrowRightLeft;
 
   return (
-    <dialog
-      ref={ref}
-      className="dialog"
-      data-tone={tone}
-      aria-labelledby={titleId}
-      aria-describedby={children ? bodyId : undefined}
-      onClick={(event) => {
-        // A click on the backdrop lands on the dialog element itself.
-        if (event.target === event.currentTarget && !pending) onCancel();
+    <AlertDialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !pending) onCancel();
       }}
     >
-      <div className="dialog__body">
-        <span className="dialog__icon" aria-hidden="true">
-          <Icon strokeWidth={1.75} focusable="false" />
-        </span>
-        <h2 className="dialog__title" id={titleId}>
-          {title}
-        </h2>
-        {children ? (
-          <div className="dialog__text" id={bodyId}>
-            {children}
-          </div>
-        ) : null}
-      </div>
-      <div className="dialog__footer">
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={onCancel}
-          disabled={pending}
-          autoFocus={critical}
-        >
-          {cancelLabel}
-        </Button>
-        <Button
-          variant={critical ? "destructive" : "default"}
-          type="button"
-          onClick={onConfirm}
-          disabled={pending}
-          aria-busy={pending || undefined}
-          autoFocus={!critical}
-        >
-          {pending ? (
-            <>
-              <span className="spinner" aria-hidden="true" />
-              {pendingLabel ?? confirmLabel}
-            </>
-          ) : (
-            confirmLabel
-          )}
-        </Button>
-      </div>
-    </dialog>
+      <AlertDialogContent tone={tone} initialFocus={critical ? cancelRef : confirmRef}>
+        <AlertDialogHeader>
+          <AlertDialogMedia>
+            <Icon strokeWidth={1.75} focusable="false" />
+          </AlertDialogMedia>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {children ? <AlertDialogDescription>{children}</AlertDialogDescription> : null}
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <Button ref={cancelRef} variant="ghost" type="button" onClick={onCancel} disabled={pending}>
+            {cancelLabel}
+          </Button>
+          <AlertDialogAction
+            ref={confirmRef}
+            variant={critical ? "destructive" : "default"}
+            type="button"
+            onClick={onConfirm}
+            disabled={pending}
+            aria-busy={pending || undefined}
+          >
+            {pending ? (
+              <>
+                <span className="spinner" aria-hidden="true" />
+                {pendingLabel ?? confirmLabel}
+              </>
+            ) : (
+              confirmLabel
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

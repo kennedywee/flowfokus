@@ -93,7 +93,8 @@
   color: var(--color-ink-3);
   font-size: var(--text-xs);
 }
-.preview-page .preview-form-actions {
+.preview-page .preview-form-actions,
+.preview-dialog .preview-form-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -101,11 +102,12 @@
   gap: 12px;
   padding-top: 8px;
 }
-.preview-page .preview-form-actions > span {
+.preview-page .preview-form-actions > span,
+.preview-dialog .preview-form-actions > span {
   margin-right: auto;
   font-size: var(--text-xs);
 }
-.preview-page dialog.preview-dialog {
+.dialog.preview-dialog {
   width: min(480px, calc(100vw - 32px));
 }
 
