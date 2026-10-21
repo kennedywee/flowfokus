@@ -56,11 +56,11 @@ function NotFound() {
         <Wordmark />
         <div className="entry__text">
           <h1>Page not found</h1>
-          <p>This address does not match a portal page. Check the address, or go back to the organization list.</p>
+          <p>This address does not match a portal page. Check the address, or go to the staff portal.</p>
         </div>
         <div className="actions">
           <Link to="/" className={buttonClass({ variant: "secondary" })}>
-            Go to the organization list
+            Go to the staff portal
           </Link>
         </div>
       </div>

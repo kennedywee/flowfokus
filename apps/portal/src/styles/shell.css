@@ -890,38 +890,6 @@
   color: var(--color-ink-2);
 }
 
-.org-link {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-1) var(--space-3);
-  align-items: center;
-  padding: var(--space-4) var(--space-6);
-  border-top: 1px solid var(--color-line);
-  color: var(--color-ink);
-  text-decoration: none;
-  transition: background-color 150ms var(--ease-out);
-}
-.org-link:hover {
-  background: var(--color-control);
-  color: var(--color-ink);
-}
-.org-link:focus-visible {
-  outline-offset: -2px;
-}
-.org-link__name {
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-medium);
-}
-.org-link svg {
-  width: 18px;
-  height: 18px;
-  color: var(--color-ink-2);
-}
-.org-link__meta {
-  grid-column: 1;
-  color: var(--color-ink-2);
-  font-size: var(--text-sm);
-}
 
 /* ---------- Icon rail ---------- */
 /*

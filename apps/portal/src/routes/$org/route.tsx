@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, createFileRoute, notFound, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
   Bot,
-  Building2,
   ChartColumn,
   ChevronRight,
   CircleHelp,
@@ -29,9 +28,10 @@ import {
 } from "lucide-react";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
+import { Blocked } from "../../components/Blocked";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
 import { useToast } from "../../components/Toast";
-import { FailureNotice, Wordmark, buttonClass, initials } from "../../components/ui";
+import { FailureNotice, Wordmark, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
@@ -108,8 +108,9 @@ function OrganizationLayout() {
   if (!organization?.ok) {
     return (
       <Blocked
+        homeLink
         title={`Cannot open “${org}”`}
-        description="Check the address name, or pick an organization from the list."
+        description="Check the address name, or go to the staff portal."
       >
         {organization ? <FailureNotice error={organization.error} title="The organization did not open" /> : null}
       </Blocked>
@@ -342,7 +343,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               <span className="visually-hidden">Navigation menu</span>
             </button>
             <div className="topbar__context">
-              {/* The portal has no organization list API yet, so the list holds the open one. */}
+              {/* Rails has no list of a person's organizations yet, so the list holds the open one. */}
               <ContextSwitcher
                 label="Organization"
                 strong
@@ -358,18 +359,12 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                 onSelect={() => undefined}
                 searchLabel="Search organizations"
                 emptyText="No organization matches."
-                footer={(close) => (
-                  <>
-                    <Link to="/" activeOptions={{ exact: true }} className="switcher__action" onClick={close}>
-                      <Building2 strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                      All organizations
-                    </Link>
-                    <button type="button" className="switcher__action" disabled>
-                      <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                      Create organization
-                      <span className="switcher__soon">Not available yet</span>
-                    </button>
-                  </>
+                footer={() => (
+                  <button type="button" className="switcher__action" disabled>
+                    <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                    Create organization
+                    <span className="switcher__soon">Not available yet</span>
+                  </button>
                 )}
               />
               <span className="topbar__slash" aria-hidden="true">
@@ -538,26 +533,5 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
         </div>
       ) : null}
     </div>
-  );
-}
-
-/** A page that replaces the whole portal: access is off, or the organization did not open. */
-function Blocked({ title, description, children }: { title: string; description: string; children: ReactNode }) {
-  return (
-    <main className="entry" id="main">
-      <div className="entry__panel">
-        <Wordmark />
-        <div className="entry__text">
-          <h1>{title}</h1>
-          <p>{description}</p>
-        </div>
-        {children}
-        <div className="actions">
-          <Link to="/" className={buttonClass({ variant: "secondary" })}>
-            Back to the organization list
-          </Link>
-        </div>
-      </div>
-    </main>
   );
 }

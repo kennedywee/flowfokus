@@ -14,7 +14,7 @@ status colors, and centered page column.
 
 - Top bar switchers: organization, actor, and locations from Rails. The
   organization list holds only the open organization until Rails has a list
-  endpoint. The chosen desk location is an httpOnly cookie per organization. It
+  endpoint. The portal start, `/`, opens the demo organization; it has no page. The chosen desk location is an httpOnly cookie per organization. It
   sets the default location for check-in and new sales. Create organization and
   Add location are shown disabled.
 - Overview: membership counts, recent visits, and check-in.

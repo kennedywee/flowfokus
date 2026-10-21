@@ -11,7 +11,7 @@ cp apps/portal/.dev.vars.example apps/portal/.dev.vars   # once
 bun run --cwd apps/portal dev                            # http://localhost:4001
 ```
 
-Open `http://localhost:4001`, then choose **Chainsaw Gym**. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
+Open `http://localhost:4001`. It opens the demo organization, **Chainsaw Gym**. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
 
 `scripts/dev` from the repository root starts Rails, the portal, and the gym site together. In `vite dev`, the variables below are also read from the shell.
 
