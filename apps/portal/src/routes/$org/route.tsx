@@ -19,7 +19,6 @@ import {
   Plus,
   Receipt,
   Search,
-  Settings,
   Sparkle,
   Tag,
   Users,
@@ -86,7 +85,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
       { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
-      { to: "/$org/settings", label: "Settings", icon: Settings, exact: false, path: "/settings" },
     ],
   },
 ];
