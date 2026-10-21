@@ -732,17 +732,6 @@
   font-size: var(--text-sm);
   line-height: 16px;
 }
-.account__demo {
-  display: grid;
-  justify-items: start;
-  gap: 6px;
-  margin-top: var(--space-2);
-}
-.account__note {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
 .account__rule {
   height: 1px;
   margin: 0;
