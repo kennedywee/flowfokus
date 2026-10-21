@@ -1,4 +1,6 @@
+import { fileURLToPath } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
@@ -21,6 +23,8 @@ function localVars(): Record<string, string> {
 export default defineConfig(({ command }) => ({
   server: { port: 4001, strictPort: true },
   preview: { port: 4001, strictPort: true },
+  // `@/` is the portal `src` folder, as shadcn components expect.
+  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
@@ -32,5 +36,6 @@ export default defineConfig(({ command }) => ({
     // mounted filesystem as routeTree.gen.ts in Docker development.
     tanstackStart({ router: { tmpDir: "./src/.tanstack/tmp" } }),
     viteReact(),
+    tailwindcss(),
   ],
 }));

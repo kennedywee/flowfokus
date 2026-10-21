@@ -1,16 +1,127 @@
 /*
  * Flowfokus staff portal styles. Order matters.
+ *
+ * Tailwind comes first and declares its layers: theme, base, components,
+ * utilities. Our own files go into the base and components layers, so they
+ * still style every screen, while Tailwind utilities on a shadcn component can
+ * override them. Unlayered CSS would beat every utility, so add no rules
+ * outside a layer. The one exception is the shadcn variable block below: it only
+ * names custom properties, and the shadcn CLI expects to find it at the top level.
+ *
  * tokens: custom properties. base: reset and type. shell: sidebar, top bar, page.
  * components: shared parts. The rest are one file per screen area.
  */
-@import "./styles/tokens.css";
-@import "./styles/base.css";
-@import "./styles/shell.css";
-@import "./styles/components.css";
-@import "./styles/members.css";
-@import "./styles/sales.css";
-@import "./styles/checkin.css";
-@import "./styles/overview.css";
-@import "./styles/products.css";
+@import "tailwindcss";
 
-@import "./styles/preview.css";
+@import "./styles/tokens.css" layer(base);
+@import "./styles/base.css" layer(base);
+@import "./styles/shell.css" layer(components);
+@import "./styles/components.css" layer(components);
+@import "./styles/members.css" layer(components);
+@import "./styles/sales.css" layer(components);
+@import "./styles/checkin.css" layer(components);
+@import "./styles/overview.css" layer(components);
+@import "./styles/products.css" layer(components);
+@import "./styles/preview.css" layer(components);
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The portal is dark only. `<html class="dark">` turns on shadcn's dark variants. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * shadcn theme variables, mapped to our tokens in tokens.css. shadcn components
+ * read these names; change a colour in tokens.css, not here. `--accent` is the
+ * neutral hover surface in shadcn, not our blue accent.
+ */
+:root {
+    --background: var(--color-page);
+    --foreground: var(--color-ink);
+    --card: var(--color-surface);
+    --card-foreground: var(--color-ink);
+    --popover: var(--color-overlay);
+    --popover-foreground: var(--color-ink);
+    --primary: var(--color-ink);
+    --primary-foreground: var(--color-on-ink);
+    --secondary: var(--color-control);
+    --secondary-foreground: var(--color-ink);
+    --muted: var(--color-well);
+    --muted-foreground: var(--color-ink-3);
+    --accent: var(--color-hover);
+    --accent-foreground: var(--color-ink);
+    --destructive: var(--color-critical);
+    --border: var(--color-line);
+    --input: var(--color-line-strong);
+    --ring: var(--color-focus);
+    --chart-1: var(--color-series-1);
+    --chart-2: var(--color-series-2);
+    --chart-3: var(--color-series-3);
+    --chart-4: var(--color-series-4);
+    --chart-5: var(--color-series-5);
+    --radius: 10px;
+    --sidebar: var(--color-sidebar);
+    --sidebar-foreground: var(--color-ink-2);
+    --sidebar-primary: var(--color-ink);
+    --sidebar-primary-foreground: var(--color-on-ink);
+    --sidebar-accent: var(--color-hover);
+    --sidebar-accent-foreground: var(--color-ink);
+    --sidebar-border: var(--color-line);
+    --sidebar-ring: var(--color-focus);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
