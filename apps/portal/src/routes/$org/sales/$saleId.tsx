@@ -37,6 +37,7 @@ import { fulfillSale, getSale, recordPayment } from "../../../lib/staff.function
 import { isUuid } from "../../../lib/validate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const sendPayment = (input: Parameters<typeof recordPayment>[0]["data"]) => recordPayment({ data: input });
 const sendFulfill = (input: Parameters<typeof fulfillSale>[0]["data"]) => fulfillSale({ data: input });
@@ -263,12 +264,11 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
         }}
       />
       <Field id="payment-amount" label="Amount" hint={amountHint} error={amountError}>
-        <div className="input-group">
-          <span className="input-group__affix" aria-hidden="true">
-            {sale.currency}
-          </span>
-          <Input
-            id="payment-amount" className="input--money"
+        <InputGroup>
+          <InputGroupAddon>{sale.currency}</InputGroupAddon>
+          <InputGroupInput
+            id="payment-amount"
+            className="input--money"
             inputMode="decimal"
             autoComplete="off"
             value={amount}
@@ -280,7 +280,7 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
             aria-invalid={amountError ? true : undefined}
             aria-describedby={describedBy("payment-amount", amountHint, amountError)}
           />
-        </div>
+        </InputGroup>
       </Field>
       <Field id="payment-reference" label="Reference (optional)" hint="Receipt number or bank reference.">
         <Input

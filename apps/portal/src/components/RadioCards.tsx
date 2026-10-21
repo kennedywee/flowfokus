@@ -1,10 +1,10 @@
-import type { CSSProperties, ReactNode } from "react";
-import { Check } from "lucide-react";
+import { useId, type CSSProperties, type ReactNode } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 /*
- * Radio cards: a group of large choices where one is picked. Each card holds a
- * native radio input, so Tab, the arrow keys, and form submission work as
- * browsers expect.
+ * Radio cards: a group of large choices where one is picked, built on the
+ * shadcn radio group (Base UI). Tab reaches the group once, the arrow keys
+ * move between cards, and the group submits its value with a form.
  *
  *   <RadioCards
  *     name="method"
@@ -50,36 +50,44 @@ export function RadioCards({
   /** Hide the legend visually when a heading nearby already names the group. */
   hideLegend?: boolean;
 }) {
+  const legendId = useId();
   return (
-    <fieldset className="radio-group" aria-describedby={describedBy}>
-      <legend className={hideLegend ? "visually-hidden" : undefined}>{legend}</legend>
-      <div
-        className="radio-cards"
+    <fieldset className="radio-group">
+      <legend id={legendId} className={hideLegend ? "visually-hidden" : undefined}>
+        {legend}
+      </legend>
+      <RadioGroup
+        name={name}
+        value={value}
+        onValueChange={(next) => onChange(next as string)}
+        aria-labelledby={legendId}
+        aria-describedby={describedBy}
         data-columns={columns}
         style={columns ? ({ "--columns": columns } as CSSProperties) : undefined}
       >
-        {options.map((option) => (
+        {options.map((option, index) => (
           <label key={option.value} className="radio-card">
-            <input
-              className="radio-card__input"
-              type="radio"
-              name={name}
+            {/* The mark is not a native input, so name it from the card text. */}
+            <RadioGroupItem
               value={option.value}
-              checked={value === option.value}
               disabled={option.disabled}
-              onChange={() => onChange(option.value)}
+              aria-labelledby={`${legendId}-${index}-title`}
+              aria-describedby={option.meta ? `${legendId}-${index}-meta` : undefined}
             />
-            <span className="radio-card__mark" aria-hidden="true">
-              <Check strokeWidth={3} focusable="false" />
-            </span>
             <span className="radio-card__text">
-              <span className="radio-card__title">{option.title}</span>
-              {option.meta ? <span className="radio-card__meta">{option.meta}</span> : null}
+              <span className="radio-card__title" id={`${legendId}-${index}-title`}>
+                {option.title}
+              </span>
+              {option.meta ? (
+                <span className="radio-card__meta" id={`${legendId}-${index}-meta`}>
+                  {option.meta}
+                </span>
+              ) : null}
             </span>
             {option.trailing ? <span className="radio-card__trailing">{option.trailing}</span> : null}
           </label>
         ))}
-      </div>
+      </RadioGroup>
     </fieldset>
   );
 }

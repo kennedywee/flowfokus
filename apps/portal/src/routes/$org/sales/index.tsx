@@ -75,7 +75,8 @@ function Sales() {
               <div className="search-field">
                 <Search aria-hidden="true" strokeWidth={1.75} />
                 <Input
-                  type="search" className="input--small"
+                  type="search"
+                  className="input--small"
                   aria-label="Search sales by member or offer"
                   placeholder="Search member or offer"
                   autoComplete="off"

@@ -624,34 +624,24 @@ input[type="radio"]:disabled {
 .radio-card:hover {
   border-color: var(--color-ink-4);
 }
-.radio-card:has(input:checked) {
+.radio-card:has([data-checked]) {
   background: var(--color-accent-wash);
   border-color: var(--color-accent);
 }
-.radio-card:has(input:focus-visible) {
+.radio-card:has(:focus-visible) {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
-.radio-card:has(input:disabled) {
+.radio-card:has([data-disabled]) {
   cursor: not-allowed;
   opacity: 0.6;
-}
-/* Two classes, to beat the drawn radio style above. */
-.radio-card .radio-card__input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-  opacity: 0;
-  cursor: inherit;
 }
 .radio-card__mark {
   flex: none;
   display: inline-grid;
+  padding: 0;
+  background: transparent;
+  cursor: inherit;
   place-content: center;
   width: 20px;
   height: 20px;
@@ -663,14 +653,14 @@ input[type="radio"]:disabled {
 .radio-card__mark svg {
   width: 12px;
   height: 12px;
-  opacity: 0;
 }
-.radio-card__input:checked + .radio-card__mark {
+.radio-card__mark[data-checked] {
   background: var(--color-accent);
   border-color: var(--color-accent);
 }
-.radio-card__input:checked + .radio-card__mark svg {
-  opacity: 1;
+/* The card shows focus, so the mark does not draw its own ring. */
+.radio-card__mark:focus-visible {
+  outline: none;
 }
 .radio-card__text {
   flex: 1;
@@ -692,6 +682,70 @@ input[type="radio"]:disabled {
   text-align: right;
   font-family: var(--font-mono);
   line-height: var(--leading-normal);
+}
+
+/* Switch (components/ui/switch.tsx). */
+.switch {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  width: 40px;
+  height: 24px;
+  padding: 3px;
+  border: 1px solid var(--color-field-line);
+  border-radius: 12px;
+  background: var(--color-control);
+  cursor: pointer;
+  transition: background-color 140ms var(--ease-out);
+}
+.switch[data-checked] {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.switch[data-disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.switch__thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-ink-2);
+  transition: transform 140ms var(--ease-out);
+}
+.switch[data-checked] .switch__thumb {
+  transform: translateX(16px);
+  background: var(--color-page);
+}
+
+/* Toggle group (components/ui/toggle-group.tsx): a row of quiet filter buttons. */
+.toggle-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.toggle-group__item {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-3);
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  transition:
+    color 120ms var(--ease-out),
+    background-color 120ms var(--ease-out);
+}
+.toggle-group__item:hover {
+  color: var(--color-ink);
+  background: var(--color-control);
+}
+.toggle-group__item[data-pressed] {
+  color: var(--color-ink);
+  background: var(--color-hover);
 }
 
 /* ---------- Pills, lamps, and tags ---------- */

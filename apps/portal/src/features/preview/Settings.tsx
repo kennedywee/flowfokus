@@ -143,7 +143,8 @@ export function Settings() {
                       {person.role === "Owner" ? (
                         "Owner"
                       ) : (
-                        <NativeSelect className="input--small"
+                        <NativeSelect
+                          className="input--small"
                           aria-label={`Role for ${person.name}`}
                           value={person.role}
                           onChange={(e) =>

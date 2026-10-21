@@ -230,7 +230,8 @@ function SearchForm({ initial }: { initial: string }) {
       <div className="search-field">
         <Search aria-hidden="true" strokeWidth={1.75} />
         <Input
-          id="member-search" className="input--small"
+          id="member-search"
+          className="input--small"
           type="search"
           placeholder="Search members"
           value={value}

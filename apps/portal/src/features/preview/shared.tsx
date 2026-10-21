@@ -1,6 +1,8 @@
 import { useId, type ReactNode } from "react";
 import { PageHead, Pill } from "../../components/ui";
 import { Dialog, DialogBody, DialogContent, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export function PreviewPage({
   title,
@@ -26,7 +28,7 @@ export function PreviewPage({
   );
 }
 
-/** A simple filter group. Native buttons retain standard keyboard behavior. */
+/** A filter row. One choice stays pressed; the arrow keys move between choices. */
 export function Filters<T extends string>({
   values,
   value,
@@ -39,13 +41,22 @@ export function Filters<T extends string>({
   label: string;
 }) {
   return (
-    <div className="preview-filters" role="group" aria-label={label}>
+    <ToggleGroup
+      className="preview-filters"
+      aria-label={label}
+      value={[value]}
+      onValueChange={(next) => {
+        // A press on the current choice would clear it. Keep one choice pressed.
+        const picked = next[0] as T | undefined;
+        if (picked) onChange(picked);
+      }}
+    >
       {values.map((item) => (
-        <button key={item} type="button" aria-pressed={value === item} onClick={() => onChange(item)}>
+        <ToggleGroupItem key={item} value={item}>
           {item}
-        </button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </ToggleGroup>
   );
 }
 
@@ -67,15 +78,7 @@ export function Toggle({
         <label htmlFor={id}>{label}</label>
         <p id={`${id}-help`}>{description}</p>
       </div>
-      <input
-        id={id}
-        className="preview-switch"
-        type="checkbox"
-        role="switch"
-        aria-describedby={`${id}-help`}
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
+      <Switch id={id} aria-describedby={`${id}-help`} checked={checked} onCheckedChange={(next) => onChange(next)} />
     </div>
   );
 }
