@@ -435,8 +435,9 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
 }
 
 /**
- * The account menu. Help, theme choice, account settings, and sign-out need
- * real sign-in, so they show disabled. The portal has one theme, dark.
+ * The account menu. Help, theme choice, account settings, and sign-out look
+ * and respond like menu items, but do nothing yet: they need real sign-in.
+ * The portal has one theme, dark.
  */
 function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
   const [open, setOpen] = useState(false);
@@ -492,7 +493,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
           <hr className="account__rule" />
           <ul className="account__list">
             <li>
-              <button type="button" className="account__item" disabled>
+              <button type="button" className="account__item">
                 <CircleHelp {...icon} />
                 Help &amp; feedback
                 <span className="account__meta">
@@ -501,7 +502,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
               </button>
             </li>
             <li>
-              <button type="button" className="account__item" disabled>
+              <button type="button" className="account__item">
                 <Monitor {...icon} />
                 Theme
                 <span className="account__meta">
@@ -511,7 +512,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
               </button>
             </li>
             <li>
-              <button type="button" className="account__item" disabled>
+              <button type="button" className="account__item">
                 <CircleUserRound {...icon} />
                 Account settings
               </button>
@@ -520,7 +521,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
           <hr className="account__rule" />
           <ul className="account__list">
             <li>
-              <button type="button" className="account__item" disabled>
+              <button type="button" className="account__item">
                 <LogOut {...icon} />
                 Sign out
               </button>
