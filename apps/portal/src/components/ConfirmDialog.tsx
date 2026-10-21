@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { ArrowRightLeft, TriangleAlert } from "lucide-react";
-import { buttonClass } from "./ui";
+import { Button } from "@/components/ui/button";
 
 /*
  * A confirm dialog: one short decision, in a native <dialog> opened with
@@ -118,18 +118,18 @@ export function ConfirmDialog({
         ) : null}
       </div>
       <div className="dialog__footer">
-        <button
+        <Button
+          variant="ghost"
           type="button"
-          className={buttonClass({ variant: "ghost" })}
           onClick={onCancel}
           disabled={pending}
           autoFocus={critical}
         >
           {cancelLabel}
-        </button>
-        <button
+        </Button>
+        <Button
+          variant={critical ? "destructive" : "default"}
           type="button"
-          className={buttonClass({ variant: critical ? "critical" : "primary" })}
           onClick={onConfirm}
           disabled={pending}
           aria-busy={pending || undefined}
@@ -143,7 +143,7 @@ export function ConfirmDialog({
           ) : (
             confirmLabel
           )}
-        </button>
+        </Button>
       </div>
     </dialog>
   );

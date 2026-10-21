@@ -2,11 +2,13 @@ import { useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { Download, LogIn } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
-import { Avatar, Empty, FailureNotice, Plate, Status, buttonClass } from "../../components/ui";
+import { Avatar, Empty, FailureNotice, Plate, Status } from "../../components/ui";
 import { useLocationName, useOrganization } from "../../lib/organization";
 import { DENIAL, formatWhen } from "../../lib/format";
 import { downloadCsv } from "./export";
 import { Filters, PreviewPage } from "./shared";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const route = getRouteApi("/$org/check-in");
 export function CheckIns() {
@@ -24,9 +26,10 @@ export function CheckIns() {
       title="Check-in"
       description="A clear answer for the person in front of you."
       actions={
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           type="button"
-          className={buttonClass({ variant: "secondary", size: "small" })}
           onClick={() =>
             downloadCsv("check-ins.csv", [
               ["Member", "Location", "Time", "Result"],
@@ -41,7 +44,7 @@ export function CheckIns() {
         >
           <Download aria-hidden="true" />
           Export visits
-        </button>
+        </Button>
       }
     >
       <div className="preview-checkin-layout">
@@ -64,42 +67,40 @@ export function CheckIns() {
           </div>
           {visits.ok ? (
             <>
-              <div className="table-wrap">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Member</th>
-                      <th scope="col">Location</th>
-                      <th scope="col">Time</th>
-                      <th scope="col">Result</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visible.map((visit) => (
-                      <tr key={visit.id}>
-                        <td>
-                          <div className="preview-person">
-                            <Avatar name={visit.member.name} size={28} />
-                            <div>
-                              <strong>{visit.member.name}</strong>
-                              <p>{visit.denial_reason ? DENIAL[visit.denial_reason].title : "Membership access"}</p>
-                            </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Member</TableHead>
+                    <TableHead scope="col">Location</TableHead>
+                    <TableHead scope="col">Time</TableHead>
+                    <TableHead scope="col">Result</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visible.map((visit) => (
+                    <TableRow key={visit.id}>
+                      <TableCell>
+                        <div className="preview-person">
+                          <Avatar name={visit.member.name} size={28} />
+                          <div>
+                            <strong>{visit.member.name}</strong>
+                            <p>{visit.denial_reason ? DENIAL[visit.denial_reason].title : "Membership access"}</p>
                           </div>
-                        </td>
-                        <td>{locationName(visit.location_id)}</td>
-                        <td className="preview-mono">
-                          <time dateTime={visit.checked_in_at} suppressHydrationWarning>
-                            {formatWhen(visit.checked_in_at, organization.timezone)}
-                          </time>
-                        </td>
-                        <td>
-                          <Status state={visit.result}>{visit.result === "granted" ? "Granted" : "Denied"}</Status>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{locationName(visit.location_id)}</TableCell>
+                      <TableCell className="preview-mono">
+                        <time dateTime={visit.checked_in_at} suppressHydrationWarning>
+                          {formatWhen(visit.checked_in_at, organization.timezone)}
+                        </time>
+                      </TableCell>
+                      <TableCell>
+                        <Status state={visit.result}>{visit.result === "granted" ? "Granted" : "Denied"}</Status>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
               {!visible.length ? (
                 <Empty title="No visits in this view">
                   <p>Try a different filter.</p>

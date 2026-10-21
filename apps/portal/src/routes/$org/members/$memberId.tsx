@@ -11,13 +11,14 @@ import {
   Plate,
   SkeletonRows,
   Status,
-  buttonClass,
   type LampState,
 } from "../../../components/ui";
 import { DENIAL, formatDate, formatUsage, formatWhen } from "../../../lib/format";
 import { useLocationName, useOrganization } from "../../../lib/organization";
 import { getMemberRecord } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
+import { buttonVariants } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/$org/members/$memberId")({
   loader: async ({ params }) => {
@@ -50,7 +51,7 @@ function MemberPage() {
           to="/$org/sales/new"
           params={{ org: organization.slug }}
           search={{ member: member.id }}
-          className={buttonClass()}
+          className={buttonVariants()}
         >
           <ShoppingBag aria-hidden="true" />
           Sell a membership
@@ -82,7 +83,7 @@ function MemberPage() {
                 to="/$org/sales/new"
                 params={{ org: organization.slug }}
                 search={{ member: member.id }}
-                className={buttonClass({ variant: "secondary", size: "small" })}
+                className={buttonVariants({ variant: "secondary", size: "sm" })}
               >
                 Sell a membership
               </Link>
@@ -217,47 +218,45 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
       flush
     >
       {periods.length ? (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Starts</th>
-                <th scope="col">Ends</th>
-                <th scope="col">State</th>
-                <th scope="col">Sale</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...periods].reverse().map((period) => {
-                const starts = Date.parse(period.starts_at);
-                const ends = Date.parse(period.ends_at);
-                const state = now >= ends ? "ended" : now >= starts ? "current" : "upcoming";
-                return (
-                  <tr key={period.id}>
-                    <td className="member-date">
-                      <time dateTime={period.starts_at} suppressHydrationWarning>
-                        {formatDate(period.starts_at, organization.timezone)}
-                      </time>
-                    </td>
-                    <td className="member-date">
-                      <time dateTime={period.ends_at} suppressHydrationWarning>
-                        {formatDate(period.ends_at, organization.timezone)}
-                      </time>
-                    </td>
-                    <td>
-                      <Status state={PERIOD_STATE[state].lamp}>{PERIOD_STATE[state].label}</Status>
-                    </td>
-                    <td>
-                      <Link to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: period.sale_id }}>
-                        View sale
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">Starts</TableHead>
+              <TableHead scope="col">Ends</TableHead>
+              <TableHead scope="col">State</TableHead>
+              <TableHead scope="col">Sale</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...periods].reverse().map((period) => {
+              const starts = Date.parse(period.starts_at);
+              const ends = Date.parse(period.ends_at);
+              const state = now >= ends ? "ended" : now >= starts ? "current" : "upcoming";
+              return (
+                <TableRow key={period.id}>
+                  <TableCell className="member-date">
+                    <time dateTime={period.starts_at} suppressHydrationWarning>
+                      {formatDate(period.starts_at, organization.timezone)}
+                    </time>
+                  </TableCell>
+                  <TableCell className="member-date">
+                    <time dateTime={period.ends_at} suppressHydrationWarning>
+                      {formatDate(period.ends_at, organization.timezone)}
+                    </time>
+                  </TableCell>
+                  <TableCell>
+                    <Status state={PERIOD_STATE[state].lamp}>{PERIOD_STATE[state].label}</Status>
+                  </TableCell>
+                  <TableCell>
+                    <Link to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: period.sale_id }}>
+                      View sale
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       ) : (
         <div className="member-state">
           <Empty title="No membership yet">
@@ -273,37 +272,35 @@ function CheckInHistory({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   return (
-    <div className="table-wrap">
-      <table className="table">
-        <thead>
-          <tr>
-            <th scope="col">Result</th>
-            <th scope="col">Reason</th>
-            <th scope="col">Location</th>
-            <th scope="col" className="num">
-              When
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {checkIns.map((checkIn) => (
-            <tr key={checkIn.id}>
-              <td>
-                <Status state={checkIn.result}>{checkIn.result === "granted" ? "Granted" : "Denied"}</Status>
-              </td>
-              <td className="muted">
-                {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : checkIn.result === "granted" ? "Access valid" : "No reason recorded"}
-              </td>
-              <td>{locationName(checkIn.location_id)}</td>
-              <td className="num member-date">
-                <time dateTime={checkIn.checked_in_at} suppressHydrationWarning>
-                  {formatWhen(checkIn.checked_in_at, organization.timezone)}
-                </time>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead scope="col">Result</TableHead>
+          <TableHead scope="col">Reason</TableHead>
+          <TableHead scope="col">Location</TableHead>
+          <TableHead scope="col" className="num">
+            When
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {checkIns.map((checkIn) => (
+          <TableRow key={checkIn.id}>
+            <TableCell>
+              <Status state={checkIn.result}>{checkIn.result === "granted" ? "Granted" : "Denied"}</Status>
+            </TableCell>
+            <TableCell className="muted">
+              {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : checkIn.result === "granted" ? "Access valid" : "No reason recorded"}
+            </TableCell>
+            <TableCell>{locationName(checkIn.location_id)}</TableCell>
+            <TableCell className="num member-date">
+              <time dateTime={checkIn.checked_in_at} suppressHydrationWarning>
+                {formatWhen(checkIn.checked_in_at, organization.timezone)}
+              </time>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

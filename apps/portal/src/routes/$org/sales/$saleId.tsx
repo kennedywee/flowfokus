@@ -17,7 +17,6 @@ import {
   Status,
   SubmitButton,
   Time,
-  buttonClass,
   describedBy,
 } from "../../../components/ui";
 import {
@@ -36,6 +35,8 @@ import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useLocationName, useOrganization } from "../../../lib/organization";
 import { fulfillSale, getSale, recordPayment } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const sendPayment = (input: Parameters<typeof recordPayment>[0]["data"]) => recordPayment({ data: input });
 const sendFulfill = (input: Parameters<typeof fulfillSale>[0]["data"]) => fulfillSale({ data: input });
@@ -266,9 +267,8 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
           <span className="input-group__affix" aria-hidden="true">
             {sale.currency}
           </span>
-          <input
-            id="payment-amount"
-            className="input input--money"
+          <Input
+            id="payment-amount" className="input--money"
             inputMode="decimal"
             autoComplete="off"
             value={amount}
@@ -283,9 +283,8 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
         </div>
       </Field>
       <Field id="payment-reference" label="Reference (optional)" hint="Receipt number or bank reference.">
-        <input
+        <Input
           id="payment-reference"
-          className="input"
           maxLength={200}
           autoComplete="off"
           value={reference}
@@ -362,16 +361,15 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
             : "Delivery opens when the sale is fully paid."}
         </p>
         <div className="sale-page__deliver">
-          <button
+          <Button
             type="button"
-            className={buttonClass()}
             disabled={!paid}
             aria-describedby={paid ? undefined : "deliver-reason"}
             onClick={() => setConfirming(true)}
           >
             <PackageCheck aria-hidden="true" strokeWidth={1.75} />
             Deliver membership
-          </button>
+          </Button>
           {paid ? null : (
             <p className="field__hint" id="deliver-reason">
               {reason}

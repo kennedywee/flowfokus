@@ -4,8 +4,9 @@ import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/r
 import sansFont from "@fontsource-variable/geist/index.css?url";
 import monoFont from "@fontsource-variable/geist-mono/index.css?url";
 import { ToastProvider } from "../components/Toast";
-import { Wordmark, buttonClass } from "../components/ui";
+import { Wordmark } from "../components/ui";
 import appCss from "../styles.css?url";
+import { buttonVariants } from "@/components/ui/button";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -59,7 +60,7 @@ function NotFound() {
           <p>This address does not match a portal page. Check the address, or go to the staff portal.</p>
         </div>
         <div className="actions">
-          <Link to="/" className={buttonClass({ variant: "secondary" })}>
+          <Link to="/" className={buttonVariants({ variant: "secondary" })}>
             Go to the staff portal
           </Link>
         </div>

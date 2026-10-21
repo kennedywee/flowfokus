@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { ArrowUpRight, Download } from "lucide-react";
-import { Money, Plate, buttonClass } from "../../components/ui";
+import { Money, Plate } from "../../components/ui";
 import { reportWeeks } from "./data";
 import { downloadCsv } from "./export";
 import { Filters, PreviewPage } from "./shared";
+import { Button } from "@/components/ui/button";
 
 export function Reports() {
   const [period, setPeriod] = useState("Last 4 weeks");
@@ -18,9 +19,10 @@ export function Reports() {
       title="Reports"
       description="A view of what came in, and who came through."
       actions={
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           type="button"
-          className={buttonClass({ variant: "secondary", size: "small" })}
           onClick={() =>
             downloadCsv("sample-weekly-report.csv", [
               ["Week", "Sales (MYR)", "Visits"],
@@ -30,7 +32,7 @@ export function Reports() {
         >
           <Download aria-hidden="true" />
           Export report
-        </button>
+        </Button>
       }
     >
       <div className="stack">

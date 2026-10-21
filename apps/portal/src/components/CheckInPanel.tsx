@@ -6,7 +6,9 @@ import { useAction, useIdempotencyKey } from "../lib/hooks";
 import { useDeskLocation, useLocationName, useOrganization } from "../lib/organization";
 import { createCheckIn } from "../lib/staff.functions";
 import { Combobox } from "./Combobox";
-import { Field, FailureNotice, Lamp, SubmitButton, buttonClass } from "./ui";
+import { Field, FailureNotice, Lamp, SubmitButton } from "./ui";
+import { buttonVariants } from "@/components/ui/button";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 type Input = Parameters<typeof createCheckIn>[0]["data"];
 const sendCheckIn = (input: Input) => createCheckIn({ data: input });
@@ -110,9 +112,8 @@ export function CheckInPanel({
       <div className="checkin__submit">
         {manyLocations ? (
           <Field id="check-in-location" label="Location">
-            <select
+            <NativeSelect
               id="check-in-location"
-              className="select"
               value={locationId}
               onChange={(event) => {
                 setLocationId(event.target.value);
@@ -120,11 +121,11 @@ export function CheckInPanel({
               }}
             >
               {organization.locations.map((location) => (
-                <option key={location.id} value={location.id}>
+                <NativeSelectOption key={location.id} value={location.id}>
                   {location.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
         ) : null}
         <SubmitButton pending={action.pending} pendingLabel="Checking…" disabled={noLocations} large>
@@ -200,7 +201,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
     <Link
       to="/$org/members/$memberId"
       params={{ org: slug, memberId: checkIn.member.id }}
-      className={buttonClass({ variant: "ghost" })}
+      className={buttonVariants({ variant: "ghost" })}
     >
       Open {checkIn.member.name}
     </Link>
@@ -216,7 +217,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
             to="/$org/sales/new"
             params={{ org: slug }}
             search={{ member: checkIn.member.id }}
-            className={buttonClass({ variant: "secondary" })}
+            className={buttonVariants({ variant: "secondary" })}
           >
             Sell a membership
           </Link>
@@ -224,7 +225,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
             to="/$org/sales"
             params={{ org: slug }}
             search={{ view: "due" }}
-            className={buttonClass({ variant: "secondary" })}
+            className={buttonVariants({ variant: "secondary" })}
           >
             Record a payment
           </Link>
@@ -232,7 +233,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
             to="/$org/sales"
             params={{ org: slug }}
             search={{ view: "deliver" }}
-            className={buttonClass({ variant: "secondary" })}
+            className={buttonVariants({ variant: "secondary" })}
           >
             Deliver a paid sale
           </Link>
@@ -242,7 +243,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
           to="/$org/sales/new"
           params={{ org: slug }}
           search={{ member: checkIn.member.id }}
-          className={buttonClass({ variant: "secondary" })}
+          className={buttonVariants({ variant: "secondary" })}
         >
           Sell a renewal
         </Link>

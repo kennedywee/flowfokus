@@ -3,10 +3,11 @@ import type { Schemas } from "@flowfokus/api";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, CircleAlert, CircleCheck, Clock, Plus, Users } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
-import { Avatar, Empty, FailureNotice, PageHead, Plate, SkeletonRows, Status, buttonClass } from "../../components/ui";
+import { Avatar, Empty, FailureNotice, PageHead, Plate, SkeletonRows, Status } from "../../components/ui";
 import { DENIAL, formatWhen } from "../../lib/format";
 import { useLocationName, useOrganization } from "../../lib/organization";
 import { getOverview, listCheckIns, listMembers } from "../../lib/staff.functions";
+import { buttonVariants } from "@/components/ui/button";
 
 const RECENT_LIMIT = 12;
 
@@ -66,7 +67,7 @@ function FrontDesk() {
   return (
     <div className="page desk-page">
       <PageHead title="Overview" description="Check members in. Then follow up on sales that need payment or delivery.">
-        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonClass()}>
+        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants()}>
           <Plus aria-hidden="true" strokeWidth={1.75} />
           New sale
         </Link>
@@ -81,7 +82,7 @@ function FrontDesk() {
               ) : (
                 <Empty title="No members yet">
                   <p>Add a member before the first check-in.</p>
-                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonClass({ variant: "secondary" })}>
+                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary" })}>
                     Add a member
                   </Link>
                 </Empty>

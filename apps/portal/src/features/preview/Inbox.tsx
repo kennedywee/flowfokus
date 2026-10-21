@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Check, CheckCheck, ChevronLeft, Inbox as InboxIcon } from "lucide-react";
-import { Avatar, Empty, Pill, buttonClass } from "../../components/ui";
+import { Avatar, Empty, Pill } from "../../components/ui";
 import { initialInbox } from "./data";
 import { Filters, PreviewPage } from "./shared";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export function Inbox() {
   const [items, setItems] = useState(initialInbox);
@@ -28,15 +29,16 @@ export function Inbox() {
       title="Inbox"
       description="The things that need a person at the desk."
       actions={
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           type="button"
-          className={buttonClass({ variant: "secondary", size: "small" })}
           disabled={!unread}
           onClick={() => setItems((items) => items.map((item) => ({ ...item, unread: false })))}
         >
           <CheckCheck aria-hidden="true" />
           Mark all read
-        </button>
+        </Button>
       }
     >
       <section className="preview-inbox" aria-label="Inbox" data-detail-open={detailOpen}>
@@ -91,7 +93,7 @@ export function Inbox() {
         <div className="preview-inbox__detail" aria-label="Selected update">
           <button
             type="button"
-            className={`${buttonClass({ variant: "ghost", size: "small" })} preview-inbox__back`}
+            className={`${buttonVariants({ variant: "ghost", size: "sm" })} preview-inbox__back`}
             onClick={() => setDetailOpen(false)}
           >
             <ChevronLeft aria-hidden="true" />
@@ -118,9 +120,9 @@ export function Inbox() {
                 <InboxIcon aria-hidden="true" />
                 <p>This is a sample update. No member will be contacted.</p>
               </div>
-              <button
+              <Button
+                variant="secondary"
                 type="button"
-                className={buttonClass({ variant: "secondary" })}
                 onClick={() =>
                   setItems((items) =>
                     items.map((item) =>
@@ -131,7 +133,7 @@ export function Inbox() {
               >
                 <Check aria-hidden="true" />
                 {current.resolved ? "Move back to inbox" : "Mark resolved"}
-              </button>
+              </Button>
             </>
           ) : (
             <Empty title="Select an update">

@@ -14,7 +14,6 @@ import {
   Plate,
   SkeletonRows,
   SubmitButton,
-  buttonClass,
   describedBy,
 } from "../../../components/ui";
 import { failureMessage, formatDuration, formatMoney, formatUsage } from "../../../lib/format";
@@ -22,6 +21,8 @@ import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
 import { createSale, listMembers, listProducts } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
+import { buttonVariants } from "@/components/ui/button";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
 
@@ -75,7 +76,7 @@ function NewSale() {
       {members.data.length === 0 ? (
         <Empty title="Add a member first">
           <p>A sale needs a member. Add one, then come back.</p>
-          <Link to="/$org/members" params={{ org: organization.slug }} className={buttonClass({ variant: "secondary", size: "small" })}>
+          <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
             Add a member
           </Link>
         </Empty>
@@ -184,9 +185,8 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
               required
             />
             <Field id="sale-location" label="Sold at" error={locationError}>
-              <select
+              <NativeSelect
                 id="sale-location"
-                className="select"
                 value={locationId}
                 onChange={(event) => {
                   setLocationId(event.target.value);
@@ -197,11 +197,11 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
                 aria-describedby={describedBy("sale-location", undefined, locationError)}
               >
                 {organization.locations.map((location) => (
-                  <option key={location.id} value={location.id}>
+                  <NativeSelectOption key={location.id} value={location.id}>
                     {location.name}
-                  </option>
+                  </NativeSelectOption>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
           </div>
         </Plate>

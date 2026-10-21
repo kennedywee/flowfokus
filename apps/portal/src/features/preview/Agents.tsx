@@ -1,8 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowUp, Bot, Check, MessageSquare, Plus, Sparkles } from "lucide-react";
-import { Avatar, Pill, buttonClass } from "../../components/ui";
+import { Avatar, Pill } from "../../components/ui";
 import { sampleMembers } from "./data";
 import { PreviewPage } from "./shared";
+import { Button } from "@/components/ui/button";
 
 const prompts = ["Who hasn’t visited in two weeks?", "What needs attention today?", "Summarize this week’s sales"];
 type Message = { id: number; role: "user" | "agent"; text: string; members?: boolean };
@@ -54,9 +55,10 @@ export function Agents() {
       title="Agents"
       description="A second pair of eyes for your front desk."
       actions={
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           type="button"
-          className={buttonClass({ variant: "secondary", size: "small" })}
           onClick={() => {
             setMessages([]);
             setInput("");
@@ -65,7 +67,7 @@ export function Agents() {
         >
           <Plus aria-hidden="true" />
           New conversation
-        </button>
+        </Button>
       }
     >
       <div className="preview-agent-layout">
@@ -162,9 +164,9 @@ export function Agents() {
             />
             <div>
               <span>Desk assistant · Sample data</span>
-              <button type="submit" className={buttonClass()} disabled={!input.trim()} aria-label="Send question">
+              <Button type="submit" disabled={!input.trim()} aria-label="Send question">
                 <ArrowUp aria-hidden="true" />
-              </button>
+              </Button>
             </div>
           </form>
         </section>

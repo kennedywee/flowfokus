@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   Circle,
   CircleAlert,
@@ -14,15 +14,26 @@ import markUrl from "../assets/flowfokus-mark.svg?url";
 import wordmarkUrl from "../assets/flowfokus-wordmark.svg?url";
 import { failureMessage, formatDateTime, formatMoney } from "../lib/format";
 import type { Failure } from "../lib/result";
+import { Alert, AlertAction, AlertContent, AlertDescription, AlertTitle } from "./ui/alert";
+import { Avatar as AvatarRoot, AvatarFallback } from "./ui/avatar";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardHeading, CardIcon, CardTitle } from "./ui/card";
+import { Empty as EmptyRoot, EmptyMedia, EmptyTitle } from "./ui/empty";
+import { Field as FieldRoot, FieldDescription, FieldError, FieldLabel } from "./ui/field";
+import { Skeleton } from "./ui/skeleton";
 
 /*
- * Shared UI parts for the staff portal. Styles live in styles/components.css.
+ * Shared UI parts for the staff portal, built on the shadcn components in
+ * components/ui/. These add the portal's conventions: icons with every state,
+ * accessible names, and hint and error wiring. Styles live in
+ * styles/components.css.
  *
  * Exports: Lamp, Status, Pill, Money, Time, Notice, FailureNotice, Empty,
  * ErrorState, LoadingState, Plate (and Card, an alias), Field, describedBy,
- * SubmitButton, buttonClass, SkeletonRows, PageHead, Avatar, initials,
- * Wordmark, formatDateTime. Added in the restyle: Pill, ErrorState, LoadingState,
- * Card, buttonClass, Avatar, initials, Wordmark.
+ * SubmitButton, SkeletonRows, PageHead, Avatar, initials, Wordmark,
+ * formatDateTime. For a button, use `Button` or `buttonVariants` from
+ * components/ui/button.
  */
 
 export type LampState = "off" | "granted" | "denied" | "paid" | "due" | "waiting" | "delivered" | "active" | "error";
@@ -59,10 +70,10 @@ export function Lamp({ state }: { state: LampState }) {
 export function Status({ state, children }: { state: LampState; children: ReactNode }) {
   const { icon: Icon, tone } = LAMP[state];
   return (
-    <span className="pill status" data-tone={tone}>
+    <Badge tone={tone} className="status">
       <Icon strokeWidth={2} aria-hidden="true" focusable="false" />
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -79,10 +90,10 @@ export function Pill({
   children: ReactNode;
 }) {
   return (
-    <span className={square ? "pill pill--square" : "pill"} data-tone={tone}>
+    <Badge variant={square ? "square" : "pill"} tone={tone}>
       {Icon ? <Icon strokeWidth={2} aria-hidden="true" focusable="false" /> : null}
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -123,16 +134,16 @@ export function Notice({
 }) {
   const { icon: Icon, state } = NOTICE[tone];
   return (
-    <div className="notice" data-tone={tone} role={live ? (tone === "error" ? "alert" : "status") : undefined}>
+    <Alert tone={tone} role={live ? (tone === "error" ? "alert" : "status") : undefined}>
       <span className="lamp" data-state={state} aria-hidden="true">
         <Icon strokeWidth={2} aria-hidden="true" focusable="false" />
       </span>
-      <div className="notice__content">
-        <p className="notice__title">{title}</p>
-        {children ? <div className="notice__body">{children}</div> : null}
-      </div>
-      {action ? <div className="notice__action">{action}</div> : null}
-    </div>
+      <AlertContent>
+        <AlertTitle>{title}</AlertTitle>
+        {children ? <AlertDescription>{children}</AlertDescription> : null}
+      </AlertContent>
+      {action ? <AlertAction>{action}</AlertAction> : null}
+    </Alert>
   );
 }
 
@@ -148,22 +159,26 @@ export function FailureNotice({ error, title = "That did not work" }: { error: F
 /** An empty list or section. Put one sentence and, if useful, one button inside. */
 export function Empty({ title, children, icon: Icon = Inbox }: { title: string; children?: ReactNode; icon?: LucideIcon }) {
   return (
-    <div className="empty">
-      <Icon className="empty__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-      <p className="empty__title">{title}</p>
+    <EmptyRoot>
+      <EmptyMedia>
+        <Icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
+      </EmptyMedia>
+      <EmptyTitle>{title}</EmptyTitle>
       {children}
-    </div>
+    </EmptyRoot>
   );
 }
 
 /** A section that could not load. Say what failed and what to do next. */
 export function ErrorState({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="state" data-tone="error">
-      <CircleAlert className="state__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-      <p className="state__title">{title}</p>
+    <EmptyRoot className="state" data-tone="error">
+      <EmptyMedia className="state__icon">
+        <CircleAlert strokeWidth={1.75} aria-hidden="true" focusable="false" />
+      </EmptyMedia>
+      <EmptyTitle className="state__title">{title}</EmptyTitle>
       {children}
-    </div>
+    </EmptyRoot>
   );
 }
 
@@ -205,27 +220,21 @@ export function Plate({
 }) {
   const id = labelledBy ?? `plate-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
-    <section className="plate" aria-labelledby={id}>
-      <div className="plate__head">
-        {icon ? (
-          <span className="plate__icon" aria-hidden="true">
-            {icon}
-          </span>
-        ) : null}
-        <div className="plate__text">
-          <h2 id={id}>{title}</h2>
-          {description ? <p>{description}</p> : null}
-        </div>
-        {action ? <div className="plate__action">{action}</div> : null}
-      </div>
-      <div className={flush ? "plate__body plate__body--flush" : "plate__body"}>{children}</div>
-      {footer ? <div className="plate__footer">{footer}</div> : null}
-    </section>
+    <Card aria-labelledby={id}>
+      <CardHeader>
+        {icon ? <CardIcon>{icon}</CardIcon> : null}
+        <CardHeading>
+          <CardTitle id={id}>{title}</CardTitle>
+          {description ? <CardDescription>{description}</CardDescription> : null}
+        </CardHeading>
+        {action ? <CardAction>{action}</CardAction> : null}
+      </CardHeader>
+      <CardContent flush={flush}>{children}</CardContent>
+      {footer ? <CardFooter>{footer}</CardFooter> : null}
+    </Card>
   );
 }
 
-/** Another name for `Plate`, to match the Paper kit ("card"). */
-export const Card = Plate;
 
 export function Field({
   id,
@@ -241,21 +250,12 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
+    <FieldRoot>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       {children}
-      {hint ? (
-        <p className="field__hint" id={`${id}-hint`}>
-          {hint}
-        </p>
-      ) : null}
-      {error ? (
-        <p className="field__error" id={`${id}-error`}>
-          <TriangleAlert strokeWidth={2} aria-hidden="true" focusable="false" />
-          <span>{error}</span>
-        </p>
-      ) : null}
-    </div>
+      {hint ? <FieldDescription id={`${id}-hint`}>{hint}</FieldDescription> : null}
+      <FieldError id={`${id}-error`}>{error}</FieldError>
+    </FieldRoot>
   );
 }
 
@@ -265,45 +265,26 @@ export function describedBy(id: string, hint?: string, error?: string): string |
   return ids.length ? ids.join(" ") : undefined;
 }
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "critical";
-export type ButtonSize = "default" | "small" | "large";
-
-/**
- * The class string for a button or a link that looks like one. Use it on a
- * router `Link`: `<Link className={buttonClass({ variant: "secondary" })}>`.
- */
-export function buttonClass({
-  variant = "primary",
-  size = "default",
-}: { variant?: ButtonVariant; size?: ButtonSize } = {}): string {
-  return [
-    "button",
-    variant === "primary" ? null : `button--${variant}`,
-    size === "default" ? null : `button--${size}`,
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
 export function SubmitButton({
   pending,
   pendingLabel,
   children,
   disabled = false,
   large = false,
-  variant = "primary",
+  variant = "default",
 }: {
   pending: boolean;
   pendingLabel: string;
   children: ReactNode;
   disabled?: boolean;
   large?: boolean;
-  variant?: ButtonVariant;
+  variant?: "default" | "secondary" | "ghost" | "destructive";
 }) {
   return (
-    <button
+    <Button
       type="submit"
-      className={buttonClass({ variant, size: large ? "large" : "default" })}
+      variant={variant}
+      size={large ? "lg" : "default"}
       disabled={disabled || pending}
       aria-busy={pending || undefined}
     >
@@ -315,7 +296,7 @@ export function SubmitButton({
       ) : (
         children
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -323,7 +304,7 @@ export function SkeletonRows({ rows = 4 }: { rows?: number }) {
   return (
     <div aria-hidden="true" className="skeleton-rows">
       {Array.from({ length: rows }, (_, index) => (
-        <span key={index} className="skeleton" style={{ width: `${88 - index * 9}%` }} />
+        <Skeleton key={index} style={{ width: `${88 - index * 9}%` }} />
       ))}
     </div>
   );
@@ -357,9 +338,9 @@ export function initials(name: string): string {
 /** A round avatar with initials. The name is not repeated for assistive technology. */
 export function Avatar({ name, size = 24 }: { name: string; size?: number }) {
   return (
-    <span className="avatar" style={{ "--size": `${size}px` } as CSSProperties} aria-hidden="true">
-      {initials(name)}
-    </span>
+    <AvatarRoot size={size} aria-hidden="true">
+      <AvatarFallback>{initials(name)}</AvatarFallback>
+    </AvatarRoot>
   );
 }
 

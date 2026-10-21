@@ -4,6 +4,7 @@ import { Empty, FailureNotice, PageHead, Pill, Plate, SkeletonRows, Status } fro
 import { formatDuration, formatMoney, formatUsage } from "../../lib/format";
 import { useLocationName } from "../../lib/organization";
 import { listProducts } from "../../lib/staff.functions";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/$org/products")({
   loader: ({ params }) => listProducts({ data: { slug: params.org } }),
@@ -64,40 +65,38 @@ function Products() {
             {product.prices.length === 0 ? (
               <p className="offer__empty">No prices yet. Add a price in the catalog to sell this offer.</p>
             ) : (
-              <div className="offer__table table-wrap">
-                <table className="table">
-                  <colgroup>
-                    <col />
-                    <col className="offer__col-term" />
-                    <col className="offer__col-status" />
-                    <col className="offer__col-amount" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th scope="col">Price</th>
-                      <th scope="col">Term</th>
-                      <th scope="col">Status</th>
-                      <th scope="col" className="num">
-                        Amount
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {product.prices.map((price) => (
-                      <tr key={price.id}>
-                        <td className="cell-title">{price.label}</td>
-                        <td className="offer__term">{formatDuration(price.duration_days)}</td>
-                        <td>
-                          <Status state={price.available ? "active" : "off"}>
-                            {price.archived_at ? "Archived" : price.available ? "On sale" : "Not on sale"}
-                          </Status>
-                        </td>
-                        <td className="num">{formatMoney(price.amount_minor, price.currency)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table wrapClassName="offer__table">
+                <colgroup>
+                  <col />
+                  <col className="offer__col-term" />
+                  <col className="offer__col-status" />
+                  <col className="offer__col-amount" />
+                </colgroup>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead scope="col">Price</TableHead>
+                    <TableHead scope="col">Term</TableHead>
+                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="num">
+                      Amount
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {product.prices.map((price) => (
+                    <TableRow key={price.id}>
+                      <TableCell className="cell-title">{price.label}</TableCell>
+                      <TableCell className="offer__term">{formatDuration(price.duration_days)}</TableCell>
+                      <TableCell>
+                        <Status state={price.available ? "active" : "off"}>
+                          {price.archived_at ? "Archived" : price.available ? "On sale" : "Not on sale"}
+                        </Status>
+                      </TableCell>
+                      <TableCell className="num">{formatMoney(price.amount_minor, price.currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </Plate>
         ))

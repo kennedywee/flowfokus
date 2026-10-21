@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Plus, Search, ShoppingBag } from "lucide-react";
 import { SalesTable } from "../../../components/SalesTable";
-import { Empty, FailureNotice, PageHead, Plate, SkeletonRows, buttonClass } from "../../../components/ui";
+import { Empty, FailureNotice, PageHead, Plate, SkeletonRows } from "../../../components/ui";
 import { useOrganization } from "../../../lib/organization";
 import { listSales } from "../../../lib/staff.functions";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type View = "all" | "due" | "deliver";
 const VIEWS: { id: View; label: string }[] = [
@@ -44,7 +46,7 @@ function Sales() {
   return (
     <div className="page sales-page">
       <PageHead title="Sales" description="Every membership sale, with what is paid and what is delivered.">
-        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonClass()}>
+        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants()}>
           <Plus aria-hidden="true" strokeWidth={1.75} />
           New sale
         </Link>
@@ -72,9 +74,8 @@ function Sales() {
               <span className="toolbar__spacer" />
               <div className="search-field">
                 <Search aria-hidden="true" strokeWidth={1.75} />
-                <input
-                  type="search"
-                  className="input input--small"
+                <Input
+                  type="search" className="input--small"
                   aria-label="Search sales by member or offer"
                   placeholder="Search member or offer"
                   autoComplete="off"
@@ -88,9 +89,9 @@ function Sales() {
             ) : needle ? (
               <Empty title="No sales match" icon={Search}>
                 <p>Nothing in this list matches “{query.trim()}”. Check the spelling or clear the search.</p>
-                <button type="button" className={buttonClass({ variant: "secondary", size: "small" })} onClick={() => setQuery("")}>
+                <Button variant="secondary" size="sm" type="button" onClick={() => setQuery("")}>
                   Clear search
-                </button>
+                </Button>
               </Empty>
             ) : (
               <Empty title={view === "all" ? "No sales yet" : "Nothing here"} icon={ShoppingBag}>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Wordmark, buttonClass } from "./ui";
+import { Wordmark } from "./ui";
+import { buttonVariants } from "@/components/ui/button";
 
 /**
  * A page that replaces the whole portal: access is off, or the organization
@@ -29,7 +30,7 @@ export function Blocked({
         {children}
         {homeLink ? (
           <div className="actions">
-            <Link to="/" className={buttonClass({ variant: "secondary" })}>
+            <Link to="/" className={buttonVariants({ variant: "secondary" })}>
               Go to the staff portal
             </Link>
           </div>

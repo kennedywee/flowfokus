@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Building2, Mail, MessageCircle, QrCode, Save, UserPlus } from "lucide-react";
-import { Avatar, Field, Pill, Plate, buttonClass } from "../../components/ui";
+import { Avatar, Field, Pill, Plate } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useOrganization } from "../../lib/organization";
 import { Filters, PreviewDialog, PreviewPage, Toggle } from "./shared";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 const initialTeam = [
   { name: "Nadia Hassan", email: "nadia@example.com", role: "Owner", status: "Active" },
@@ -55,8 +59,7 @@ export function Settings() {
           >
             <form className="form preview-settings-form" onSubmit={save}>
               <Field id="preview-org-name" label="Organization name">
-                <input
-                  className="input"
+                <Input
                   id="preview-org-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -65,8 +68,7 @@ export function Settings() {
                 />
               </Field>
               <Field id="preview-org-email" label="Contact email">
-                <input
-                  className="input"
+                <Input
                   id="preview-org-email"
                   type="email"
                   value={email}
@@ -76,27 +78,26 @@ export function Settings() {
               </Field>
               <div className="grid-2">
                 <Field id="preview-timezone" label="Time zone">
-                  <select
-                    className="input"
+                  <NativeSelect
                     id="preview-timezone"
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
                   >
-                    <option value="Asia/Kuala_Lumpur">Kuala Lumpur (UTC+8)</option>
-                    <option value="Asia/Singapore">Singapore (UTC+8)</option>
-                    <option value="Asia/Jakarta">Jakarta (UTC+7)</option>
-                  </select>
+                    <NativeSelectOption value="Asia/Kuala_Lumpur">Kuala Lumpur (UTC+8)</NativeSelectOption>
+                    <NativeSelectOption value="Asia/Singapore">Singapore (UTC+8)</NativeSelectOption>
+                    <NativeSelectOption value="Asia/Jakarta">Jakarta (UTC+7)</NativeSelectOption>
+                  </NativeSelect>
                 </Field>
                 <Field id="preview-currency" label="Currency" hint="Prices are recorded in Malaysian ringgit.">
-                  <input className="input" id="preview-currency" value="MYR — Malaysian ringgit" readOnly />
+                  <Input id="preview-currency" value="MYR — Malaysian ringgit" readOnly />
                 </Field>
               </div>
               <div className="preview-form-actions">
                 <span className="muted">{dirty ? "Unsaved changes" : "No unsaved changes"}</span>
-                <button className={buttonClass()} type="submit" disabled={!dirty}>
+                <Button type="submit" disabled={!dirty}>
                   <Save aria-hidden="true" />
                   Save changes
-                </button>
+                </Button>
               </div>
             </form>
           </Plate>
@@ -106,65 +107,63 @@ export function Settings() {
             title="Your team"
             description="People who can work in this organization."
             action={
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 type="button"
-                className={buttonClass({ variant: "secondary", size: "small" })}
                 onClick={() => setInviting(true)}
               >
                 <UserPlus aria-hidden="true" />
                 Invite staff
-              </button>
+              </Button>
             }
             flush
           >
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Staff member</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {team.map((person, index) => (
-                    <tr key={person.email}>
-                      <td>
-                        <div className="preview-person">
-                          <Avatar name={person.name} />
-                          <div>
-                            <strong>{person.name}</strong>
-                            <p>{person.email}</p>
-                          </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">Staff member</TableHead>
+                  <TableHead scope="col">Role</TableHead>
+                  <TableHead scope="col">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {team.map((person, index) => (
+                  <TableRow key={person.email}>
+                    <TableCell>
+                      <div className="preview-person">
+                        <Avatar name={person.name} />
+                        <div>
+                          <strong>{person.name}</strong>
+                          <p>{person.email}</p>
                         </div>
-                      </td>
-                      <td>
-                        {person.role === "Owner" ? (
-                          "Owner"
-                        ) : (
-                          <select
-                            className="input input--small"
-                            aria-label={`Role for ${person.name}`}
-                            value={person.role}
-                            onChange={(e) =>
-                              setTeam((items) =>
-                                items.map((item, i) => (i === index ? { ...item, role: e.target.value } : item)),
-                              )
-                            }
-                          >
-                            <option>Front desk</option>
-                            <option>Manager</option>
-                          </select>
-                        )}
-                      </td>
-                      <td>
-                        <Pill tone={person.status === "Active" ? "good" : "warning"}>{person.status}</Pill>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {person.role === "Owner" ? (
+                        "Owner"
+                      ) : (
+                        <NativeSelect className="input--small"
+                          aria-label={`Role for ${person.name}`}
+                          value={person.role}
+                          onChange={(e) =>
+                            setTeam((items) =>
+                              items.map((item, i) => (i === index ? { ...item, role: e.target.value } : item)),
+                            )
+                          }
+                        >
+                          <NativeSelectOption>Front desk</NativeSelectOption>
+                          <NativeSelectOption>Manager</NativeSelectOption>
+                        </NativeSelect>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Pill tone={person.status === "Active" ? "good" : "warning"}>{person.status}</Pill>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </Plate>
         ) : null}
         {section === "Notifications" ? (
@@ -213,16 +212,17 @@ export function Settings() {
                       <strong>{name}</strong>
                       <p>{detail}</p>
                     </div>
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       type="button"
-                      className={buttonClass({ variant: "secondary", size: "small" })}
                       aria-pressed={active}
                       onClick={() =>
                         setConnected((items) => (active ? items.filter((item) => item !== name) : [...items, name]))
                       }
                     >
                       {active ? "Disconnect" : "Connect"}
-                    </button>
+                    </Button>
                     <Pill tone={active ? "good" : "neutral"}>{active ? "Connected" : "Not connected"}</Pill>
                   </div>
                 );
@@ -256,24 +256,24 @@ export function Settings() {
             }}
           >
             <Field id="invite-name" label="Full name">
-              <input id="invite-name" name="name" className="input" required autoFocus />
+              <Input id="invite-name" name="name" required autoFocus />
             </Field>
             <Field id="invite-email" label="Email">
-              <input id="invite-email" name="email" type="email" className="input" required />
+              <Input id="invite-email" name="email" type="email" required />
             </Field>
             <Field id="invite-role" label="Role">
-              <select id="invite-role" name="role" className="input">
-                <option>Front desk</option>
-                <option>Manager</option>
-              </select>
+              <NativeSelect id="invite-role" name="role">
+                <NativeSelectOption>Front desk</NativeSelectOption>
+                <NativeSelectOption>Manager</NativeSelectOption>
+              </NativeSelect>
             </Field>
             <div className="preview-form-actions">
-              <button type="button" className={buttonClass({ variant: "ghost" })} onClick={() => setInviting(false)}>
+              <Button variant="ghost" type="button" onClick={() => setInviting(false)}>
                 Cancel
-              </button>
-              <button type="submit" className={buttonClass()}>
+              </Button>
+              <Button type="submit">
                 Add sample invitation
-              </button>
+              </Button>
             </div>
           </form>
         </PreviewDialog>

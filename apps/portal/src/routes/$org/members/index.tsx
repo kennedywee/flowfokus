@@ -13,13 +13,15 @@ import {
   Plate,
   SkeletonRows,
   SubmitButton,
-  buttonClass,
   describedBy,
 } from "../../../components/ui";
 import { formatDate } from "../../../lib/format";
 import { useAction } from "../../../lib/hooks";
 import { useOrganization } from "../../../lib/organization";
 import { createMember, listMembers } from "../../../lib/staff.functions";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 
 interface MembersSearch {
   q?: string;
@@ -56,10 +58,10 @@ function Members() {
   return (
     <div className="page members-page">
       <PageHead title="Members" description="Find a member, or add a new one before their first sale.">
-        <button type="button" className={buttonClass()} onClick={() => setAdding(true)}>
+        <Button type="button" onClick={() => setAdding(true)}>
           <UserPlus aria-hidden="true" />
           Add member
-        </button>
+        </Button>
       </PageHead>
       <Plate title={q ? `Results for “${q}”` : "All members"} icon={<Users />} flush>
         <div className="members-toolbar toolbar">
@@ -77,7 +79,7 @@ function Members() {
               {q ? (
                 <Empty title={`No member matches “${q}”`}>
                   <p>Check the spelling, search by email, or add them as a new member.</p>
-                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonClass({ variant: "secondary", size: "small" })}>
+                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
                     Clear search
                   </Link>
                 </Empty>
@@ -122,41 +124,39 @@ function MemberTable({ members }: { members: Schemas["Member"][] }) {
 
   return (
     <>
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Added</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((member) => (
-              <tr key={member.id}>
-                <td>
-                  <span className="members-name">
-                    <Avatar name={member.name} />
-                    <Link
-                      to="/$org/members/$memberId"
-                      params={{ org: organization.slug, memberId: member.id }}
-                      className="cell-title"
-                    >
-                      {member.name}
-                    </Link>
-                  </span>
-                </td>
-                <td className="muted members-email">{member.email}</td>
-                <td className="members-added">
-                  <time dateTime={member.created_at} suppressHydrationWarning>
-                    {formatDate(member.created_at, organization.timezone)}
-                  </time>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col">Name</TableHead>
+            <TableHead scope="col">Email</TableHead>
+            <TableHead scope="col">Added</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((member) => (
+            <TableRow key={member.id}>
+              <TableCell>
+                <span className="members-name">
+                  <Avatar name={member.name} />
+                  <Link
+                    to="/$org/members/$memberId"
+                    params={{ org: organization.slug, memberId: member.id }}
+                    className="cell-title"
+                  >
+                    {member.name}
+                  </Link>
+                </span>
+              </TableCell>
+              <TableCell className="muted members-email">{member.email}</TableCell>
+              <TableCell className="members-added">
+                <time dateTime={member.created_at} suppressHydrationWarning>
+                  {formatDate(member.created_at, organization.timezone)}
+                </time>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {pages > 1 ? (
         <nav className="pager" aria-label="Members pages">
           <p className="pager__range" aria-live="polite">
@@ -228,18 +228,17 @@ function SearchForm({ initial }: { initial: string }) {
       </label>
       <div className="search-field">
         <Search aria-hidden="true" strokeWidth={1.75} />
-        <input
-          id="member-search"
-          className="input input--small"
+        <Input
+          id="member-search" className="input--small"
           type="search"
           placeholder="Search members"
           value={value}
           onChange={(event) => setValue(event.target.value)}
         />
       </div>
-      <button type="submit" className={buttonClass({ variant: "secondary", size: "small" })}>
+      <Button variant="secondary" size="sm" type="submit">
         Search
-      </button>
+      </Button>
     </form>
   );
 }
@@ -330,10 +329,9 @@ function AddMember({ onClose }: { onClose: () => void }) {
           ) : null}
           <div className="members-add">
             <Field id="member-name" label="Full name" error={nameError}>
-              <input
+              <Input
                 id="member-name"
                 autoFocus
-                className="input"
                 name="name"
                 autoComplete="off"
                 maxLength={200}
@@ -344,9 +342,8 @@ function AddMember({ onClose }: { onClose: () => void }) {
               />
             </Field>
             <Field id="member-email" label="Email" error={emailError}>
-              <input
+              <Input
                 id="member-email"
-                className="input"
                 name="email"
                 type="email"
                 autoComplete="off"
@@ -358,9 +355,9 @@ function AddMember({ onClose }: { onClose: () => void }) {
               />
             </Field>
             <div className="members-add__submit">
-              <button type="button" className={buttonClass({ variant: "ghost" })} disabled={action.pending} onClick={onClose}>
+              <Button variant="ghost" type="button" disabled={action.pending} onClick={onClose}>
                 Cancel
-              </button>
+              </Button>
               <SubmitButton pending={action.pending} pendingLabel="Adding…">
                 <UserPlus aria-hidden="true" />
                 Add member
