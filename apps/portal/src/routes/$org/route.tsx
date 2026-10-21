@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, createFileRoute, notFound, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
@@ -44,6 +44,21 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/$org")({
   beforeLoad: ({ params }) => {
@@ -131,14 +146,6 @@ type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>
 
 function Shell({ organization: data }: { organization: OrganizationData }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const [navOpen, setNavOpen] = useState(false);
-  // The desktop rail. Kept in React state only, so a reload opens the full sidebar.
-  const [collapsed, setCollapsed] = useState(false);
-  const [showWhatsNew, setShowWhatsNew] = useState(true);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const restoreFocus = useRef(false);
-
   const base = `/${data.slug}`;
   const trimmed = pathname.replace(/\/$/, "");
   const routed = NAV_GROUPS.flatMap((group) => group.items).find(
@@ -165,66 +172,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
     }
   }
 
-  function closeNav(returnFocus: boolean) {
-    restoreFocus.current = returnFocus;
-    setNavOpen(false);
-  }
-
-  // A link inside the open phone sidebar was used. Close it.
-  function onSidebarLink() {
-    if (navOpen) closeNav(true);
-  }
-
-  // Move focus into the sidebar when it opens, and back to the toggle when it closes.
-  useEffect(() => {
-    if (navOpen) closeRef.current?.focus();
-    else if (restoreFocus.current) {
-      restoreFocus.current = false;
-      toggleRef.current?.focus();
-    }
-  }, [navOpen]);
-
-  // A link inside the sidebar was used. Close it, and let the new page start at the top.
-  useEffect(() => {
-    setNavOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!navOpen) return;
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") closeNav(true);
-    }
-    // The sidebar is always visible from 768px, so an open phone menu has no meaning there.
-    const wide = window.matchMedia("(min-width: 768px)");
-    function onWide(event: MediaQueryListEvent) {
-      if (event.matches) closeNav(false);
-    }
-    document.addEventListener("keydown", onKeyDown);
-    wide.addEventListener("change", onWide);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      wide.removeEventListener("change", onWide);
-    };
-  }, [navOpen]);
-
-  function renderItem(item: NavItem) {
-    // The router marks the active link (`aria-current="page"`). A section stays active on its detail pages.
-    const props = { className: "nav-item", "data-tooltip": item.label, onClick: onSidebarLink };
-    const content = (
-      <>
-        <item.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
-        <span className="nav-item__label">{item.label}</span>
-      </>
-    );
-    return (
-      <li key={item.label}>
-        <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} {...props}>
-          {content}
-        </Link>
-      </li>
-    );
-  }
-
   // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
   const crumb: { label: string; section?: RoutedPath } | null = routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, section: routed.to }
@@ -232,123 +179,18 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
     : null;
 
   return (
-    <div className="shell" data-collapsed={collapsed}>
+    <SidebarProvider>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <div className="sidebar" id="app-sidebar" data-open={navOpen}>
-        <div className="sidebar__brand">
-          <Link
-            to="/$org"
-            params={{ org: data.slug }}
-            activeOptions={{ exact: true }}
-            className="sidebar__logo"
-            onClick={onSidebarLink}
-          >
-            <Wordmark />
-          </Link>
-          <button
-            type="button"
-            className="sidebar__collapse"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-controls="app-sidebar"
-            aria-expanded={!collapsed}
-            onClick={() => setCollapsed((value) => !value)}
-          >
-            <img className="sidebar__collapse-mark" src={markUrl} width={26} height={26} alt="" />
-            <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-            <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-          </button>
-          <button ref={closeRef} type="button" className="sidebar__close" onClick={() => closeNav(true)}>
-            <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
-            <span className="visually-hidden">Close navigation</span>
-          </button>
-        </div>
-        <nav className="nav" aria-label="Staff pages">
-          {/* The first group has no visible title. In the rail, later titles become dividers. */}
-          {NAV_GROUPS.map((group, index) => (
-            <div className="nav-group" key={group.label}>
-              {index === 0 ? (
-                <p className="visually-hidden" id={`nav-${group.label.toLowerCase()}`}>
-                  {group.label}
-                </p>
-              ) : (
-                <div className="nav-group__head">
-                  <p className="nav-group__label" id={`nav-${group.label.toLowerCase()}`}>
-                    {group.label}
-                  </p>
-                </div>
-              )}
-              <ul className="nav-list" aria-labelledby={`nav-${group.label.toLowerCase()}`}>
-                {group.items.map(renderItem)}
-              </ul>
-            </div>
-          ))}
-        </nav>
-        {showWhatsNew ? (
-          <>
-            <aside className="whatsnew" aria-labelledby="whatsnew-title">
-              <div className="whatsnew__head">
-                <span className="whatsnew__tag">
-                  <span className="whatsnew__dot" aria-hidden="true" />
-                  What&rsquo;s new
-                </span>
-                <button type="button" className="whatsnew__dismiss" onClick={() => setShowWhatsNew(false)}>
-                  <X strokeWidth={2} aria-hidden="true" focusable="false" />
-                  <span className="visually-hidden">Hide what&rsquo;s new</span>
-                </button>
-              </div>
-              <div className="whatsnew__body">
-                <p className="whatsnew__title" id="whatsnew-title">
-                  New look for the staff portal
-                </p>
-                <p className="whatsnew__text">Same tasks, new dark design.</p>
-              </div>
-              <div className="whatsnew__foot">
-                <span className="whatsnew__version">v0.4</span>
-                <Link
-                  to="/$org/changelog"
-                  params={{ org: data.slug }}
-                  activeOptions={{ exact: true }}
-                  className="whatsnew__link"
-                  onClick={onSidebarLink}
-                >
-                  Changelog
-                  <ArrowRight strokeWidth={2} aria-hidden="true" focusable="false" />
-                </Link>
-              </div>
-            </aside>
-            {/* On the rail the card becomes one icon with a dot. */}
-            <Link
-              to="/$org/changelog"
-              params={{ org: data.slug }}
-              activeOptions={{ exact: true }}
-              className="whatsnew-rail"
-              data-tooltip="What’s new"
-              onClick={onSidebarLink}
-            >
-              <Sparkle strokeWidth={1.75} aria-hidden="true" focusable="false" />
-              <span className="whatsnew-rail__dot" aria-hidden="true" />
-              <span className="visually-hidden">What&rsquo;s new</span>
-            </Link>
-          </>
-        ) : null}
-      </div>
-      <div className="scrim" data-open={navOpen} onClick={() => closeNav(true)} aria-hidden="true" />
-      <div className="shell__main" inert={navOpen}>
+      <AppSidebar data={data} />
+      <SidebarInset>
         <header className="topbar">
           <div className="topbar__start">
-            <button
-              ref={toggleRef}
-              type="button"
-              className="nav-toggle"
-              aria-expanded={navOpen}
-              aria-controls="app-sidebar"
-              onClick={() => setNavOpen(true)}
-            >
+            <SidebarTrigger className="nav-toggle" aria-controls="app-sidebar">
               <Menu strokeWidth={1.75} aria-hidden="true" focusable="false" />
               <span className="visually-hidden">Navigation menu</span>
-            </button>
+            </SidebarTrigger>
             <div className="topbar__context">
               {/* Rails has no list of a person's organizations yet, so the list holds the open one. */}
               <ContextSwitcher
@@ -438,8 +280,147 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
         <main className="main" id="main" tabIndex={-1}>
           <Outlet />
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+/**
+ * The sidebar: logo, the staff pages, and What's new. It lives inside the
+ * sidebar provider, so it can close the phone drawer after a link is used.
+ */
+function AppSidebar({ data }: { data: OrganizationData }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { open, isRail, setOpenMobile } = useSidebar();
+  const [showWhatsNew, setShowWhatsNew] = useState(true);
+  const closeDrawer = () => setOpenMobile(false);
+
+  // A link inside the drawer was used. Close it, so the new page shows.
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [pathname, setOpenMobile]);
+
+  return (
+    <Sidebar id="app-sidebar">
+      <SidebarHeader>
+        <Link
+          to="/$org"
+          params={{ org: data.slug }}
+          activeOptions={{ exact: true }}
+          className="sidebar__logo"
+          onClick={closeDrawer}
+        >
+          <Wordmark />
+        </Link>
+        <SidebarTrigger
+          className="sidebar__collapse"
+          aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+          aria-controls="app-sidebar"
+        >
+          <img className="sidebar__collapse-mark" src={markUrl} width={26} height={26} alt="" />
+          <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        </SidebarTrigger>
+        <button type="button" className="sidebar__close" onClick={closeDrawer}>
+          <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <span className="visually-hidden">Close navigation</span>
+        </button>
+      </SidebarHeader>
+      <SidebarContent aria-label="Staff pages">
+        {/* The first group has no visible title. In the rail, later titles become dividers. */}
+        {NAV_GROUPS.map((group, index) => {
+          const labelId = `nav-${group.label.toLowerCase()}`;
+          return (
+            <SidebarGroup key={group.label}>
+              {index === 0 ? (
+                <p className="visually-hidden" id={labelId}>
+                  {group.label}
+                </p>
+              ) : (
+                <SidebarGroupLabel id={labelId}>{group.label}</SidebarGroupLabel>
+              )}
+              <SidebarMenu aria-labelledby={labelId}>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.label}>
+                    {/* The router marks the active link (aria-current="page"). A section stays active on its detail pages. */}
+                    <SidebarMenuButton
+                      tooltip={item.label}
+                      render={
+                        <Link
+                          to={item.to}
+                          params={{ org: data.slug }}
+                          activeOptions={{ exact: item.exact }}
+                          onClick={closeDrawer}
+                        />
+                      }
+                    >
+                      <item.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      <span className="nav-item__label">{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          );
+        })}
+      </SidebarContent>
+      {showWhatsNew ? (
+        <>
+          <aside className="whatsnew" aria-labelledby="whatsnew-title">
+            <div className="whatsnew__head">
+              <span className="whatsnew__tag">
+                <span className="whatsnew__dot" aria-hidden="true" />
+                What&rsquo;s new
+              </span>
+              <button type="button" className="whatsnew__dismiss" onClick={() => setShowWhatsNew(false)}>
+                <X strokeWidth={2} aria-hidden="true" focusable="false" />
+                <span className="visually-hidden">Hide what&rsquo;s new</span>
+              </button>
+            </div>
+            <div className="whatsnew__body">
+              <p className="whatsnew__title" id="whatsnew-title">
+                New look for the staff portal
+              </p>
+              <p className="whatsnew__text">Same tasks, new dark design.</p>
+            </div>
+            <div className="whatsnew__foot">
+              <span className="whatsnew__version">v0.4</span>
+              <Link
+                to="/$org/changelog"
+                params={{ org: data.slug }}
+                activeOptions={{ exact: true }}
+                className="whatsnew__link"
+                onClick={closeDrawer}
+              >
+                Changelog
+                <ArrowRight strokeWidth={2} aria-hidden="true" focusable="false" />
+              </Link>
+            </div>
+          </aside>
+          {/* On the rail the card becomes one icon with a dot. */}
+          <Tooltip disabled={!isRail}>
+            <TooltipTrigger
+              render={
+                <Link
+                  to="/$org/changelog"
+                  params={{ org: data.slug }}
+                  activeOptions={{ exact: true }}
+                  className="whatsnew-rail"
+                  onClick={closeDrawer}
+                />
+              }
+            >
+              <Sparkle strokeWidth={1.75} aria-hidden="true" focusable="false" />
+              <span className="whatsnew-rail__dot" aria-hidden="true" />
+              <span className="visually-hidden">What&rsquo;s new</span>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={12}>
+              What&rsquo;s new
+            </TooltipContent>
+          </Tooltip>
+        </>
+      ) : null}
+    </Sidebar>
   );
 }
 

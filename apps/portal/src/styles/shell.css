@@ -19,10 +19,6 @@
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 }
 
-.scrim {
-  display: none;
-}
-
 .shell__main {
   min-width: 0;
   display: flex;
@@ -317,10 +313,6 @@
 }
 /* The rail form of the card. Only the rail shows it. */
 .whatsnew-rail {
-  display: none;
-}
-
-.scrim {
   display: none;
 }
 
@@ -1006,39 +998,6 @@
     padding-inline: var(--space-6);
   }
 
-  /* Tooltips. The visually hidden label names the link; this only shows it. */
-  .shell .nav-item::after,
-  .shell .whatsnew-rail::after {
-    content: attr(data-tooltip);
-    content: attr(data-tooltip) / "";
-    position: absolute;
-    left: calc(100% + 12px);
-    top: 50%;
-    z-index: 70;
-    display: flex;
-    align-items: center;
-    height: 32px;
-    padding: 0 10px;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 8px;
-    background: var(--color-tooltip);
-    box-shadow: var(--shadow-popover);
-    color: var(--color-ink);
-    font-size: var(--text-sm);
-    line-height: 16px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transform: translate(-4px, -50%);
-    transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out);
-  }
-  .shell .nav-item:hover::after,
-  .shell .nav-item:focus-visible::after,
-  .shell .whatsnew-rail:hover::after,
-  .shell .whatsnew-rail:focus-visible::after {
-    opacity: 1;
-    transform: translate(0, -50%);
-  }
 }
 
 @media (min-width: 1181px) {
@@ -1149,39 +1108,6 @@
     padding-inline: var(--space-6);
   }
 
-  /* Tooltips. The visually hidden label names the link; this only shows it. */
-  .shell[data-collapsed="true"] .nav-item::after,
-  .shell[data-collapsed="true"] .whatsnew-rail::after {
-    content: attr(data-tooltip);
-    content: attr(data-tooltip) / "";
-    position: absolute;
-    left: calc(100% + 12px);
-    top: 50%;
-    z-index: 70;
-    display: flex;
-    align-items: center;
-    height: 32px;
-    padding: 0 10px;
-    border: 1px solid var(--color-line-strong);
-    border-radius: 8px;
-    background: var(--color-tooltip);
-    box-shadow: var(--shadow-popover);
-    color: var(--color-ink);
-    font-size: var(--text-sm);
-    line-height: 16px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transform: translate(-4px, -50%);
-    transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out);
-  }
-  .shell[data-collapsed="true"] .nav-item:hover::after,
-  .shell[data-collapsed="true"] .nav-item:focus-visible::after,
-  .shell[data-collapsed="true"] .whatsnew-rail:hover::after,
-  .shell[data-collapsed="true"] .whatsnew-rail:focus-visible::after {
-    opacity: 1;
-    transform: translate(0, -50%);
-  }
 
   /* The collapse button is the logo on the rail. Hover or focus shows the expand icon. */
   .shell[data-collapsed="true"] .sidebar__logo {
@@ -1261,6 +1187,7 @@
   .shell {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Before the app starts, the sidebar waits off screen. Then it renders inside the drawer. */
   .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
@@ -1268,13 +1195,37 @@
     width: min(300px, 86vw);
     transform: translateX(-100%);
     visibility: hidden;
-    transition: transform 180ms var(--ease-out), visibility 0s linear 180ms;
   }
-  .sidebar[data-open="true"] {
+  /* The drawer (components/ui/sheet.tsx). Base UI marks the frames that slide in and out. */
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: var(--scrim);
+    transition: opacity var(--sidebar-motion) var(--ease-out);
+  }
+  .sheet-backdrop[data-starting-style],
+  .sheet-backdrop[data-ending-style] {
+    opacity: 0;
+  }
+  .sheet {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(300px, 86vw);
+    outline: none;
+    transition: transform var(--sidebar-motion) var(--ease-out);
+  }
+  .sheet[data-starting-style],
+  .sheet[data-ending-style] {
+    transform: translateX(-100%);
+  }
+  .sheet .sidebar {
+    position: static;
+    width: 100%;
+    height: 100%;
     transform: none;
     visibility: visible;
-    transition-delay: 0s;
-    transition-duration: var(--sidebar-motion), 0s;
   }
   .sidebar__close,
   .nav-toggle {
@@ -1286,24 +1237,6 @@
   }
   .whatsnew-rail {
     display: none;
-  }
-  .scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: var(--scrim);
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 180ms var(--ease-out), visibility 0s linear 180ms;
-  }
-  .scrim[data-open="true"] {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-    transition-duration: var(--sidebar-motion), 0s;
-    transition-delay: 0s;
   }
   .topbar {
     padding-inline: var(--space-3) var(--space-4);

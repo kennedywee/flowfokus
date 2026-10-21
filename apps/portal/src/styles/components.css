@@ -748,6 +748,33 @@ input[type="radio"]:disabled {
   background: var(--color-hover);
 }
 
+/* Tooltip (components/ui/tooltip.tsx), from the Paper sidebar kit. */
+.tooltip-positioner {
+  z-index: 70;
+}
+.tooltip {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 8px;
+  background: var(--color-tooltip);
+  box-shadow: var(--shadow-popover);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 16px;
+  white-space: nowrap;
+  transition:
+    opacity 120ms var(--ease-out),
+    transform 120ms var(--ease-out);
+}
+.tooltip[data-starting-style],
+.tooltip[data-ending-style] {
+  opacity: 0;
+  transform: translateX(-4px);
+}
+
 /* ---------- Pills, lamps, and tags ---------- */
 
 .lamp {
