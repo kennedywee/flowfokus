@@ -13,7 +13,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
-import { Route as OrgBranchesRouteImport } from './routes/$org/branches'
 import { Route as OrgChangelogRouteImport } from './routes/$org/changelog'
 import { Route as OrgCheckInRouteImport } from './routes/$org/check-in'
 import { Route as OrgInboxRouteImport } from './routes/$org/inbox'
@@ -45,11 +44,6 @@ const OrgIndexRoute = OrgIndexRouteImport.update({
 const OrgAgentsRoute = OrgAgentsRouteImport.update({
   id: '/agents',
   path: '/agents',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgBranchesRoute = OrgBranchesRouteImport.update({
-  id: '/branches',
-  path: '/branches',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgChangelogRoute = OrgChangelogRouteImport.update({
@@ -117,7 +111,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/$org/agents': typeof OrgAgentsRoute
-  '/$org/branches': typeof OrgBranchesRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
@@ -135,7 +128,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$org/agents': typeof OrgAgentsRoute
-  '/$org/branches': typeof OrgBranchesRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
@@ -155,7 +147,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
   '/$org/agents': typeof OrgAgentsRoute
-  '/$org/branches': typeof OrgBranchesRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
@@ -176,7 +167,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/$org/agents'
-    | '/$org/branches'
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
@@ -194,7 +184,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$org/agents'
-    | '/$org/branches'
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
@@ -213,7 +202,6 @@ export interface FileRouteTypes {
     | '/'
     | '/$org'
     | '/$org/agents'
-    | '/$org/branches'
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
@@ -262,13 +250,6 @@ declare module '@tanstack/react-router' {
       path: '/agents'
       fullPath: '/$org/agents'
       preLoaderRoute: typeof OrgAgentsRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/branches': {
-      id: '/$org/branches'
-      path: '/branches'
-      fullPath: '/$org/branches'
-      preLoaderRoute: typeof OrgBranchesRouteImport
       parentRoute: typeof OrgRouteRoute
     }
     '/$org/changelog': {
@@ -360,7 +341,6 @@ declare module '@tanstack/react-router' {
 
 interface OrgRouteRouteChildren {
   OrgAgentsRoute: typeof OrgAgentsRoute
-  OrgBranchesRoute: typeof OrgBranchesRoute
   OrgChangelogRoute: typeof OrgChangelogRoute
   OrgCheckInRoute: typeof OrgCheckInRoute
   OrgInboxRoute: typeof OrgInboxRoute
@@ -378,7 +358,6 @@ interface OrgRouteRouteChildren {
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgAgentsRoute: OrgAgentsRoute,
-  OrgBranchesRoute: OrgBranchesRoute,
   OrgChangelogRoute: OrgChangelogRoute,
   OrgCheckInRoute: OrgCheckInRoute,
   OrgInboxRoute: OrgInboxRoute,

@@ -3,7 +3,7 @@ import { parseSoonPage } from "../../lib/soon";
 
 const DESTINATIONS = {
   inbox: "/$org/inbox", agents: "/$org/agents", "check-in": "/$org/check-in",
-  reports: "/$org/reports", settings: "/$org/settings", branches: "/$org/branches", changelog: "/$org/changelog",
+  reports: "/$org/reports", settings: "/$org/settings", changelog: "/$org/changelog",
 } as const;
 
 /** Keep bookmarks to the old placeholder URLs working. */

@@ -12,7 +12,6 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
   Receipt,
   Search,
   Settings,
@@ -53,7 +52,7 @@ export const Route = createFileRoute("/$org")({
 
 type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products"
   | "/$org/inbox" | "/$org/agents" | "/$org/check-in" | "/$org/reports" | "/$org/settings"
-  | "/$org/branches" | "/$org/changelog";
+  | "/$org/changelog";
 
 type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean; path: string };
 
@@ -112,20 +111,6 @@ type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>
 /** The first letter of a name, for the organization avatar. */
 function firstLetter(name: string): string {
   return (Array.from(name.trim())[0] ?? "?").toUpperCase();
-}
-
-/**
- * The branch status ring from the Paper kit. Every branch uses the same one: the
- * portal has no per-branch state yet, so the ring is decoration only.
- */
-function BranchRing() {
-  const good = { stroke: "var(--color-good)" };
-  return (
-    <svg className="nav-item__ring" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="8" fill="none" strokeWidth="1.75" style={good} />
-      <circle cx="12" cy="12" r="3.5" style={{ fill: "var(--color-good)" }} />
-    </svg>
-  );
 }
 
 function Shell({ organization: data }: { organization: OrganizationData }) {
@@ -209,7 +194,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
   // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
   const crumb: { label: string; section?: RoutedPath } | null = routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, section: routed.to }
-    : trimmed === `${base}/branches` ? { label: "Branches" }
     : trimmed === `${base}/changelog` ? { label: "Changelog" }
     : null;
 
@@ -271,41 +255,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               </ul>
             </div>
           ))}
-          <div className="nav-group">
-            <div className="nav-group__head">
-              <p className="nav-group__label" id="nav-branches">
-                Branches
-              </p>
-              <Link
-                to="/$org/branches"
-                params={{ org: data.slug }}
-                activeOptions={{ exact: true }}
-                className="nav-group__add"
-                onClick={onSidebarLink}
-              >
-                <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                <span className="visually-hidden">Add a branch</span>
-              </Link>
-            </div>
-            <ul className="nav-list" aria-labelledby="nav-branches">
-              {data.locations.map((location) => (
-                <li key={location.id}>
-                  <Link
-                    to="/$org/branches"
-                    params={{ org: data.slug }}
-                    hash={`branch-${location.id}`}
-                    activeOptions={{ exact: true, includeHash: true }}
-                    className="nav-item nav-item--branch"
-                    data-tooltip={location.name}
-                    onClick={onSidebarLink}
-                  >
-                    <BranchRing />
-                    <span className="nav-item__label">{location.name}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
         </nav>
         {showWhatsNew ? (
           <>

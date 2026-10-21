@@ -5,7 +5,6 @@ export const SOON_PAGES = {
   "check-in": "Check-in",
   reports: "Reports",
   settings: "Settings",
-  branches: "Branches",
   changelog: "Changelog",
 } as const;
 

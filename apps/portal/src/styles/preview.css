@@ -613,8 +613,7 @@
   background: var(--color-series-1);
   border-radius: 4px;
 }
-.preview-page .preview-report-note,
-.preview-page .preview-branch-note {
+.preview-page .preview-report-note {
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -622,13 +621,11 @@
   font-size: var(--text-xs);
   line-height: 18px;
 }
-.preview-page .preview-report-note svg,
-.preview-page .preview-branch-note svg {
+.preview-page .preview-report-note svg {
   width: 16px;
   height: 16px;
 }
-.preview-page .preview-report-note p,
-.preview-page .preview-branch-note p {
+.preview-page .preview-report-note p {
   margin: 0;
 }
 
@@ -728,118 +725,6 @@
 }
 .preview-page .preview-integration > .pill {
   justify-self: end;
-}
-
-/* Branches: location selector and one focused detail sheet. */
-.preview-page .preview-branches {
-  display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-.preview-page .preview-branch-list {
-  display: grid;
-  gap: 4px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
-  padding-bottom: 12px;
-  background: var(--color-surface);
-}
-.preview-page .preview-branch-list > button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-inline: 12px;
-  padding: 12px;
-  min-height: 64px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--color-ink);
-  cursor: pointer;
-  text-align: left;
-}
-.preview-page .preview-branch-list > button:hover {
-  background: var(--color-well);
-}
-.preview-page .preview-branch-list > button[aria-pressed="true"] {
-  background: var(--color-control);
-}
-.preview-page .preview-branch-icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-md);
-  color: var(--color-ink-2);
-}
-.preview-page .preview-branch-icon svg {
-  width: 18px;
-  height: 18px;
-}
-.preview-page .preview-branch-list > button > span:nth-child(2) {
-  display: grid;
-  gap: 3px;
-  flex: 1;
-}
-.preview-page .preview-branch-list strong {
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-.preview-page .preview-branch-list small {
-  color: var(--color-ink-3);
-  font-size: var(--text-xs);
-}
-.preview-page .preview-live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-good);
-  flex: none;
-}
-.preview-page .preview-branch-details {
-  display: grid;
-  gap: 24px;
-  margin: 24px 0 0;
-}
-.preview-page .preview-branch-details > div {
-  display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
-  gap: 16px;
-}
-.preview-page .preview-branch-details dt {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--color-ink-3);
-  font-size: var(--text-sm);
-}
-.preview-page .preview-branch-details dt svg {
-  width: 16px;
-  height: 16px;
-}
-.preview-page .preview-branch-details dd {
-  margin: 0;
-}
-.preview-page .preview-branch-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-.preview-page .preview-branch-stats > div {
-  display: grid;
-  gap: 12px;
-}
-.preview-page .preview-branch-stats span {
-  color: var(--color-ink-3);
-  font-size: var(--text-sm);
-}
-.preview-page .preview-branch-stats strong {
-  font-size: 32px;
-  line-height: 40px;
-  font-weight: 500;
 }
 
 /* Release notes follow a simple date/content reading order. */
@@ -991,19 +876,6 @@
   }
   .preview-page .preview-chart__track {
     height: 160px;
-  }
-  .preview-page .preview-branches {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .preview-page .preview-branch-details > div {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-  }
-  .preview-page .preview-branch-stats {
-    gap: 12px;
-  }
-  .preview-page .preview-branch-stats span {
-    font-size: var(--text-xs);
   }
   .preview-page .preview-integration {
     grid-template-columns: 36px minmax(0, 1fr);

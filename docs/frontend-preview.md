@@ -34,8 +34,6 @@ These actions persist in PostgreSQL, including during local demo development.
 - Settings: editable sample organization details, team invitations and roles,
   notification switches, and integration states. Initial organization name comes
   from the API. Edits do not update Rails or contact external systems.
-- Branches: location names and addresses come from the API. Hours, managers,
-  capacity, activity, and edits are frontend samples.
 - Changelog: static notes for the preview and portal layout.
 
 These screens display a Sample data label. Local edits reset when the screen

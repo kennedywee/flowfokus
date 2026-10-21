@@ -199,27 +199,6 @@
   line-height: 14px;
   text-transform: uppercase;
 }
-.nav-group__add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 24px;
-  height: 24px;
-  margin-block: -5px;
-  margin-right: -4px;
-  border-radius: var(--radius-sm);
-  color: var(--color-ink-3);
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
-}
-.nav-group__add:hover {
-  background: var(--color-control);
-  color: var(--color-ink);
-}
-.nav-group__add svg {
-  width: 16px;
-  height: 16px;
-}
 .nav-list {
   display: grid;
   gap: 2px;
@@ -844,9 +823,6 @@
     font-size: 0;
     line-height: 0;
   }
-  .shell .nav-group__add {
-    display: none;
-  }
   .shell .nav-list {
     gap: 10px;
     justify-items: center;
@@ -856,9 +832,6 @@
     width: 40px;
     height: 40px;
     padding: 0;
-  }
-  .shell .nav-item--branch {
-    height: 36px;
   }
   /* What's new becomes one icon with a dot. */
   .shell .whatsnew-rail {
@@ -1007,9 +980,6 @@
     font-size: 0;
     line-height: 0;
   }
-  .shell[data-collapsed="true"] .nav-group__add {
-    display: none;
-  }
   .shell[data-collapsed="true"] .nav-list {
     gap: 10px;
     justify-items: center;
@@ -1019,9 +989,6 @@
     width: 40px;
     height: 40px;
     padding: 0;
-  }
-  .shell[data-collapsed="true"] .nav-item--branch {
-    height: 36px;
   }
   /* What's new becomes one icon with a dot. */
   .shell[data-collapsed="true"] .whatsnew-rail {
