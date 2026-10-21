@@ -47,8 +47,8 @@ Existing `/<org>/soon?page=…` bookmarks redirect to the new routes.
 
 ## Run and verify
 
-Use the Docker stack and open `http://localhost:3001`, or the host's Tailscale IP
-on port 3001. The Rails server and database must be running for API-backed screens.
+Use the Docker stack and open `http://localhost:4001`, or the host's Tailscale IP
+on port 4001. The Rails server and database must be running for API-backed screens.
 Local demo access remains explicit and disabled in production.
 
 ```sh

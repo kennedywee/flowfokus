@@ -52,7 +52,7 @@ describe("toPublicAccess", () => {
 
 describe("resolveApiBaseUrl", () => {
   test("defaults to local Rails in development only", () => {
-    expect(resolveApiBaseUrl(true, {})).toBe("http://127.0.0.1:3000");
+    expect(resolveApiBaseUrl(true, {})).toBe("http://127.0.0.1:4000");
     expect(resolveApiBaseUrl(false, {})).toBeUndefined();
     expect(resolveApiBaseUrl(false, { API_BASE_URL: "https://api.flowfokus.com" })).toBe("https://api.flowfokus.com");
   });

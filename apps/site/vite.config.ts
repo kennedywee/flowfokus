@@ -20,8 +20,8 @@ function localVars(): Record<string, string> {
 
 export default defineConfig(({ command }) => ({
   // Gym sites run on <slug>.localhost in development.
-  server: { port: 3002, strictPort: true, allowedHosts: [".localhost"] },
-  preview: { port: 3002, strictPort: true },
+  server: { port: 4002, strictPort: true, allowedHosts: [".localhost"] },
+  preview: { port: 4002, strictPort: true },
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },

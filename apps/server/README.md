@@ -14,7 +14,7 @@ Run from `apps/server`. The repository scripts (`bun run setup`, `bun run check`
 | Install gems | `bundle install` |
 | Prepare the database | `bin/rails db:prepare` |
 | Seed demo data (idempotent) | `bin/rails db:seed` |
-| Run the API with demo auth | `FLOWFOKUS_DEMO_MODE=true FLOWFOKUS_DEMO_TOKEN=flowfokus-local-demo-token bin/dev -p 3000` |
+| Run the API with demo auth | `FLOWFOKUS_DEMO_MODE=true FLOWFOKUS_DEMO_TOKEN=flowfokus-local-demo-token bin/dev -p 4000` |
 | Run specs | `RAILS_ENV=test bin/rails db:prepare && bundle exec rspec` |
 | Lint | `bin/rubocop` |
 | Security scan | `bin/brakeman --no-pager` |

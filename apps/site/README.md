@@ -4,14 +4,14 @@ The public site for each gym. One build serves every gym; the request host choos
 
 ## Run locally
 
-Start Rails first (`apps/server`, port 3000). Then:
+Start Rails first (`apps/server`, port 4000). Then:
 
 ```sh
 cp apps/site/.dev.vars.example apps/site/.dev.vars   # once
-bun run --cwd apps/site dev                          # port 3002
+bun run --cwd apps/site dev                          # port 4002
 ```
 
-Open `http://chainsaw.localhost:3002`. Browsers send every `*.localhost` name to this computer. Plain `http://localhost:3002` shows how to open a gym; it never picks one for you.
+Open `http://chainsaw.localhost:4002`. Browsers send every `*.localhost` name to this computer. Plain `http://localhost:4002` shows how to open a gym; it never picks one for you.
 
 ## How the host chooses the gym
 
@@ -20,8 +20,8 @@ Open `http://chainsaw.localhost:3002`. Browsers send every `*.localhost` name to
 | Host | Result |
 | --- | --- |
 | `<slug>.flowfokus.com` | That gym. Rails returns `404` if it does not exist or is not published. |
-| `<slug>.localhost:3002` | That gym, in development builds only. |
-| `localhost:3002` | Setup instructions, in development builds only. |
+| `<slug>.localhost:4002` | That gym, in development builds only. |
+| `localhost:4002` | Setup instructions, in development builds only. |
 | Reserved slug (`portal`, `api`, `www`, `admin`, `auth`, `login`, …) | `404` |
 | Nested, malformed, IP, or other domain | `404` |
 
@@ -31,7 +31,7 @@ Open `http://chainsaw.localhost:3002`. Browsers send every `*.localhost` name to
 
 | Name | Where | Purpose |
 | --- | --- | --- |
-| `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:3000`. Production has no default; without it, the site shows a "cannot load" page with status 503. |
+| `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:4000`. Production has no default; without it, the site shows a "cannot load" page with status 503. |
 | `SITE_BASE_DOMAINS` | Variable | Gym site base domains. Set in `wrangler.jsonc`. |
 | `WORKER_SECRET` | Secret | Optional. Sent as `Flowfokus-Worker-Secret` with `Flowfokus-Client-IP`. |
 
@@ -51,7 +51,7 @@ The signed-in member area ships in a later sprint. `/sign-in` explains that sign
 
 | Command | What it does |
 | --- | --- |
-| `bun run dev` | Dev server on port 3002 |
+| `bun run dev` | Dev server on port 4002 |
 | `bun run build` | Worker bundle in `dist/` |
 | `bun run preview` | Runs the built Worker locally |
 | `bun run typecheck` | TypeScript check |

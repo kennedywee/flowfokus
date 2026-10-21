@@ -19,7 +19,7 @@ services:
     volumes:
       - ./apps/server:/app
     ports:
-      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:4000:4000"
     depends_on:
       db:
         condition: service_healthy
@@ -33,14 +33,14 @@ services:
     image: flowfokus-portal:development
     init: true
     environment:
-      API_BASE_URL: http://server:3000
+      API_BASE_URL: http://server:4000
       FLOWFOKUS_DEMO_MODE: "true"
       FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
-      - "0.0.0.0:3001:3001"
+      - "0.0.0.0:4001:4001"
     depends_on:
       - server
 
@@ -53,12 +53,12 @@ services:
     image: flowfokus-site:development
     init: true
     environment:
-      API_BASE_URL: http://server:3000
+      API_BASE_URL: http://server:4000
     volumes:
       - ./apps/site/src:/app/apps/site/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
-      - "0.0.0.0:3002:3002"
+      - "0.0.0.0:4002:4002"
     depends_on:
       - server
 

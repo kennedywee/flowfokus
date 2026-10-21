@@ -3,11 +3,11 @@ import { contentSecurityPolicy, rejectUnsafeRequest, securityHeaders } from "./b
 
 describe("rejectUnsafeRequest", () => {
   test("the site is read-only in Sprint 1", () => {
-    const get = new Request("http://chainsaw.localhost:3002/");
+    const get = new Request("http://chainsaw.localhost:4002/");
     expect(rejectUnsafeRequest(get, "router")).toBeNull();
     expect(rejectUnsafeRequest(get, "serverFn")).toBeNull();
     for (const method of ["POST", "PUT", "PATCH", "DELETE"]) {
-      const request = new Request("http://chainsaw.localhost:3002/_serverFn/x", {
+      const request = new Request("http://chainsaw.localhost:4002/_serverFn/x", {
         method,
         headers: { "Content-Type": "application/json" },
         body: "{}",

@@ -48,7 +48,7 @@ RSpec.describe "Production boot and container" do
     it "pins production settings and a liveness health check" do
       expect(dockerfile).to include('RAILS_ENV="production"')
       expect(dockerfile).to include('FLOWFOKUS_DEMO_MODE="false"')
-      expect(dockerfile).to match(%r{HEALTHCHECK .*\n.*127\.0\.0\.1:3000/up})
+      expect(dockerfile).to match(%r{HEALTHCHECK .*\n.*127\.0\.0\.1:4000/up})
       expect(dockerfile).to include("USER 1000:1000")
     end
   end

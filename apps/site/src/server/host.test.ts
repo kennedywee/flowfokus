@@ -15,21 +15,21 @@ describe("resolveSiteHost", () => {
   });
 
   test("development accepts <slug>.localhost with a port", () => {
-    expect(resolveSiteHost("chainsaw.localhost:3002", development)).toEqual({ kind: "gym", slug: "chainsaw" });
+    expect(resolveSiteHost("chainsaw.localhost:4002", development)).toEqual({ kind: "gym", slug: "chainsaw" });
   });
 
   test("production rejects localhost hosts", () => {
-    expect(resolveSiteHost("chainsaw.localhost:3002", production)).toEqual({ kind: "rejected", reason: "unknown_domain" });
-    expect(resolveSiteHost("localhost:3002", production)).toEqual({ kind: "rejected", reason: "unknown_domain" });
+    expect(resolveSiteHost("chainsaw.localhost:4002", production)).toEqual({ kind: "rejected", reason: "unknown_domain" });
+    expect(resolveSiteHost("localhost:4002", production)).toEqual({ kind: "rejected", reason: "unknown_domain" });
   });
 
   test("plain localhost in development shows setup, never a default gym", () => {
-    expect(resolveSiteHost("localhost:3002", development)).toEqual({ kind: "setup" });
+    expect(resolveSiteHost("localhost:4002", development)).toEqual({ kind: "setup" });
   });
 
   test.each(["portal", "api", "www", "admin", "auth", "login", "staff"])("reserved %s is rejected", (slug) => {
     expect(resolveSiteHost(`${slug}.flowfokus.com`, production)).toEqual({ kind: "rejected", reason: "reserved" });
-    expect(resolveSiteHost(`${slug}.localhost:3002`, development)).toEqual({ kind: "rejected", reason: "reserved" });
+    expect(resolveSiteHost(`${slug}.localhost:4002`, development)).toEqual({ kind: "rejected", reason: "reserved" });
   });
 
   test.each([
@@ -37,12 +37,12 @@ describe("resolveSiteHost", () => {
     ["chainsaw.example.com", "unknown_domain"],
     ["chainsaw.flowfokus.com.evil.com", "unknown_domain"],
     ["evilflowfokus.com", "unknown_domain"],
-    ["127.0.0.1:3002", "unknown_domain"],
+    ["127.0.0.1:4002", "unknown_domain"],
     ["a.b.flowfokus.com", "malformed"],
     ["-chainsaw.flowfokus.com", "malformed"],
     ["chain_saw.flowfokus.com", "malformed"],
     ["chainsaw..flowfokus.com", "malformed"],
-    ["[::1]:3002", "malformed"],
+    ["[::1]:4002", "malformed"],
     ["chainsaw.flowfokus.com:99999x", "malformed"],
     ["", "malformed"],
   ])("%s is rejected as %s", (host, reason) => {
@@ -56,7 +56,7 @@ describe("resolveSiteHost", () => {
 
 describe("helpers", () => {
   test("normalizeHost strips port and case", () => {
-    expect(normalizeHost("Chainsaw.Localhost:3002")).toBe("chainsaw.localhost");
+    expect(normalizeHost("Chainsaw.Localhost:4002")).toBe("chainsaw.localhost");
     expect(normalizeHost("bad host")).toBeNull();
   });
 

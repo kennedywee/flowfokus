@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 
-const base = new URL(process.env.API_BASE_URL || 'http://127.0.0.1:3000')
+const base = new URL(process.env.API_BASE_URL || 'http://127.0.0.1:4000')
 if (!['localhost', '127.0.0.1', '[::1]'].includes(base.hostname)) {
   throw new Error('This smoke workflow creates demo records. API_BASE_URL must be local.')
 }

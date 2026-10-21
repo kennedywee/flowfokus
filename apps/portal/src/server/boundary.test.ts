@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { contentSecurityPolicy, createNonce, rejectUnsafeRequest, securityHeaders } from "./boundary";
 
 function request(method: string, contentType?: string) {
-  return new Request("http://localhost:3001/_serverFn/x", {
+  return new Request("http://localhost:4001/_serverFn/x", {
     method,
     headers: contentType ? { "Content-Type": contentType } : {},
     ...(method === "POST" || method === "PUT" ? { body: "{}" } : {}),

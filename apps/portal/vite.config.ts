@@ -19,8 +19,8 @@ function localVars(): Record<string, string> {
 }
 
 export default defineConfig(({ command }) => ({
-  server: { port: 3001, strictPort: true },
-  preview: { port: 3001, strictPort: true },
+  server: { port: 4001, strictPort: true },
+  preview: { port: 4001, strictPort: true },
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },

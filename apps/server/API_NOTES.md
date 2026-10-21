@@ -4,7 +4,7 @@
 
 ## Call rules
 
-- Base URL in development: `http://localhost:3000`.
+- Base URL in development: `http://localhost:4000`.
 - Call Rails from server code only. Never from the browser.
 - Send `Flowfokus-Organization: <slug>` on every `/public/*`, `/staff/*`, and `/member/*` call.
 - Send `Authorization: Bearer <token>` on `/staff/*` and `/member/*`.

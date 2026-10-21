@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3002 --strictPort",
+    "dev": "vite dev --port 4002 --strictPort",
     "build": "vite build",
-    "preview": "vite preview --port 3002 --strictPort",
+    "preview": "vite preview --port 4002 --strictPort",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test",
     "cf-typegen": "wrangler types"

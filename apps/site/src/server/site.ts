@@ -9,7 +9,7 @@ import { getRequest, setResponseStatus } from "@tanstack/react-start/server";
 import { createFlowfokusClient, isErrorBody, type FlowfokusClient, type Schemas } from "@flowfokus/api";
 import { parseBaseDomains, resolveSiteHost, type HostResolution } from "./host";
 
-const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:3000";
+const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:4000";
 
 export type SitePage =
   | { kind: "gym"; organization: Schemas["PublicOrganization"]; products: Schemas["PublicProduct"][] }

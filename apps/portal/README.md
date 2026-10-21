@@ -4,14 +4,14 @@ The staff portal for Flowfokus. TanStack Start (React) on Cloudflare Workers. It
 
 ## Run locally
 
-Start Rails first (`apps/server`, port 3000). Then:
+Start Rails first (`apps/server`, port 4000). Then:
 
 ```sh
 cp apps/portal/.dev.vars.example apps/portal/.dev.vars   # once
-bun run --cwd apps/portal dev                            # http://localhost:3001
+bun run --cwd apps/portal dev                            # http://localhost:4001
 ```
 
-Open `http://localhost:3001`, then choose **Chainsaw Gym**. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
+Open `http://localhost:4001`, then choose **Chainsaw Gym**. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
 
 `scripts/dev` from the repository root starts Rails, the portal, and the gym site together. In `vite dev`, the variables below are also read from the shell.
 
@@ -21,7 +21,7 @@ Worker variables and secrets. Local values go in `.dev.vars`, which is never com
 
 | Name | Where | Purpose |
 | --- | --- | --- |
-| `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:3000`. Production has no default; without it, every call fails closed. |
+| `API_BASE_URL` | Variable | Rails base URL. Development defaults to `http://127.0.0.1:4000`. Production has no default; without it, every call fails closed. |
 | `WORKER_SECRET` | Secret | Optional. Sent as `Flowfokus-Worker-Secret` with `Flowfokus-Client-IP`. |
 | `FLOWFOKUS_DEMO_MODE` | Local only | `true` turns on the local demo actor. |
 | `FLOWFOKUS_DEMO_TOKEN` | Local only | The demo Bearer value. At least 16 characters. Must match Rails. |
@@ -50,7 +50,7 @@ Without demo access, the portal shows sign-in as unavailable and turns off every
 
 | Command | What it does |
 | --- | --- |
-| `bun run dev` | Dev server on port 3001 |
+| `bun run dev` | Dev server on port 4001 |
 | `bun run build` | Worker bundle in `dist/` |
 | `bun run preview` | Runs the built Worker locally |
 | `bun run typecheck` | TypeScript check |

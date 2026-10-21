@@ -12,7 +12,7 @@ export type Permission = Schemas["Permission"];
 export type FlowfokusClient = Client<paths>;
 
 export interface FlowfokusClientOptions {
-  /** Rails base URL, for example `http://localhost:3000`. */
+  /** Rails base URL, for example `http://localhost:4000`. */
   baseUrl: string;
   /** Gym slug sent as `Flowfokus-Organization`. */
   organization?: string;

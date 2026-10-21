@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 set -eu
 umask 077
-printf 'API_BASE_URL=%s\n' "${API_BASE_URL:-http://server:3000}" > /app/apps/site/.dev.vars
+printf 'API_BASE_URL=%s\n' "${API_BASE_URL:-http://server:4000}" > /app/apps/site/.dev.vars
 exec "$@"

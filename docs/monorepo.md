@@ -101,8 +101,8 @@ Run each app in its own terminal:
 
 In development:
 
-- Portal and site call Rails at `http://127.0.0.1:3000`.
-- Open a gym site at `http://<slug>.localhost:<site port>`, for example `chainsaw.localhost:3002`. Browsers send every `*.localhost` name to your machine. No `/etc/hosts` entries are needed.
+- Portal and site call Rails at `http://127.0.0.1:4000`.
+- Open a gym site at `http://<slug>.localhost:<site port>`, for example `chainsaw.localhost:4002`. Browsers send every `*.localhost` name to your machine. No `/etc/hosts` entries are needed.
 - Browsers treat `localhost` as secure, so the `__Host-` session cookie works over plain HTTP.
 - Each app has its own WorkOS redirect URI in the WorkOS staging environment. See [Authentication](authentication.md#sign-in-flow).
 

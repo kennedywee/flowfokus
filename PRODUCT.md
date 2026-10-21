@@ -24,7 +24,7 @@ Every right a member uses traces back to a purchase. Sale, payment, fulfillment,
 ## Operating Context
 
 - Staff portal: one build at `portal.flowfokus.com`. Staff choose the organization in the URL, `/<slug>/…`.
-- Gym site: one build serves every gym. The host chooses the gym, `<slug>.flowfokus.com` or `<slug>.localhost:3002` in development.
+- Gym site: one build serves every gym. The host chooses the gym, `<slug>.flowfokus.com` or `<slug>.localhost:4002` in development.
 - Both web apps are TanStack Start on Cloudflare Workers. They are the backend for frontend. The browser never calls Rails and never holds an access token.
 - Money is integer minor units with a currency. Times are UTC and display in the organization's time zone.
 - Seed gyms: Chainsaw Gym (Bangsar, Mont Kiara, MYR), Ironworks Fitness (Penang, MYR).

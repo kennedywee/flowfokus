@@ -17,11 +17,11 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-(cd apps/server && exec bin/dev -b 127.0.0.1 -p 3000) &
+(cd apps/server && exec bin/dev -b 127.0.0.1 -p 4000) &
 pids+=("$!")
 bun run --cwd apps/portal dev &
 pids+=("$!")
 bun run --cwd apps/site dev &
 pids+=("$!")
-echo "Portal: http://localhost:3001 | Gym: http://chainsaw.localhost:3002"
+echo "Portal: http://localhost:4001 | Gym: http://chainsaw.localhost:4002"
 wait -n "${pids[@]}"

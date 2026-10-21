@@ -23,6 +23,6 @@ RUN bun run --cwd apps/site build \
 
 FROM base AS development
 RUN chmod +x apps/site/bin/docker-entrypoint
-EXPOSE 3002
+EXPOSE 4002
 ENTRYPOINT ["/app/apps/site/bin/docker-entrypoint"]
 CMD ["bun", "run", "--cwd", "apps/site", "dev", "--host", "0.0.0.0"]

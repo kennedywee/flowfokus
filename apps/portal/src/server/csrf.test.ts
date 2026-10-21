@@ -6,7 +6,7 @@ import { describe, expect, test } from "bun:test";
 import { isCsrfRequestAllowed } from "@tanstack/react-start";
 import { csrfOptions, rejectUnsafeRequest, type HandlerType } from "./boundary";
 
-const ORIGIN = "http://localhost:3001";
+const ORIGIN = "http://localhost:4001";
 
 async function decide(request: Request, handlerType: HandlerType): Promise<number> {
   const rejected = rejectUnsafeRequest(request, handlerType);

@@ -6,7 +6,7 @@
  * can hold the demo token, which must never reach the browser.
  */
 
-export const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:3000";
+export const DEFAULT_LOCAL_API_BASE_URL = "http://127.0.0.1:4000";
 const MIN_DEMO_TOKEN_LENGTH = 16;
 
 export interface PortalEnv {

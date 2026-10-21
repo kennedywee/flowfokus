@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Production image for the Flowfokus Rails API.
 # Build:  docker build -t flowfokus-server apps/server
-# Run:    docker run -p 3000:3000 -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server
+# Run:    docker run -p 4000:4000 -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server
 # Migrate as a separate release step (never on boot):
 #         docker run --rm -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server bin/rails db:migrate
 # Local development uses Dockerfile.dev instead.
@@ -52,8 +52,8 @@ USER 1000:1000
 
 # Liveness only. It does not touch the database. Use GET /ready for database readiness.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:3000/up || exit 1
+  CMD curl -fsS http://127.0.0.1:4000/up || exit 1
 
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-EXPOSE 3000
-CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
+EXPOSE 4000
+CMD ["bin/rails", "server", "-b", "0.0.0.0", "-p", "4000"]
