@@ -52,6 +52,16 @@ export function slugInput(value: unknown): SlugInput {
   return { slug: slugField(record(value)) };
 }
 
+export interface DeskLocationInput extends SlugInput {
+  location_id: string;
+}
+
+/** The desk location is a display preference, not a write to Rails. */
+export function deskLocationInput(value: unknown): DeskLocationInput {
+  const input = record(value);
+  return { slug: slugField(input), location_id: uuidField(input, "location_id") };
+}
+
 export interface IdInput extends SlugInput {
   id: string;
 }

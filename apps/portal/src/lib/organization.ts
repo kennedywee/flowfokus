@@ -17,3 +17,13 @@ export function useLocationName() {
   return (id: string | null) =>
     id === null ? "All locations" : (organization.locations.find((location) => location.id === id)?.name ?? "Unknown location");
 }
+
+/**
+ * The location this desk works at: the saved choice when it still belongs to
+ * the organization, otherwise the first location. Null only when there are none.
+ */
+export function useDeskLocation() {
+  const organization = useOrganization();
+  const { deskLocationId } = orgRoute.useLoaderData();
+  return organization.locations.find((location) => location.id === deskLocationId) ?? organization.locations[0] ?? null;
+}

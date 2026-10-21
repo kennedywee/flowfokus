@@ -1,9 +1,9 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { DENIAL, formatTime } from "../lib/format";
 import { useAction, useIdempotencyKey } from "../lib/hooks";
-import { useLocationName, useOrganization } from "../lib/organization";
+import { useDeskLocation, useLocationName, useOrganization } from "../lib/organization";
 import { createCheckIn } from "../lib/staff.functions";
 import { Combobox } from "./Combobox";
 import { Field, FailureNotice, Lamp, SubmitButton, buttonClass } from "./ui";
@@ -35,7 +35,10 @@ export function CheckInPanel({
   const formRef = useRef<HTMLFormElement>(null);
 
   const [memberId, setMemberId] = useState<string | null>(fixedMember?.id ?? null);
-  const [locationId, setLocationId] = useState(organization.locations[0]?.id ?? "");
+  // Start at the desk location, and follow it when the top bar changes it.
+  const deskLocationId = useDeskLocation()?.id ?? "";
+  const [locationId, setLocationId] = useState(deskLocationId);
+  useEffect(() => setLocationId(deskLocationId), [deskLocationId]);
   const [memberError, setMemberError] = useState<string | undefined>();
   const [fresh, setFresh] = useState(false);
 

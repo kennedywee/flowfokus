@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Combobox } from "../../../components/Combobox";
@@ -19,7 +19,7 @@ import {
 } from "../../../components/ui";
 import { failureMessage, formatDuration, formatMoney, formatUsage } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
-import { useLocationName, useOrganization } from "../../../lib/organization";
+import { useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
 import { createSale, listMembers, listProducts } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 
@@ -103,7 +103,10 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
   const [memberId, setMemberId] = useState(preselected ?? "");
   const [productId, setProductId] = useState("");
   const [priceId, setPriceId] = useState("");
-  const [locationId, setLocationId] = useState(organization.locations[0]?.id ?? "");
+  // Start at the desk location, and follow it when the top bar changes it.
+  const deskLocationId = useDeskLocation()?.id ?? "";
+  const [locationId, setLocationId] = useState(deskLocationId);
+  useEffect(() => setLocationId(deskLocationId), [deskLocationId]);
   const [local, setLocal] = useState<{ member?: string; product?: string; price?: string; location?: string }>({});
 
   const server = action.error?.code === "validation_failed" ? action.error.details : undefined;

@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, Outlet, createFileRoute, notFound, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, createFileRoute, notFound, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
   Bot,
   Building2,
   ChartColumn,
-  ChevronsUpDown,
   Inbox,
   LayoutGrid,
   LogIn,
+  MapPin,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  Plus,
   Receipt,
   Search,
   Settings,
@@ -23,7 +24,11 @@ import {
 } from "lucide-react";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
+import { ContextSwitcher } from "../../components/ContextSwitcher";
+import { useToast } from "../../components/Toast";
 import { FailureNotice, Wordmark, buttonClass, initials } from "../../components/ui";
+import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
+import { useDeskLocation } from "../../lib/organization";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
 import { isSlug } from "../../lib/validate";
 
@@ -33,9 +38,12 @@ export const Route = createFileRoute("/$org")({
   },
   loader: async ({ params }) => {
     const access = await getAccess();
-    if (access.kind !== "demo") return { access, organization: null };
-    const organization = await getStaffOrganization({ data: { slug: params.org } });
-    return { access, organization };
+    if (access.kind !== "demo") return { access, organization: null, deskLocationId: null };
+    const [organization, deskLocationId] = await Promise.all([
+      getStaffOrganization({ data: { slug: params.org } }),
+      getDeskLocation({ data: { slug: params.org } }),
+    ]);
+    return { access, organization, deskLocationId };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -108,11 +116,6 @@ function OrganizationLayout() {
 
 type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>, { ok: true }>["data"];
 
-/** The first letter of a name, for the organization avatar. */
-function firstLetter(name: string): string {
-  return (Array.from(name.trim())[0] ?? "?").toUpperCase();
-}
-
 function Shell({ organization: data }: { organization: OrganizationData }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [navOpen, setNavOpen] = useState(false);
@@ -129,7 +132,25 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
     (item) => item.to !== undefined && (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)),
   );
   const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
-  const locationName = data.locations[0]?.name ?? data.name;
+
+  // The desk location shows the new choice at once, while the cookie is saved.
+  const router = useRouter();
+  const toast = useToast();
+  const desk = useDeskLocation();
+  const [pendingLocation, setPendingLocation] = useState<string | null>(null);
+  const shownLocation = data.locations.find((location) => location.id === pendingLocation) ?? desk;
+
+  async function chooseLocation(id: string) {
+    setPendingLocation(id);
+    try {
+      await setDeskLocation({ data: { slug: data.slug, location_id: id } });
+      await router.invalidate();
+    } catch {
+      toast.show({ tone: "error", title: "Location not changed", body: "The choice was not saved. Try again." });
+    } finally {
+      setPendingLocation(null);
+    }
+  }
 
   function closeNav(returnFocus: boolean) {
     restoreFocus.current = returnFocus;
@@ -230,18 +251,6 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
             <span className="visually-hidden">Close navigation</span>
           </button>
         </div>
-        {/* The portal has no organization switcher. This opens the list of organizations. */}
-        <Link to="/" activeOptions={{ exact: true }} className="org-switch" data-tooltip={data.name} onClick={onSidebarLink}>
-          <span className="org-switch__avatar" aria-hidden="true">
-            {firstLetter(data.name)}
-          </span>
-          <span className="org-switch__text">
-            <span className="org-switch__name">{data.name}</span>
-            <span className="org-switch__meta">{locationName}</span>
-          </span>
-          <ChevronsUpDown className="org-switch__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-          <span className="visually-hidden">: switch organization</span>
-        </Link>
         <nav className="nav" aria-label="Staff pages">
           {/* The first group has no visible title. In the rail, later titles become dividers. */}
           {NAV_GROUPS.map((group, index) => (
@@ -327,32 +336,87 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               <Menu strokeWidth={1.75} aria-hidden="true" focusable="false" />
               <span className="visually-hidden">Navigation menu</span>
             </button>
-            <nav className="breadcrumb" aria-label="Breadcrumb">
-              <ol>
-                <li>
-                  {crumb && !routed?.exact ? (
-                    <Link to="/$org" params={{ org: data.slug }} activeOptions={{ exact: true }}>
-                      {locationName}
+            <div className="topbar__context">
+              {/* The portal has no organization list API yet, so the list holds the open one. */}
+              <ContextSwitcher
+                label="Organization"
+                strong
+                current={data.name}
+                options={[
+                  {
+                    value: data.slug,
+                    label: data.name,
+                    detail: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
+                  },
+                ]}
+                value={data.slug}
+                onSelect={() => undefined}
+                searchLabel="Search organizations"
+                emptyText="No organization matches."
+                footer={(close) => (
+                  <>
+                    <Link to="/" activeOptions={{ exact: true }} className="switcher__action" onClick={close}>
+                      <Building2 strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      All organizations
                     </Link>
-                  ) : crumb ? (
-                    <span>{locationName}</span>
-                  ) : (
-                    <span aria-current="page">{locationName}</span>
+                    <button type="button" className="switcher__action" disabled>
+                      <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      Create organization
+                      <span className="switcher__soon">Not available yet</span>
+                    </button>
+                  </>
+                )}
+              />
+              <span className="topbar__slash" aria-hidden="true">
+                /
+              </span>
+              {shownLocation ? (
+                <ContextSwitcher
+                  label="Location"
+                  icon={<MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />}
+                  current={shownLocation.name}
+                  options={data.locations.map((location) => ({
+                    value: location.id,
+                    label: location.name,
+                    detail: location.address ?? undefined,
+                    icon: <MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />,
+                  }))}
+                  value={shownLocation.id}
+                  onSelect={(id) => void chooseLocation(id)}
+                  searchLabel="Search locations"
+                  emptyText="No location matches."
+                  footer={() => (
+                    <button type="button" className="switcher__action" disabled>
+                      <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      Add location
+                      <span className="switcher__soon">Not available yet</span>
+                    </button>
                   )}
-                </li>
-                {crumb ? (
-                  <li>
-                    {crumb.section ? (
-                      <Link to={crumb.section} params={{ org: data.slug }} activeOptions={{ exact: true }}>
-                        {crumb.label}
-                      </Link>
-                    ) : (
-                      <span aria-current="page">{crumb.label}</span>
-                    )}
-                  </li>
-                ) : null}
-              </ol>
-            </nav>
+                />
+              ) : (
+                <span className="topbar__none">No locations</span>
+              )}
+              {crumb ? (
+                <>
+                  <span className="topbar__slash topbar__slash--page" aria-hidden="true">
+                    /
+                  </span>
+                  <nav className="breadcrumb" aria-label="Breadcrumb">
+                    <ol>
+                      <li>
+                        {crumb.section ? (
+                          <Link to={crumb.section} params={{ org: data.slug }} activeOptions={{ exact: true }}>
+                            {crumb.label}
+                          </Link>
+                        ) : (
+                          <span aria-current="page">{crumb.label}</span>
+                        )}
+                      </li>
+                    </ol>
+                  </nav>
+                </>
+              ) : null}
+            </div>
           </div>
           <div className="topbar__end">
             {/* Visual only for now. The members page has the search. */}

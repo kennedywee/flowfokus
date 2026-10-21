@@ -12,7 +12,11 @@ status colors, and centered page column.
 
 ## API-backed screens
 
-- Organization chooser and sidebar: organization, actor, and locations from Rails.
+- Top bar switchers: organization, actor, and locations from Rails. The
+  organization list holds only the open organization until Rails has a list
+  endpoint. The chosen desk location is an httpOnly cookie per organization. It
+  sets the default location for check-in and new sales. Create organization and
+  Add location are shown disabled.
 - Overview: membership counts, recent visits, and check-in.
 - Members: search, create, and view member records.
 - Sales: list and create sales, record payments, and deliver access.

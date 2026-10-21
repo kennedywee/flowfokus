@@ -135,66 +135,6 @@
   display: none;
 }
 
-/* Organization block. It opens the list of organizations: the portal has no switcher API. */
-.org-switch {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px var(--space-3);
-  background: var(--color-control);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 12px;
-  color: var(--color-ink);
-  text-decoration: none;
-  transition: background-color 150ms var(--ease-out);
-}
-.org-switch:hover {
-  background: var(--color-hover);
-  color: var(--color-ink);
-}
-.org-switch__avatar {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: var(--color-avatar-light);
-  color: var(--color-surface);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: 16px;
-}
-.org-switch__text {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-}
-.org-switch__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 16px;
-}
-.org-switch__meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--color-ink-3);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.org-switch__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--color-ink-3);
-}
-
 /* Navigation. */
 .nav {
   flex: 1;
@@ -524,13 +464,214 @@
   color: var(--color-ink-2);
   text-decoration: underline;
 }
-/* The first crumb is the location. It is quiet in every state. */
-.breadcrumb li:first-child > span {
-  color: var(--color-ink-3);
-}
 .breadcrumb [aria-current="page"] {
   color: var(--color-ink-2);
   white-space: nowrap;
+}
+
+/* Top bar context: organization / location / page. */
+.topbar__context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.topbar__slash {
+  flex: none;
+  padding-inline: 2px;
+  color: var(--color-ink-4);
+  font-size: var(--text-sm);
+  line-height: 16px;
+}
+.topbar__none {
+  padding-inline: var(--space-2);
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
+}
+
+/* Switcher. A button that opens a panel with a search box, a list, and actions. */
+.switcher {
+  position: relative;
+  min-width: 0;
+}
+.switcher__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: 16px;
+  cursor: pointer;
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+.switcher__button:hover,
+.switcher__button[aria-expanded="true"] {
+  background: var(--color-control);
+  color: var(--color-ink);
+}
+.switcher__button[data-strong="true"] {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+}
+.switcher__icon,
+.switcher__option-icon {
+  flex: none;
+  display: inline-flex;
+  color: var(--color-ink-3);
+}
+.switcher__icon svg,
+.switcher__option-icon svg,
+.switcher__search svg,
+.switcher__action svg,
+.switcher__check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.switcher__current {
+  max-width: 24ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.switcher__chevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+.switcher__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  background: var(--color-overlay);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow-popover);
+}
+.switcher__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-ink-3);
+}
+/* The search box takes focus as the panel opens. Its row shows the focus. */
+.switcher__search:has(:focus-visible) {
+  border-bottom-color: var(--color-ink-3);
+}
+.switcher__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+.switcher__input::placeholder {
+  color: var(--color-ink-3);
+}
+.switcher__list {
+  max-height: 280px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+}
+.switcher__list:empty {
+  display: none;
+}
+.switcher__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.switcher__option[data-active="true"] {
+  background: var(--color-hover);
+}
+.switcher__option-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.switcher__option-label,
+.switcher__option-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.switcher__option-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 18px;
+}
+.switcher__option-detail {
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.switcher__empty {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
+}
+.switcher__footer {
+  display: grid;
+  padding: 6px;
+  border-top: 1px solid var(--color-line);
+}
+.switcher__action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.switcher__action:hover:not(:disabled) {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.switcher__action:disabled {
+  color: var(--color-ink-4);
+  cursor: not-allowed;
+}
+.switcher__soon {
+  margin-left: auto;
+  color: var(--color-ink-4);
+  font-size: var(--text-xs);
 }
 
 /* Account menu. A disclosure: a button, then a panel. */
@@ -795,8 +936,6 @@
     padding-inline: var(--space-4);
   }
   .shell .sidebar .wordmark__text,
-  .shell .org-switch__text,
-  .shell .org-switch__icon,
   .shell .nav-item__label {
     position: absolute;
     width: 1px;
@@ -817,14 +956,6 @@
   .shell .whatsnew,
   .shell .sidebar__collapse {
     display: none;
-  }
-  /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
-  .shell .org-switch {
-    width: 40px;
-    height: 40px;
-    margin-block: 7px;
-    /* 1px border + 6px + half the 26px avatar puts its centre on x=36. */
-    padding: 0 0 0 6px;
   }
   .shell .nav {
     flex: 1;
@@ -898,7 +1029,6 @@
 
   /* Tooltips. The visually hidden label names the link; this only shows it. */
   .shell .nav-item::after,
-  .shell .org-switch::after,
   .shell .whatsnew-rail::after {
     content: attr(data-tooltip);
     content: attr(data-tooltip) / "";
@@ -925,8 +1055,6 @@
   }
   .shell .nav-item:hover::after,
   .shell .nav-item:focus-visible::after,
-  .shell .org-switch:hover::after,
-  .shell .org-switch:focus-visible::after,
   .shell .whatsnew-rail:hover::after,
   .shell .whatsnew-rail:focus-visible::after {
     opacity: 1;
@@ -952,8 +1080,6 @@
     padding-inline: var(--space-4);
   }
   .shell[data-collapsed="true"] .sidebar .wordmark__text,
-  .shell[data-collapsed="true"] .org-switch__text,
-  .shell[data-collapsed="true"] .org-switch__icon,
   .shell[data-collapsed="true"] .nav-item__label {
     position: absolute;
     width: 1px;
@@ -973,14 +1099,6 @@
   }
   .shell[data-collapsed="true"] .whatsnew {
     display: none;
-  }
-  /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
-  .shell[data-collapsed="true"] .org-switch {
-    width: 40px;
-    height: 40px;
-    margin-block: 7px;
-    /* 1px border + 6px + half the 26px avatar puts its centre on x=36. */
-    padding: 0 0 0 6px;
   }
   .shell[data-collapsed="true"] .nav {
     flex: 1;
@@ -1054,7 +1172,6 @@
 
   /* Tooltips. The visually hidden label names the link; this only shows it. */
   .shell[data-collapsed="true"] .nav-item::after,
-  .shell[data-collapsed="true"] .org-switch::after,
   .shell[data-collapsed="true"] .whatsnew-rail::after {
     content: attr(data-tooltip);
     content: attr(data-tooltip) / "";
@@ -1081,8 +1198,6 @@
   }
   .shell[data-collapsed="true"] .nav-item:hover::after,
   .shell[data-collapsed="true"] .nav-item:focus-visible::after,
-  .shell[data-collapsed="true"] .org-switch:hover::after,
-  .shell[data-collapsed="true"] .org-switch:focus-visible::after,
   .shell[data-collapsed="true"] .whatsnew-rail:hover::after,
   .shell[data-collapsed="true"] .whatsnew-rail:focus-visible::after {
     opacity: 1;
@@ -1161,24 +1276,6 @@
     opacity: 0;
     transition: none;
   }
-  /* The organization card grows out of the rail square. Its total slot stays 54px. */
-  .org-switch {
-    flex: none;
-    width: var(--sidebar-content-width);
-    height: 54px;
-    overflow: hidden;
-    transition:
-      background-color 150ms var(--ease-out),
-      width var(--rail-open) var(--ease-out),
-      height var(--rail-open) var(--ease-out),
-      margin var(--rail-open) var(--ease-out),
-      padding var(--rail-open) var(--ease-out);
-  }
-  /* The rail card shows a tooltip outside its box, so it must not clip. */
-  .shell[data-collapsed="true"] .org-switch {
-    overflow: visible;
-    transition: background-color 150ms var(--ease-out);
-  }
 }
 
 @media (max-width: 767.98px) {
@@ -1231,6 +1328,23 @@
   }
   .topbar {
     padding-inline: var(--space-3) var(--space-4);
+  }
+  /* The phone top bar has room for the two switchers only. The page title says where you are. */
+  .topbar__slash--page,
+  .topbar__context .breadcrumb {
+    display: none;
+  }
+  .switcher__current {
+    max-width: 11ch;
+  }
+  /* A phone has no room to hang the panel under its button. It spans the screen under the top bar. */
+  .switcher__panel {
+    position: fixed;
+    top: calc(var(--topbar-height) + 4px);
+    right: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+    max-width: none;
   }
   .main {
     padding: var(--space-6) var(--space-4) 48px;

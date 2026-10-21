@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createCheckInInput, createSaleInput, isSlug, recordPaymentInput, slugInput } from "./validate";
+import { createCheckInInput, createSaleInput, deskLocationInput, isSlug, recordPaymentInput, slugInput } from "./validate";
 import { parseAmountToMinor } from "./format";
 
 const id = "0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
@@ -32,6 +32,12 @@ describe("write inputs", () => {
       "Flowfokus-Organization": "ironworks",
     } as never);
     expect(Object.keys(input).sort()).toEqual(["idempotencyKey", "location_id", "member_id", "price_id", "slug"]);
+  });
+
+  test("desk location input keeps only the slug and a UUID", () => {
+    const input = deskLocationInput({ slug: "chainsaw", location_id: id.toUpperCase(), extra: "x" } as never);
+    expect(input).toEqual({ slug: "chainsaw", location_id: id });
+    expect(() => deskLocationInput({ slug: "chainsaw", location_id: "front-desk" })).toThrow();
   });
 
   test("ids must be UUIDs", () => {
