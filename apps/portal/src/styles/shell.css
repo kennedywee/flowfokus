@@ -9,6 +9,11 @@
 
 .shell {
   --sidebar-motion: 220ms;
+  /* Desktop collapse and expand. Closing is quicker, like a drawer snapping shut. */
+  --rail-open: 180ms;
+  --rail-close: 120ms;
+  /* The open sidebar's inner width: 16px padding each side and a 1px border. */
+  --sidebar-content-width: calc(var(--sidebar-width) - 2 * var(--space-4) - 1px);
   min-height: 100dvh;
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
@@ -815,11 +820,11 @@
   }
   /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
   .shell .org-switch {
-    justify-content: center;
     width: 40px;
     height: 40px;
     margin-block: 7px;
-    padding: 0;
+    /* 1px border + 6px + half the 26px avatar puts its centre on x=36. */
+    padding: 0 0 0 6px;
   }
   .shell .nav {
     flex: 1;
@@ -971,11 +976,11 @@
   }
   /* 7px above and below keeps the 54px slot of the open card, so the avatar stays level. */
   .shell[data-collapsed="true"] .org-switch {
-    justify-content: center;
     width: 40px;
     height: 40px;
     margin-block: 7px;
-    padding: 0;
+    /* 1px border + 6px + half the 26px avatar puts its centre on x=36. */
+    padding: 0 0 0 6px;
   }
   .shell[data-collapsed="true"] .nav {
     flex: 1;
@@ -1118,32 +1123,61 @@
 
 /* ---------- Phone: top bar and off-canvas sidebar ---------- */
 
-/* The page follows the rail, while labels return after there is room to read. */
+/*
+ * Desktop collapse and expand, modelled on a drawer.
+ * Expand: the column widens and the open layout is already in place, so the
+ * sidebar edge reveals labels as it moves. Only the logo text fades in, last.
+ * Collapse: the rail layout applies at once and only the column closes.
+ */
 @media (min-width: 1181px) {
   .shell {
-    transition: grid-template-columns var(--sidebar-motion) var(--ease-out);
+    transition: grid-template-columns var(--rail-open) var(--ease-out);
   }
-  .sidebar,
-  .sidebar__brand,
-  .nav,
-  .nav-group,
-  .nav-group__head,
-  .nav-list {
-    transition: gap var(--sidebar-motion) var(--ease-out);
+  .shell[data-collapsed="true"] {
+    transition-duration: var(--rail-close);
   }
-  .sidebar .wordmark__text,
-  .org-switch__text,
-  .org-switch__icon,
+  /* A revealed label is cut by the edge, not shortened with an ellipsis. */
   .nav-item__label {
-    opacity: 1;
-    transition: opacity 120ms var(--ease-out) 60ms;
+    text-overflow: clip;
   }
-  .shell[data-collapsed="true"] .sidebar .wordmark__text,
-  .shell[data-collapsed="true"] .org-switch__text,
-  .shell[data-collapsed="true"] .org-switch__icon,
-  .shell[data-collapsed="true"] .nav-item__label {
+  .sidebar .wordmark__text {
+    opacity: 1;
+    transition: opacity 120ms var(--ease-out) 80ms;
+  }
+  /* The logo link returns from display: none, so the fade needs a start value. */
+  @starting-style {
+    .sidebar .wordmark__text {
+      opacity: 0;
+    }
+  }
+  /*
+   * Cards keep their open width while the column widens. The edge cuts them
+   * instead of squeezing them, so their text never rewraps mid-animation.
+   */
+  .whatsnew {
+    width: var(--sidebar-content-width);
+  }
+  .shell[data-collapsed="true"] .sidebar .wordmark__text {
     opacity: 0;
-    transition-delay: 0s;
+    transition: none;
+  }
+  /* The organization card grows out of the rail square. Its total slot stays 54px. */
+  .org-switch {
+    flex: none;
+    width: var(--sidebar-content-width);
+    height: 54px;
+    overflow: hidden;
+    transition:
+      background-color 150ms var(--ease-out),
+      width var(--rail-open) var(--ease-out),
+      height var(--rail-open) var(--ease-out),
+      margin var(--rail-open) var(--ease-out),
+      padding var(--rail-open) var(--ease-out);
+  }
+  /* The rail card shows a tooltip outside its box, so it must not clip. */
+  .shell[data-collapsed="true"] .org-switch {
+    overflow: visible;
+    transition: background-color 150ms var(--ease-out);
   }
 }
 
