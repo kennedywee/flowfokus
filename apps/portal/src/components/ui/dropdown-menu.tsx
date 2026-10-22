@@ -70,16 +70,21 @@ function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.
 }
 
 /**
- * A choice of one value. The chosen item shows a check on its left. The menu
- * stays open after a pick, so the person sees the change.
+ * A choice of one value. The chosen item shows a check on its left. A pick
+ * closes the menu, like a plain item. Pass `closeOnClick={false}` to keep it open.
  */
 function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
 }
 
-function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
+function DropdownMenuRadioItem({ className, children, closeOnClick = true, ...props }: MenuPrimitive.RadioItem.Props) {
   return (
-    <MenuPrimitive.RadioItem data-slot="dropdown-menu-radio-item" className={cn("menu__item", className)} {...props}>
+    <MenuPrimitive.RadioItem
+      data-slot="dropdown-menu-radio-item"
+      className={cn("menu__item", className)}
+      closeOnClick={closeOnClick}
+      {...props}
+    >
       {/* The slot keeps its width when empty, so every label lines up. */}
       <span className="menu__check">
         <MenuPrimitive.RadioItemIndicator render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />} />
