@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronLeft, ChevronRight, Search, UserPlus, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, UserPlus } from "lucide-react";
 import { useToast } from "../../../components/Toast";
 import {
   Avatar,
@@ -10,7 +10,6 @@ import {
   Field,
   Notice,
   PageHead,
-  Plate,
   SkeletonRows,
   SubmitButton,
   describedBy,
@@ -20,6 +19,7 @@ import { useAction } from "../../../lib/hooks";
 import { useOrganization } from "../../../lib/organization";
 import { createMember, listMembers } from "../../../lib/staff.functions";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogBody, DialogContent, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
@@ -64,42 +64,51 @@ function Members() {
           Add member
         </Button>
       </PageHead>
-      <Plate title={q ? `Results for “${q}”` : "All members"} icon={<Users />} flush>
-        <div className="members-toolbar toolbar">
-          <p className="members-count" aria-live="polite">
-            {members.ok ? `${members.data.length} ${members.data.length === 1 ? "member" : "members"}` : null}
-          </p>
-          <div className="toolbar__spacer" />
-          <SearchForm initial={q ?? ""} />
-        </div>
-        {members.ok ? (
-          members.data.length ? (
-            <MemberTable key={q ?? ""} members={members.data} />
+      <Card aria-label={q ? `Members matching “${q}”` : "All members"}>
+        <CardContent flush>
+          <div className="members-toolbar toolbar">
+            <p className="members-count" aria-live="polite">
+              {members.ok ? memberCount(members.data.length, q) : null}
+            </p>
+            <div className="toolbar__spacer" />
+            <SearchForm initial={q ?? ""} />
+          </div>
+          {members.ok ? (
+            members.data.length ? (
+              <MemberTable key={q ?? ""} members={members.data} />
+            ) : (
+              <div className="members-state">
+                {q ? (
+                  <Empty title={`No member matches “${q}”`}>
+                    <p>Check the spelling, search by email, or add them as a new member.</p>
+                    <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+                      Clear search
+                    </Link>
+                  </Empty>
+                ) : (
+                  <Empty title="No members yet">
+                    <p>Select Add member to add the first member. You can then sell them a membership.</p>
+                  </Empty>
+                )}
+              </div>
+            )
           ) : (
             <div className="members-state">
-              {q ? (
-                <Empty title={`No member matches “${q}”`}>
-                  <p>Check the spelling, search by email, or add them as a new member.</p>
-                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
-                    Clear search
-                  </Link>
-                </Empty>
-              ) : (
-                <Empty title="No members yet">
-                  <p>Select Add member to add the first member. You can then sell them a membership.</p>
-                </Empty>
-              )}
+              <FailureNotice error={members.error} title="Members did not load" />
             </div>
-          )
-        ) : (
-          <div className="members-state">
-            <FailureNotice error={members.error} title="Members did not load" />
-          </div>
-        )}
-      </Plate>
+          )}
+        </CardContent>
+      </Card>
       {adding ? <AddMember onClose={() => setAdding(false)} /> : null}
     </div>
   );
+}
+
+/** "16 members", or "2 members match “ana”" during a search. */
+function memberCount(count: number, q?: string): string {
+  const noun = count === 1 ? "member" : "members";
+  if (!q) return `${count} ${noun}`;
+  return `${count} ${noun} ${count === 1 ? "matches" : "match"} “${q}”`;
 }
 
 /** Page numbers to show: first, last, and the current page with its neighbours. */

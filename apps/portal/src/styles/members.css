@@ -34,8 +34,9 @@
   border-radius: 0;
 }
 
+/* The card has no header, so the toolbar opens it. */
 .members-page .members-toolbar {
-  padding: 0 var(--space-6) var(--space-4);
+  padding: var(--space-5) var(--space-6) var(--space-4);
 }
 .members-page .members-count {
   color: var(--color-ink-3);
