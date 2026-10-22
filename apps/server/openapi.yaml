@@ -710,19 +710,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/WorkosWebhookErrorResponse"
         "413":
           description: "`payload_too_large`: the body is larger than 1 MB."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "503":
-          description: "`webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`."
+                $ref: "#/components/schemas/WorkosWebhookErrorResponse"
+        "500":
+          description: "`internal_error`: an unexpected server failure. WorkOS retries the delivery."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/WorkosWebhookErrorResponse"
+        "503":
+          description: "`webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`: the ledger cannot be reached."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkosWebhookErrorResponse"
 
 components:
   securitySchemes:
@@ -822,15 +828,12 @@ components:
         Stable machine-readable error code.
         - `bad_request` (400), `organization_required` (400), `idempotency_key_required` (400)
         - `unauthenticated` (401), `invalid_token` (401)
-        - `invalid_signature` (400, webhooks)
         - `forbidden` (403), `organization_mismatch` (403)
         - `not_found` (404)
         - `idempotency_key_reused` (409)
-        - `payload_too_large` (413, webhooks)
         - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
-        - `webhook_not_configured` (503, webhooks)
       enum:
         - bad_request
         - organization_required
@@ -849,9 +852,6 @@ components:
         - auth_not_configured
         - auth_unavailable
         - database_unavailable
-        - invalid_signature
-        - payload_too_large
-        - webhook_not_configured
 
     WorkosWebhookEvent:
       type: object
@@ -889,6 +889,38 @@ components:
         duplicate:
           type: boolean
           description: True when the ledger already had this event.
+
+    WorkosWebhookErrorCode:
+      type: string
+      description: |
+        Error codes of `POST /webhooks/workos` only. Separate from `ErrorCode`,
+        so the webhook codes do not widen the responses of other endpoints.
+        - `bad_request`, `invalid_signature` (400)
+        - `payload_too_large` (413)
+        - `internal_error` (500)
+        - `webhook_not_configured`, `database_unavailable` (503)
+      enum:
+        - bad_request
+        - invalid_signature
+        - payload_too_large
+        - internal_error
+        - webhook_not_configured
+        - database_unavailable
+
+    WorkosWebhookErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              $ref: "#/components/schemas/WorkosWebhookErrorCode"
+            message:
+              type: string
 
     ErrorResponse:
       type: object

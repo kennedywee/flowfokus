@@ -118,6 +118,19 @@ RSpec.describe "POST /webhooks/workos" do
       deliver
       expect_rejected("webhook_not_configured", status: :service_unavailable)
     end
+
+    it "answers 503 database_unavailable when the ledger cannot be reached" do
+      allow(WorkosEvent).to receive(:accept!).and_raise(ActiveRecord::ConnectionNotEstablished)
+      deliver
+      expect_rejected("database_unavailable", status: :service_unavailable)
+    end
+
+    it "answers 500 internal_error on an unexpected failure, so WorkOS retries" do
+      allow(WorkosEvent).to receive(:accept!).and_raise(StandardError, "boom")
+      deliver
+      expect_rejected("internal_error", status: :internal_server_error)
+      expect(json.dig("error", "message")).to eq("Something went wrong.")
+    end
   end
 
   it "reads the whole signed body when Content-Length understates it, and keeps UTF-8 text" do

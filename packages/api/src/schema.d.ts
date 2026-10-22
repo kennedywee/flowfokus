@@ -353,18 +353,15 @@ export interface components {
          * @description Stable machine-readable error code.
          *     - `bad_request` (400), `organization_required` (400), `idempotency_key_required` (400)
          *     - `unauthenticated` (401), `invalid_token` (401)
-         *     - `invalid_signature` (400, webhooks)
          *     - `forbidden` (403), `organization_mismatch` (403)
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
-         *     - `payload_too_large` (413, webhooks)
          *     - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
-         *     - `webhook_not_configured` (503, webhooks)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "invalid_signature" | "payload_too_large" | "webhook_not_configured";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -390,6 +387,22 @@ export interface components {
             status: "pending" | "processed" | "ignored" | "failed";
             /** @description True when the ledger already had this event. */
             duplicate: boolean;
+        };
+        /**
+         * @description Error codes of `POST /webhooks/workos` only. Separate from `ErrorCode`,
+         *     so the webhook codes do not widen the responses of other endpoints.
+         *     - `bad_request`, `invalid_signature` (400)
+         *     - `payload_too_large` (413)
+         *     - `internal_error` (500)
+         *     - `webhook_not_configured`, `database_unavailable` (503)
+         * @enum {string}
+         */
+        WorkosWebhookErrorCode: "bad_request" | "invalid_signature" | "payload_too_large" | "internal_error" | "webhook_not_configured" | "database_unavailable";
+        WorkosWebhookErrorResponse: {
+            error: {
+                code: components["schemas"]["WorkosWebhookErrorCode"];
+                message: string;
+            };
         };
         ErrorResponse: {
             error: {
@@ -1403,7 +1416,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["WorkosWebhookErrorResponse"];
                 };
             };
             /** @description `payload_too_large`: the body is larger than 1 MB. */
@@ -1412,16 +1425,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["WorkosWebhookErrorResponse"];
                 };
             };
-            /** @description `webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`. */
+            /** @description `internal_error`: an unexpected server failure. WorkOS retries the delivery. */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkosWebhookErrorResponse"];
+                };
+            };
+            /** @description `webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`: the ledger cannot be reached. */
             503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["WorkosWebhookErrorResponse"];
                 };
             };
         };
