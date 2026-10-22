@@ -821,8 +821,11 @@
 }
 .page-head__text {
   display: grid;
+  align-content: start;
   gap: 2px;
   min-width: 0;
+  /* A title and a one-line description. Pages without a description keep the same height. */
+  min-height: 52px;
 }
 .page-head__text p {
   color: var(--color-ink-3);

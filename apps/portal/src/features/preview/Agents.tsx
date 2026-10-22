@@ -57,7 +57,6 @@ export function Agents() {
       actions={
         <Button
           variant="secondary"
-          size="sm"
           type="button"
           onClick={() => {
             setMessages([]);

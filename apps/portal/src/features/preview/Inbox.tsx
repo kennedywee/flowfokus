@@ -31,7 +31,6 @@ export function Inbox() {
       actions={
         <Button
           variant="secondary"
-          size="sm"
           type="button"
           disabled={!unread}
           onClick={() => setItems((items) => items.map((item) => ({ ...item, unread: false })))}

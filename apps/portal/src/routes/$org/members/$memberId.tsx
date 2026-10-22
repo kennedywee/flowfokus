@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { CalendarRange, History, KeyRound, ShoppingBag, UserRound } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
 import { CheckInPanel } from "../../../components/CheckInPanel";
 import { SalesTable } from "../../../components/SalesTable";
@@ -62,7 +62,7 @@ function MemberPage() {
 
       <div className="grid-2">
         <Access member={member} />
-        <Plate title="Check in" icon={<KeyRound />}>
+        <Plate title="Check in">
           <CheckInPanel fixedMember={member} />
         </Plate>
       </div>
@@ -70,7 +70,6 @@ function MemberPage() {
       <Plate
         title="Sales"
         description="Newest first. Open a sale to record payment or deliver it."
-        icon={<ShoppingBag />}
         flush
       >
         {sales.length ? (
@@ -94,7 +93,7 @@ function MemberPage() {
 
       <Periods member={member} />
 
-      <Plate title="Check-in history" icon={<History />} flush>
+      <Plate title="Check-in history" flush>
         {checkIns.length ? (
           <CheckInHistory checkIns={checkIns} />
         ) : (
@@ -112,7 +111,7 @@ function MemberPage() {
 function Details({ member }: { member: Schemas["MemberDetail"] }) {
   const organization = useOrganization();
   return (
-    <Plate title="Details" icon={<UserRound />}>
+    <Plate title="Details">
       <dl className="facts">
         <div>
           <dt>Email</dt>
@@ -150,7 +149,7 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
   const rights = member.entitlements;
 
   return (
-    <Plate title="Access now" icon={<KeyRound />}>
+    <Plate title="Access now">
       {period ? (
         <Status state="active">
           Covered from {formatDate(period.starts_at, organization.timezone)} until{" "}
@@ -214,7 +213,6 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
     <Plate
       title="Membership periods"
       description="Each period comes from one delivered sale. Periods never overlap."
-      icon={<CalendarRange />}
       flush
     >
       {periods.length ? (

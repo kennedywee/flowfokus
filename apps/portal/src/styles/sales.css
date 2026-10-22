@@ -8,9 +8,9 @@
 
 /* ---------- Sales list ---------- */
 
-/* The toolbar sits inside the flush card, above the table. */
+/* The card has no header, so the toolbar opens it, as on the members list. */
 .sales-page__toolbar {
-  padding: 0 var(--space-6) var(--space-4);
+  padding: var(--space-5) var(--space-6) var(--space-4);
 }
 .sales-page__count {
   color: var(--color-ink-3);

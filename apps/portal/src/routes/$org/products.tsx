@@ -19,8 +19,8 @@ function Products() {
   return (
     <div className="page offers-page">
       <PageHead
-        title="Offers"
-        description="Membership products and their prices. A price never changes; a new amount or term is a new price."
+        title="Plans & offers"
+        description="Membership products and their prices. To change a price, add a new one."
       />
       {!products.ok ? (
         <FailureNotice error={products.error} title="Offers did not load" />

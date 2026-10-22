@@ -183,7 +183,8 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
   // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
   const crumb: { label: string; section?: RoutedPath } | null = routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, section: routed.to }
-    : trimmed === `${base}/changelog` ? { label: "Changelog" }
+    : trimmed === `${base}/changelog` ? { label: "What’s new" }
+    : trimmed === `${base}/settings` ? { label: "Settings" }
     : null;
 
   return (

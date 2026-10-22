@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { getRouteApi } from "@tanstack/react-router";
-import { Download, LogIn } from "lucide-react";
+import { Download } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
 import { Avatar, Empty, FailureNotice, Plate, Status } from "../../components/ui";
 import { useLocationName, useOrganization } from "../../lib/organization";
@@ -28,7 +28,6 @@ export function CheckIns() {
       actions={
         <Button
           variant="secondary"
-          size="sm"
           type="button"
           onClick={() =>
             downloadCsv("check-ins.csv", [
@@ -48,7 +47,7 @@ export function CheckIns() {
       }
     >
       <div className="preview-checkin-layout">
-        <Plate title="Front desk" description="Choose a member and location to record a visit." icon={<LogIn />}>
+        <Plate title="Front desk" description="Choose a member and location to record a visit.">
           {members.ok ? <CheckInPanel members={members.data} /> : <FailureNotice error={members.error} />}
 
         </Plate>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Building2, Mail, MessageCircle, QrCode, Save, UserPlus } from "lucide-react";
+import { Mail, MessageCircle, QrCode, Save, UserPlus } from "lucide-react";
 import { Avatar, Field, Pill, Plate } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import { useOrganization } from "../../lib/organization";
@@ -55,7 +55,6 @@ export function Settings() {
           <Plate
             title="Organization details"
             description="Used on receipts and member-facing pages."
-            icon={<Building2 />}
           >
             <form className="form preview-settings-form" onSubmit={save}>
               <Field id="preview-org-name" label="Organization name">

@@ -911,9 +911,16 @@ input[type="radio"]:disabled {
   color: var(--color-ink);
   background: var(--color-control);
 }
-.toggle-group__item[data-pressed] {
+.toggle-group__item[data-pressed],
+.toggle-group__item[aria-current="page"] {
   color: var(--color-ink);
   background: var(--color-hover);
+}
+/* Filter links (for example on the sales list) use the same look as the buttons. */
+a.toggle-group__item {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 /* Tooltip (components/ui/tooltip.tsx), from the Paper sidebar kit. */

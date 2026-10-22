@@ -21,7 +21,6 @@ export function Reports() {
       actions={
         <Button
           variant="secondary"
-          size="sm"
           type="button"
           onClick={() =>
             downloadCsv("sample-weekly-report.csv", [

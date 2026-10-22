@@ -55,6 +55,11 @@ Answer **no** when the CLI asks to overwrite an existing file: the files in `src
 - **Theme.** The shadcn variables (`--background`, `--primary`, and the others) point at our tokens. Each colour token holds a light and a dark value in `light-dark()`. Staff choose System, Light, or Dark in the account menu. The choice lives in an httpOnly cookie (`lib/theme.functions.ts`), so the server sets the `light` or `dark` class on `<html>` and the page never flashes. System sets no class and follows the operating system through CSS. Add new colours to `tokens.css` with both values.
 - **Helpers.** `src/components/ui.tsx` builds the portal patterns (status pills, notices, cards with a heading, fields with hints and errors) from the shadcn parts. Use them in pages.
 - **Pickers.** Use `NativeSelect` for a short, plain list. Use `Select` only when options need icons or details. Use `Combobox` (`src/components/Combobox.tsx`) to search a long list. Use `DatePicker` (`src/components/DatePicker.tsx`) for a date. It takes and returns `"YYYY-MM-DD"`.
+- **Page layout.** Every page is a `.page` with a `PageHead`, so headers and content line up across pages:
+  - The title matches the sidebar label and the breadcrumb. The description is one short line. The header keeps the same height without one.
+  - Header buttons use the default size. Use the primary variant for the main task and secondary for the rest.
+  - Cards (`Plate`) have a title and an optional description, with no icon tile. Numbered steps, as on New sale, are the one exception.
+  - A list card has no title: the page title already names it. Its toolbar (filters, count, search) opens the card. Filters use the toggle-group look.
 - **Outside Base UI.** `Calendar` uses react-day-picker. `Command` uses cmdk, which brings a few Radix packages with it.
 
 ## Request boundary
