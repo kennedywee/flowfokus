@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -166,7 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
     t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id"
     t.index ["user_id"], name: "index_organization_memberships_on_user_id"
     t.index ["workos_id"], name: "index_organization_memberships_on_workos_id", unique: true
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'pending'::character varying]::text[])", name: "organization_memberships_status"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'inactive'::character varying::text, 'pending'::character varying::text])", name: "organization_memberships_status"
   end
 
   create_table "organizations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -329,7 +329,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
     t.index ["workos_id"], name: "index_workos_events_on_workos_id", unique: true
     t.check_constraint "attempts >= 0", name: "workos_events_attempts_non_negative"
     t.check_constraint "jsonb_typeof(payload) = 'object'::text", name: "workos_events_payload_object"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'processed'::character varying, 'ignored'::character varying, 'failed'::character varying]::text[])", name: "workos_events_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'processed'::character varying::text, 'ignored'::character varying::text, 'failed'::character varying::text])", name: "workos_events_status"
   end
 
   add_foreign_key "benefit_grants", "fulfillments", column: ["fulfillment_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -419,6 +419,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
         IF NEW.workos_id IS DISTINCT FROM OLD.workos_id
           OR NEW.event_type IS DISTINCT FROM OLD.event_type
           OR NEW.subject_id IS DISTINCT FROM OLD.subject_id
+          OR NEW.organization_workos_id IS DISTINCT FROM OLD.organization_workos_id
           OR NEW.occurred_at IS DISTINCT FROM OLD.occurred_at
           OR NEW.payload IS DISTINCT FROM OLD.payload THEN
           RAISE EXCEPTION 'accepted WorkOS events are immutable' USING ERRCODE = 'check_violation';

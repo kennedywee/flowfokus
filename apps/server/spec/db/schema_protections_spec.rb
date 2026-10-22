@@ -24,6 +24,7 @@ RSpec.describe "Database protections from db/schema.rb" do
     schema = Rails.root.join("db/schema.rb").read
 
     expect(schema).to include("create_function :prevent_workos_event_changes", "create_trigger :workos_events_immutable")
+    expect(schema).to include("OR NEW.organization_workos_id IS DISTINCT FROM OLD.organization_workos_id")
     expect(schema).to include('name: "index_workos_events_on_workos_id", unique: true')
     expect(schema).to include('name: "index_organization_memberships_live", unique: true, where: "(workos_deleted_at IS NULL)"')
     %w[workos_events_status workos_events_payload_object organization_memberships_status].each { expect(schema).to include(%(name: "#{_1}")) }
@@ -38,6 +39,17 @@ RSpec.describe "Database protections from db/schema.rb" do
       .to raise_error(ActiveRecord::RecordNotUnique)
     expect { in_savepoint { OrganizationMembership.where(workos_id: "om_new").update_all(status: "removed") } }
       .to raise_error(ActiveRecord::StatementInvalid, /organization_memberships_status/)
+  end
+
+  it "keeps the ledger's routing fields immutable after a schema load" do
+    WorkosEvent.insert!({ workos_id: "event_route", event_type: "organization_membership.deleted", subject_id: "om_1",
+      organization_workos_id: "org_a", occurred_at: Time.current, payload: { "id" => "event_route" } })
+
+    %i[workos_id event_type subject_id organization_workos_id occurred_at payload].each do |column|
+      value = column == :occurred_at ? 1.day.ago : (column == :payload ? { "id" => "x" } : "changed")
+      expect { in_savepoint { WorkosEvent.where(workos_id: "event_route").update_all(column => value) } }
+        .to raise_error(ActiveRecord::StatementInvalid, /immutable/), "#{column} should be immutable"
+    end
   end
 
   it "rejects duplicate WorkOS events and unknown statuses" do
