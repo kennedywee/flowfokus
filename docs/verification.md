@@ -11,7 +11,7 @@ default. No live WorkOS account was used. Application changes are committed on
 - All 147 Rails examples pass in Docker, including real response contracts,
   JWT signature/issuer/expiry checks, permissions, organization isolation, key
   rotation, and the existing membership workflow.
-- All 78 portal tests, 42 gym-site tests, and 3 tooling tests pass. Generated API
+- All 85 portal tests, 42 gym-site tests, and 3 tooling tests pass. Generated API
   types match OpenAPI. Shared API and both apps pass TypeScript checks.
 - Both apps build their Cloudflare Worker bundles. Artifact checks find no local
   environment files after cleanup. Each app still has its own image.
@@ -41,8 +41,11 @@ The T3 collaborative browser completed the following through the Docker portal:
 4. Check in successfully. The counted entitlement changes from 8 visits left to
    7 visits left, with one usage recorded.
 5. Sign out through the account menu and return to the signed-out page.
-6. Sign in as the multi-organization manager, use both organization choosers, and
-   switch between Ironworks and Chainsaw through the top bar.
+6. Sign in as the multi-organization manager and select Ironworks in WorkOS.
+   The portal opens `/ironworks` directly, without a second organization chooser.
+7. Switch to Chainsaw through the top bar. Returning to `/` opens Chainsaw directly.
+8. Sign out and sign in from `/sign-in?returnTo=/ironworks/members`.
+   Selecting Ironworks opens the Members page directly. Sign out again.
 
 The browser made no direct requests to Rails port 4000. No JWT appeared in the
 page HTML or browser storage. The safe session server function returned the user

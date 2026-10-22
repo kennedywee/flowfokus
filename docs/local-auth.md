@@ -18,6 +18,8 @@ docker compose up -d --wait
 
 Open `http://localhost:4001`. Use the portal sign-in link to open the emulator's
 login page. The callback returns to `http://localhost:4001/callback`.
+If AuthKit asks you to select an organization, the portal opens that organization
+directly. Use the top-bar switcher to change it later.
 Use localhost for this flow. The emulator port is bound to loopback and the
 callback is fixed to localhost; LAN and Tailscale hosts are not configured for
 emulator sign-in.

@@ -14,7 +14,8 @@ status colors, and centered page column.
 
 - Top bar switchers: organization, actor, and locations from Rails. The
   organization list comes from `/staff/memberships`. The portal start, `/`,
-  offers sign-in, opens a single organization, or shows an organization chooser.
+  offers sign-in and opens the session's selected organization. A chooser is a
+  fallback when no organization is selected and several memberships are available.
   The optional fixed demo actor opens Chainsaw directly. The chosen desk location is an HttpOnly cookie per organization. It
   sets the default location for check-in and new sales. Create organization and
   Add location are shown but do nothing yet.

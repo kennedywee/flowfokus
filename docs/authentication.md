@@ -258,7 +258,9 @@ end
 ### Staff
 
 1. After sign-in, the portal lists the user's active staff memberships from Rails.
-2. One membership opens it directly. Several show an organization selector.
+2. If the session already names an organization in that list, open it directly.
+   AuthKit can select it during sign-in; the portal must not ask again.
+   Otherwise, one membership opens directly and several show an organization selector.
 3. To open an organization, Start calls `switchToOrganization()`. The new token carries the role and permissions for that organization.
 4. The slug in the URL must match the token's organization. Otherwise Start switches the organization or Rails returns `403`.
 
