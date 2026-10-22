@@ -100,6 +100,55 @@ RSpec.describe "Concurrent WorkOS sync" do
     expect(OrganizationMembership.sole).to have_attributes(workos_id: "om_race", workos_deleted_at: be_present)
   end
 
+  describe "two syncs creating the same new user" do
+    let(:api) { WorkosSyncHelpers::FakeWorkosApi.new }
+    let(:membership) { workos_membership_data("om_new", user_id: "user_new", organization_id: chainsaw.workos_id) }
+
+    # The first creator inserts and pauses before commit. The second misses the
+    # uncommitted row, so its insert waits on the unique index, then fails.
+    it "converges when the second insert hits the unique index" do
+      api.users["user_new"] = workos_user_data("user_new", first_name: "Newer", updated_at: 1.minute.from_now)
+
+      race(WorkosEvent, :finish!, any_instance: true,
+        first: -> { deliver_workos_event("user.created", workos_user_data("user_new", first_name: "Older")) },
+        second: -> { deliver_workos_event("organization_membership.created", membership, api:) })
+
+      expect(WorkosEvent.order(:created_at).pluck(:event_type, :status, :outcome)).to eq([
+        [ "user.created", "processed", "created" ],
+        [ "organization_membership.created", "processed", "created" ]
+      ])
+      expect(User.where(workos_id: "user_new").sole.first_name).to eq("Newer")
+      expect(OrganizationMembership.live.sole).to have_attributes(workos_id: "om_new", user: User.find_by!(workos_id: "user_new"))
+    end
+
+    # The first creator misses the user, then pauses. The second creates and
+    # commits it. The first then fails the uniqueness validation.
+    it "converges when the second insert fails the uniqueness validation" do
+      api.users["user_new"] = workos_user_data("user_new", first_name: "Newer", updated_at: 1.minute.from_now)
+
+      pause_first_call(User, :new) do |reached, release|
+        first = in_thread { deliver_workos_event("user.created", workos_user_data("user_new", first_name: "Older")) }
+        expect(reached.wait(10)).to be(true)
+
+        second = in_thread { deliver_workos_event("organization_membership.created", membership, api:) }
+        expect(second.value).not_to be_a(StandardError)
+        release.set
+        expect(first.value).not_to be_a(StandardError)
+      end
+
+      expect(WorkosEvent.order(:created_at).pluck(:event_type, :status, :outcome)).to eq([
+        [ "user.created", "processed", "stale" ],
+        [ "organization_membership.created", "processed", "created" ]
+      ])
+      expect(User.where(workos_id: "user_new").sole.first_name).to eq("Newer")
+    end
+
+    it "still raises for invalid user data" do
+      expect { User.transaction { User.sync_from_workos!(workos_user_data("user_new", email: nil)) } }
+        .to raise_error(ActiveRecord::RecordInvalid, /Email/)
+    end
+  end
+
   it "does not deadlock when reconciliations, deletions, and observations overlap" do
     api = WorkosSyncHelpers::FakeWorkosApi.new
     users = %w[user_a user_b user_c user_d].map { staff_user(_1) }
