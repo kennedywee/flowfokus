@@ -20,11 +20,12 @@ module Webhooks
 
     def create
       secret = Flowfokus::WorkosWebhooks.secret!
-      if request.content_length.to_i > MAX_BODY_BYTES
+      # Content-Length can be absent or wrong. The limit applies to the bytes read.
+      body = read_body
+      if request.content_length.to_i > MAX_BODY_BYTES || body.bytesize > MAX_BODY_BYTES
         return render_error(:content_too_large, "payload_too_large", "The webhook body is larger than #{MAX_BODY_BYTES} bytes.")
       end
 
-      body = request.raw_post.to_s
       Flowfokus::WorkosWebhooks.verify!(body, request.headers["WorkOS-Signature"], secret:)
 
       event, duplicate = WorkosEvent.accept!(body)
@@ -33,6 +34,17 @@ module Webhooks
     end
 
     private
+      # The raw request body, read whole up to one byte past the limit.
+      # Rails' raw_post, and request.body after parameter parsing, stop at
+      # Content-Length, so this reads the Rack input stream directly.
+      def read_body
+        return "".b if request.content_length.to_i > MAX_BODY_BYTES
+
+        stream = request.body_stream
+        stream.rewind if stream.respond_to?(:rewind)
+        stream.read(MAX_BODY_BYTES + 1).to_s
+      end
+
       # The event is already saved. If queueing fails, it stays pending for the retry command.
       def enqueue(event)
         WorkosEventJob.perform_later(event)

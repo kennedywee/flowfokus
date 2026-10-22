@@ -102,6 +102,12 @@ RSpec.describe "POST /webhooks/workos" do
       expect_rejected("payload_too_large", status: :content_too_large)
     end
 
+    it "measures the body it reads, not the Content-Length header" do
+      raw = workos_event_body("user.updated", workos_user_data("user_big").merge("padding" => "x" * 1.megabyte))
+      deliver(raw, headers: { "CONTENT_LENGTH" => "100" })
+      expect_rejected("payload_too_large", status: :content_too_large)
+    end
+
     it "fails closed with 503 when no webhook secret is set", webhook_secret: false do
       deliver
       expect_rejected("webhook_not_configured", status: :service_unavailable)
@@ -112,6 +118,16 @@ RSpec.describe "POST /webhooks/workos" do
       deliver
       expect_rejected("webhook_not_configured", status: :service_unavailable)
     end
+  end
+
+  it "reads the whole signed body when Content-Length understates it, and keeps UTF-8 text" do
+    raw = workos_event_body("user.updated", workos_user_data("user_utf8", first_name: "Zoë"), id: "event_utf8")
+
+    deliver(raw, headers: { "CONTENT_LENGTH" => "10" })
+    perform_enqueued_jobs
+
+    expect(response).to have_http_status(:ok)
+    expect(User.find_by!(workos_id: "user_utf8").first_name).to eq("Zoë")
   end
 
   it "keeps the saved event pending when queueing fails" do
