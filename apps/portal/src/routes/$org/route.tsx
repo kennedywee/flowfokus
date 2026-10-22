@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, createFileRoute, notFound, useRouter, useRouterState } from "@tanstack/react-router";
+import { Link, Outlet, createFileRoute, notFound, rootRouteId, useLoaderData, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
   Bot,
@@ -14,12 +14,14 @@ import {
   MapPin,
   Menu,
   Monitor,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
   Receipt,
   Search,
   Sparkle,
+  Sun,
   Tag,
   Users,
   X,
@@ -34,14 +36,20 @@ import { FailureNotice, Wordmark, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
 import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
-import { isSlug } from "../../lib/validate";
+import { setTheme } from "../../lib/theme.functions";
+import { isSlug, type Theme } from "../../lib/validate";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuHeader,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -424,15 +432,50 @@ function AppSidebar({ data }: { data: OrganizationData }) {
   );
 }
 
+const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: LucideIcon }> = [
+  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+];
+
+/** Sets the class that tokens.css reads. No class means follow the operating system. */
+function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  root.classList.remove("light", "dark");
+  if (theme !== "system") root.classList.add(theme);
+}
+
 /**
- * The account menu, on the shadcn dropdown menu. Help, theme choice, account
- * settings, and sign-out respond like menu items, but do nothing yet: they need
- * real sign-in. The portal has one theme, dark.
+ * The account menu, on the shadcn dropdown menu. The theme choice works. Help,
+ * account settings, and sign-out respond like menu items, but do nothing yet:
+ * they need real sign-in.
  */
 function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
   // The items do nothing yet, so a click leaves the menu open.
   const item = { closeOnClick: false } as const;
+  const router = useRouter();
+  const toast = useToast();
+  const saved = useLoaderData({ from: rootRouteId });
+  // Shown at once, before the cookie is saved and the root route reloads.
+  const [pending, setPending] = useState<Theme | null>(null);
+  const theme = pending ?? saved;
+  const current = THEME_CHOICES.find((choice) => choice.value === theme) ?? THEME_CHOICES[0]!;
+
+  async function chooseTheme(next: Theme) {
+    if (next === theme) return;
+    setPending(next);
+    applyTheme(next);
+    try {
+      await setTheme({ data: { theme: next } });
+      await router.invalidate({ filter: (match) => match.routeId === rootRouteId });
+    } catch {
+      applyTheme(saved);
+      toast.show({ tone: "error", title: "Theme not changed", body: "The choice was not saved. Try again." });
+    } finally {
+      setPending(null);
+    }
+  }
 
   return (
     <DropdownMenu>
@@ -453,14 +496,26 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
             <ChevronRight {...icon} />
           </DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem {...item}>
-          <Monitor {...icon} />
-          Theme
-          <DropdownMenuShortcut>
-            Dark
-            <ChevronRight {...icon} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <current.icon {...icon} />
+            Theme
+            <DropdownMenuShortcut>
+              {current.label}
+              <ChevronRight {...icon} />
+            </DropdownMenuShortcut>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuRadioGroup value={theme} onValueChange={(value) => chooseTheme(value as Theme)}>
+              {THEME_CHOICES.map((choice) => (
+                <DropdownMenuRadioItem key={choice.value} value={choice.value}>
+                  <choice.icon {...icon} />
+                  {choice.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuItem {...item}>
           <CircleUserRound {...icon} />
           Account settings

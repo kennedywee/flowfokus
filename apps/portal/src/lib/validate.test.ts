@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createCheckInInput, createSaleInput, deskLocationInput, isSlug, recordPaymentInput, slugInput } from "./validate";
+import { createCheckInInput, createSaleInput, deskLocationInput, isSlug, recordPaymentInput, slugInput, themeInput } from "./validate";
 import { parseAmountToMinor } from "./format";
 
 const id = "0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
@@ -38,6 +38,12 @@ describe("write inputs", () => {
     const input = deskLocationInput({ slug: "chainsaw", location_id: id.toUpperCase(), extra: "x" } as never);
     expect(input).toEqual({ slug: "chainsaw", location_id: id });
     expect(() => deskLocationInput({ slug: "chainsaw", location_id: "front-desk" })).toThrow();
+  });
+
+  test("theme input accepts only system, light, or dark", () => {
+    expect(themeInput({ theme: "light", extra: "x" } as never)).toEqual({ theme: "light" });
+    expect(() => themeInput({ theme: "sepia" })).toThrow();
+    expect(() => themeInput({ theme: "Dark" })).toThrow();
   });
 
   test("ids must be UUIDs", () => {

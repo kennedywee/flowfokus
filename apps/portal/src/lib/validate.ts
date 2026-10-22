@@ -62,6 +62,25 @@ export function deskLocationInput(value: unknown): DeskLocationInput {
   return { slug: slugField(input), location_id: uuidField(input, "location_id") };
 }
 
+/** The colour theme. `system` follows the operating system. */
+export const THEMES = ["system", "light", "dark"] as const;
+export type Theme = (typeof THEMES)[number];
+
+export function isTheme(value: unknown): value is Theme {
+  return typeof value === "string" && (THEMES as ReadonlyArray<string>).includes(value);
+}
+
+export interface ThemeInput {
+  theme: Theme;
+}
+
+/** The theme is a display preference, not a write to Rails. */
+export function themeInput(value: unknown): ThemeInput {
+  const input = record(value);
+  if (!isTheme(input.theme)) throw new InputError("Invalid theme");
+  return { theme: input.theme };
+}
+
 export interface IdInput extends SlugInput {
   id: string;
 }

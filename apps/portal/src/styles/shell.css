@@ -93,8 +93,11 @@
 }
 .wordmark__text {
   flex: none;
+  display: inline-block;
   width: 104px;
   height: 13px;
+  background: var(--color-ink);
+  mask: url("../assets/flowfokus-wordmark.svg") center / 100% 100% no-repeat;
 }
 
 .sidebar__close,
@@ -763,6 +766,19 @@
   flex: none;
   width: 16px;
   height: 16px;
+}
+/* A submenu trigger stays lit while its submenu is open. */
+.menu__item[data-popup-open] {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.menu--sub {
+  width: 200px;
+}
+/* The check on the chosen radio item. Base UI renders it only when chosen. */
+.menu__check {
+  margin-left: auto;
+  color: var(--color-accent);
 }
 /* Right side of an item: the current value and a chevron for a submenu. */
 .menu__meta {

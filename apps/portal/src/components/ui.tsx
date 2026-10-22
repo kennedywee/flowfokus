@@ -11,7 +11,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import markUrl from "../assets/flowfokus-mark.svg?url";
-import wordmarkUrl from "../assets/flowfokus-wordmark.svg?url";
 import { failureMessage, formatDateTime, formatMoney } from "../lib/format";
 import type { Failure } from "../lib/result";
 import { Alert, AlertAction, AlertContent, AlertDescription, AlertTitle } from "./ui/alert";
@@ -353,7 +352,8 @@ export function Wordmark() {
   return (
     <span className="wordmark">
       <img className="wordmark__mark" src={markUrl} width={22} height={22} alt="" />
-      <img className="wordmark__text" src={wordmarkUrl} width={104} height={13} alt="Flowfokus" />
+      {/* Drawn as a CSS mask filled with ink, so it follows the theme. */}
+      <span className="wordmark__text" role="img" aria-label="Flowfokus" />
     </span>
   );
 }

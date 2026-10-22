@@ -7,7 +7,7 @@ records cover only features whose APIs are not implemented yet.
 
 The reference is the [Flowfokus Paper file](https://app.paper.design/file/01M5CMH3NK5Q37J3EJN86P3W5C/p-7-0).
 Its Components page supplies tabs, table rows, chat, integrations, and state
-controls. The portal keeps its Geist fonts, dark surfaces, hairline borders,
+controls. The portal keeps its Geist fonts, dark and light surfaces, hairline borders,
 status colors, and centered page column.
 
 ## API-backed screens

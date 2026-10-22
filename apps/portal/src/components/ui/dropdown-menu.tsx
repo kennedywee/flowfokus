@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /*
@@ -68,6 +69,56 @@ function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.
   )
 }
 
+/**
+ * A choice of one value. Each item shows a check when chosen. The menu stays
+ * open after a pick, so the person sees the change.
+ */
+function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
+  return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
+}
+
+function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
+  return (
+    <MenuPrimitive.RadioItem data-slot="dropdown-menu-radio-item" className={cn("menu__item", className)} {...props}>
+      {children}
+      <MenuPrimitive.RadioItemIndicator
+        className="menu__check"
+        render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />}
+      />
+    </MenuPrimitive.RadioItem>
+  )
+}
+
+/** A submenu. It opens on hover, on Enter, or on the Right arrow key. */
+function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
+  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+}
+
+function DropdownMenuSubTrigger({ className, ...props }: MenuPrimitive.SubmenuTrigger.Props) {
+  return (
+    <MenuPrimitive.SubmenuTrigger data-slot="dropdown-menu-sub-trigger" className={cn("menu__item", className)} {...props} />
+  )
+}
+
+function DropdownMenuSubContent({
+  className,
+  side = "inline-end",
+  sideOffset = 4,
+  alignOffset = -7,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuContent>) {
+  return (
+    <DropdownMenuContent
+      data-slot="dropdown-menu-sub-content"
+      className={cn("menu--sub", className)}
+      side={side}
+      sideOffset={sideOffset}
+      alignOffset={alignOffset}
+      {...props}
+    />
+  )
+}
+
 /** The right side of an item: a current value, a shortcut, or a submenu chevron. */
 function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return <span data-slot="dropdown-menu-shortcut" className={cn("menu__meta", className)} {...props} />
@@ -81,7 +132,12 @@ export {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 }

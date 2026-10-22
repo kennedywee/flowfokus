@@ -26,8 +26,20 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* The portal is dark only. `<html class="dark">` turns on shadcn's dark variants. */
-@custom-variant dark (&:is(.dark *));
+/*
+ * shadcn's `dark:` utilities follow the same choice as tokens.css: the `dark`
+ * class on <html>, or the operating system when <html> has no theme class.
+ */
+@custom-variant dark {
+    &:where(.dark, .dark *) {
+        @slot;
+    }
+    @media (prefers-color-scheme: dark) {
+        &:where(:root:not(.light), :root:not(.light) *) {
+            @slot;
+        }
+    }
+}
 
 @theme inline {
     --color-sidebar-ring: var(--sidebar-ring);
@@ -72,7 +84,8 @@
 
 /*
  * shadcn theme variables, mapped to our tokens in tokens.css. shadcn components
- * read these names; change a colour in tokens.css, not here. `--accent` is the
+ * read these names; change a colour in tokens.css, not here. The tokens carry
+ * both themes, so this block serves light and dark. `--accent` is the
  * neutral hover surface in shadcn, not our blue accent.
  */
 :root {
