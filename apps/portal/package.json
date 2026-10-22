@@ -9,6 +9,7 @@
     "preview": "vite preview --port 4001 --strictPort",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "bun test",
+    "smoke:session": "node scripts/smoke-session.mjs",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

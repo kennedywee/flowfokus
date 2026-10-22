@@ -11,6 +11,7 @@
     "check:docker": "bash scripts/check-docker",
     "smoke": "node scripts/smoke.mjs",
     "smoke:auth": "node scripts/smoke-auth.mjs",
+    "smoke:session": "bun run --cwd apps/portal smoke:session",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
     "contract:check": "bash scripts/contract-check",
     "typecheck": "bun run --cwd packages/api typecheck && bun run --cwd apps/portal typecheck && bun run --cwd apps/site typecheck",
