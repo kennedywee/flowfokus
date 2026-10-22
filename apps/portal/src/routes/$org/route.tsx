@@ -14,7 +14,7 @@ import {
   MapPin,
   Menu,
   Monitor,
-  Moon,
+  MoonStar,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -433,9 +433,9 @@ function AppSidebar({ data }: { data: OrganizationData }) {
 }
 
 const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: LucideIcon }> = [
-  { value: "system", label: "System", icon: Monitor },
   { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
+  { value: "dark", label: "Dark", icon: MoonStar },
+  { value: "system", label: "System", icon: Monitor },
 ];
 
 /** Sets the class that tokens.css reads. No class means follow the operating system. */
@@ -460,7 +460,7 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
   // Shown at once, before the cookie is saved and the root route reloads.
   const [pending, setPending] = useState<Theme | null>(null);
   const theme = pending ?? saved;
-  const current = THEME_CHOICES.find((choice) => choice.value === theme) ?? THEME_CHOICES[0]!;
+  const current = THEME_CHOICES.find((choice) => choice.value === theme)!;
 
   async function chooseTheme(next: Theme) {
     if (next === theme) return;

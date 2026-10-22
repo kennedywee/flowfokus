@@ -70,8 +70,8 @@ function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.
 }
 
 /**
- * A choice of one value. Each item shows a check when chosen. The menu stays
- * open after a pick, so the person sees the change.
+ * A choice of one value. The chosen item shows a check on its left. The menu
+ * stays open after a pick, so the person sees the change.
  */
 function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
@@ -80,11 +80,11 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
 function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.RadioItem.Props) {
   return (
     <MenuPrimitive.RadioItem data-slot="dropdown-menu-radio-item" className={cn("menu__item", className)} {...props}>
+      {/* The slot keeps its width when empty, so every label lines up. */}
+      <span className="menu__check">
+        <MenuPrimitive.RadioItemIndicator render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />} />
+      </span>
       {children}
-      <MenuPrimitive.RadioItemIndicator
-        className="menu__check"
-        render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />}
-      />
     </MenuPrimitive.RadioItem>
   )
 }
@@ -103,7 +103,8 @@ function DropdownMenuSubTrigger({ className, ...props }: MenuPrimitive.SubmenuTr
 function DropdownMenuSubContent({
   className,
   side = "inline-end",
-  sideOffset = 4,
+  // Measured from the trigger, which sits 7px inside the menu edge: an 8px gap.
+  sideOffset = 15,
   alignOffset = -7,
   ...props
 }: React.ComponentProps<typeof DropdownMenuContent>) {

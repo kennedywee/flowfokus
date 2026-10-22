@@ -772,13 +772,17 @@
   background: var(--color-hover);
   color: var(--color-ink);
 }
+/* A submenu is as wide as its items. */
 .menu--sub {
-  width: 200px;
+  width: auto;
+  min-width: 0;
 }
-/* The check on the chosen radio item. Base UI renders it only when chosen. */
+/* The check column of a radio item. Base UI renders the check only when chosen. */
 .menu__check {
-  margin-left: auto;
-  color: var(--color-accent);
+  flex: none;
+  display: inline-flex;
+  width: 16px;
+  color: var(--color-ink);
 }
 /* Right side of an item: the current value and a chevron for a submenu. */
 .menu__meta {
