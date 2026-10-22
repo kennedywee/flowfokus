@@ -4,6 +4,7 @@ import { Blocked } from "../components/Blocked";
 import { OrganizationChoices, SignInLink, SignOutForm } from "../components/Session";
 import { FailureNotice, Notice } from "../components/ui";
 import { getAccess, listMyOrganizations } from "../lib/staff.functions";
+import { startOrganization } from "../lib/start";
 
 /** The seeded organization the local demo actor belongs to. */
 const DEMO_SLUG = "chainsaw";
@@ -17,8 +18,9 @@ interface StartSearch {
  * The portal start.
  *
  * - Signed out: a sign-in button.
- * - Signed in with one organization: opens it.
- * - Signed in with more: a list to choose from.
+ * - Signed in: opens the organization the session holds, which the user
+ *   picked at WorkOS sign-in. With one organization, opens that one.
+ * - Signed in with more and none held by the session: a list to choose from.
  * - The local demo opens its one organization.
  * - Without staff access, it says why nothing can open.
  */
@@ -36,9 +38,8 @@ export const Route = createFileRoute("/")({
     if (!organizations.ok && organizations.error.code === "signed_out") {
       return { view: "signed_out", failed: false } as const;
     }
-    if (organizations.ok && organizations.data.length === 1) {
-      throw redirect({ to: "/$org", params: { org: organizations.data[0]!.slug }, replace: true });
-    }
+    const slug = organizations.ok ? startOrganization(organizations.data) : null;
+    if (slug) throw redirect({ to: "/$org", params: { org: slug }, replace: true });
     return { view: "choose", user, organizations } as const;
   },
   component: Start,
@@ -57,7 +58,7 @@ function Start() {
 
   if (data.view === "signed_out") {
     return (
-      <Blocked title="Sign in to the staff portal" description="Use your staff account. You choose the organization after you sign in.">
+      <Blocked title="Sign in to the staff portal" description="Use your staff account. If you work at more than one organization, you pick one during sign-in.">
         {data.failed ? (
           <Notice tone="error" title="Sign-in did not finish" live>
             <p>The sign-in link expired or was already used. Start again.</p>

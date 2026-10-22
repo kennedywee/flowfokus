@@ -17,7 +17,7 @@ import type { Failure, Result } from "../lib/result";
 import { resolveApiBaseUrl, type PortalEnv } from "./access";
 import { currentAccessToken, currentOrganizationId, currentStaffAccess, refreshFor, signedInUser } from "./workos";
 
-export { currentStaffAccess, signedInUser };
+export { currentOrganizationId, currentStaffAccess, signedInUser };
 
 const dev = import.meta.env.DEV;
 

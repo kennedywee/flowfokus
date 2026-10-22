@@ -9,8 +9,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { Schemas } from "@flowfokus/api";
 import { toPublicAccess, type PublicAccess } from "../server/access";
-import { callStaff, currentStaffAccess, signedInUser, staffMemberships } from "../server/rails";
+import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, staffMemberships } from "../server/rails";
 import type { Result } from "./result";
+import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
   createCheckInInput,
   createMemberInput,
@@ -44,18 +45,14 @@ export const getAccess = createServerFn({ method: "GET" }).handler(async (): Pro
   return { access, user: access.kind === "workos" ? signedInUser() : null };
 });
 
-/** An organization the signed-in user can open. No WorkOS IDs reach the browser. */
-export interface StaffOrganizationChoice {
-  slug: string;
-  name: string;
-  role: string;
-}
+export type { StaffOrganizationChoice };
 
 export const listMyOrganizations = createServerFn({ method: "GET" }).handler(
   async (): Promise<Result<StaffOrganizationChoice[]>> => {
     const result = await staffMemberships();
     if (!result.ok) return result;
-    return { ok: true, data: result.data.map(({ slug, name, role }) => ({ slug, name, role })) };
+    // Read after the call: a refresh inside it can change the session.
+    return { ok: true, data: toOrganizationChoices(result.data, currentOrganizationId()) };
   },
 );
 
