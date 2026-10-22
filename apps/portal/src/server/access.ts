@@ -32,6 +32,12 @@ export interface PortalEnv {
   WORKOS_API_HTTPS?: string;
   /** Development only: the emulator origin as the browser reaches it, for example `http://localhost:4100`. */
   WORKOS_BROWSER_URL?: string;
+  /**
+   * Development only: comma-separated hosts the browser may use for sign-in,
+   * for example `localhost,127.0.0.1,100.89.45.88`. Only loopback, private,
+   * and Tailscale hosts count. Production builds ignore it.
+   */
+  FLOWFOKUS_DEV_AUTH_HOSTS?: string;
 }
 
 /** Why protected actions are not available. Safe to show in the browser. */
@@ -167,13 +173,13 @@ export function workosSetting(name: string, { dev, env }: AccessInput): string |
  * authorize or logout URL from that address to `WORKOS_BROWSER_URL`. Other
  * URLs, and every URL in a production build, pass through unchanged.
  */
-export function toBrowserUrl(url: string, { dev, env }: AccessInput): string {
-  if (!dev || !env.WORKOS_BROWSER_URL || !env.WORKOS_API_HOSTNAME) return url;
+export function toBrowserUrl(url: string, { dev, env }: AccessInput, browserUrl = env.WORKOS_BROWSER_URL): string {
+  if (!dev || !browserUrl || !env.WORKOS_API_HOSTNAME) return url;
   const scheme = env.WORKOS_API_HTTPS === "false" ? "http:" : "https:";
   const internal = new URL(`${scheme}//${env.WORKOS_API_HOSTNAME}${env.WORKOS_API_PORT ? `:${env.WORKOS_API_PORT}` : ""}`);
   const target = new URL(url);
   if (target.origin !== internal.origin) return url;
-  const browser = new URL(env.WORKOS_BROWSER_URL);
+  const browser = new URL(browserUrl);
   target.protocol = browser.protocol;
   target.host = browser.host;
   return target.toString();
@@ -187,10 +193,10 @@ export const WORKOS_API_ORIGIN = "https://api.workos.com";
  * the portal, which redirects there, so the Content Security Policy
  * `form-action` must allow it. Production is always `api.workos.com`.
  */
-export function workosBrowserOrigin({ dev, env }: AccessInput): string {
+export function workosBrowserOrigin({ dev, env }: AccessInput, browserUrl = env.WORKOS_BROWSER_URL): string {
   if (!dev) return WORKOS_API_ORIGIN;
   const candidates = [
-    env.WORKOS_BROWSER_URL,
+    browserUrl,
     env.WORKOS_API_HOSTNAME
       ? `${env.WORKOS_API_HTTPS === "false" ? "http" : "https"}://${env.WORKOS_API_HOSTNAME}${env.WORKOS_API_PORT ? `:${env.WORKOS_API_PORT}` : ""}`
       : undefined,
@@ -199,6 +205,106 @@ export function workosBrowserOrigin({ dev, env }: AccessInput): string {
     if (candidate && isUrl(candidate)) return new URL(candidate).origin;
   }
   return WORKOS_API_ORIGIN;
+}
+
+/** Hosts allowed for development sign-in when `FLOWFOKUS_DEV_AUTH_HOSTS` is unset. */
+export const DEFAULT_DEV_AUTH_HOSTS = "localhost,127.0.0.1,::1";
+
+/**
+ * True for a host that only this machine or its private network can reach:
+ * `localhost` and `*.localhost`, IPv4 loopback, RFC 1918 private ranges, the
+ * Tailscale range `100.64.0.0/10`, IPv6 loopback, IPv6 unique local addresses
+ * (`fc00::/7`, Tailscale uses `fd7a:115c:a1e0::/48`), and Tailscale MagicDNS
+ * names (`*.ts.net`). Takes a URL hostname: lowercase, IPv6 in brackets.
+ */
+export function isPrivateDevHost(hostname: string): boolean {
+  if (hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".ts.net")) return true;
+  if (hostname === "[::1]") return true;
+  if (/^\[f[cd][0-9a-f]{2}:/.test(hostname)) return true;
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(hostname);
+  if (!ipv4) return false;
+  const [a = 0, b = 0] = ipv4.slice(1, 3).map(Number);
+  return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+}
+
+/** Reads one `FLOWFOKUS_DEV_AUTH_HOSTS` entry as a URL hostname, or `null` when it is not a bare host. */
+function devAuthHostname(entry: string): string | null {
+  const host = entry.trim().toLowerCase();
+  if (!host) return null;
+  const bracketed = host.includes(":") && !host.startsWith("[") ? `[${host}]` : host;
+  try {
+    const url = new URL(`http://${bracketed}`);
+    // Refuse ports, paths, and credentials: the entry must be the host alone.
+    if (url.host !== url.hostname || url.pathname !== "/" || url.username || url.search || url.hash) return null;
+    return url.hostname;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The hosts a browser may use for development sign-in. Entries that are not
+ * private (see `isPrivateDevHost`) are dropped, so a public name in the list
+ * never becomes a callback.
+ */
+export function devAuthHosts(env: PortalEnv): Set<string> {
+  const hosts = new Set<string>();
+  for (const entry of (env.FLOWFOKUS_DEV_AUTH_HOSTS ?? DEFAULT_DEV_AUTH_HOSTS).split(",")) {
+    const hostname = devAuthHostname(entry);
+    if (hostname && isPrivateDevHost(hostname)) hosts.add(hostname);
+  }
+  return hosts;
+}
+
+/** Where sign-in, the callback, and sign-out lead for one request. */
+export interface AuthOrigins {
+  /** False in development when the request host may not sign in. Always true in production. */
+  allowed: boolean;
+  /** The WorkOS `redirect_uri`: the portal callback. */
+  redirectUri: string;
+  /** The portal start page. WorkOS returns here after sign-out. */
+  home: string;
+  /** Development only: the emulator origin for this browser. */
+  browserUrl: string | undefined;
+}
+
+/**
+ * Picks the callback and return addresses for a request.
+ *
+ * Production always uses `WORKOS_REDIRECT_URI` and its origin, whatever host
+ * the request names.
+ *
+ * Development follows the address the browser used, so sign-in works from
+ * `localhost` and from this machine's Tailscale or private IP. The request host
+ * must be in `FLOWFOKUS_DEV_AUTH_HOSTS` (private hosts only), and the scheme
+ * and port must match `WORKOS_REDIRECT_URI`. The emulator address keeps the
+ * scheme and port of `WORKOS_BROWSER_URL` and takes the request host. Any other
+ * host gets the configured addresses and `allowed: false`. Only the request URL is read;
+ * `X-Forwarded-Host` and similar headers are ignored.
+ */
+export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput): AuthOrigins {
+  const configured = new URL(env.WORKOS_REDIRECT_URI ?? "");
+  const fallback: AuthOrigins = {
+    allowed: !dev,
+    redirectUri: configured.toString(),
+    home: new URL("/", configured).toString(),
+    browserUrl: dev ? env.WORKOS_BROWSER_URL : undefined,
+  };
+  if (!dev) return fallback;
+
+  const current = new URL(request.url);
+  if (current.protocol !== configured.protocol || current.port !== configured.port) return fallback;
+  if (current.hostname !== configured.hostname && !devAuthHosts(env).has(current.hostname)) return fallback;
+
+  const redirect = new URL(configured);
+  redirect.hostname = current.hostname;
+  let browserUrl = env.WORKOS_BROWSER_URL;
+  if (browserUrl && isUrl(browserUrl)) {
+    const browser = new URL(browserUrl);
+    browser.hostname = current.hostname;
+    browserUrl = browser.origin;
+  }
+  return { allowed: true, redirectUri: redirect.toString(), home: new URL("/", redirect).toString(), browserUrl };
 }
 
 /**

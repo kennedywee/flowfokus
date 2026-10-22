@@ -15,7 +15,7 @@ const boundaryMiddleware = createMiddleware().server(async ({ request, handlerTy
   const { formTargets } = await import("./server/workos");
   const nonce = createNonce();
   const result = await next({ context: { nonce } });
-  return { ...result, response: withHeaders(result.response, securityHeaders(nonce, dev, formTargets())) };
+  return { ...result, response: withHeaders(result.response, securityHeaders(nonce, dev, formTargets(request))) };
 });
 
 /**

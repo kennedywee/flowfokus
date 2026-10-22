@@ -13,7 +13,18 @@ import { env } from "cloudflare:workers";
 import { configure } from "@workos/authkit-session";
 import { authkitMiddleware, getAuthkit, getAuthKitContextOrNull } from "@workos/authkit-tanstack-react-start";
 import { SIGN_OUT_PATH } from "./boundary";
-import { resolveProductionAccess, resolveStaffAccess, safeReturnPath, toBrowserUrl, workosBrowserOrigin, workosSetting, type PortalEnv, type StaffAccess } from "./access";
+import {
+  resolveAuthOrigins,
+  resolveProductionAccess,
+  resolveStaffAccess,
+  safeReturnPath,
+  toBrowserUrl,
+  workosBrowserOrigin,
+  workosSetting,
+  type AuthOrigins,
+  type PortalEnv,
+  type StaffAccess,
+} from "./access";
 
 const dev = import.meta.env.DEV;
 
@@ -28,10 +39,15 @@ export function currentStaffAccess(): StaffAccess {
   return resolveProductionAccess(portalEnv());
 }
 
+/** The callback, start page, and emulator address for this request. See `resolveAuthOrigins`. */
+function authOrigins(request: Request): AuthOrigins {
+  return resolveAuthOrigins(request, { dev, env: portalEnv() });
+}
+
 /** Extra CSP `form-action` origins: the WorkOS sign-out page, when WorkOS sign-in is on. */
-export function formTargets(): string[] {
+export function formTargets(request: Request): string[] {
   if (currentStaffAccess().kind !== "workos") return [];
-  return [workosBrowserOrigin({ dev, env: portalEnv() })];
+  return [workosBrowserOrigin({ dev, env: portalEnv() }, authOrigins(request).browserUrl)];
 }
 
 let configured = false;
@@ -155,16 +171,21 @@ export function currentOrganizationId(): string | null {
   return requestSession()?.tokens?.organizationId ?? null;
 }
 
-/** Starts sign-in: sets the PKCE verifier cookie and returns the AuthKit URL. */
-export async function signInUrl(returnTo: string | null): Promise<string> {
+/**
+ * Starts sign-in: sets the PKCE verifier cookie and returns the AuthKit URL,
+ * or `null` when development sign-in is not allowed from this host. The callback address is chosen per request and passed to the SDK, which
+ * seals it into the PKCE state. Nothing global changes.
+ */
+export async function signInUrl(request: Request, returnTo: string | null): Promise<string | null> {
+  const origins = authOrigins(request);
+  if (!origins.allowed) return null;
   configureWorkos();
   const authkit = await getAuthkit();
-  const context = getAuthKitContextOrNull();
   const { url } = await authkit.createSignIn(undefined, {
     returnPathname: safeReturnPath(returnTo),
-    ...(context?.redirectUri ? { redirectUri: context.redirectUri } : {}),
+    redirectUri: origins.redirectUri,
   });
-  return toBrowserUrl(url, { dev, env: portalEnv() });
+  return toBrowserUrl(url, { dev, env: portalEnv() }, origins.browserUrl);
 }
 
 function sessionIdFrom(accessToken: string): string | null {
@@ -181,10 +202,12 @@ function sessionIdFrom(accessToken: string): string | null {
 /**
  * Ends the session: clears the cookie and returns where to send the browser.
  * With a session, that is the WorkOS logout URL, which ends the WorkOS session
- * and returns to `returnTo`. Without one, it is `returnTo` itself.
+ * and returns to the portal start page. Without one, it is the start page.
  */
-export async function signOut(request: Request, returnTo: string): Promise<{ location: string; cookies: string[] }> {
+export async function signOut(request: Request): Promise<{ location: string; cookies: string[] }> {
   configureWorkos();
+  const origins = authOrigins(request);
+  const returnTo = origins.home;
   const authkit = await getAuthkit();
   let sessionId: string | null = null;
   try {
@@ -201,7 +224,7 @@ export async function signOut(request: Request, returnTo: string): Promise<{ loc
 
   const { logoutUrl, response, headers } = await authkit.signOut(sessionId, { returnTo });
   return {
-    location: toBrowserUrl(logoutUrl, { dev, env: portalEnv() }),
+    location: toBrowserUrl(logoutUrl, { dev, env: portalEnv() }, origins.browserUrl),
     cookies: response?.headers.getSetCookie() ?? headerList(headers),
   };
 }

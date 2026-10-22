@@ -12,6 +12,11 @@ WORKOS_API_HOSTNAME=localhost
 WORKOS_API_PORT=4100
 WORKOS_API_HTTPS=false
 WORKOS_BROWSER_URL=http://localhost:4100
+# Hosts the browser may use for sign-in: loopback, private, or Tailscale only.
+# The callback and emulator address follow the host the browser used. Add this
+# machine's Tailscale IP to sign in from another device. Use the same list as
+# the emulator's WORKOS_EMULATE_REDIRECT_HOSTS.
+FLOWFOKUS_DEV_AUTH_HOSTS=localhost,127.0.0.1,::1
 
 # Optional: skip sign-in and act as the seeded demo owner. Needs the same
 # token on the Rails server. Off by default.

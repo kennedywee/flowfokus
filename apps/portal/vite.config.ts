@@ -22,6 +22,7 @@ const LOCAL_VARS = [
   "WORKOS_API_PORT",
   "WORKOS_API_HTTPS",
   "WORKOS_BROWSER_URL",
+  "FLOWFOKUS_DEV_AUTH_HOSTS",
 ] as const;
 
 function localVars(): Record<string, string> {

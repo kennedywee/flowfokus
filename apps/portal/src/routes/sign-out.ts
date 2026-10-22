@@ -11,9 +11,8 @@ export const Route = createFileRoute("/sign-out")({
     handlers: {
       POST: async ({ request }) => {
         const { currentStaffAccess, signOut } = await import("../server/workos");
-        const home = new URL("/", request.url).toString();
-        if (currentStaffAccess().kind !== "workos") return seeOther(home, []);
-        const { location, cookies } = await signOut(request, home);
+        if (currentStaffAccess().kind !== "workos") return seeOther("/", []);
+        const { location, cookies } = await signOut(request);
         return seeOther(location, cookies);
       },
     },
