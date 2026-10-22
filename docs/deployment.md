@@ -1,19 +1,19 @@
 # Deployment candidate
 
-Sprint 1 builds a Rails container and two Cloudflare Worker bundles. It does not publish or deploy them. The local demo is the complete test path until WorkOS credentials are available.
+Sprint 1 builds a Rails container and two Cloudflare Worker bundles. It does not publish or deploy them. Local staff authentication uses WorkOS Emulate. Live WorkOS verification still needs credentials.
 
 ## What can run now
 
 - PostgreSQL and the Rails API run locally.
-- The staff portal can use a fixed local demo actor.
+- The staff portal uses local emulator sign-in, with an optional fixed demo actor. See [Local staff authentication](local-auth.md).
 - The gym site can show public organization details and offers.
 - Production builds serve public pages. Protected requests fail closed while real authentication is unavailable.
 
-Do not use this candidate for live member or payment data. WorkOS sign-in and token verification are a next-sprint release requirement. Manual payment recording does not collect money from a bank or card processor.
+Do not use this candidate for live member or payment data. Live WorkOS sign-in and token verification must be verified before release. Manual payment recording does not collect money from a bank or card processor.
 
 ## Build and check
 
-For a fully containerized local demo, follow [Run with Docker](../README.md#run-with-docker). Prepare the database explicitly with `docker compose run --rm server bin/rails db:prepare`, then start the stack with `docker compose up`. PostgreSQL, the API, and the two Worker emulators run in Docker. Database preparation is separate from normal app startup.
+For a fully containerized local demo, follow [Run with Docker](../README.md#run-with-docker). Prepare the database explicitly with `docker compose run --rm server bin/rails db:prepare`, then start the stack with `docker compose up`. PostgreSQL, WorkOS Emulate, the API, and the two Worker emulators run in Docker. Database preparation is separate from normal app startup.
 
 Every app has its own Dockerfile and image. Compose uses the server's `Dockerfile.dev` and the web apps' `development` targets. The server's default `Dockerfile` builds the production API. Each web app's `worker-build` target builds only its own Cloudflare bundle, using the repository root as the build context:
 
@@ -29,7 +29,7 @@ bun run check
 docker build -t flowfokus-server:local apps/server
 ```
 
-With the apps running through `bun run dev`, run `bun run smoke` in another terminal. This creates a test member and records a sale, partial payments, fulfillment, and check-ins in the local demo database. It checks retries as well as successful access. It refuses a remote API URL.
+With the apps running through `bun run dev`, run `bun run smoke:auth` in another terminal. This creates a test member and records a sale, partial payments, fulfillment, and check-ins in the local demo database. It checks retries as well as successful access. It refuses a remote API URL.
 
 CI runs these checks on pushes to `master` and pull requests. A tag matching `v*` or a manual run of **Build release candidate** packages the verified image, Worker outputs, OpenAPI contract, and a SHA-256 manifest as one workflow artifact. This workflow needs no cloud account credentials. It does not publish a GitHub Release or registry image yet.
 
@@ -63,6 +63,12 @@ The next sprint must configure the API URL, the portal host, the wildcard gym ro
 - Confirm duration, activation, renewal, refund, and access override policies from [Decisions](decisions.md).
 
 Verify AuthKit on Workers, CSRF checks, organization switching, revoked access, and webhook reconciliation with the real environment. These checks are required before calling the system production-ready.
+
+The portal and Rails keep production staff operations disabled until
+`WORKOS_VERIFIED=true` is configured after real WorkOS integration checks pass.
+Do not set this flag to bypass verification. Rails refuses local or HTTP issuer
+and JWKS URLs in production, and production portal builds ignore emulator host
+settings.
 
 ## Release lab patterns
 

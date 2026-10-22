@@ -24,6 +24,7 @@ Status of each design decision. The rules themselves live in the linked document
 | TanStack Start is the BFF. Encrypted, host-only session cookie from the WorkOS TanStack Start SDK. Start calls Rails with Bearer tokens. Rails accepts Bearer tokens only. | [Authentication](authentication.md#design-tanstack-start-is-the-bff) |
 | API areas by path: `/staff`, `/member`, `/public`. The gym is named by the `Flowfokus-Organization` header. Rails never reads host headers. | [Authentication](authentication.md#api-areas) |
 | Workers send a shared secret. Rails trusts the forwarded client IP only with it. | [Authentication](authentication.md#worker-secret-and-client-ip) |
+| Local staff authentication uses WorkOS Emulate in Docker with seeded fake identities. Live WorkOS staging remains an integration check. | [Local staff authentication](local-auth.md) |
 | Local gym sites run on `<slug>.localhost`. | [Monorepo](monorepo.md#local-development) |
 | Mobile, when built, uses WorkOS PKCE and Bearer tokens. | [Authentication](authentication.md#mobile) |
 | `Organization` is the tenant, not `Account`. Branches are `Location`s. | [Identity](identity.md#organization) |

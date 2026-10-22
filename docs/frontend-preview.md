@@ -13,8 +13,9 @@ status colors, and centered page column.
 ## API-backed screens
 
 - Top bar switchers: organization, actor, and locations from Rails. The
-  organization list holds only the open organization until Rails has a list
-  endpoint. The portal start, `/`, opens the demo organization; it has no page. The chosen desk location is an httpOnly cookie per organization. It
+  organization list comes from `/staff/memberships`. The portal start, `/`,
+  offers sign-in, opens a single organization, or shows an organization chooser.
+  The optional fixed demo actor opens Chainsaw directly. The chosen desk location is an HttpOnly cookie per organization. It
   sets the default location for check-in and new sales. Create organization and
   Add location are shown but do nothing yet.
 - Overview: membership counts, recent visits, and check-in.
@@ -51,7 +52,7 @@ Existing `/<org>/soon?page=…` bookmarks redirect to the new routes.
 
 Use the Docker stack and open `http://localhost:4001`, or the host's Tailscale IP
 on port 4001. The Rails server and database must be running for API-backed screens.
-Local demo access remains explicit and disabled in production.
+Local staff sign-in uses WorkOS Emulate. See [Local staff authentication](local-auth.md). The optional fixed demo actor remains explicit and disabled in production.
 
 ```sh
 docker compose up -d

@@ -56,7 +56,7 @@ There is no default `app/services/` layer. Business behavior belongs in models a
 
 ## Development and testing
 
-- Local development uses the WorkOS staging environment. This is a WorkOS setting; Flowfokus has no staging deployment.
+- Local staff development uses WorkOS Emulate in Docker. See [Local staff authentication](local-auth.md). Live integration checks use WorkOS staging; Flowfokus has no staging deployment.
 - Most tests must not call live WorkOS APIs. Use test doubles. Authentication integration tests can use staging.
 - Every API response is checked against `openapi.yaml`. See [Monorepo](monorepo.md#api-contract).
 - Test coverage must include: authentication, permission enforcement, member ownership, cross-organization isolation, staff and member isolation, organization switching, role changes and revoked access, and WorkOS sync.

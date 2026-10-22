@@ -49,9 +49,13 @@ The project uses `db/schema.rb`, not `db/structure.sql`. Keep it that way.
 `Dockerfile` builds a production image. It never runs migrations on boot. Run them as a
 separate release step: `docker run --rm -e DATABASE_URL=... -e SECRET_KEY_BASE=... IMAGE bin/rails db:migrate`.
 
-## Sprint 1 limits
+## Authentication
 
-- WorkOS JWT/JWKS verification is not implemented. Without demo mode, protected areas return
-  `503 auth_not_configured` or `503 auth_unavailable`. `/member/*` always fails closed.
+- Rails verifies WorkOS RS256 signatures, issuer, expiry, client claims, and
+  organization access. Local staff sign-in uses WorkOS Emulate in Docker.
+  See [Local staff authentication](../../docs/local-auth.md).
+- Production requires real WorkOS settings and `WORKOS_VERIFIED=true` after
+  integration verification. HTTP or local issuer and JWKS URLs are rejected.
+  Missing or unverified settings fail closed. `/member/*` remains unavailable.
 - Demo authentication works only in development and test, with a fixed seeded actor.
 - The Worker secret and client IP middleware is not implemented yet.

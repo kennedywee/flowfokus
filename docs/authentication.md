@@ -2,6 +2,15 @@
 
 How staff and members sign in. Who they are and what they can access is in [Identity](identity.md) and [Authorization](authorization.md).
 
+## Local development
+
+Staff development uses WorkOS Emulate in Docker with fake users and fixed IDs.
+See [Local staff authentication](local-auth.md) for setup and verification.
+Plain HTTP development uses the encrypted HttpOnly `hf_session` cookie; HTTPS
+uses `__Host-hf_session`. Both are host-only.
+The flows below describe the target integration. Member sign-in, live WorkOS
+sync, and production deployment still need separate verification.
+
 ## Hosts
 
 | Host | App | Users |
