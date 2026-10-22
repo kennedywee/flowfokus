@@ -54,6 +54,8 @@ Answer **no** when the CLI asks to overwrite an existing file: the files in `src
 - **Layers.** `src/styles.css` loads Tailwind first, then our files into the `base` and `components` layers. Tailwind utilities on an element still win over our classes. Do not add rules outside a layer.
 - **Theme.** The shadcn variables (`--background`, `--primary`, and the others) point at our tokens. The portal is dark only.
 - **Helpers.** `src/components/ui.tsx` builds the portal patterns (status pills, notices, cards with a heading, fields with hints and errors) from the shadcn parts. Use them in pages.
+- **Pickers.** Use `NativeSelect` for a short, plain list. Use `Select` only when options need icons or details. Use `Combobox` (`src/components/Combobox.tsx`) to search a long list. Use `DatePicker` (`src/components/DatePicker.tsx`) for a date. It takes and returns `"YYYY-MM-DD"`.
+- **Outside Base UI.** `Calendar` uses react-day-picker. `Command` uses cmdk, which brings a few Radix packages with it.
 
 ## Request boundary
 
