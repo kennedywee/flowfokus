@@ -16,22 +16,38 @@ LOCAL_STAFF = [
 ].freeze
 
 ActiveRecord::Base.transaction do
+  # Once WorkOS sync has written a user (workos:reconcile or a webhook), sync
+  # owns its email and names. Seeds only create missing users and fill users
+  # that sync has not touched.
   staff = LOCAL_STAFF.to_h do |attributes|
     user = User.find_or_initialize_by(workos_id: attributes[:workos_id])
-    user.update!(attributes.except(:workos_id))
+    user.update!(attributes.except(:workos_id)) unless user.workos_updated_at || user.workos_deleted?
     [ attributes[:workos_id], user ]
   end
   owner = staff.fetch(demo::USER[:workos_id])
 
-  # The synced copy of WorkOS memberships. WorkOS stays the authority.
+  # The synced copy of WorkOS memberships. WorkOS stays the authority, so seeds
+  # only fill a gap before the first sync. They never change a copy that sync
+  # wrote (for example an inactive one), never touch removed copies kept for
+  # history, and never add a copy where sync removed one or for a deleted user
+  # or gym. Only the live copy counts; tombstones may exist beside it.
   seed_membership = ->(organization, workos_id, role) do
-    organization.organization_memberships.find_or_initialize_by(user: staff.fetch(workos_id))
-      .update!(role:, status: "active")
+    user = staff.fetch(workos_id)
+    return if user.workos_deleted? || organization.workos_deleted?
+
+    memberships = organization.organization_memberships.where(user:)
+    membership = memberships.live.first
+    return if membership&.synced_from_workos?
+    return if membership.nil? && memberships.where.not(workos_deleted_at: nil).exists?
+
+    (membership || memberships.new).update!(role:, status: "active")
   end
 
   seed_organization = lambda do |slug:, workos_id:, name:, published:, timezone: "Asia/Kuala_Lumpur", currency: "MYR"|
+    # Flowfokus owns gym settings. After sync has written the gym, sync owns its name.
     Organization.find_or_initialize_by(slug:).tap do |organization|
-      organization.update!(workos_id:, name:, published:, timezone:, currency:)
+      organization.name = name unless organization.workos_updated_at
+      organization.update!(workos_id:, published:, timezone:, currency:)
     end
   end
 
