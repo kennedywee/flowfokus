@@ -1,6 +1,21 @@
 name: flowfokus
 
 services:
+  workos:
+    container_name: flowfokus-workos
+    image: ghcr.io/workos/emulate:0.16.0
+    init: true
+    command: ["--host", "0.0.0.0", "--interactive-password", "--issuer", "http://localhost:4100"]
+    volumes:
+      - ./workos-emulate.config.yaml:/app/workos-emulate.config.yaml:ro
+    ports:
+      - "127.0.0.1:4100:4100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4100/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   server:
     container_name: flowfokus-server
     build:
@@ -12,8 +27,11 @@ services:
       RAILS_ENV: development
       DATABASE_URL: postgres://flowfokus:flowfokus@db:5432/flowfokus_development
       SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
-      FLOWFOKUS_DEMO_MODE: "true"
+      FLOWFOKUS_DEMO_MODE: "${FLOWFOKUS_DEMO_MODE:-false}"
       FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
+      WORKOS_CLIENT_ID: client_flowfokus_local
+      WORKOS_ISSUER: http://localhost:4100/user_management/client_flowfokus_local
+      WORKOS_JWKS_URL: http://workos:4100/sso/jwks/client_flowfokus_local
       RAILS_DEVELOPMENT_HOSTS: server
       PIDFILE: /tmp/flowfokus-server.pid
     volumes:
@@ -22,6 +40,8 @@ services:
       - "0.0.0.0:4000:4000"
     depends_on:
       db:
+        condition: service_healthy
+      workos:
         condition: service_healthy
 
   portal:
@@ -34,15 +54,26 @@ services:
     init: true
     environment:
       API_BASE_URL: http://server:4000
-      FLOWFOKUS_DEMO_MODE: "true"
+      FLOWFOKUS_DEMO_MODE: "${FLOWFOKUS_DEMO_MODE:-false}"
       FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
+      WORKOS_CLIENT_ID: client_flowfokus_local
+      WORKOS_API_KEY: sk_test_default
+      WORKOS_REDIRECT_URI: http://localhost:4001/callback
+      WORKOS_COOKIE_PASSWORD: local-only-cookie-password-0123456789abcdef
+      WORKOS_API_HOSTNAME: workos
+      WORKOS_API_PORT: "4100"
+      WORKOS_API_HTTPS: "false"
+      WORKOS_BROWSER_URL: http://localhost:4100
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
       - "0.0.0.0:4001:4001"
     depends_on:
-      - server
+      server:
+        condition: service_started
+      workos:
+        condition: service_healthy
 
   site:
     container_name: flowfokus-site

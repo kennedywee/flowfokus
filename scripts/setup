@@ -7,7 +7,7 @@ for tool in bun ruby bundle docker; do
   command -v "$tool" >/dev/null || { echo "Missing $tool. Run mise install and install Docker." >&2; exit 1; }
 done
 
-docker compose up -d --wait db
+docker compose up -d --wait db workos
 bun install --frozen-lockfile
 for app in portal site; do
   if [[ ! -f "apps/$app/.dev.vars" ]]; then

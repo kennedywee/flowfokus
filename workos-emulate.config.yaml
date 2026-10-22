@@ -1,0 +1,92 @@
+# Fake identities for local development only. No email is sent.
+# IDs match the Rails seeds and stay stable when the emulator restarts.
+users:
+  - id: user_demo_chainsaw_owner
+    email: demo.owner@flowfokus.test
+    first_name: Demo
+    last_name: Owner
+    password: local-password
+    email_verified: true
+  - id: user_demo_chainsaw_receptionist
+    email: receptionist@example.com
+    first_name: Demo
+    last_name: Receptionist
+    password: local-password
+    email_verified: true
+  - id: user_demo_ironworks_owner
+    email: ironworks.owner@example.com
+    first_name: Ironworks
+    last_name: Owner
+    password: local-password
+    email_verified: true
+  - id: user_demo_multi_org
+    email: manager@example.com
+    first_name: Demo
+    last_name: Manager
+    password: local-password
+    email_verified: true
+
+organizations:
+  - id: org_demo_chainsaw
+    name: Chainsaw Gym
+    memberships:
+      - email: demo.owner@flowfokus.test
+        role: owner
+        status: active
+      - email: receptionist@example.com
+        role: receptionist
+        status: active
+      - email: manager@example.com
+        role: owner
+        status: active
+  - id: org_demo_ironworks
+    name: Ironworks Fitness
+    memberships:
+      - email: ironworks.owner@example.com
+        role: owner
+        status: active
+      - email: manager@example.com
+        role: receptionist
+        status: active
+
+roles:
+  - slug: owner
+    name: Owner
+    permissions:
+      - members:read
+      - members:create
+      - products:read
+      - purchases:read
+      - purchases:create
+      - purchases:fulfill
+      - payments:create
+      - check_ins:read
+      - check_ins:create
+  - slug: receptionist
+    name: Receptionist
+    permissions:
+      - members:read
+      - products:read
+      - purchases:read
+      - check_ins:read
+      - check_ins:create
+
+permissions:
+  - slug: members:read
+    name: Read members
+  - slug: members:create
+    name: Create members
+  - slug: products:read
+    name: Read offers
+  - slug: purchases:read
+    name: Read sales
+  - slug: purchases:create
+    name: Create sales
+  - slug: purchases:fulfill
+    name: Deliver access
+  - slug: payments:create
+    name: Record payments
+  - slug: check_ins:read
+    name: Read check-ins
+  - slug: check_ins:create
+    name: Check in members

@@ -2,9 +2,12 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/env.sh
-docker compose up -d --wait db
-export FLOWFOKUS_DEMO_MODE="${FLOWFOKUS_DEMO_MODE:-true}"
+docker compose up -d --wait db workos
+export FLOWFOKUS_DEMO_MODE="${FLOWFOKUS_DEMO_MODE:-false}"
 export FLOWFOKUS_DEMO_TOKEN="${FLOWFOKUS_DEMO_TOKEN:-flowfokus-local-demo-token}"
+export WORKOS_CLIENT_ID="${WORKOS_CLIENT_ID:-client_flowfokus_local}"
+export WORKOS_ISSUER="${WORKOS_ISSUER:-http://localhost:4100/user_management/client_flowfokus_local}"
+export WORKOS_JWKS_URL="${WORKOS_JWKS_URL:-http://127.0.0.1:4100/sso/jwks/client_flowfokus_local}"
 
 set -m
 pids=()

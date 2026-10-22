@@ -9,7 +9,7 @@ const slug = process.env.FLOWFOKUS_SMOKE_ORGANIZATION || 'chainsaw'
 const headers = {
   'Content-Type': 'application/json',
   'Flowfokus-Organization': slug,
-  Authorization: `Bearer ${process.env.FLOWFOKUS_DEMO_TOKEN || 'flowfokus-local-demo-token'}`,
+  Authorization: `Bearer ${process.env.FLOWFOKUS_ACCESS_TOKEN || process.env.FLOWFOKUS_DEMO_TOKEN || 'flowfokus-local-demo-token'}`,
 }
 async function call(path, { body, key, status, method = body ? 'POST' : 'GET' } = {}) {
   const response = await fetch(new URL(path, base), {
@@ -29,7 +29,7 @@ await call('/ready')
 const gym = await call('/public/organization')
 assert.equal(gym.slug, slug)
 const org = await call('/staff/organization')
-assert.equal(org.actor.demo, true, 'Expected the local demo actor')
+assert.equal(org.actor.demo, !process.env.FLOWFOKUS_ACCESS_TOKEN, 'Expected the selected authentication mode')
 const products = await call('/staff/products')
 const offer = products.find((product) => product.published && product.prices.some((price) => price.available && price.amount_minor > 1))
 assert.ok(offer, 'Seed a published paid offer first')
@@ -73,4 +73,4 @@ const detail = await call(`/staff/members/${member.id}`)
 assert.equal(detail.membership.periods.length, 1)
 assert.ok(detail.entitlements.some((right) => right.used_count === 1))
 console.log('PASS: public gym, member, denied access, sale retry, partial/manual payments, fulfillment retry, granted check-in, and single consumption.')
-console.log(`Demo member: ${member.id}. Smoke records remain in the local database.`)
+console.log(`Smoke member: ${member.id}. Smoke records remain in the local database.`)
