@@ -48,9 +48,13 @@ module Authentication
     end
 
     def user_for!(claims)
-      User.find_by(workos_id: claims.user_workos_id) ||
+      user = User.find_by(workos_id: claims.user_workos_id) ||
         fail_auth!(:service_unavailable, "auth_unavailable",
           claims.demo? ? "The demo user is missing. Run bin/rails db:seed." :
-            "This WorkOS user has no local record yet. Sync users from WorkOS, or run bin/rails db:seed locally.")
+            "This WorkOS user has no local record yet. Run bin/rails workos:reconcile, or bin/rails db:seed locally.")
+      # WorkOS deleted this identity. Its token may not have expired yet.
+      fail_auth!(:unauthorized, "invalid_token", "This WorkOS user was deleted.") if user.workos_deleted?
+
+      user
     end
 end

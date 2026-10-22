@@ -100,7 +100,8 @@ export interface paths {
          * The organizations the signed-in staff user can open.
          * @description Needs a Bearer token but no `Flowfokus-Organization` header. The list comes from the
          *     synced copy of WorkOS memberships and only helps navigation. Opening an organization
-         *     still needs a token issued for that organization.
+         *     still needs a token issued for that organization. Removed memberships and gyms
+         *     deleted in WorkOS are not listed.
          */
         get: operations["listStaffMemberships"];
         put?: never;
@@ -310,6 +311,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/webhooks/workos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Receives a signed WorkOS event.
+         * @description Called by WorkOS only. No Bearer token and no `Flowfokus-Organization` header.
+         *     Rails checks the `WorkOS-Signature` header against the raw body before it reads
+         *     any JSON: HMAC-SHA256 with `WORKOS_WEBHOOK_SECRET` over `<t>.<raw body>`, and
+         *     `t` (milliseconds) within 3 minutes of the server clock.
+         *
+         *     A verified event is saved to the event ledger before processing, then
+         *     processed in the background. A redelivered event answers 200 with
+         *     `duplicate: true` and changes nothing. Unsupported event types are saved
+         *     and ignored. Production answers 503 until `WORKOS_VERIFIED=true`.
+         */
+        post: operations["receiveWorkosWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -324,15 +353,44 @@ export interface components {
          * @description Stable machine-readable error code.
          *     - `bad_request` (400), `organization_required` (400), `idempotency_key_required` (400)
          *     - `unauthenticated` (401), `invalid_token` (401)
+         *     - `invalid_signature` (400, webhooks)
          *     - `forbidden` (403), `organization_mismatch` (403)
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
+         *     - `payload_too_large` (413, webhooks)
          *     - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
+         *     - `webhook_not_configured` (503, webhooks)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "invalid_signature" | "payload_too_large" | "webhook_not_configured";
+        /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
+        WorkosWebhookEvent: {
+            /** @description WorkOS event ID. Unique; redeliveries repeat it. */
+            id: string;
+            /** @example organization_membership.updated */
+            event: string;
+            data: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            created_at: string;
+        } & {
+            [key: string]: unknown;
+        };
+        WorkosWebhookReceipt: {
+            /** @description The WorkOS event ID. */
+            id: string;
+            event: string;
+            /**
+             * @description Ledger status. A new event is usually `pending`.
+             * @enum {string}
+             */
+            status: "pending" | "processed" | "ignored" | "failed";
+            /** @description True when the ledger already had this event. */
+            duplicate: boolean;
+        };
         ErrorResponse: {
             error: {
                 code: components["schemas"]["ErrorCode"];
@@ -1310,6 +1368,62 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    receiveWorkosWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description `t=<milliseconds since epoch>, v1=<hex HMAC-SHA256>` */
+                "WorkOS-Signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkosWebhookEvent"];
+            };
+        };
+        responses: {
+            /** @description The event is saved. Processing happens later. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["WorkosWebhookReceipt"];
+                    };
+                };
+            };
+            /** @description `invalid_signature` for a missing, malformed, mismatched, or expired signature. `bad_request` for a signed body that is not a WorkOS event. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description `payload_too_large`: the body is larger than 1 MB. */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description `webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
 }

@@ -5,6 +5,7 @@ module Staff
   # calls it before it knows which organization to open. The list comes from the
   # synced copy, so it only helps navigation. Opening an organization still needs
   # a token for that organization, which WorkOS issues only to active members.
+  # Observing the token fills gaps only; it never undoes a synced removal or role.
   class MembershipsController < ApplicationController
     include Authentication
 
@@ -17,7 +18,8 @@ module Staff
       end
 
       memberships = user.organization_memberships.active.joins(:organization)
-        .where.not(organizations: { workos_id: nil }).includes(:organization).order("organizations.name")
+        .where.not(organizations: { workos_id: nil }).where(organizations: { workos_deleted_at: nil })
+        .includes(:organization).order("organizations.name")
       # The demo token works for its one organization only.
       memberships = memberships.where(organizations: { workos_id: claims.organization_workos_id }) if claims.demo?
 

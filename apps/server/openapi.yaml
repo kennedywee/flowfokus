@@ -22,6 +22,7 @@ tags:
   - name: public
   - name: staff
   - name: member
+  - name: webhooks
 
 paths:
   /up:
@@ -141,7 +142,8 @@ paths:
       description: |
         Needs a Bearer token but no `Flowfokus-Organization` header. The list comes from the
         synced copy of WorkOS memberships and only helps navigation. Opening an organization
-        still needs a token issued for that organization.
+        still needs a token issued for that organization. Removed memberships and gyms
+        deleted in WorkOS are not listed.
       security:
         - bearerAuth: []
       responses:
@@ -662,6 +664,66 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /webhooks/workos:
+    post:
+      tags: [webhooks]
+      operationId: receiveWorkosWebhook
+      summary: Receives a signed WorkOS event.
+      description: |
+        Called by WorkOS only. No Bearer token and no `Flowfokus-Organization` header.
+        Rails checks the `WorkOS-Signature` header against the raw body before it reads
+        any JSON: HMAC-SHA256 with `WORKOS_WEBHOOK_SECRET` over `<t>.<raw body>`, and
+        `t` (milliseconds) within 3 minutes of the server clock.
+
+        A verified event is saved to the event ledger before processing, then
+        processed in the background. A redelivered event answers 200 with
+        `duplicate: true` and changes nothing. Unsupported event types are saved
+        and ignored. Production answers 503 until `WORKOS_VERIFIED=true`.
+      security: []
+      parameters:
+        - name: WorkOS-Signature
+          in: header
+          required: true
+          description: "`t=<milliseconds since epoch>, v1=<hex HMAC-SHA256>`"
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkosWebhookEvent"
+      responses:
+        "200":
+          description: The event is saved. Processing happens later.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/WorkosWebhookReceipt"
+        "400":
+          description: "`invalid_signature` for a missing, malformed, mismatched, or expired signature. `bad_request` for a signed body that is not a WorkOS event."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: "`payload_too_large`: the body is larger than 1 MB."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: "`webhook_not_configured`: no webhook secret, or WorkOS is not verified in production. `database_unavailable`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     organizationHeader:
@@ -760,12 +822,15 @@ components:
         Stable machine-readable error code.
         - `bad_request` (400), `organization_required` (400), `idempotency_key_required` (400)
         - `unauthenticated` (401), `invalid_token` (401)
+        - `invalid_signature` (400, webhooks)
         - `forbidden` (403), `organization_mismatch` (403)
         - `not_found` (404)
         - `idempotency_key_reused` (409)
+        - `payload_too_large` (413, webhooks)
         - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
+        - `webhook_not_configured` (503, webhooks)
       enum:
         - bad_request
         - organization_required
@@ -784,6 +849,46 @@ components:
         - auth_not_configured
         - auth_unavailable
         - database_unavailable
+        - invalid_signature
+        - payload_too_large
+        - webhook_not_configured
+
+    WorkosWebhookEvent:
+      type: object
+      description: A WorkOS event, as WorkOS sends it. Other fields are allowed and kept.
+      required: [id, event, data, created_at]
+      properties:
+        id:
+          type: string
+          description: WorkOS event ID. Unique; redeliveries repeat it.
+        event:
+          type: string
+          example: organization_membership.updated
+        data:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+      additionalProperties: true
+
+    WorkosWebhookReceipt:
+      type: object
+      additionalProperties: false
+      required: [id, event, status, duplicate]
+      properties:
+        id:
+          type: string
+          description: The WorkOS event ID.
+        event:
+          type: string
+        status:
+          type: string
+          enum: [pending, processed, ignored, failed]
+          description: Ledger status. A new event is usually `pending`.
+        duplicate:
+          type: boolean
+          description: True when the ledger already had this event.
 
     ErrorResponse:
       type: object

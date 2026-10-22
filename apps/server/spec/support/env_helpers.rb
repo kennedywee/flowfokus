@@ -26,7 +26,10 @@ RSpec.configure do |config|
       "WORKOS_CLIENT_ID" => example.metadata[:workos] ? WorkosHelpers::CLIENT_ID : nil,
       "WORKOS_ISSUER" => nil,
       "WORKOS_JWKS_URL" => nil,
-      "WORKOS_VERIFIED" => nil
+      "WORKOS_VERIFIED" => nil,
+      "WORKOS_API_KEY" => nil,
+      "WORKOS_API_BASE_URL" => nil,
+      "WORKOS_WEBHOOK_SECRET" => example.metadata[:webhook_secret] == false ? nil : WorkosSyncHelpers::WEBHOOK_SECRET
     ) { example.run }
   end
 end

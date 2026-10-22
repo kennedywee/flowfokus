@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -49,10 +49,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
     t.index ["organization_id", "checked_in_at"], name: "index_check_ins_on_organization_id_and_checked_in_at"
     t.index ["organization_id", "idempotency_key"], name: "index_check_ins_on_organization_id_and_idempotency_key", unique: true
     t.index ["recorded_by_user_id"], name: "index_check_ins_on_recorded_by_user_id"
-    t.check_constraint "denial_reason IS NULL OR (denial_reason::text = ANY (ARRAY['no_entitlement'::character varying, 'location_not_allowed'::character varying, 'usage_limit_reached'::character varying]::text[]))", name: "check_ins_denial_reason"
+    t.check_constraint "denial_reason IS NULL OR (denial_reason::text = ANY (ARRAY['no_entitlement'::character varying::text, 'location_not_allowed'::character varying::text, 'usage_limit_reached'::character varying::text]))", name: "check_ins_denial_reason"
     t.check_constraint "entry_method::text = 'staff'::text", name: "check_ins_entry_method"
     t.check_constraint "result::text = 'granted'::text AND denial_reason IS NULL AND entitlement_id IS NOT NULL OR result::text = 'denied'::text AND denial_reason IS NOT NULL AND entitlement_id IS NULL", name: "check_ins_result_shape"
-    t.check_constraint "result::text = ANY (ARRAY['granted'::character varying, 'denied'::character varying]::text[])", name: "check_ins_result"
+    t.check_constraint "result::text = ANY (ARRAY['granted'::character varying::text, 'denied'::character varying::text])", name: "check_ins_result"
   end
 
   create_table "entitlement_usages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -159,9 +159,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
     t.string "status", default: "active", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id", unique: true
+    t.datetime "workos_updated_at"
+    t.datetime "workos_deleted_at"
+    t.datetime "synced_at"
+    t.index ["organization_id", "user_id"], name: "index_organization_memberships_live", unique: true, where: "(workos_deleted_at IS NULL)"
+    t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id"
     t.index ["user_id"], name: "index_organization_memberships_on_user_id"
     t.index ["workos_id"], name: "index_organization_memberships_on_workos_id", unique: true
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'pending'::character varying]::text[])", name: "organization_memberships_status"
   end
 
   create_table "organizations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -173,6 +178,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
     t.boolean "published", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "workos_updated_at"
+    t.datetime "workos_deleted_at"
+    t.datetime "workos_synced_at"
     t.index ["slug"], name: "index_organizations_on_slug", unique: true
     t.index ["workos_id"], name: "index_organizations_on_workos_id", unique: true
     t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "organizations_currency_format"
@@ -196,7 +204,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
     t.index ["recorded_by_user_id"], name: "index_payments_on_recorded_by_user_id"
     t.index ["sale_id"], name: "index_payments_on_sale_id"
     t.check_constraint "amount_minor > 0", name: "payments_amount_positive"
-    t.check_constraint "payment_method::text = ANY (ARRAY['cash'::character varying, 'bank_transfer'::character varying]::text[])", name: "payments_payment_method"
+    t.check_constraint "payment_method::text = ANY (ARRAY['cash'::character varying::text, 'bank_transfer'::character varying::text])", name: "payments_payment_method"
   end
 
   create_table "prices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -296,7 +304,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
     t.string "last_name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "workos_updated_at"
+    t.datetime "workos_deleted_at"
     t.index ["workos_id"], name: "index_users_on_workos_id", unique: true
+  end
+
+  create_table "workos_events", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "workos_id", null: false
+    t.string "event_type", null: false
+    t.string "subject_id"
+    t.string "organization_workos_id"
+    t.datetime "occurred_at", null: false
+    t.jsonb "payload", null: false
+    t.string "status", default: "pending", null: false
+    t.string "outcome"
+    t.integer "attempts", default: 0, null: false
+    t.text "last_error"
+    t.datetime "processed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_workos_id", "event_type"], name: "index_workos_events_on_organization_workos_id_and_event_type"
+    t.index ["status", "created_at"], name: "index_workos_events_on_status_and_created_at"
+    t.index ["subject_id", "event_type"], name: "index_workos_events_on_subject_id_and_event_type"
+    t.index ["workos_id"], name: "index_workos_events_on_workos_id", unique: true
+    t.check_constraint "attempts >= 0", name: "workos_events_attempts_non_negative"
+    t.check_constraint "jsonb_typeof(payload) = 'object'::text", name: "workos_events_payload_object"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'processed'::character varying, 'ignored'::character varying, 'failed'::character varying]::text[])", name: "workos_events_status"
   end
 
   add_foreign_key "benefit_grants", "fulfillments", column: ["fulfillment_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -377,6 +410,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
       $function$
   SQL
 
+  create_function :prevent_workos_event_changes, sql_definition: <<-'SQL'
+      CREATE OR REPLACE FUNCTION public.prevent_workos_event_changes()
+       RETURNS trigger
+       LANGUAGE plpgsql
+      AS $function$
+      BEGIN
+        IF NEW.workos_id IS DISTINCT FROM OLD.workos_id
+          OR NEW.event_type IS DISTINCT FROM OLD.event_type
+          OR NEW.subject_id IS DISTINCT FROM OLD.subject_id
+          OR NEW.occurred_at IS DISTINCT FROM OLD.occurred_at
+          OR NEW.payload IS DISTINCT FROM OLD.payload THEN
+          RAISE EXCEPTION 'accepted WorkOS events are immutable' USING ERRCODE = 'check_violation';
+        END IF;
+        RETURN NEW;
+      END;
+      $function$
+  SQL
+
+  create_trigger :payments_immutable, sql_definition: <<-SQL
+      CREATE TRIGGER payments_immutable BEFORE UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION prevent_update()
+  SQL
+
   create_trigger :prices_immutable_terms, sql_definition: <<-SQL
       CREATE TRIGGER prices_immutable_terms BEFORE UPDATE ON public.prices FOR EACH ROW EXECUTE FUNCTION prevent_price_term_changes()
   SQL
@@ -385,7 +440,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_000004) do
       CREATE TRIGGER sale_line_items_immutable BEFORE UPDATE ON public.sale_line_items FOR EACH ROW EXECUTE FUNCTION prevent_update()
   SQL
 
-  create_trigger :payments_immutable, sql_definition: <<-SQL
-      CREATE TRIGGER payments_immutable BEFORE UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION prevent_update()
+  create_trigger :workos_events_immutable, sql_definition: <<-SQL
+      CREATE TRIGGER workos_events_immutable BEFORE UPDATE ON public.workos_events FOR EACH ROW EXECUTE FUNCTION prevent_workos_event_changes()
   SQL
 end

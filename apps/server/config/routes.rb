@@ -20,6 +20,10 @@ Rails.application.routes.draw do
     resources :check_ins, only: %i[index create]
   end
 
+  namespace :webhooks do
+    post "workos" => "workos#create"
+  end
+
   scope :member, module: :member_area, as: :member do
     resource :profile, only: :show
   end

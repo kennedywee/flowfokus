@@ -250,6 +250,66 @@ RSpec.describe "WorkOS access tokens", workos: true, demo: false do
     end
   end
 
+  describe "token observation after WorkOS sync" do
+    let(:token) { token_for(receptionist, role: "owner", permissions: receptionist_permissions) }
+
+    def synced_membership(**attributes)
+      chainsaw.organization_memberships.create!(user: receptionist, role: "receptionist", workos_id: "om_receptionist",
+        workos_updated_at: 1.minute.ago, synced_at: 1.minute.ago, **attributes)
+    end
+
+    it "does not undo a synced removal, while the unexpired token keeps its claims" do
+      synced_membership.tombstone!
+
+      api :get, "/staff/organization", token: token
+      expect(response).to have_http_status(:ok)
+      expect(data["actor"]["permissions"]).to match_array(receptionist_permissions)
+
+      api :get, "/staff/memberships", organization: nil, token: token
+      expect(data).to eq([])
+      expect(chainsaw.organization_memberships.live.where(user: receptionist)).to be_empty
+    end
+
+    it "does not overwrite a synced role or status" do
+      membership = synced_membership(status: "inactive")
+
+      api :get, "/staff/organization", token: token
+      api :get, "/staff/memberships", organization: nil, token: token
+
+      expect(data).to eq([])
+      expect(membership.reload).to have_attributes(role: "receptionist", status: "inactive")
+    end
+
+    it "does not add a copy after WorkOS deleted the membership" do
+      deliver_workos_event("organization_membership.deleted",
+        workos_membership_data("om_late", user_id: "user_late", organization_id: chainsaw.workos_id))
+      late = staff_user("user_late")
+
+      api :get, "/staff/memberships", organization: nil, token: token_for(late)
+
+      expect(response).to have_http_status(:ok)
+      expect(data).to eq([])
+    end
+
+    it "rejects a token for a user that WorkOS deleted" do
+      receptionist.update!(workos_deleted_at: Time.current)
+
+      api :get, "/staff/organization", token: token
+
+      expect(response).to have_http_status(:unauthorized)
+      expect(error_code).to eq("invalid_token")
+    end
+
+    it "hides a gym that WorkOS deleted from the organization list" do
+      synced_membership(status: "active")
+      chainsaw.update!(workos_deleted_at: Time.current)
+
+      api :get, "/staff/memberships", organization: nil, token: token
+
+      expect(data).to eq([])
+    end
+  end
+
   describe "demo mode alongside WorkOS", demo: true do
     it "still accepts the demo token and a WorkOS token" do
       chainsaw && demo_user

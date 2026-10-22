@@ -20,10 +20,39 @@ RSpec.describe "Database protections from db/schema.rb" do
     expect(Rails.root.join("db/structure.sql")).not_to exist
   end
 
+  it "dumps the WorkOS sync protections into schema.rb" do
+    schema = Rails.root.join("db/schema.rb").read
+
+    expect(schema).to include("create_function :prevent_workos_event_changes", "create_trigger :workos_events_immutable")
+    expect(schema).to include('name: "index_workos_events_on_workos_id", unique: true')
+    expect(schema).to include('name: "index_organization_memberships_live", unique: true, where: "(workos_deleted_at IS NULL)"')
+    %w[workos_events_status workos_events_payload_object organization_memberships_status].each { expect(schema).to include(%(name: "#{_1}")) }
+  end
+
+  it "keeps one live staff membership per user and organization, alongside tombstones" do
+    user = User.create!(workos_id: "user_unique", email: "unique@example.test")
+    chainsaw.organization_memberships.create!(user:, role: "owner", workos_id: "om_old", workos_deleted_at: Time.current)
+    chainsaw.organization_memberships.create!(user:, role: "owner", workos_id: "om_new")
+
+    expect { in_savepoint { chainsaw.organization_memberships.insert!({ user_id: user.id, role: "owner", status: "active" }) } }
+      .to raise_error(ActiveRecord::RecordNotUnique)
+    expect { in_savepoint { OrganizationMembership.where(workos_id: "om_new").update_all(status: "removed") } }
+      .to raise_error(ActiveRecord::StatementInvalid, /organization_memberships_status/)
+  end
+
+  it "rejects duplicate WorkOS events and unknown statuses" do
+    row = { workos_id: "event_dup", event_type: "user.created", occurred_at: Time.current, payload: { "id" => "event_dup" } }
+    WorkosEvent.insert!(row)
+
+    expect { in_savepoint { WorkosEvent.insert!(row) } }.to raise_error(ActiveRecord::RecordNotUnique)
+    expect { in_savepoint { WorkosEvent.where(workos_id: "event_dup").update_all(status: "done") } }
+      .to raise_error(ActiveRecord::StatementInvalid, /workos_events_status/)
+  end
+
   it "has the triggers installed" do
     names = connection.select_values("SELECT tgname FROM pg_trigger WHERE NOT tgisinternal")
 
-    expect(names).to include("prices_immutable_terms", "sale_line_items_immutable", "payments_immutable")
+    expect(names).to include("prices_immutable_terms", "sale_line_items_immutable", "payments_immutable", "workos_events_immutable")
   end
 
   it "rejects price term changes that skip the model" do
