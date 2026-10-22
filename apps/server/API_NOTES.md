@@ -26,7 +26,7 @@
 - The demo token works only for `Flowfokus-Organization: chainsaw`. Other slugs give `403 organization_mismatch`.
 - The demo actor is staff only. `/member/*` gives `403`.
 - Without demo mode and without WorkOS, protected calls give `503 auth_not_configured`. A missing token always gives `401 unauthenticated`.
-- WorkOS JWT verification is **not** implemented in Sprint 1. A configured WorkOS still gives `503 auth_unavailable`.
+- Rails verifies WorkOS access tokens against the configured JWKS. See `openapi.yaml`.
 
 ## Seed data
 
@@ -72,6 +72,7 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim. Ironworks has its own membe
 | GET | `/staff/check_ins?member_id=` | `check_ins:read` | 200 `CheckIn[]` (max 100) | |
 | POST | `/staff/check_ins` | `check_ins:create` | 201 `CheckIn` (200 on replay) | `{ member_id, location_id }` |
 | GET | `/member/profile` | member | always fails closed in Sprint 1 | |
+| POST | `/webhooks/workos` | WorkOS signature | 200 `WorkosWebhookReceipt` | a WorkOS event |
 
 `/public/*` returns `404 not_found` for unknown or unpublished slugs.
 
@@ -118,14 +119,15 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim. Ironworks has its own membe
 
 | Status | Codes |
 | --- | --- |
-| 400 | `bad_request`, `organization_required`, `idempotency_key_required` |
+| 400 | `bad_request`, `organization_required`, `idempotency_key_required`, `invalid_signature` |
 | 401 | `unauthenticated`, `invalid_token` |
 | 403 | `forbidden`, `organization_mismatch` |
 | 404 | `not_found` (also for records of another organization) |
 | 409 | `idempotency_key_reused` |
+| 413 | `payload_too_large` |
 | 422 | `validation_failed` (with `details`), `price_unavailable`, `overpayment`, `sale_not_paid` |
 | 500 | `internal_error` |
-| 503 | `auth_not_configured`, `auth_unavailable`, `database_unavailable` |
+| 503 | `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `webhook_not_configured` |
 
 Body references to another organization's member, price, or location return `422 validation_failed` with `details`, for example `{ "member_id": ["was not found"] }`.
 
@@ -136,6 +138,47 @@ Body references to another organization's member, price, or location return `422
 - Fulfill only when `balance_minor` is 0. Fulfillment is idempotent.
 - One membership per member per organization. A new period starts at `max(purchased_at, end of latest period)`. Periods never overlap.
 - Check-in picks an unlimited right first, then the counted right that ends soonest. Denied attempts consume nothing.
+
+## WorkOS sync
+
+Rails keeps local copies of WorkOS users, staff memberships, and the identity of linked gyms.
+WorkOS stays the authority. Permissions always come from verified token claims, never from these copies.
+
+| Variable | Example | Use |
+| --- | --- | --- |
+| `WORKOS_WEBHOOK_SECRET` | from the WorkOS webhook endpoint | Verifies `POST /webhooks/workos`. At least 16 characters. Without it, the endpoint answers `503`. |
+| `WORKOS_API_KEY` | `sk_test_default` (emulator) | Reconciliation, and fetching an unknown user for a membership event. |
+| `WORKOS_API_BASE_URL` | `http://workos:4100` | Development and test only. Production uses `https://api.workos.com` and refuses other values. |
+| `WORKOS_VERIFIED` | `true` | Production only. Webhooks and API sync stay off until it is set. |
+
+How events flow:
+
+1. `POST /webhooks/workos` checks `WorkOS-Signature` over the raw body (HMAC-SHA256, timestamp in milliseconds, 3 minute window).
+2. It saves the event in `workos_events`, unique by WorkOS event ID, and answers `200`. Redeliveries answer `200` with `duplicate: true`.
+3. `WorkosEventJob` applies it. The job uses the default Active Job adapter; no Redis. If the process stops, the event stays `pending`.
+
+Sync rules:
+
+- Users match by WorkOS ID only. Never by email. Members are never linked by email.
+- Each record keeps the remote `updated_at` it last applied (`workos_updated_at`). Older versions are `stale` and change nothing.
+- Deletions are terminal. The row stays with `workos_deleted_at`, so history keeps its references. A later or delayed event cannot bring it back. The event ledger is the tombstone for records Rails never stored.
+- Organization events only update the name of a gym that already has that WorkOS ID. Sync never creates or links a gym. Slug, currency, timezone, publishing, and business data do not change. Events for unlinked organizations are saved as `ignored` with outcome `organization_not_linked`.
+- A membership ID is never moved to another user or organization (the event fails with `LinkMismatch`).
+- Token observation (`OrganizationMembership.observe!`) only fills gaps before sync. It never changes a synced copy and never recreates a removed one.
+- A removed membership or role change does not end access at once. Rails accepts a verified token until its `exp` (plus 5 seconds of clock leeway). The token lifetime is a WorkOS session setting; WorkOS Emulate 0.16.0 issues 1 hour tokens. A deleted user is refused at once (`401 invalid_token`).
+
+Event statuses: `pending`, `processed` (with an outcome such as `created`, `updated`, `unchanged`, `stale`, `deleted`, `deleted_remotely`), `ignored` (`organization_not_linked`, `unsupported_event`), `failed` (with `last_error`).
+
+| Task | Command (in `apps/server`) |
+| --- | --- |
+| Import or repair linked gyms (also loads emulator seeds) | `bin/rails workos:reconcile` or `ORGANIZATION=chainsaw bin/rails workos:reconcile` |
+| Show event counts and events needing attention | `bin/rails workos:events:status` |
+| Process failed events and pending events older than 5 minutes | `bin/rails workos:events:retry` |
+| Reprocess one event in any status | `EVENT=event_01... bin/rails workos:events:retry` |
+
+Reconciliation reads every page from WorkOS before it writes, then writes in one transaction per gym.
+A failed fetch changes nothing and the command exits non-zero. Live copies that WorkOS no longer lists
+are marked removed. A gym whose WorkOS organization returns `404` is marked deleted.
 
 ## Shared client
 
