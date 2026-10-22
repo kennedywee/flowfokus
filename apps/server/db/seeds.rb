@@ -6,9 +6,28 @@ return if Rails.env.test?
 
 demo = Flowfokus::DemoIdentity
 
+# Local staff identities. IDs and emails match workos-emulate.config.yaml at the
+# repository root, so emulator sign-ins find these users. Fake data only.
+LOCAL_STAFF = [
+  demo::USER,
+  { workos_id: "user_demo_chainsaw_receptionist", email: "receptionist@example.com", first_name: "Demo", last_name: "Receptionist" },
+  { workos_id: "user_demo_ironworks_owner", email: "ironworks.owner@example.com", first_name: "Ironworks", last_name: "Owner" },
+  { workos_id: "user_demo_multi_org", email: "manager@example.com", first_name: "Demo", last_name: "Manager" }
+].freeze
+
 ActiveRecord::Base.transaction do
-  owner = User.find_or_initialize_by(workos_id: demo::USER[:workos_id])
-  owner.update!(demo::USER.except(:workos_id))
+  staff = LOCAL_STAFF.to_h do |attributes|
+    user = User.find_or_initialize_by(workos_id: attributes[:workos_id])
+    user.update!(attributes.except(:workos_id))
+    [ attributes[:workos_id], user ]
+  end
+  owner = staff.fetch(demo::USER[:workos_id])
+
+  # The synced copy of WorkOS memberships. WorkOS stays the authority.
+  seed_membership = ->(organization, workos_id, role) do
+    organization.organization_memberships.find_or_initialize_by(user: staff.fetch(workos_id))
+      .update!(role:, status: "active")
+  end
 
   seed_organization = lambda do |slug:, workos_id:, name:, published:, timezone: "Asia/Kuala_Lumpur", currency: "MYR"|
     Organization.find_or_initialize_by(slug:).tap do |organization|
@@ -46,7 +65,9 @@ ActiveRecord::Base.transaction do
   # Chainsaw: the demo organization. The demo token maps to its owner.
   chainsaw = seed_organization.(slug: demo::ORGANIZATION_SLUG, workos_id: demo::ORGANIZATION_WORKOS_ID,
     name: "Chainsaw Gym", published: true)
-  chainsaw.organization_memberships.find_or_initialize_by(user: owner).update!(role: "owner", status: "active")
+  seed_membership.(chainsaw, owner.workos_id, "owner")
+  seed_membership.(chainsaw, "user_demo_chainsaw_receptionist", "receptionist")
+  seed_membership.(chainsaw, "user_demo_multi_org", "owner")
   bangsar = seed_location.(chainsaw, "Bangsar", "12 Jalan Telawi, Bangsar, Kuala Lumpur")
   seed_location.(chainsaw, "Mont Kiara", "3 Jalan Kiara, Mont Kiara, Kuala Lumpur")
 
@@ -79,6 +100,8 @@ ActiveRecord::Base.transaction do
   ironworks = seed_organization.(slug: "ironworks", workos_id: "org_demo_ironworks",
     name: "Ironworks Fitness", published: true)
   seed_location.(ironworks, "Penang", "88 Lebuh Pantai, George Town, Penang")
+  seed_membership.(ironworks, "user_demo_ironworks_owner", "owner")
+  seed_membership.(ironworks, "user_demo_multi_org", "receptionist")
   iron_monthly = seed_product.(ironworks, name: "Ironworks Monthly", position: 1,
     description: "Unlimited access for 30 days.",
     benefits: [ { name: "Gym access", usage_limit: nil, location: nil } ])

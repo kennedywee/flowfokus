@@ -3,7 +3,10 @@
 # Order of checks:
 # 1. No Bearer token: 401 unauthenticated.
 # 2. Demo mode (development/test only) and the demo token: fixed demo claims.
-# 3. WorkOS configured: 503 auth_unavailable. Verification ships next sprint.
+# 3. WorkOS configured: verify the token against the WorkOS JWKS.
+#    A bad, expired, or foreign token gets 401 invalid_token. Missing or
+#    unsafe settings, an unreachable JWKS, or an unverified production setup
+#    get 503 auth_unavailable.
 # 4. Demo mode with another token: 401 invalid_token.
 # 5. Nothing configured: 503 auth_not_configured.
 #
@@ -31,6 +34,8 @@ module Authentication
         fail_auth! :service_unavailable, "auth_not_configured",
           "Authentication is not configured. Set up WorkOS, or set FLOWFOKUS_DEMO_MODE=true in local development."
       end
+    rescue Flowfokus::WorkosTokens::Invalid => error
+      fail_auth! :unauthorized, "invalid_token", error.message
     rescue Flowfokus::WorkosTokens::Unavailable => error
       fail_auth! :service_unavailable, "auth_unavailable", error.message
     rescue Flowfokus::DemoIdentity::ProductionError, Flowfokus::DemoIdentity::TokenError => error
@@ -45,6 +50,7 @@ module Authentication
     def user_for!(claims)
       User.find_by(workos_id: claims.user_workos_id) ||
         fail_auth!(:service_unavailable, "auth_unavailable",
-          claims.demo? ? "The demo user is missing. Run bin/rails db:seed." : "The user is not synced yet.")
+          claims.demo? ? "The demo user is missing. Run bin/rails db:seed." :
+            "This WorkOS user has no local record yet. Sync users from WorkOS, or run bin/rails db:seed locally.")
     end
 end

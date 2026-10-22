@@ -20,6 +20,7 @@ module Staff
         Current.user = user_for!(claims)
         Current.permissions = claims.permissions.dup.freeze
         Current.demo = claims.demo?
+        OrganizationMembership.observe!(organization:, user: Current.user, role: claims.role) unless claims.demo?
       end
 
       def current_organization = Current.organization

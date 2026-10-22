@@ -9,6 +9,7 @@ Rails.application.routes.draw do
 
   namespace :staff do
     resource :organization, only: :show
+    resources :memberships, only: :index
     resource :overview, only: :show
     resources :members, only: %i[index show create]
     resources :products, only: :index

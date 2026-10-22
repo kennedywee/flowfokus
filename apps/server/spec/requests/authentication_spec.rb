@@ -77,12 +77,12 @@ RSpec.describe "Authentication and permissions" do
       end
     end
 
-    context "with WorkOS configured but not verified yet", demo: false, workos: true do
-      it "fails closed with 503 instead of trusting the token" do
+    context "with WorkOS configured", demo: false, workos: true do
+      it "rejects a token that does not verify" do
         api :get, "/staff/organization", token: "eyJhbGciOiJSUzI1NiJ9.fake.token"
 
-        expect(response).to have_http_status(:service_unavailable)
-        expect(error_code).to eq("auth_unavailable")
+        expect(response).to have_http_status(:unauthorized)
+        expect(error_code).to eq("invalid_token")
       end
     end
 
@@ -156,11 +156,11 @@ RSpec.describe "Authentication and permissions" do
       expect(error_code).to eq("forbidden")
     end
 
-    it "fails closed with WorkOS configured", demo: false, workos: true do
+    it "rejects a token that does not verify", demo: false, workos: true do
       api :get, "/member/profile", token: "eyJhbGciOiJSUzI1NiJ9.fake.token"
 
-      expect(response).to have_http_status(:service_unavailable)
-      expect(error_code).to eq("auth_unavailable")
+      expect(response).to have_http_status(:unauthorized)
+      expect(error_code).to eq("invalid_token")
     end
 
     it "fails closed with nothing configured", demo: false do

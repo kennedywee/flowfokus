@@ -9,8 +9,9 @@ info:
     - Error bodies use `{ "error": { "code", "message", "details"? } }`.
     - Organization-scoped paths need the `Flowfokus-Organization` header with the gym slug
       (the `organizationHeader` scheme).
-    - `/staff/*` paths need `Authorization: Bearer <token>`. In Sprint 1 only the
-      local demo token works, and only when `FLOWFOKUS_DEMO_MODE=true` in development or test.
+    - `/staff/*` paths need `Authorization: Bearer <token>`: a WorkOS AuthKit access token,
+      verified against the configured JWKS (RS256, issuer, expiry, client). The local demo
+      token also works, but only when `FLOWFOKUS_DEMO_MODE=true` in development or test.
     - Money uses integer minor units with an ISO 4217 currency code.
     - Times are UTC ISO 8601 strings.
 servers:
@@ -129,6 +130,36 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/memberships:
+    get:
+      tags: [staff]
+      operationId: listStaffMemberships
+      summary: The organizations the signed-in staff user can open.
+      description: |
+        Needs a Bearer token but no `Flowfokus-Organization` header. The list comes from the
+        synced copy of WorkOS memberships and only helps navigation. Opening an organization
+        still needs a token issued for that organization.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Active memberships, ordered by organization name.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/StaffMembership"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
@@ -644,7 +675,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: WorkOS access token (next sprint) or the local demo token (development and test only).
+      description: WorkOS AuthKit access token, or the local demo token (development and test only).
 
   parameters:
     IdempotencyKey:
@@ -856,6 +887,22 @@ components:
             $ref: "#/components/schemas/Location"
         actor:
           $ref: "#/components/schemas/Actor"
+
+    StaffMembership:
+      type: object
+      additionalProperties: false
+      required: [slug, name, workos_organization_id, role]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        workos_organization_id:
+          type: string
+          description: The WorkOS organization ID. The portal uses it to switch the session.
+        role:
+          type: string
+          description: Role slug from the last verified token or sync. Display only.
 
     Actor:
       type: object

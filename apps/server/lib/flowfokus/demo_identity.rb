@@ -72,6 +72,7 @@ module Flowfokus
         user_workos_id: USER[:workos_id],
         organization_workos_id: ORGANIZATION_WORKOS_ID,
         permissions: PERMISSIONS,
+        role: "owner",
         demo: true
       )
     end

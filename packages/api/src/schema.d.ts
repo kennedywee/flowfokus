@@ -89,6 +89,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The organizations the signed-in staff user can open.
+         * @description Needs a Bearer token but no `Flowfokus-Organization` header. The list comes from the
+         *     synced copy of WorkOS memberships and only helps navigation. Opening an organization
+         *     still needs a token issued for that organization.
+         */
+        get: operations["listStaffMemberships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/overview": {
         parameters: {
             query?: never;
@@ -351,6 +373,14 @@ export interface components {
             currency: string;
             locations: components["schemas"]["Location"][];
             actor: components["schemas"]["Actor"];
+        };
+        StaffMembership: {
+            slug: string;
+            name: string;
+            /** @description The WorkOS organization ID. The portal uses it to switch the session. */
+            workos_organization_id: string;
+            /** @description Role slug from the last verified token or sync. Display only. */
+            role: string;
         };
         Actor: {
             name: string;
@@ -830,6 +860,30 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listStaffMemberships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active memberships, ordered by organization name. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffMembership"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
