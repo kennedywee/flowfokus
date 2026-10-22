@@ -104,6 +104,6 @@ In development:
 - Portal and site call Rails at `http://127.0.0.1:4000`.
 - Open a gym site at `http://<slug>.localhost:<site port>`, for example `chainsaw.localhost:4002`. Browsers send every `*.localhost` name to your machine. No `/etc/hosts` entries are needed.
 - Browsers treat `localhost` as secure, so the `__Host-` session cookie works over plain HTTP.
-- Staff sign-in uses WorkOS Emulate in Docker at `http://localhost:4100`. See [Local staff authentication](local-auth.md). Live staging checks use separately registered WorkOS redirect URIs.
+- Staff sign-in uses WorkOS Emulate in Docker at `http://localhost:4100`. Remote development can use an explicitly allowed LAN or Tailscale host. See [Local staff authentication](local-auth.md). Live staging checks use separately registered WorkOS redirect URIs.
 
 After changing a version in `mise.toml`, run `mise lock` and commit both files.

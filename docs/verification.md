@@ -11,7 +11,7 @@ default. No live WorkOS account was used. Application changes are committed on
 - All 147 Rails examples pass in Docker, including real response contracts,
   JWT signature/issuer/expiry checks, permissions, organization isolation, key
   rotation, and the existing membership workflow.
-- All 85 portal tests, 42 gym-site tests, and 3 tooling tests pass. Generated API
+- All 104 portal tests, 42 gym-site tests, and 3 tooling tests pass. Generated API
   types match OpenAPI. Shared API and both apps pass TypeScript checks.
 - Both apps build their Cloudflare Worker bundles. Artifact checks find no local
   environment files after cleanup. Each app still has its own image.
@@ -46,6 +46,17 @@ The T3 collaborative browser completed the following through the Docker portal:
 7. Switch to Chainsaw through the top bar. Returning to `/` opens Chainsaw directly.
 8. Sign out and sign in from `/sign-in?returnTo=/ironworks/members`.
    Selecting Ironworks opens the Members page directly. Sign out again.
+9. Repeat the manager flow through `http://100.89.45.88:4001`. The login page
+   opens on that host at port 4100. The callback opens Ironworks Members on
+   port 4001. Switching to Chainsaw and signing out keep the Tailscale host.
+   The user also confirmed sign-in works from macOS through Tailscale.
+10. Verify owner sign-in, a Members deep link, and sign-out still work on localhost.
+
+The local portal and emulator share an explicit development host list. HTTP
+checks accept localhost and the configured Tailscale address, reject an unlisted
+host, and confirm forwarded host headers cannot change the callback. SDK tests
+check the callback, PKCE cookie, logout return URL, and host-only session cookie
+names. Production keeps the configured callback origin, including after sign-out.
 
 The browser made no direct requests to Rails port 4000. No JWT appeared in the
 page HTML or browser storage. The safe session server function returned the user

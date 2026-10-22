@@ -28,7 +28,7 @@ sales, payments, delivery, and check-in. New sections without APIs use clearly
 labelled frontend sample data. See [Frontend preview](docs/frontend-preview.md)
 for the current boundary.
 
-Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator sign-in uses localhost; its port 4100 is bound to loopback. The optional fixed demo actor can be enabled explicitly for LAN demonstrations. Production still refuses demo access. The gym site still selects the organization from its hostname.
+Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator port 4100 defaults to loopback. To sign in from another device, configure the allowed development hosts and emulator binding in [Local staff authentication](docs/local-auth.md#access-from-another-device). The optional fixed demo actor remains opt-in. Production refuses demo access. The gym site still selects the organization from its hostname.
 
 PostgreSQL, WorkOS Emulate, and all three apps run in containers. Run `db:prepare` explicitly on first setup and after adding migrations. It loads demo data into a new database. To reload demo data later, run `docker compose run --rm server bin/rails db:seed`. Data stays in the Compose volume when the stack stops with `docker compose down`.
 

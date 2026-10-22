@@ -20,9 +20,38 @@ Open `http://localhost:4001`. Use the portal sign-in link to open the emulator's
 login page. The callback returns to `http://localhost:4001/callback`.
 If AuthKit asks you to select an organization, the portal opens that organization
 directly. Use the top-bar switcher to change it later.
-Use localhost for this flow. The emulator port is bound to loopback and the
-callback is fixed to localhost; LAN and Tailscale hosts are not configured for
-emulator sign-in.
+
+### Access from another device
+
+Add this development machine's Tailscale IP to the host list in the root `.env`.
+Keep localhost in the list so both addresses work. For example:
+
+```dotenv
+FLOWFOKUS_DEV_AUTH_HOSTS=localhost,127.0.0.1,100.89.45.88
+FLOWFOKUS_WORKOS_BIND_IP=0.0.0.0
+```
+
+Use your machine's address from `tailscale ip -4`. The bind setting publishes
+the fake-user emulator on port 4100, alongside the portal on port 4001.
+Both ports must be reachable from the other device. The default binding is
+loopback; remote access is opt-in.
+
+After changing these settings, recreate the containers:
+
+```sh
+docker compose up -d --wait --force-recreate workos server portal
+```
+
+Open `http://<tailscale-ip>:4001` on the other device. Sign-in opens the same
+host on port 4100, and the callback returns to that host on port 4001. The
+portal and emulator accept only the configured development hosts. Production
+keeps its configured callback URL. Sessions belong to each host, so signing in
+on localhost does not also sign in on the Tailscale address.
+
+Recreating the emulator clears its in-memory sessions. Restart Rails with it
+to clear cached signing keys, then sign in again.
+
+### Fake staff accounts
 
 Each fake user has the password `local-password`:
 
@@ -96,7 +125,8 @@ host-compatible emulator configuration. Copy it to `.dev.vars` when configuring
 an existing checkout. The Docker entrypoint writes its own internal service URLs.
 
 Rails in Docker fetches keys from `http://workos:4100`. The browser reaches the
-emulator at `http://localhost:4100`. Both agree on the token issuer
+emulator through localhost or an allowed development host on port 4100.
+The token issuer stays fixed at
 `http://localhost:4100/user_management/client_flowfokus_local`.
 
 ## Scope

@@ -128,6 +128,11 @@ Registered WorkOS redirect URIs:
 | `http://localhost:<portal port>/callback` | Development: staff portal |
 | `http://*.localhost:<site port>/callback` | Development: gym sites, for example `chainsaw.localhost` |
 
+For local staff testing, the emulator also accepts hosts explicitly listed in
+`FLOWFOKUS_DEV_AUTH_HOSTS`. The portal uses the allowed request host for its
+callback and emulator URLs. This development setting does not change production
+redirects. See [Local staff authentication](local-auth.md#access-from-another-device).
+
 The gym site builds its redirect URI from the request host and passes it to `authkitMiddleware({ redirectUri })`. Before it does, it checks that the host is a valid gym host.
 
 ## Signed-in request
