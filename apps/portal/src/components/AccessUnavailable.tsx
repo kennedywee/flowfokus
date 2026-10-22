@@ -6,9 +6,13 @@ const COPY: Record<UnavailableReason, { title: string; body: string }> = {
     title: "Staff sign-in is not configured",
     body: "This portal has no WorkOS settings yet, so staff pages and actions stay turned off. Add the WorkOS settings to the portal, then reload.",
   },
-  sign_in_not_integrated: {
-    title: "Staff sign-in is not available yet",
-    body: "WorkOS settings are present, but the sign-in integration ships in the next release. Staff pages and actions stay turned off until then.",
+  sign_in_misconfigured: {
+    title: "Staff sign-in is set up wrongly",
+    body: "Some WorkOS settings are missing or unsafe. Production needs an API key, an HTTPS callback address, and a cookie password of 32 or more characters. Fix the portal settings, then reload.",
+  },
+  sign_in_not_verified: {
+    title: "Staff sign-in is not verified yet",
+    body: "WorkOS settings are present, but nobody has checked this WorkOS environment end to end. Staff pages and actions stay turned off until a person verifies it and sets WORKOS_VERIFIED.",
   },
   demo_token_invalid: {
     title: "Local demo is not set up",

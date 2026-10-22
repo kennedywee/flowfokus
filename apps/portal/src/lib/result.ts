@@ -7,6 +7,7 @@ export type FailureCode =
   | "api_not_configured"
   | "api_unreachable"
   | "invalid_input"
+  | "signed_out"
   | "unexpected_response";
 
 export interface Failure {

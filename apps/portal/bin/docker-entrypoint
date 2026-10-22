@@ -1,8 +1,19 @@
 #!/usr/bin/env sh
+# Local development only. Writes the Worker settings from the container
+# environment. Production builds ignore the demo and emulator settings.
 set -eu
 umask 077
-printf 'API_BASE_URL=%s\nFLOWFOKUS_DEMO_MODE=%s\nFLOWFOKUS_DEMO_TOKEN=%s\n' \
-  "${API_BASE_URL:-http://server:4000}" \
-  "${FLOWFOKUS_DEMO_MODE:-false}" \
-  "${FLOWFOKUS_DEMO_TOKEN:-}" > /app/apps/portal/.dev.vars
+{
+  printf 'API_BASE_URL=%s\n' "${API_BASE_URL:-http://server:4000}"
+  printf 'FLOWFOKUS_DEMO_MODE=%s\n' "${FLOWFOKUS_DEMO_MODE:-false}"
+  printf 'FLOWFOKUS_DEMO_TOKEN=%s\n' "${FLOWFOKUS_DEMO_TOKEN:-}"
+  printf 'WORKOS_CLIENT_ID=%s\n' "${WORKOS_CLIENT_ID:-client_flowfokus_local}"
+  printf 'WORKOS_API_KEY=%s\n' "${WORKOS_API_KEY:-sk_test_default}"
+  printf 'WORKOS_REDIRECT_URI=%s\n' "${WORKOS_REDIRECT_URI:-http://localhost:4001/callback}"
+  printf 'WORKOS_COOKIE_PASSWORD=%s\n' "${WORKOS_COOKIE_PASSWORD:-local-only-cookie-password-0123456789abcdef}"
+  printf 'WORKOS_API_HOSTNAME=%s\n' "${WORKOS_API_HOSTNAME:-workos}"
+  printf 'WORKOS_API_PORT=%s\n' "${WORKOS_API_PORT:-4100}"
+  printf 'WORKOS_API_HTTPS=%s\n' "${WORKOS_API_HTTPS:-false}"
+  printf 'WORKOS_BROWSER_URL=%s\n' "${WORKOS_BROWSER_URL:-http://localhost:4100}"
+} > /app/apps/portal/.dev.vars
 exec "$@"

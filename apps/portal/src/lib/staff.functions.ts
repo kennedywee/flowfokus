@@ -9,7 +9,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { Schemas } from "@flowfokus/api";
 import { toPublicAccess, type PublicAccess } from "../server/access";
-import { callStaff, currentStaffAccess } from "../server/rails";
+import { callStaff, currentStaffAccess, signedInUser, staffMemberships } from "../server/rails";
 import type { Result } from "./result";
 import {
   createCheckInInput,
@@ -32,8 +32,31 @@ import {
   type SlugInput,
 } from "./validate";
 
-export const getAccess = createServerFn({ method: "GET" }).handler(
-  async (): Promise<PublicAccess> => toPublicAccess(currentStaffAccess()),
+/** How staff access works here, and who is signed in. Never holds a token. */
+export interface PortalSession {
+  access: PublicAccess;
+  /** The signed-in WorkOS user. Null in demo mode, and when signed out. */
+  user: { name: string; email: string } | null;
+}
+
+export const getAccess = createServerFn({ method: "GET" }).handler(async (): Promise<PortalSession> => {
+  const access = toPublicAccess(currentStaffAccess());
+  return { access, user: access.kind === "workos" ? signedInUser() : null };
+});
+
+/** An organization the signed-in user can open. No WorkOS IDs reach the browser. */
+export interface StaffOrganizationChoice {
+  slug: string;
+  name: string;
+  role: string;
+}
+
+export const listMyOrganizations = createServerFn({ method: "GET" }).handler(
+  async (): Promise<Result<StaffOrganizationChoice[]>> => {
+    const result = await staffMemberships();
+    if (!result.ok) return result;
+    return { ok: true, data: result.data.map(({ slug, name, role }) => ({ slug, name, role })) };
+  },
 );
 
 export const getStaffOrganization = createServerFn({ method: "GET" })

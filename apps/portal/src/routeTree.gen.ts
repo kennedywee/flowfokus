@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
+import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SignOutRouteImport } from './routes/sign-out'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
 import { Route as OrgChangelogRouteImport } from './routes/$org/changelog'
@@ -34,6 +37,21 @@ const IndexRoute = IndexRouteImport.update({
 const OrgRouteRoute = OrgRouteRouteImport.update({
   id: '/$org',
   path: '/$org',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallbackRoute = CallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignOutRoute = SignOutRouteImport.update({
+  id: '/sign-out',
+  path: '/sign-out',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrgIndexRoute = OrgIndexRouteImport.update({
@@ -110,6 +128,9 @@ const OrgSalesNewRoute = OrgSalesNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/callback': typeof CallbackRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-out': typeof SignOutRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
@@ -127,6 +148,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/callback': typeof CallbackRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-out': typeof SignOutRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
@@ -146,6 +170,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/callback': typeof CallbackRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-out': typeof SignOutRoute
   '/$org/agents': typeof OrgAgentsRoute
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
@@ -166,6 +193,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$org'
+    | '/callback'
+    | '/sign-in'
+    | '/sign-out'
     | '/$org/agents'
     | '/$org/changelog'
     | '/$org/check-in'
@@ -183,6 +213,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/callback'
+    | '/sign-in'
+    | '/sign-out'
     | '/$org/agents'
     | '/$org/changelog'
     | '/$org/check-in'
@@ -201,6 +234,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$org'
+    | '/callback'
+    | '/sign-in'
+    | '/sign-out'
     | '/$org/agents'
     | '/$org/changelog'
     | '/$org/check-in'
@@ -220,6 +256,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
+  CallbackRoute: typeof CallbackRoute
+  SignInRoute: typeof SignInRoute
+  SignOutRoute: typeof SignOutRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -236,6 +275,27 @@ declare module '@tanstack/react-router' {
       path: '/$org'
       fullPath: '/$org'
       preLoaderRoute: typeof OrgRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/callback': {
+      id: '/callback'
+      path: '/callback'
+      fullPath: '/callback'
+      preLoaderRoute: typeof CallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-out': {
+      id: '/sign-out'
+      path: '/sign-out'
+      fullPath: '/sign-out'
+      preLoaderRoute: typeof SignOutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$org/': {
@@ -380,6 +440,9 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrgRouteRoute: OrgRouteRouteWithChildren,
+  CallbackRoute: CallbackRoute,
+  SignInRoute: SignInRoute,
+  SignOutRoute: SignOutRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

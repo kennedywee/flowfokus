@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, Outlet, createFileRoute, notFound, rootRouteId, useLoaderData, useRouter, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link, Outlet, createFileRoute, notFound, redirect, rootRouteId, useLoaderData, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
   Bot,
@@ -31,11 +31,12 @@ import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
+import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { useToast } from "../../components/Toast";
 import { FailureNotice, Wordmark, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
-import { getAccess, getStaffOrganization } from "../../lib/staff.functions";
+import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
 import { setTheme } from "../../lib/theme.functions";
 import { isSlug, type Theme } from "../../lib/validate";
 import {
@@ -72,14 +73,21 @@ export const Route = createFileRoute("/$org")({
   beforeLoad: ({ params }) => {
     if (!isSlug(params.org)) throw notFound();
   },
-  loader: async ({ params }) => {
-    const access = await getAccess();
-    if (access.kind !== "demo") return { access, organization: null, deskLocationId: null };
-    const [organization, deskLocationId] = await Promise.all([
-      getStaffOrganization({ data: { slug: params.org } }),
+  loader: async ({ params, location }) => {
+    const { access } = await getAccess();
+    if (access.kind === "unavailable") return { access, organization: null, organizations: null, deskLocationId: null };
+    // A full page load, so the server can set the PKCE cookie and leave for WorkOS.
+    const toSignIn = () => redirect({ href: signInHref(location.href), reloadDocument: true });
+
+    // The organization loads first: when the session holds another organization,
+    // this call switches it, and the calls after it use the new session.
+    const organization = await getStaffOrganization({ data: { slug: params.org } });
+    if (!organization.ok && organization.error.code === "signed_out") throw toSignIn();
+    const [organizations, deskLocationId] = await Promise.all([
+      access.kind === "workos" ? listMyOrganizations() : null,
       getDeskLocation({ data: { slug: params.org } }),
     ]);
-    return { access, organization, deskLocationId };
+    return { access, organization, organizations: organizations?.ok ? organizations.data : null, deskLocationId };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -122,10 +130,10 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
 ];
 
 function OrganizationLayout() {
-  const { access, organization } = Route.useLoaderData();
+  const { access, organization, organizations } = Route.useLoaderData();
   const { org } = Route.useParams();
 
-  if (access.kind !== "demo") {
+  if (access.kind === "unavailable") {
     return (
       <Blocked
         title="Staff access is turned off"
@@ -143,16 +151,38 @@ function OrganizationLayout() {
         description="Check the address name, or go to the staff portal."
       >
         {organization ? <FailureNotice error={organization.error} title="The organization did not open" /> : null}
+        {access.kind === "workos" ? (
+          <div className="actions">
+            <SignOutForm />
+          </div>
+        ) : null}
       </Blocked>
     );
   }
 
-  return <Shell organization={organization.data} />;
+  return <Shell organization={organization.data} organizations={organizations} canSignOut={access.kind === "workos"} />;
 }
 
 type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>, { ok: true }>["data"];
 
-function Shell({ organization: data }: { organization: OrganizationData }) {
+/**
+ * Opens another organization with a full page load. The server then switches
+ * the session once, before any page data loads, instead of once per loader.
+ */
+function openOrganization(slug: string) {
+  window.location.assign(`/${encodeURIComponent(slug)}`);
+}
+
+function Shell({
+  organization: data,
+  organizations,
+  canSignOut,
+}: {
+  organization: OrganizationData;
+  /** Every organization the signed-in person can open. Null in demo mode or when the list did not load. */
+  organizations: StaffOrganizationChoice[] | null;
+  canSignOut: boolean;
+}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const base = `/${data.slug}`;
   const trimmed = pathname.replace(/\/$/, "");
@@ -201,20 +231,26 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
               <span className="visually-hidden">Navigation menu</span>
             </SidebarTrigger>
             <div className="topbar__context">
-              {/* Rails has no list of a person's organizations yet, so the list holds the open one. */}
+              {/* Demo mode has no list of organizations, so the list holds the open one. */}
               <ContextSwitcher
                 label="Organization"
                 strong
                 current={data.name}
-                options={[
-                  {
-                    value: data.slug,
-                    label: data.name,
-                    detail: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
-                  },
-                ]}
+                options={
+                  organizations && organizations.length > 0
+                    ? organizations.map((choice) => ({ value: choice.slug, label: choice.name, detail: roleLabel(choice.role) }))
+                    : [
+                        {
+                          value: data.slug,
+                          label: data.name,
+                          detail: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
+                        },
+                      ]
+                }
                 value={data.slug}
-                onSelect={() => undefined}
+                onSelect={(slug) => {
+                  if (slug !== data.slug) openOrganization(slug);
+                }}
                 searchLabel="Search organizations"
                 emptyText="No organization matches."
                 footer={() => (
@@ -283,7 +319,7 @@ function Shell({ organization: data }: { organization: OrganizationData }) {
                 ⌘K
               </kbd>
             </Link>
-            <AccountMenu actor={data.actor} />
+            <AccountMenu actor={data.actor} canSignOut={canSignOut} />
           </div>
         </header>
         <main className="main" id="main" tabIndex={-1}>
@@ -447,11 +483,12 @@ function applyTheme(theme: Theme) {
 }
 
 /**
- * The account menu, on the shadcn dropdown menu. The theme choice works. Help,
- * account settings, and sign-out respond like menu items, but do nothing yet:
- * they need real sign-in.
+ * The account menu, on the shadcn dropdown menu. The theme choice and sign-out
+ * work. Help and account settings respond like menu items, but do nothing yet.
+ * Sign-out submits a hidden form, so it is a same-origin POST, not a script call.
  */
-function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
+function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; canSignOut: boolean }) {
+  const signOutForm = useRef<HTMLFormElement>(null);
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
   // The items do nothing yet, so a click leaves the menu open.
   const item = { closeOnClick: false } as const;
@@ -521,12 +558,17 @@ function AccountMenu({ actor }: { actor: OrganizationData["actor"] }) {
           <CircleUserRound {...icon} />
           Account settings
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem {...item}>
-          <LogOut {...icon} />
-          Sign out
-        </DropdownMenuItem>
+        {canSignOut ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => signOutForm.current?.requestSubmit()}>
+              <LogOut {...icon} />
+              Sign out
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
+      {canSignOut ? <SignOutForm ref={signOutForm} showButton={false} /> : null}
     </DropdownMenu>
   );
 }

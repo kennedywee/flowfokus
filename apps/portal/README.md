@@ -4,14 +4,14 @@ The staff portal for Flowfokus. TanStack Start (React) on Cloudflare Workers. It
 
 ## Run locally
 
-Start Rails first (`apps/server`, port 4000). Then:
+Start the WorkOS emulator and Rails first (`docker compose up -d workos server`, ports 4100 and 4000). Then:
 
 ```sh
 cp apps/portal/.dev.vars.example apps/portal/.dev.vars   # once
 bun run --cwd apps/portal dev                            # http://localhost:4001
 ```
 
-Open `http://localhost:4001`. It opens the demo organization, **Chainsaw Gym**. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
+Open `http://localhost:4001` and sign in. The local WorkOS emulator holds fake staff users; see `docs/local-auth.md`. With one organization, the portal opens it. With more, it shows a list, and the top bar switches between them. Pages live under `/<organization slug>/…`, for example `/chainsaw/members`.
 
 `scripts/dev` from the repository root starts Rails, the portal, and the gym site together. In `vite dev`, the variables below are also read from the shell.
 
@@ -25,19 +25,36 @@ Worker variables and secrets. Local values go in `.dev.vars`, which is never com
 | `WORKER_SECRET` | Secret | Optional. Sent as `Flowfokus-Worker-Secret` with `Flowfokus-Client-IP`. |
 | `FLOWFOKUS_DEMO_MODE` | Local only | `true` turns on the local demo actor. |
 | `FLOWFOKUS_DEMO_TOKEN` | Local only | The demo Bearer value. At least 16 characters. Must match Rails. |
-| `WORKOS_*` | Next sprint | WorkOS AuthKit is not integrated yet. With these set, the portal still reports sign-in as unavailable. |
+| `WORKOS_CLIENT_ID` | Variable | WorkOS client ID. |
+| `WORKOS_API_KEY` | Secret | WorkOS API key. Production needs it. |
+| `WORKOS_REDIRECT_URI` | Variable | The `/callback` address. Production needs HTTPS. |
+| `WORKOS_COOKIE_PASSWORD` | Secret | Encrypts the session cookie. At least 32 characters. |
+| `WORKOS_VERIFIED` | Variable | Production only. `true` after a person checked the real WorkOS environment end to end. Until then, staff sign-in stays off. |
+| `WORKOS_API_HOSTNAME`, `WORKOS_API_PORT`, `WORKOS_API_HTTPS` | Local only | Point the SDK at the emulator. Production builds ignore them and use `api.workos.com`. |
+| `WORKOS_BROWSER_URL` | Local only | The emulator address as the browser opens it, when the Worker reaches it at another address (Docker: `http://workos:4100` inside, `http://localhost:4100` outside). |
+
+## Staff sign-in
+
+The portal uses the official WorkOS SDK, `@workos/authkit-tanstack-react-start`, on the server only.
+
+- `/sign-in` sets a PKCE verifier cookie and sends the browser to AuthKit. `?returnTo=` keeps same-origin paths only.
+- `/callback` checks the `state` against the verifier cookie, exchanges the code, and sets the session cookie. A failure returns to the start page with a notice and no session.
+- The session lives in one encrypted, `httpOnly`, `SameSite=Lax`, host-only cookie: `__Host-hf_session` over HTTPS, `hf_session` over local HTTP. The request middleware refreshes an expired access token and saves the new cookie.
+- The Worker reads the access token from the session and sends it to Rails as a Bearer token. Server functions return display data only (name, email, organizations), never a token. The portal has no AuthKit client provider and no client token store.
+- The organization in the URL picks the organization. When the session holds another one, the Worker refreshes the session for that organization. WorkOS issues the token only for an active membership, and Rails checks that the token matches the slug.
+- `/sign-out` accepts a same-origin POST only. It clears the session cookie and sends the browser to WorkOS to end the WorkOS session.
+- The SDK package also defines server functions that return tokens. The portal never imports them in browser code, so production builds do not register them. The request guard also refuses any server function outside `src/lib/*.functions.ts`, which covers the development server.
 
 ## Local demo access
 
-Demo access is opt-in and local only. All of these must hold:
+Demo access is opt-in and local only. It skips sign-in. All of these must hold:
 
 1. A development build (`vite dev`). Production builds do not contain the demo code path at all.
 2. `FLOWFOKUS_DEMO_MODE=true` and a demo token of at least 16 characters.
-3. The request host is `localhost`, `*.localhost`, or a loopback address.
 
 The Worker attaches the demo Bearer token on the server. The browser never sees it. Rails maps it to the fixed seeded actor (Demo Owner, Chainsaw). The portal labels every demo page **Local demo**.
 
-Without demo access, the portal shows sign-in as unavailable and turns off every staff page and action.
+Without WorkOS settings or demo access, the portal shows sign-in as unavailable and turns off every staff page and action.
 
 ## UI components
 
@@ -82,6 +99,7 @@ Answer **no** when the CLI asks to overwrite an existing file: the files in `src
 
 ## Limits in Sprint 1
 
-- No real sign-in. WorkOS AuthKit ships next sprint.
+- Staff sign-in runs against the local WorkOS emulator only. Production stays off until a person verifies a real WorkOS environment and sets `WORKOS_VERIFIED=true`.
+- Member sign-in is not built.
 - Member choice uses a plain list, which suits small seed data. A search picker is needed for large gyms.
 - Payments are recorded by hand (cash or bank transfer). Nothing is charged.

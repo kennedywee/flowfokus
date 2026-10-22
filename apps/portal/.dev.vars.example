@@ -1,5 +1,19 @@
 # Local development only. Copy to .dev.vars. Never commit .dev.vars.
-# Production builds ignore the demo settings.
+# Production builds ignore the demo and emulator settings.
 API_BASE_URL=http://127.0.0.1:4000
-FLOWFOKUS_DEMO_MODE=true
+
+# Staff sign-in through the local WorkOS emulator (docker compose up workos).
+# Fake credentials only. See docs/local-auth.md for the seeded users.
+WORKOS_CLIENT_ID=client_flowfokus_local
+WORKOS_API_KEY=sk_test_default
+WORKOS_REDIRECT_URI=http://localhost:4001/callback
+WORKOS_COOKIE_PASSWORD=local-only-cookie-password-0123456789abcdef
+WORKOS_API_HOSTNAME=localhost
+WORKOS_API_PORT=4100
+WORKOS_API_HTTPS=false
+WORKOS_BROWSER_URL=http://localhost:4100
+
+# Optional: skip sign-in and act as the seeded demo owner. Needs the same
+# token on the Rails server. Off by default.
+FLOWFOKUS_DEMO_MODE=false
 FLOWFOKUS_DEMO_TOKEN=flowfokus-local-demo-token
