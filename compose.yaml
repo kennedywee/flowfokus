@@ -6,10 +6,12 @@ services:
     image: ghcr.io/workos/emulate:0.16.0
     init: true
     command: ["--host", "0.0.0.0", "--interactive-password", "--issuer", "http://localhost:4100"]
+    environment:
+      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
     volumes:
       - ./workos-emulate.config.yaml:/app/workos-emulate.config.yaml:ro
     ports:
-      - "127.0.0.1:4100:4100"
+      - "${FLOWFOKUS_WORKOS_BIND_IP:-127.0.0.1}:4100:4100"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4100/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 2s
@@ -64,6 +66,7 @@ services:
       WORKOS_API_PORT: "4100"
       WORKOS_API_HTTPS: "false"
       WORKOS_BROWSER_URL: http://localhost:4100
+      FLOWFOKUS_DEV_AUTH_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/api/src:/app/packages/api/src:ro
