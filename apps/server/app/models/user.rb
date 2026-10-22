@@ -9,7 +9,9 @@ class User < ApplicationRecord
 
   normalizes :email, with: ->(email) { email.strip.downcase }
   validates :workos_id, presence: true, uniqueness: true
-  validates :email, presence: true
+  # A deletion can arrive before the user's details. Such a reference has no
+  # email yet and cannot authenticate. Live identities always need an email.
+  validates :email, presence: true, unless: :workos_deleted?
 
   # Applies WorkOS user data (an event's `data` or an API record). Call inside a
   # transaction. Returns the outcome as a symbol.
@@ -33,10 +35,15 @@ class User < ApplicationRecord
       user = lock(WorkosSynced::EXCLUSIVE).find_by(workos_id:)
 
       if deleted
-        return :not_present unless user
-        return :already_deleted if user.workos_deleted?
+        return :already_deleted if user&.workos_deleted?
 
-        user.update!(workos_deleted_at: at, workos_updated_at: [ version, user.workos_updated_at ].compact.max)
+        # Reserve the unique WorkOS ID even if creation is still in flight.
+        # The index serializes both inserts. A losing creator then finds this
+        # deleted row instead of restoring a live identity after deletion.
+        user ||= new(workos_id:, email: data["email"].to_s,
+          first_name: data["first_name"].presence, last_name: data["last_name"].presence)
+        user.assign_attributes(workos_deleted_at: at, workos_updated_at: [ version, user.workos_updated_at ].compact.max)
+        transaction(requires_new: true) { user.save! }
         user.organization_memberships.live.order(:id).lock.to_a.each { _1.tombstone!(at:) }
         return :deleted
       end

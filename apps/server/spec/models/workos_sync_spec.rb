@@ -50,12 +50,22 @@ RSpec.describe "WorkOS event sync" do
       expect(CheckIn.where(recorded_by_user: user)).to exist
     end
 
-    it "does not create a user whose deletion arrived first" do
+    it "keeps a deleted reference when deletion arrives before creation" do
       deliver_workos_event("user.deleted", workos_user_data("user_never"))
       created = deliver_workos_event("user.created", workos_user_data("user_never", updated_at: 1.minute.from_now))
 
       expect(created.outcome).to eq("deleted_remotely")
-      expect(User.find_by(workos_id: "user_never")).to be_nil
+      expect(User.find_by!(workos_id: "user_never").workos_deleted_at).to be_present
+      expect(User.live.where(workos_id: "user_never")).to be_empty
+    end
+
+    it "can preserve a deletion before user details are available" do
+      deleted = deliver_workos_event("user.deleted", { "id" => "user_no_details" })
+      created = deliver_workos_event("user.created", workos_user_data("user_no_details"))
+
+      expect(deleted).to have_attributes(status: "processed", outcome: "deleted")
+      expect(created.outcome).to eq("deleted_remotely")
+      expect(User.find_by!(workos_id: "user_no_details")).to have_attributes(email: "", workos_deleted_at: be_present)
     end
   end
 

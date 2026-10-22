@@ -91,6 +91,23 @@ RSpec.describe "Concurrent WorkOS sync" do
     expect(OrganizationMembership.live).to be_empty
   end
 
+  it "keeps a first user creation deleted when deletion arrives before its insert" do
+    id = "user_new_deleted_race"
+    pause_first_call(User, :save!, any_instance: true) do |reached, release|
+      creation = in_thread { deliver_workos_event("user.created", workos_user_data(id, updated_at: 1.hour.ago)) }
+      expect(reached.wait(10)).to be(true)
+
+      deletion = in_thread { deliver_workos_event("user.deleted", workos_user_data(id)) }
+      expect(deletion.join(5)).not_to be_nil
+      expect(deletion.value).not_to be_a(StandardError)
+      release.set
+      expect(creation.value).not_to be_a(StandardError)
+    end
+
+    expect(User.find_by!(workos_id: id).workos_deleted_at).to be_present
+    expect(WorkosEvent.where(subject_id: id).pluck(:status)).to all(eq("processed"))
+  end
+
   it "leaves no live copy when a membership sync races the gym's deletion" do
     race(WorkosEvent, :deleted?,
       first: -> { deliver_workos_event("organization_membership.created", membership_data) },
