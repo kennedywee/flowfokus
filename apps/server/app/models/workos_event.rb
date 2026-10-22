@@ -18,8 +18,10 @@ class WorkosEvent < ApplicationRecord
   SUBJECTS = { "user" => "User", "organization" => "Organization", "organization_membership" => "OrganizationMembership" }.freeze
   ACTIONS = %w[created updated deleted].freeze
   # Outcomes that applied nothing because Flowfokus does not handle the event
-  # here. They stay visible. Link the gym, then reconcile it, to repair them.
-  IGNORED_OUTCOMES = %w[organization_not_linked unsupported_event].freeze
+  # here. They stay visible. Link the gym if needed, then reconcile it, to repair them.
+  # A version_conflict event carried the same remote version as the local copy,
+  # with different data. Reconcile the gym to apply WorkOS's current state.
+  IGNORED_OUTCOMES = %w[organization_not_linked unsupported_event version_conflict].freeze
   # A pending event older than this has lost its job, for example after a restart.
   STUCK_AFTER = 5.minutes
   ID_FORMAT = /\A[A-Za-z0-9_\-]{1,255}\z/
@@ -98,13 +100,10 @@ class WorkosEvent < ApplicationRecord
 
       data = payload.fetch("data")
       deleted = action == "deleted"
-      options = { deleted:, at: occurred_at }
 
       if model == OrganizationMembership && !deleted
         user = membership_user(data, api)
         return finish!(user) if user.is_a?(Symbol)
-
-        options[:user] = user
       end
 
       tries = 0
@@ -113,7 +112,7 @@ class WorkosEvent < ApplicationRecord
           lock!
           next if settled? && !force
 
-          finish!(model.sync_from_workos!(data, **options))
+          finish!(model.sync_from_workos!(data, deleted:, at: occurred_at))
         end
       rescue OrganizationMembership::Superseded => error
         raise if (tries += 1) > 1
@@ -146,7 +145,7 @@ class WorkosEvent < ApplicationRecord
 
       api ||= Flowfokus::WorkosApi.from_env
       remote = begin
-        api.user(user_workos_id)
+        WorkosSynced.fetched!(api.user(user_workos_id), user_workos_id)
       rescue Flowfokus::WorkosApi::NotFound
         return :user_deleted
       end
@@ -158,9 +157,15 @@ class WorkosEvent < ApplicationRecord
     # arrives while the old copy is live, the old one was deleted, unless
     # WorkOS still has it.
     def release_superseded!(membership, api)
-      api.organization_membership(membership.workos_id)
+      WorkosSynced.fetched!(api.organization_membership(membership.workos_id), membership.workos_id)
       raise OrganizationMembership::Superseded, membership
     rescue Flowfokus::WorkosApi::NotFound
-      transaction { membership.lock!.tombstone!(at: occurred_at) }
+      transaction do
+        # Lock order: organization, user, membership (see WorkosSynced).
+        Organization.lock(WorkosSynced::SHARED).find(membership.organization_id)
+        User.lock(WorkosSynced::EXCLUSIVE).find(membership.user_id)
+        membership.lock!
+        membership.tombstone!(at: occurred_at) unless membership.workos_deleted?
+      end
     end
 end

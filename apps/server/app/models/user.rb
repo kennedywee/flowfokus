@@ -16,17 +16,19 @@ class User < ApplicationRecord
   #
   # A deletion keeps the row and its email and names for history. It removes the
   # user's live staff memberships from the synced copy.
-  def self.sync_from_workos!(data, deleted: false, at: Time.current)
+  # `authoritative` marks data fetched from the WorkOS API just now. It may
+  # replace data of the same version; an event may not (see WorkosSynced).
+  def self.sync_from_workos!(data, deleted: false, at: Time.current, authoritative: false)
     workos_id = WorkosSynced.id!(data)
     version = WorkosSynced.time(data["updated_at"]) || at
-    user = lock.find_by(workos_id:)
+    user = lock(WorkosSynced::EXCLUSIVE).find_by(workos_id:)
 
     if deleted
       return :not_present unless user
       return :already_deleted if user.workos_deleted?
 
       user.update!(workos_deleted_at: at, workos_updated_at: [ version, user.workos_updated_at ].compact.max)
-      user.organization_memberships.live.find_each { _1.tombstone!(at:) }
+      user.organization_memberships.live.order(:id).lock.to_a.each { _1.tombstone!(at:) }
       return :deleted
     end
 
@@ -34,9 +36,11 @@ class User < ApplicationRecord
     return :stale if user&.stale_workos_version?(version)
 
     user ||= new(workos_id:)
+    same_version = user.same_workos_version?(version)
     user.assign_attributes(email: data["email"], first_name: data["first_name"].presence,
       last_name: data["last_name"].presence, workos_updated_at: version)
     return :unchanged unless user.changed?
+    return :version_conflict if same_version && !authoritative
 
     created = user.new_record?
     user.save!

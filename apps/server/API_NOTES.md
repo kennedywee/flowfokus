@@ -153,7 +153,7 @@ WorkOS stays the authority. Permissions always come from verified token claims, 
 
 How events flow:
 
-1. `POST /webhooks/workos` checks `WorkOS-Signature` over the raw body (HMAC-SHA256, timestamp in milliseconds, 3 minute window).
+1. `POST /webhooks/workos` checks `WorkOS-Signature` over the raw body (HMAC-SHA256, timestamp in milliseconds, 3 minute window). The 1 MB limit applies to the bytes read, whatever `Content-Length` says.
 2. It saves the event in `workos_events`, unique by WorkOS event ID, and answers `200`. Redeliveries answer `200` with `duplicate: true`.
 3. `WorkosEventJob` applies it. The job uses the default Active Job adapter; no Redis. If the process stops, the event stays `pending`.
 
@@ -161,13 +161,16 @@ Sync rules:
 
 - Users match by WorkOS ID only. Never by email. Members are never linked by email.
 - Each record keeps the remote `updated_at` it last applied (`workos_updated_at`). Older versions are `stale` and change nothing.
+- An event with the same `updated_at` but different data cannot be ordered. It changes nothing and is saved as `ignored` with outcome `version_conflict`. Reconcile the gym to apply WorkOS's current data. Event IDs are not used for ordering.
 - Deletions are terminal. The row stays with `workos_deleted_at`, so history keeps its references. A later or delayed event cannot bring it back. The event ledger is the tombstone for records Rails never stored.
 - Organization events only update the name of a gym that already has that WorkOS ID. Sync never creates or links a gym. Slug, currency, timezone, publishing, and business data do not change. Events for unlinked organizations are saved as `ignored` with outcome `organization_not_linked`.
 - A membership ID is never moved to another user or organization (the event fails with `LinkMismatch`).
-- Token observation (`OrganizationMembership.observe!`) only fills gaps before sync. It never changes a synced copy and never recreates a removed one.
+- Token observation (`OrganizationMembership.observe!`) only fills gaps before sync. It never changes a synced copy and never recreates a removed one. It takes the same organization and user locks as sync, so a sync that runs during a request waits and then applies its data last.
+- Lock order for every identity write: organization, then users in WorkOS ID order, then memberships in row ID order (`WorkosSynced`). A membership write holds its user and organization, so it cannot race their deletion. Parent locks are `FOR NO KEY UPDATE` or `FOR SHARE`, so business writes that only reference a user or gym are not blocked.
+- `db:seed` (local only) creates missing staff users and memberships. It never changes a user, gym name, or membership that sync wrote, never touches removed copies, and never adds a copy where sync removed one.
 - A removed membership or role change does not end access at once. Rails accepts a verified token until its `exp` (plus 5 seconds of clock leeway). The token lifetime is a WorkOS session setting; WorkOS Emulate 0.16.0 issues 1 hour tokens. A deleted user is refused at once (`401 invalid_token`).
 
-Event statuses: `pending`, `processed` (with an outcome such as `created`, `updated`, `unchanged`, `stale`, `deleted`, `deleted_remotely`), `ignored` (`organization_not_linked`, `unsupported_event`), `failed` (with `last_error`).
+Event statuses: `pending`, `processed` (with an outcome such as `created`, `updated`, `unchanged`, `stale`, `deleted`, `deleted_remotely`), `ignored` (`organization_not_linked`, `unsupported_event`, `version_conflict`), `failed` (with `last_error`).
 
 | Task | Command (in `apps/server`) |
 | --- | --- |
@@ -176,9 +179,16 @@ Event statuses: `pending`, `processed` (with an outcome such as `created`, `upda
 | Process failed events and pending events older than 5 minutes | `bin/rails workos:events:retry` |
 | Reprocess one event in any status | `EVENT=event_01... bin/rails workos:events:retry` |
 
-Reconciliation reads every page from WorkOS before it writes, then writes in one transaction per gym.
-A failed fetch changes nothing and the command exits non-zero. Live copies that WorkOS no longer lists
-are marked removed. A gym whose WorkOS organization returns `404` is marked deleted.
+Reconciliation reads everything from WorkOS before it writes, then writes in one transaction per gym.
+A failed fetch changes nothing and the command exits non-zero. So does an answer for another WorkOS ID,
+or a list page without a valid `list_metadata.after`: only `after: null` ends a list, because a missing
+record counts as deleted. Live copies that WorkOS no longer lists are marked removed. A gym whose
+WorkOS organization returns `404` is marked deleted.
+
+Reconciliation also fetches, by ID, every live local user who has had a membership in the gym but is
+not in its WorkOS lists. WorkOS deletes a user's memberships with the user, so this is the only way to
+repair a missed `user.deleted`. A `404` marks the user deleted, with their history kept. A user who only
+left the gym stays live. This costs one API read per such former staff member per run.
 
 ## Shared client
 

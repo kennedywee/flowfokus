@@ -70,6 +70,15 @@ RSpec.describe "WorkOS event sync" do
         timezone: "Asia/Kuala_Lumpur", published: true)
     end
 
+    it "does not guess between two different names with the same version" do
+      version = 1.minute.ago
+      deliver_workos_event("organization.updated", workos_organization_data(chainsaw.workos_id, name: "First", updated_at: version))
+      conflict = deliver_workos_event("organization.updated", workos_organization_data(chainsaw.workos_id, name: "Second", updated_at: version))
+
+      expect(conflict).to have_attributes(status: "ignored", outcome: "version_conflict")
+      expect(chainsaw.reload.name).to eq("First")
+    end
+
     it "never creates or links a gym for an unknown organization" do
       event = nil
       expect {
@@ -115,6 +124,17 @@ RSpec.describe "WorkOS event sync" do
 
       expect(late.outcome).to eq("stale")
       expect(chainsaw.organization_memberships.sole.role).to eq("receptionist")
+    end
+
+    it "does not guess between two different updates with the same version" do
+      version = 1.minute.ago
+      deliver_workos_event("organization_membership.updated", membership_data(role: "owner", updated_at: version))
+      same = deliver_workos_event("organization_membership.updated", membership_data(role: "owner", updated_at: version))
+      conflict = deliver_workos_event("organization_membership.updated", membership_data(role: "receptionist", updated_at: version))
+
+      expect(same.outcome).to eq("unchanged")
+      expect(conflict).to have_attributes(status: "ignored", outcome: "version_conflict")
+      expect(chainsaw.organization_memberships.sole.role).to eq("owner")
     end
 
     it "keeps a removal when an older update arrives later" do
@@ -233,8 +253,10 @@ RSpec.describe "WorkOS event sync" do
     it "keeps the received event immutable in the database" do
       event, = WorkosEvent.accept!(workos_event_body("user.created", workos_user_data("user_fixed")))
 
-      expect { in_savepoint { WorkosEvent.where(id: event.id).update_all(payload: { "id" => "forged" }) } }
-        .to raise_error(ActiveRecord::StatementInvalid, /immutable/)
+      [ { payload: { "id" => "forged" } }, { organization_workos_id: "org_other" }, { subject_id: "user_other" } ].each do |change|
+        expect { in_savepoint { WorkosEvent.where(id: event.id).update_all(change) } }
+          .to raise_error(ActiveRecord::StatementInvalid, /immutable/)
+      end
       expect { WorkosEvent.where(id: event.id).update_all(status: "failed", last_error: "x") }.not_to raise_error
     end
   end

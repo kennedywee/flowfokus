@@ -22,6 +22,8 @@ module Flowfokus
     PAGE_LIMIT = 100
     MAX_PAGES = 1_000
     MEMBERSHIP_STATUSES = %w[active inactive pending].freeze
+    # WorkOS page cursors are object IDs.
+    CURSOR_FORMAT = /\A[A-Za-z0-9_\-]{1,255}\z/
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 15
 
@@ -62,6 +64,12 @@ module Flowfokus
 
     # Follows `list_metadata.after` until the last page. Returns all records, or
     # raises: a partial list is never returned.
+    #
+    # Sync treats a record missing from a complete list as deleted, so the end
+    # of the list must be explicit. Every page needs a `data` list of objects
+    # and a `list_metadata` object with an `after` key. Only `after: null` ends
+    # the list. A missing key, a cursor of the wrong shape, a cursor on an empty
+    # page, or a repeated cursor raises.
     def list(path, **params)
       records = []
       seen = Set.new
@@ -69,11 +77,15 @@ module Flowfokus
       MAX_PAGES.times do
         page = get(path, **params, limit: PAGE_LIMIT, order: "asc", after:)
         data = page["data"]
-        raise Error, "WorkOS #{path} returned no data list." unless data.is_a?(Array)
+        metadata = page["list_metadata"]
+        raise Error, "WorkOS #{path} returned no data list." unless data.is_a?(Array) && data.all?(Hash)
+        raise Error, "WorkOS #{path} returned no list_metadata.after." unless metadata.is_a?(Hash) && metadata.key?("after")
 
         records.concat(data)
-        after = page.dig("list_metadata", "after")
-        return records if after.blank?
+        after = metadata["after"]
+        return records if after.nil?
+        raise Error, "WorkOS #{path} returned an invalid page cursor." unless after.is_a?(String) && CURSOR_FORMAT.match?(after)
+        raise Error, "WorkOS #{path} returned a page cursor for an empty page." if data.empty?
         raise Error, "WorkOS #{path} repeated a page cursor." unless seen.add?(after)
       end
       raise Error, "WorkOS #{path} has more than #{MAX_PAGES} pages."

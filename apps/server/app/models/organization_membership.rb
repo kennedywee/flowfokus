@@ -37,59 +37,63 @@ class OrganizationMembership < ApplicationRecord
   # - It never changes a copy that WorkOS sync already wrote.
   # - It never creates a copy where sync removed one, or for a deleted user or
   #   organization. An old token cannot undo a removal or a newer role.
+  # It holds the organization and user locks that sync takes (see WorkosSynced),
+  # so a sync that runs while it works waits, then applies its data last.
   # Writes only when something changed. Returns the membership or nil.
   def self.observe!(organization:, user:, role:)
-    return nil if user.workos_deleted? || organization.workos_deleted?
+    transaction do
+      organization = Organization.lock(WorkosSynced::SHARED).find(organization.id)
+      user = User.lock(WorkosSynced::EXCLUSIVE).find(user.id)
+      next nil if user.workos_deleted? || organization.workos_deleted?
 
-    membership = live.find_by(organization:, user:)
-    if membership.nil?
-      return nil if where(organization:, user:).where.not(workos_deleted_at: nil).exists?
-      return nil if WorkosEvent.membership_deleted?(organization:, user:)
+      membership = live.lock.find_by(organization:, user:)
+      if membership.nil?
+        next nil if where(organization:, user:).where.not(workos_deleted_at: nil).exists?
+        next nil if WorkosEvent.membership_deleted?(organization:, user:)
 
-      membership = new(organization:, user:)
+        membership = new(organization:, user:)
+      end
+      next membership if membership.synced_from_workos?
+
+      membership.status = "active"
+      membership.role = role if role.present?
+      membership.role ||= "member"
+      membership.save! if membership.changed?
+      membership
     end
-    return membership if membership.synced_from_workos?
-
-    membership.status = "active"
-    membership.role = role if role.present?
-    membership.role ||= "member"
-    membership.save! if membership.changed?
-    membership
   rescue ActiveRecord::RecordNotUnique
-    # A parallel request or a sync created it first. Its copy wins.
+    # A writer outside sync, such as db:seed, created it first. Its copy wins.
     live.find_by(organization:, user:)
   end
 
-  # Applies WorkOS membership data for a known local user. Call inside a
-  # transaction. Returns the outcome as a symbol.
+  # Applies WorkOS membership data. Call inside a transaction. Returns the
+  # outcome as a symbol.
   #
-  # The membership must belong to an existing linked gym. A WorkOS ID is never
-  # moved to another user or organization. Raises Superseded when another live
-  # copy exists for the pair; the caller checks WorkOS and retries.
-  def self.sync_from_workos!(data, user: nil, deleted: false, at: Time.current)
+  # The membership must belong to an existing linked gym, and its user must
+  # exist locally. A WorkOS ID is never moved to another user or organization.
+  # Raises Superseded when another live copy exists for the pair; the caller
+  # checks WorkOS and retries. `authoritative`: see User.sync_from_workos!.
+  def self.sync_from_workos!(data, deleted: false, at: Time.current, authoritative: false)
     workos_id = WorkosSynced.id!(data)
     organization_workos_id = WorkosSynced.id!(data, "organization_id")
     user_workos_id = WorkosSynced.id!(data, "user_id")
     version = WorkosSynced.time(data["updated_at"]) || at
 
-    organization = Organization.find_by(workos_id: organization_workos_id)
+    # Lock order: organization, user, then membership rows (see WorkosSynced).
+    organization = Organization.lock(WorkosSynced::SHARED).find_by(workos_id: organization_workos_id)
     return :organization_not_linked unless organization
 
+    user = User.lock(WorkosSynced::EXCLUSIVE).find_by(workos_id: user_workos_id)
     membership = lock.find_by(workos_id:)
     if membership && (membership.organization_id != organization.id || membership.user.workos_id != user_workos_id)
       raise LinkMismatch, "WorkOS membership #{workos_id} is linked to another user or organization."
     end
-    if user && user.workos_id != user_workos_id
-      raise LinkMismatch, "WorkOS membership #{workos_id} names another user."
-    end
 
     if deleted
       # A copy written before sync has no WorkOS ID yet. Adopt it.
-      membership ||= live.lock.joins(:user).find_by(organization:, workos_id: nil, users: { workos_id: user_workos_id })
+      membership ||= user && live.lock.find_by(organization:, user:, workos_id: nil)
       return :already_deleted if membership&.workos_deleted?
-
       # Keep a tombstone even when no copy existed, so an old token cannot add one.
-      user ||= User.find_by(workos_id: user_workos_id)
       return :not_present unless membership || user
 
       membership ||= new(organization:, user:, role: role_slug(data) || "member",
@@ -101,10 +105,9 @@ class OrganizationMembership < ApplicationRecord
 
     return :deleted_remotely if membership&.workos_deleted? || WorkosEvent.deleted?("organization_membership", workos_id)
     return :organization_deleted if organization.workos_deleted?
-    return :stale if membership&.stale_workos_version?(version)
-
-    user ||= User.find_by!(workos_id: user_workos_id)
+    return :user_missing unless user
     return :user_deleted if user.workos_deleted?
+    return :stale if membership&.stale_workos_version?(version)
 
     if membership.nil?
       membership = live.lock.find_by(organization:, user:)
@@ -112,9 +115,11 @@ class OrganizationMembership < ApplicationRecord
       membership ||= new(organization:, user:)
     end
 
+    same_version = membership.same_workos_version?(version)
     membership.assign_attributes(workos_id:, status: data["status"], role: role_slug(data) || membership.role || "member",
       workos_updated_at: version)
     return :unchanged unless membership.changed?
+    return :version_conflict if same_version && !authoritative
 
     created = membership.new_record?
     membership.synced_at = Time.current

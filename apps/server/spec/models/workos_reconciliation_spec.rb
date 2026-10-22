@@ -28,18 +28,40 @@ RSpec.describe "Organization#reconcile_with_workos!" do
     expect(OrganizationMembership.count).to eq(2)
   end
 
-  it "adopts copies written before sync and removes copies WorkOS no longer has" do
+  it "adopts copies written before sync, and removes the membership of staff who left but still exist" do
     owner = staff_user("user_owner", email: "owner@example.test")
     former = staff_user("user_former")
+    api.users["user_former"] = workos_user_data("user_former", email: "former@example.test", updated_at: 1.hour.ago)
     seeded = chainsaw.organization_memberships.create!(user: owner, role: "member")
     stale = chainsaw.organization_memberships.create!(user: former, role: "owner")
 
     summary = chainsaw.reconcile_with_workos!(api:)
 
-    expect(summary).to include(membership_deleted: 1, membership_updated: 1, membership_created: 1)
+    expect(summary).to include(membership_deleted: 1, membership_updated: 1, membership_created: 1, user_updated: 2)
     expect(seeded.reload).to have_attributes(workos_id: "om_owner", role: "owner")
     expect(stale.reload.workos_deleted_at).to be_present
-    expect(former.reload.workos_deleted_at).to be_nil
+    expect(former.reload).to have_attributes(workos_deleted_at: nil, email: "former@example.test")
+    expect(api.calls.count(:user)).to eq(1)
+  end
+
+  it "repairs a missed user deletion and keeps the user's history" do
+    gone = staff_user("user_gone")
+    other_gym = ironworks.organization_memberships.create!(user: gone, role: "owner")
+    membership = chainsaw.organization_memberships.create!(user: gone, role: "owner", workos_id: "om_gone", workos_updated_at: 2.hours.ago)
+    location = create_location(chainsaw)
+    member = create_member(chainsaw)
+    CheckIn.create!(organization: chainsaw, member:, location:, recorded_by_user: gone, result: "denied",
+      denial_reason: "no_entitlement", checked_in_at: Time.current, idempotency_key: SecureRandom.uuid, request_fingerprint: "x")
+
+    summary = chainsaw.reconcile_with_workos!(api:)
+
+    expect(summary).to include(user_deleted: 1)
+    expect(gone.reload.workos_deleted_at).to be_present
+    expect(gone.email).to eq("user_gone@example.test")
+    expect([ membership.reload, other_gym.reload ].map(&:workos_deleted_at)).to all(be_present)
+    expect(CheckIn.where(recorded_by_user: gone)).to exist
+
+    expect(chainsaw.reconcile_with_workos!(api:)).not_to include(:user_deleted)
   end
 
   it "changes nothing when any fetch fails" do
@@ -51,6 +73,69 @@ RSpec.describe "Organization#reconcile_with_workos!" do
     expect(User.where(workos_id: %w[user_owner user_desk])).to be_empty
     expect(chainsaw.organization_memberships.live.count).to eq(1)
     expect(chainsaw.reload.workos_synced_at).to be_nil
+  end
+
+  it "changes nothing when fetching a missing user fails" do
+    gone = staff_user("user_gone")
+    membership = chainsaw.organization_memberships.create!(user: gone, role: "owner")
+    api.fail_on = :user
+
+    expect { chainsaw.reconcile_with_workos!(api:) }.to raise_error(Flowfokus::WorkosApi::Unavailable)
+
+    expect(api.calls).to include(:user)
+    expect(gone.reload.workos_deleted_at).to be_nil
+    expect(membership.reload.workos_deleted_at).to be_nil
+    expect(User.where(workos_id: %w[user_owner user_desk])).to be_empty
+    expect(chainsaw.reload.workos_synced_at).to be_nil
+  end
+
+  it "refuses an organization answer for another WorkOS ID" do
+    ironworks
+    allow(api).to receive(:organization).and_return(workos_organization_data(ironworks.workos_id, name: "Wrong Gym"))
+
+    expect { chainsaw.reconcile_with_workos!(api:) }.to raise_error(Flowfokus::WorkosApi::Error, /#{ironworks.workos_id}/)
+
+    expect([ chainsaw.reload.name, ironworks.reload.name ]).to eq(%w[Chainsaw Ironworks])
+    expect(User.count).to eq(0)
+  end
+
+  it "refuses a user answer for another WorkOS ID" do
+    staff_user("user_gone").then { chainsaw.organization_memberships.create!(user: _1, role: "owner") }
+    allow(api).to receive(:user).and_return(api.users["user_owner"])
+
+    expect { chainsaw.reconcile_with_workos!(api:) }.to raise_error(Flowfokus::WorkosApi::Error, /user_owner/)
+
+    expect(User.where(workos_id: "user_owner")).to be_empty
+    expect(chainsaw.organization_memberships.live.count).to eq(1)
+  end
+
+  it "changes nothing when a list page has no explicit end" do
+    removed = staff_user("user_removed").then { chainsaw.organization_memberships.create!(user: _1, role: "owner") }
+    client = Flowfokus::WorkosApi.new(api_key: "sk_test_x", base_url: "http://workos:4100")
+    allow(client).to receive(:get) do |path, **|
+      if path.start_with?("/organizations/")
+        api.organizations[org_id]
+      else
+        { "object" => "list", "data" => [] }
+      end
+    end
+
+    expect { chainsaw.reconcile_with_workos!(api: client) }.to raise_error(Flowfokus::WorkosApi::Error, /list_metadata/)
+
+    expect(removed.reload.workos_deleted_at).to be_nil
+    expect(chainsaw.reload.workos_synced_at).to be_nil
+  end
+
+  it "applies WorkOS's current data over an event with the same version" do
+    version = 1.hour.ago
+    api.users["user_owner"] = workos_user_data("user_owner", email: "current@example.test", updated_at: version)
+    deliver_workos_event("user.updated", workos_user_data("user_owner", email: "first@example.test", updated_at: version))
+    conflict = deliver_workos_event("user.updated", workos_user_data("user_owner", email: "second@example.test", updated_at: version))
+    expect(conflict).to have_attributes(status: "ignored", outcome: "version_conflict")
+    expect(User.find_by!(workos_id: "user_owner").email).to eq("first@example.test")
+
+    expect(chainsaw.reconcile_with_workos!(api:)).to include(user_updated: 1)
+    expect(User.find_by!(workos_id: "user_owner").email).to eq("current@example.test")
   end
 
   it "does not overwrite data that a newer webhook applied" do
@@ -113,15 +198,37 @@ RSpec.describe Flowfokus::WorkosApi do
   end
 
   it "raises instead of looping on a repeated cursor" do
-    allow(client).to receive(:get).and_return({ "data" => [], "list_metadata" => { "after" => "same" } })
+    allow(client).to receive(:get).and_return({ "data" => [ { "id" => "same" } ], "list_metadata" => { "after" => "same" } })
 
     expect { client.organization_users("org_1") }.to raise_error(described_class::Error, /repeated/)
   end
 
-  it "raises on a malformed page" do
-    allow(client).to receive(:get).and_return({ "list_metadata" => {} })
+  it "raises on a page without a data list of objects" do
+    [ { "list_metadata" => { "after" => nil } }, { "data" => [ "a" ], "list_metadata" => { "after" => nil } } ].each do |page|
+      allow(client).to receive(:get).and_return(page)
 
-    expect { client.organization_users("org_1") }.to raise_error(described_class::Error)
+      expect { client.organization_users("org_1") }.to raise_error(described_class::Error, /data list/)
+    end
+  end
+
+  it "needs an explicit end: a page without list_metadata.after is not the last page" do
+    [ { "data" => [] }, { "data" => [], "list_metadata" => nil }, { "data" => [], "list_metadata" => [] },
+      { "data" => [], "list_metadata" => {} }, { "data" => [], "list_metadata" => { "before" => nil } } ].each do |page|
+      allow(client).to receive(:get).and_return(page)
+
+      expect { client.organization_memberships("org_1") }.to raise_error(described_class::Error, /list_metadata/)
+    end
+  end
+
+  it "raises on a cursor of the wrong shape, or a cursor on an empty page" do
+    [ "", 42, true, { "id" => "a" }, [ "a" ], "has space", "a/../b", "x" * 256 ].each do |after|
+      allow(client).to receive(:get).and_return({ "data" => [ { "id" => "a" } ], "list_metadata" => { "after" => after } })
+
+      expect { client.organization_memberships("org_1") }.to raise_error(described_class::Error, /invalid page cursor/)
+    end
+
+    allow(client).to receive(:get).and_return({ "data" => [], "list_metadata" => { "after" => "om_1" } })
+    expect { client.organization_memberships("org_1") }.to raise_error(described_class::Error, /empty page/)
   end
 
   it "uses only the official HTTPS API in production, after verification" do

@@ -45,78 +45,103 @@ class Organization < ApplicationRecord
   # timezone, publishing, and business records stay as Flowfokus set them.
   # A deletion keeps the gym and its history, keeps its WorkOS ID so nothing can
   # relink it, and removes its live staff memberships from the synced copy.
-  def self.sync_from_workos!(data, deleted: false, at: Time.current)
+  # `authoritative`: see User.sync_from_workos!.
+  def self.sync_from_workos!(data, deleted: false, at: Time.current, authoritative: false)
     workos_id = WorkosSynced.id!(data)
     version = WorkosSynced.time(data["updated_at"]) || at
-    organization = lock.find_by(workos_id:)
+    organization = lock(WorkosSynced::EXCLUSIVE).find_by(workos_id:)
     return :organization_not_linked unless organization
 
     if deleted
       return :already_deleted if organization.workos_deleted?
 
       organization.update!(workos_deleted_at: at, workos_updated_at: [ version, organization.workos_updated_at ].compact.max)
-      organization.organization_memberships.live.find_each { _1.tombstone!(at:) }
+      organization.organization_memberships.live.order(:id).lock.to_a.each { _1.tombstone!(at:) }
       return :deleted
     end
 
     return :deleted_remotely if organization.workos_deleted?
     return :stale if organization.stale_workos_version?(version)
 
+    same_version = organization.same_workos_version?(version)
     name = data["name"].to_s.strip
     organization.name = name if name.present?
     organization.workos_updated_at = version
     return :unchanged unless organization.changed?
+    return :version_conflict if same_version && !authoritative
 
     organization.save!
     :updated
   end
 
-  # Imports or repairs this gym's WorkOS identity data: its name, the users with
-  # a membership, and every membership. Use it for the first import, after missed
+  # Imports or repairs this gym's WorkOS identity data: its name, its staff
+  # users, and every membership. Use it for the first import, after missed
   # webhooks, and to load emulator seeds. Safe to repeat.
   #
-  # It reads every page from WorkOS before it writes. A failed or partial fetch
-  # raises and changes nothing. All writes happen in one transaction. Data that
-  # a newer webhook already applied is not overwritten.
+  # It reads everything from WorkOS before it writes. A failed, partial, or
+  # mismatched fetch raises and changes nothing. All writes happen in one
+  # transaction. Data that a newer webhook already applied is not overwritten.
+  #
+  # Users come from the gym's member lists, plus every live local user who has
+  # ever had a membership here. Those are fetched by ID: WorkOS deletes a user's
+  # memberships with the user, so a missed user.deleted leaves no other trace.
+  # A 404 marks the user deleted. A user who only left this gym stays live.
   # Returns a summary hash.
   def reconcile_with_workos!(api: Flowfokus::WorkosApi.from_env, at: Time.current)
     raise ArgumentError, "#{slug} has no WorkOS organization ID." if workos_id.blank?
 
     summary = Hash.new(0)
     begin
-      remote = api.organization(workos_id)
+      remote = WorkosSynced.fetched!(api.organization(workos_id), workos_id)
     rescue Flowfokus::WorkosApi::NotFound
       transaction { summary[:"organization_#{self.class.sync_from_workos!({ "id" => workos_id }, deleted: true, at:)}"] += 1 }
       return summary
     end
 
-    users = api.organization_users(workos_id).index_by { WorkosSynced.id!(_1) }
     memberships = api.organization_memberships(workos_id)
-    foreign = memberships.reject { _1.is_a?(Hash) && _1["organization_id"] == workos_id }
+    foreign = memberships.reject { _1["organization_id"] == workos_id }
     summary[:membership_wrong_organization] += foreign.size if foreign.any?
     memberships -= foreign
+    users = api.organization_users(workos_id).index_by { WorkosSynced.id!(_1) }
 
-    # A membership can name a user the user list missed. Fetch those one by one.
+    # Fetch, one by one, users the lists missed: members the user list lacks,
+    # and local staff that WorkOS no longer lists here.
+    known = User.live.where(id: organization_memberships.select(:user_id)).pluck(:workos_id)
     deleted_user_ids = []
-    memberships.map { WorkosSynced.id!(_1, "user_id") }.uniq.each do |user_id|
+    (memberships.map { WorkosSynced.id!(_1, "user_id") } | known).sort.each do |user_id|
       next if users.key?(user_id)
 
-      users[user_id] = api.user(user_id)
+      users[user_id] = WorkosSynced.fetched!(api.user(user_id), user_id)
     rescue Flowfokus::WorkosApi::NotFound
       deleted_user_ids << user_id
     end
 
     transaction do
-      lock!
-      summary[:"organization_#{self.class.sync_from_workos!(remote, at:)}"] += 1
-      users.each_value { summary[:"user_#{User.sync_from_workos!(_1, at:)}"] += 1 }
-      deleted_user_ids.each { summary[:"user_#{User.sync_from_workos!({ "id" => _1 }, deleted: true, at:)}"] += 1 }
+      lock!(WorkosSynced::EXCLUSIVE)
+      summary[:"organization_#{self.class.sync_from_workos!(remote, at:, authoritative: true)}"] += 1
+
+      # Lock in the WorkosSynced order: users, then every membership this run
+      # may change, in one statement.
+      user_ids = (users.keys + deleted_user_ids).sort
+      User.where(workos_id: user_ids).order(:workos_id).lock(WorkosSynced::EXCLUSIVE).load
+      OrganizationMembership.live.where(organization: self)
+        .or(OrganizationMembership.live.where(user: User.where(workos_id: deleted_user_ids)))
+        .order(:id).lock.load
+
+      user_ids.each do |user_id|
+        outcome = if users.key?(user_id)
+          User.sync_from_workos!(users[user_id], at:, authoritative: true)
+        else
+          User.sync_from_workos!({ "id" => user_id }, deleted: true, at:)
+        end
+        summary[:"user_#{outcome}"] += 1
+      end
 
       remote_ids = memberships.map { WorkosSynced.id!(_1) }
       remote_user_ids = memberships.map { _1["user_id"] }
       # Live local copies that WorkOS no longer lists were deleted. Skip any that
       # a webhook changed after this fetch started.
-      organization_memberships.live.includes(:user).lock.find_each do |membership|
+      organization_memberships.live.includes(:user).order(:id).each do |membership|
         listed = membership.workos_id ? remote_ids.include?(membership.workos_id) : remote_user_ids.include?(membership.user.workos_id)
         next if listed || (membership.synced_at && membership.synced_at >= at)
 
@@ -125,9 +150,7 @@ class Organization < ApplicationRecord
       end
 
       memberships.each do |data|
-        user = User.find_by(workos_id: data["user_id"])
-        outcome = user ? OrganizationMembership.sync_from_workos!(data, user:, at:) : :user_missing
-        summary[:"membership_#{outcome}"] += 1
+        summary[:"membership_#{OrganizationMembership.sync_from_workos!(data, at:, authoritative: true)}"] += 1
       end
 
       update!(workos_synced_at: at)
