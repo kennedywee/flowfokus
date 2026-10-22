@@ -7,6 +7,8 @@ Sprint 1 builds a Rails container and two Cloudflare Worker bundles. It does not
 - PostgreSQL and the Rails API run locally.
 - The staff portal uses local emulator sign-in, with an optional fixed demo actor. See [Local staff authentication](local-auth.md).
 - The gym site can show public organization details and offers.
+- Local WorkOS users and staff memberships sync through verified webhooks, with
+  explicit import and recovery commands. See [WorkOS identity sync](workos-sync.md).
 - Production builds serve public pages. Protected requests fail closed while real authentication is unavailable.
 
 Do not use this candidate for live member or payment data. Live WorkOS sign-in and token verification must be verified before release. Manual payment recording does not collect money from a bank or card processor.

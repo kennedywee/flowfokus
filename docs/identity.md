@@ -86,6 +86,10 @@ The member area never gets staff permissions, even when the person is also staff
 
 Rails keeps local copies of WorkOS users, organizations, and memberships. WorkOS events or webhooks update them. Reconcile when needed.
 
+The local implementation uses verified webhooks, a saved event ledger, and
+explicit import and repair commands. See [WorkOS identity sync](workos-sync.md)
+for setup, recovery, and production limits.
+
 Sync processing must be:
 
 - Verified.

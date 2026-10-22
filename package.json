@@ -11,6 +11,8 @@
     "check:docker": "bash scripts/check-docker",
     "smoke": "node scripts/smoke.mjs",
     "smoke:auth": "node scripts/smoke-auth.mjs",
+    "smoke:identity": "node scripts/smoke-identity-sync.mjs",
+    "workos:webhook": "node scripts/configure-workos-webhook.mjs",
     "smoke:session": "bun run --cwd apps/portal smoke:session",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
     "contract:check": "bash scripts/contract-check",

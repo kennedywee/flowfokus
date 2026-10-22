@@ -6,6 +6,8 @@ services:
     image: ghcr.io/workos/emulate:0.16.0
     init: true
     command: ["--host", "0.0.0.0", "--interactive-password", "--issuer", "http://localhost:4100"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
     volumes:
@@ -34,6 +36,9 @@ services:
       WORKOS_CLIENT_ID: client_flowfokus_local
       WORKOS_ISSUER: http://localhost:4100/user_management/client_flowfokus_local
       WORKOS_JWKS_URL: http://workos:4100/sso/jwks/client_flowfokus_local
+      WORKOS_API_KEY: sk_test_default
+      WORKOS_API_BASE_URL: http://workos:4100
+      WORKOS_WEBHOOK_SECRET: whsec_flowfokus_local_only
       RAILS_DEVELOPMENT_HOSTS: server
       PIDFILE: /tmp/flowfokus-server.pid
     volumes:

@@ -17,6 +17,7 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 | [Monorepo](monorepo.md) | Apps, shared packages, API contract, local development. |
 | [Release](release.md) | Tags, CI, candidates, deployment, hotfixes, mobile delivery. |
 | [Local staff authentication](local-auth.md) | Emulator setup, fake users, permissions, and local verification. |
+| [WorkOS identity sync](workos-sync.md) | Local webhooks, initial import, recovery commands, and release limits. |
 | [Authentication](authentication.md) | Hosts, BFF sign-in for staff and members, mobile tokens. |
 | [Identity](identity.md) | Users, organizations, staff, members, staff portal, member area, WorkOS sync. |
 | [Authorization](authorization.md) | Permissions, enforcement, tenant isolation, staff management. |

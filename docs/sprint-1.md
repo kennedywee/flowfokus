@@ -53,3 +53,16 @@ membership workflow must also work through an authenticated session.
 The fixed demo actor remains an explicit local option. Gym member sign-in,
 live WorkOS sync, real staging verification, and deployment remain separate work.
 See [Local staff authentication](local-auth.md).
+
+## Follow-up: local WorkOS identity sync
+
+Local identity sync now covers users, staff memberships, and the names of
+already linked organizations. Signed webhooks are saved before processing.
+Explicit commands import existing identities, repair missed events, show
+failures, and retry saved events. Deletions preserve local history. The portal
+keeps verified token claims as its permission authority.
+
+See [WorkOS identity sync](workos-sync.md) for setup and recovery, and
+[Verification](verification.md) for the local evidence and release limits.
+Live WorkOS verification, automatic recovery scheduling, staff management
+screens, and member linking remain separate work.

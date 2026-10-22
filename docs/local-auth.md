@@ -70,13 +70,16 @@ memberships, and roles in `workos-emulate.config.yaml`, then restart the emulato
 
 ```sh
 docker compose restart workos server
+docker compose exec -T server bin/rails workos:reconcile
 ```
 
 The emulator keeps sessions and users in memory. A restart reloads the seed file
 and invalidates existing sessions. Restarting Rails also clears its cached signing
 keys. Sign in again. PostgreSQL business records remain in the database volume.
-Adding a new identity also needs a matching Rails
-user reference; the existing seed users are prepared by `db:seed`.
+New users and staff memberships created through the emulator API sync to Rails
+through signed webhooks. Seed-file changes need the reconciliation command
+because the emulator does not deliver its initial seed events to seeded webhook
+endpoints. See [WorkOS identity sync](workos-sync.md).
 
 ## Verify
 

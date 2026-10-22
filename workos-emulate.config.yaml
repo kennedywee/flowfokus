@@ -1,5 +1,20 @@
 # Fake identities for local development only. No email is sent.
 # IDs match the Rails seeds and stay stable when the emulator restarts.
+# Fake signing secret for Docker development. Never use it with live WorkOS.
+webhookEndpoints:
+  - endpoint_url: http://server:4000/webhooks/workos
+    secret: whsec_flowfokus_local_only
+    events:
+      - user.created
+      - user.updated
+      - user.deleted
+      - organization.created
+      - organization.updated
+      - organization.deleted
+      - organization_membership.created
+      - organization_membership.updated
+      - organization_membership.deleted
+
 users:
   - id: user_demo_chainsaw_owner
     email: demo.owner@flowfokus.test
@@ -48,6 +63,9 @@ organizations:
       - email: manager@example.com
         role: receptionist
         status: active
+  - id: org_demo_hidden
+    name: Hidden Gym
+    memberships: []
 
 roles:
   - slug: owner

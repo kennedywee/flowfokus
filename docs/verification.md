@@ -1,5 +1,74 @@
 # Verification
 
+## Local WorkOS identity sync — 22 October 2026
+
+Opus implemented the Rails sync. Coordinator review and follow-up fixes covered
+concurrent creation, token observation, deletions, reconciliation, and API
+compatibility. The local Docker stack is the verified webhook setup. Nothing
+was pushed or deployed.
+
+### Checks completed
+
+- All 231 Rails examples pass in Docker. Coverage includes actual webhook
+  response contracts, raw-body signatures, body size limits, duplicates,
+  reordered events, equal-version conflicts, retained history, tenant links,
+  missed user deletions, partial API failures, and concurrent identity writes.
+- Real parallel transactions cover both unique-index and validation races on
+  first user creation. A separate regression proves a deletion arriving before
+  the first insert leaves the user deleted. Removing the fixes reproduces the
+  failures. Old token observation cannot restore removed staff memberships.
+- A fresh schema load preserves the event ledger constraints and immutable
+  routing fields. The trigger update has a reversible migration. Rails keeps
+  `db/schema.rb`.
+- RuboCop passes across 103 files. Brakeman reports no warnings or errors.
+- All 104 portal tests, 42 site tests, and 3 tooling tests pass. Generated types
+  match OpenAPI. API, portal, and site type checks pass. The contract comparison
+  against `2005249` reports no breaking changes. Webhook error codes have their
+  own schema, so older endpoint response enums stay unchanged.
+- Both Cloudflare Worker bundles build. Artifact checks pass after local
+  environment files are removed. The existing Vite CSS source-map warning
+  remains.
+- The production Rails image builds. The image check confirms it boots without
+  a database, rejects demo mode, and refuses protected demo requests.
+- `bun run smoke:identity` passes against the running emulator and Rails. It
+  creates a staff identity without Rails seeds, applies name and role changes,
+  rejects a bad signature, accepts duplicate delivery, and preserves removal
+  despite an old token. After cleanup, the ledger has 14 processed events and
+  no pending or failed events.
+- `bun run smoke:auth` and `bun run smoke:session` pass. The existing membership
+  sale, payment, access delivery, check-in, organization switching, refresh, and
+  revoked-session checks remain successful.
+- A separate outage check disabled the local webhook, created a user and
+  membership, and imported them through `workos:reconcile`. A repeated import
+  preserved one membership. Deleting the remote user while delivery stayed
+  disabled, then reconciling, marked the local user deleted and rejected their
+  old token with 401. The webhook was enabled again afterward.
+- Rails liveness and readiness, the portal, and the gym site at
+  `chainsaw.localhost:4002` answer successfully. Compose configuration, shell
+  syntax, and JavaScript syntax checks pass.
+
+### Host processes and release limits
+
+The host-mode script points the emulator at the Docker host gateway and allows
+that development host in Rails. Rails answered on localhost during the host
+probe, but the emulator's gateway request failed with
+`The operation was aborted due to timeout`. Host-mode webhook delivery is not
+verified on this machine. The Docker setup was restored. No host firewall
+settings were changed. Host developers can use explicit reconciliation or
+configure container-to-host access. See [WorkOS identity sync](workos-sync.md).
+
+Real WorkOS, cloud deployment, and GitHub-hosted CI remain unverified. The
+in-process job adapter can lose queued jobs on restart; the event ledger and
+explicit retry command recover them. Automatic recovery scheduling remains
+production follow-up work. Membership revocation takes effect when existing
+tokens expire, plus five seconds of clock leeway. The production token lifetime
+and required revocation delay remain open.
+
+Deleted WorkOS gyms leave staff navigation but retain their Rails publication
+setting. Closing a gym's public site needs a separate product policy. Staff
+invitation screens, account profile forms, and member linking remain separate
+work.
+
 ## Local staff authentication — 22 October 2026
 
 Local staff sign-in uses WorkOS Emulate 0.16.0 in Docker. Demo mode is off by

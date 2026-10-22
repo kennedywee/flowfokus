@@ -8,6 +8,11 @@ export FLOWFOKUS_DEMO_TOKEN="${FLOWFOKUS_DEMO_TOKEN:-flowfokus-local-demo-token}
 export WORKOS_CLIENT_ID="${WORKOS_CLIENT_ID:-client_flowfokus_local}"
 export WORKOS_ISSUER="${WORKOS_ISSUER:-http://localhost:4100/user_management/client_flowfokus_local}"
 export WORKOS_JWKS_URL="${WORKOS_JWKS_URL:-http://127.0.0.1:4100/sso/jwks/client_flowfokus_local}"
+export WORKOS_API_KEY="${WORKOS_API_KEY:-sk_test_default}"
+export WORKOS_API_BASE_URL="${WORKOS_API_BASE_URL:-http://127.0.0.1:4100}"
+export WORKOS_WEBHOOK_SECRET="${WORKOS_WEBHOOK_SECRET:-whsec_flowfokus_local_only}"
+export RAILS_DEVELOPMENT_HOSTS="host.docker.internal${RAILS_DEVELOPMENT_HOSTS:+,$RAILS_DEVELOPMENT_HOSTS}"
+node scripts/configure-workos-webhook.mjs http://host.docker.internal:4000/webhooks/workos
 
 set -m
 pids=()
@@ -20,7 +25,8 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-(cd apps/server && exec bin/dev -b 127.0.0.1 -p 4000) &
+# The emulator container reaches Rails through the Docker host gateway.
+(cd apps/server && exec bin/dev -b 0.0.0.0 -p 4000) &
 pids+=("$!")
 bun run --cwd apps/portal dev &
 pids+=("$!")

@@ -76,10 +76,16 @@ Or use the installed runtimes:
 bun run check
 # With the local apps running:
 bun run smoke:auth
+bun run smoke:identity
 bun run smoke:session
 ```
 
 The smoke workflow creates records in the local database. Tests use a separate database.
+
+Local WorkOS changes sync through signed webhooks. Run
+`docker compose exec -T server bin/rails workos:reconcile` after changing emulator
+seeds or restarting it. Import, repair, and retry commands are in
+[WorkOS identity sync](docs/workos-sync.md).
 
 ## Release boundary
 
