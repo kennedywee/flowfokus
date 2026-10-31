@@ -6,7 +6,8 @@ class ProductBenefit < ApplicationRecord
   belongs_to :location, optional: true
   same_organization_as :product, :location
 
-  validates :name, presence: true
+  validates :name, presence: true, length: { maximum: 200 }
+  validate { errors.add(:location_id, "was not found") if location_id.present? && location.nil? }
   validates :kind, inclusion: { in: %w[gym_access] }
   validates :usage_limit, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
 

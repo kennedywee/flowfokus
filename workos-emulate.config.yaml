@@ -74,6 +74,8 @@ roles:
       - members:read
       - members:create
       - products:read
+      - products:create
+      - products:update
       - purchases:read
       - purchases:create
       - purchases:fulfill
@@ -96,6 +98,10 @@ permissions:
     name: Create members
   - slug: products:read
     name: Read offers
+  - slug: products:create
+    name: Create offers
+  - slug: products:update
+    name: Change offers and prices
   - slug: purchases:read
     name: Read sales
   - slug: purchases:create

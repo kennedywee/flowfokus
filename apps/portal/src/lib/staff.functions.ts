@@ -13,6 +13,14 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  createPriceInput,
+  createProductInput,
+  updatePriceInput,
+  updateProductInput,
+  type CreatePriceInput,
+  type CreateProductInput,
+  type UpdatePriceInput,
+  type UpdateProductInput,
   createCheckInInput,
   createMemberInput,
   createSaleInput,
@@ -116,6 +124,41 @@ export const listProducts = createServerFn({ method: "GET" })
   .handler(
     async ({ data }): Promise<Result<Schemas["StaffProduct"][]>> =>
       callStaff(data.slug, (api) => api.GET("/staff/products")),
+  );
+
+export const createProduct = createServerFn({ method: "POST" })
+  .validator((input: CreateProductInput) => createProductInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["StaffProduct"]>> => {
+    const { slug, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/products", { body }));
+  });
+
+export const updateProduct = createServerFn({ method: "POST" })
+  .validator((input: UpdateProductInput) => updateProductInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["StaffProduct"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.PATCH("/staff/products/{id}", { params: { path: { id } }, body }));
+  });
+
+export const createPrice = createServerFn({ method: "POST" })
+  .validator((input: CreatePriceInput) => createPriceInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["StaffProduct"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/products/{id}/prices", { params: { path: { id } }, body }));
+  });
+
+export const updatePrice = createServerFn({ method: "POST" })
+  .validator((input: UpdatePriceInput) => updatePriceInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["StaffProduct"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.PATCH("/staff/prices/{id}", { params: { path: { id } }, body }));
+  });
+
+export const archivePrice = createServerFn({ method: "POST" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["StaffProduct"]>> =>
+      callStaff(data.slug, (api) => api.POST("/staff/prices/{id}/archive", { params: { path: { id: data.id } } })),
   );
 
 export const listSales = createServerFn({ method: "GET" })

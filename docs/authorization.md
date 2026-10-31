@@ -23,6 +23,23 @@ purchases:read  purchases:refund
 staff:manage    settings:manage
 ```
 
+### Implemented permissions
+
+The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Receptionist role has the read permissions and `check_ins:create`.
+
+| Permission | Allows |
+| --- | --- |
+| `members:read`, `members:create` | List, view, and add members |
+| `products:read` | List offers and prices |
+| `products:create` | Add an offer with its benefits |
+| `products:update` | Edit an offer, add prices, change a price label or sale status, archive a price |
+| `purchases:read`, `purchases:create` | List, view, and record sales |
+| `purchases:fulfill` | Deliver a fully paid sale |
+| `payments:create` | Record a manual payment |
+| `check_ins:read`, `check_ins:create` | List and record check-ins |
+
+Which roles ship by default is still open. See [Decisions](decisions.md#identity-and-access).
+
 ## Enforcement
 
 `Current.permissions` comes from verified WorkOS session claims for the active organization. See [Identity](identity.md#request-context).

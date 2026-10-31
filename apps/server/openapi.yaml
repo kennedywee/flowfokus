@@ -345,6 +345,190 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [staff]
+      operationId: createStaffProduct
+      summary: Create a membership product with its benefits. Needs products:create.
+      description: |
+        A product needs at least one benefit. Add prices separately.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/products/{id}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffProduct
+      summary: Change a product. Needs products:update.
+      description: |
+        Changes the name, description, or publication. `benefits`, when sent, replaces
+        every benefit template. Past sales keep their snapshotted terms.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdate"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/products/{id}/prices:
+    post:
+      tags: [staff]
+      operationId: createStaffPrice
+      summary: Add a price to a product. Needs products:update.
+      description: |
+        Amount, currency, and duration never change after creation. The currency is the
+        organization currency. Returns the whole product.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/prices/{id}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffPrice
+      summary: Change a price label or sale status. Needs products:update.
+      description: |
+        Only `label` and `available` can change. An archived price stays off sale.
+        Returns the whole product.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceUpdate"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/prices/{id}/archive:
+    post:
+      tags: [staff]
+      operationId: archiveStaffPrice
+      summary: Archive a price. Needs products:update.
+      description: |
+        Stops new sales for good. Past sales keep the price. Repeating the call changes nothing.
+        Returns the whole product.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffProductResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /staff/sales:
     get:
@@ -1010,6 +1194,8 @@ components:
         - members:read
         - members:create
         - products:read
+        - products:create
+        - products:update
         - purchases:read
         - purchases:create
         - purchases:fulfill
@@ -1676,3 +1862,103 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/CheckIn"
+
+    BenefitInput:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        usage_limit:
+          type: integer
+          minimum: 1
+          nullable: true
+          description: Uses per period. Null or absent means unlimited.
+        location_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Null or absent means every location.
+
+    ProductInput:
+      type: object
+      additionalProperties: false
+      required: [name, benefits]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+        published:
+          type: boolean
+          description: Shown on the gym site. Defaults to false.
+        benefits:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/BenefitInput"
+
+    ProductUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+        published:
+          type: boolean
+        benefits:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/BenefitInput"
+
+    PriceInput:
+      type: object
+      additionalProperties: false
+      required: [label, amount_minor, duration_days]
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        amount_minor:
+          type: integer
+          minimum: 0
+        duration_days:
+          type: integer
+          minimum: 1
+          maximum: 3660
+
+    PriceUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        available:
+          type: boolean
+
+    StaffProductResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/StaffProduct"

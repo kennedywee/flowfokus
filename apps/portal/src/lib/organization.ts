@@ -1,4 +1,5 @@
 import { getRouteApi } from "@tanstack/react-router";
+import type { Permission } from "@flowfokus/api";
 
 const orgRoute = getRouteApi("/$org");
 
@@ -10,6 +11,15 @@ export function useOrganization() {
   const { organization } = orgRoute.useLoaderData();
   if (!organization?.ok) throw new Error("Organization is not loaded");
   return organization.data;
+}
+
+/**
+ * True when the session holds `permission`. Only hides actions the person
+ * cannot take. Rails still checks every request.
+ */
+export function useCan() {
+  const organization = useOrganization();
+  return (permission: Permission) => organization.actor.permissions.includes(permission);
 }
 
 export function useLocationName() {

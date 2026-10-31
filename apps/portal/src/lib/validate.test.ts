@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createCheckInInput, createSaleInput, deskLocationInput, isSlug, recordPaymentInput, slugInput, themeInput } from "./validate";
+import { createCheckInInput, createPriceInput, createProductInput, createSaleInput, updatePriceInput, updateProductInput, deskLocationInput, isSlug, recordPaymentInput, slugInput, themeInput } from "./validate";
 import { parseAmountToMinor } from "./format";
 
 const id = "0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
@@ -70,4 +70,35 @@ describe("parseAmountToMinor", () => {
     ["abc", null],
     ["", null],
   ])("%s → %p", (text, expected) => expect(parseAmountToMinor(text, "MYR")).toBe(expected));
+});
+
+describe("catalog inputs", () => {
+  test("product input keeps contract fields and lowercases location IDs", () => {
+    const input = createProductInput({
+      slug: "chainsaw",
+      name: "Monthly",
+      published: true,
+      extra: "dropped",
+      benefits: [{ name: "Gym", usage_limit: 8, location_id: id.toUpperCase(), extra: "dropped" }],
+    });
+    expect(input).toEqual({
+      slug: "chainsaw",
+      name: "Monthly",
+      description: null,
+      published: true,
+      benefits: [{ name: "Gym", usage_limit: 8, location_id: id }],
+    });
+  });
+
+  test("product update sends only changed fields", () => {
+    expect(updateProductInput({ slug: "chainsaw", id, published: false })).toEqual({ slug: "chainsaw", id, published: false });
+  });
+
+  test("rejects malformed catalog input", () => {
+    expect(() => createProductInput({ slug: "chainsaw", name: "X", benefits: "all" })).toThrow();
+    expect(() => createProductInput({ slug: "chainsaw", name: "X", benefits: [{ name: "Gym", location_id: "../x" }] })).toThrow();
+    expect(() => createPriceInput({ slug: "chainsaw", id, label: "X", amount_minor: 1.5, duration_days: 30 })).toThrow();
+    expect(() => createPriceInput({ slug: "chainsaw", id, label: "X", amount_minor: 100, duration_days: 0 })).toThrow();
+    expect(() => updatePriceInput({ slug: "chainsaw", id, available: "yes" })).toThrow();
+  });
 });

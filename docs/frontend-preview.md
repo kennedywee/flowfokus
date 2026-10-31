@@ -22,7 +22,9 @@ status colors, and centered page column.
 - Overview: membership counts, recent visits, and check-in.
 - Members: search, create, and view member records.
 - Sales: list and create sales, record payments, and deliver access.
-- Plans & offers: membership catalog, prices, and availability.
+- Plans & offers: membership catalog, prices, and availability. Staff with
+  `products:create` add offers. Staff with `products:update` edit offers and
+  benefits, add prices, take prices off sale, and archive them.
 - Check-in: the same member and visit endpoints used by Overview, with filters
   and CSV export.
 

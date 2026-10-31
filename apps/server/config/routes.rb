@@ -12,7 +12,12 @@ Rails.application.routes.draw do
     resources :memberships, only: :index
     resource :overview, only: :show
     resources :members, only: %i[index show create]
-    resources :products, only: :index
+    resources :products, only: %i[index create update] do
+      resources :prices, only: :create
+    end
+    resources :prices, only: :update do
+      post :archive, on: :member
+    end
     resources :sales, only: %i[index show create] do
       resources :payments, only: :create
       resource :fulfill, only: :create, controller: "fulfillments"

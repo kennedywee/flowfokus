@@ -48,3 +48,61 @@
 .offers-page td.num {
   font-size: var(--text-md);
 }
+
+.offers-page .offer__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.offers-page .offer__col-actions {
+  width: 14rem;
+}
+.offers-page .offer__price-buttons {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+/* Dialog. Rendered in a portal, so it is not under .offers-page. */
+.dialog.offer-dialog {
+  width: min(640px, calc(100vw - 32px));
+}
+.offer-dialog__problems {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.offer-dialog__switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+.offer-dialog__benefits {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.offer-dialog__benefits legend {
+  margin-bottom: var(--space-1);
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.offer-dialog__benefit {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  gap: var(--space-3);
+  align-items: end;
+}
+@media (max-width: 599.98px) {
+  .offer-dialog__benefit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .offer-dialog__benefit > :first-child {
+    grid-column: 1 / -1;
+  }
+}

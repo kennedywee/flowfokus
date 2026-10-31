@@ -190,3 +190,99 @@ export function createCheckInInput(value: unknown): CreateCheckInInput {
     location_id: uuidField(input, "location_id"),
   };
 }
+
+function optionalBoolean(input: Record<string, unknown>, name: string): boolean | undefined {
+  const value = input[name];
+  if (value === undefined) return undefined;
+  if (typeof value !== "boolean") throw new InputError(`Invalid ${name}`);
+  return value;
+}
+
+function wholeNumber(input: Record<string, unknown>, name: string, min: number, max: number): number {
+  const value = input[name];
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < min || value > max) {
+    throw new InputError(`Invalid ${name}`);
+  }
+  return value;
+}
+
+function benefitsField(input: Record<string, unknown>): Schemas["BenefitInput"][] {
+  const list = input.benefits;
+  if (!Array.isArray(list) || list.length > 10) throw new InputError("Invalid benefits");
+  return list.map((item) => {
+    const benefit = record(item);
+    const limit = benefit.usage_limit;
+    if (limit !== null && limit !== undefined && (typeof limit !== "number" || !Number.isSafeInteger(limit))) {
+      throw new InputError("Invalid usage_limit");
+    }
+    const location = benefit.location_id;
+    if (location !== null && location !== undefined && !isUuid(location)) throw new InputError("Invalid location_id");
+    return {
+      name: textField(benefit, "name", 200),
+      usage_limit: typeof limit === "number" ? limit : null,
+      location_id: typeof location === "string" ? location.toLowerCase() : null,
+    };
+  });
+}
+
+function descriptionField(input: Record<string, unknown>): string | null {
+  const value = input.description;
+  if (value === null || value === "") return null;
+  return textField(input, "description", 2000);
+}
+
+export type CreateProductInput = SlugInput & Schemas["ProductInput"];
+
+export function createProductInput(value: unknown): CreateProductInput {
+  const input = record(value);
+  const published = optionalBoolean(input, "published");
+  return {
+    slug: slugField(input),
+    name: textField(input, "name", 200),
+    description: input.description === undefined ? null : descriptionField(input),
+    ...(published === undefined ? {} : { published }),
+    benefits: benefitsField(input),
+  };
+}
+
+export type UpdateProductInput = IdInput & Schemas["ProductUpdate"];
+
+/** Sends only the fields the form changed. */
+export function updateProductInput(value: unknown): UpdateProductInput {
+  const input = record(value);
+  const published = optionalBoolean(input, "published");
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    ...(input.name === undefined ? {} : { name: textField(input, "name", 200) }),
+    ...(input.description === undefined ? {} : { description: descriptionField(input) }),
+    ...(published === undefined ? {} : { published }),
+    ...(input.benefits === undefined ? {} : { benefits: benefitsField(input) }),
+  };
+}
+
+export type CreatePriceInput = IdInput & Schemas["PriceInput"];
+
+export function createPriceInput(value: unknown): CreatePriceInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    label: textField(input, "label", 200),
+    amount_minor: wholeNumber(input, "amount_minor", 0, Number.MAX_SAFE_INTEGER),
+    duration_days: wholeNumber(input, "duration_days", 1, 3660),
+  };
+}
+
+export type UpdatePriceInput = IdInput & Schemas["PriceUpdate"];
+
+export function updatePriceInput(value: unknown): UpdatePriceInput {
+  const input = record(value);
+  const available = optionalBoolean(input, "available");
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    ...(input.label === undefined ? {} : { label: textField(input, "label", 200) }),
+    ...(available === undefined ? {} : { available }),
+  };
+}

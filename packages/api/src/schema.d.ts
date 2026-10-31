@@ -174,7 +174,95 @@ export interface paths {
         /** All products with benefits and prices, including archived prices. Needs products:read. */
         get: operations["listStaffProducts"];
         put?: never;
+        /**
+         * Create a membership product with its benefits. Needs products:create.
+         * @description A product needs at least one benefit. Add prices separately.
+         */
+        post: operations["createStaffProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/products/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a product. Needs products:update.
+         * @description Changes the name, description, or publication. `benefits`, when sent, replaces
+         *     every benefit template. Past sales keep their snapshotted terms.
+         */
+        patch: operations["updateStaffProduct"];
+        trace?: never;
+    };
+    "/staff/products/{id}/prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a price to a product. Needs products:update.
+         * @description Amount, currency, and duration never change after creation. The currency is the
+         *     organization currency. Returns the whole product.
+         */
+        post: operations["createStaffPrice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/prices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a price label or sale status. Needs products:update.
+         * @description Only `label` and `available` can change. An archived price stays off sale.
+         *     Returns the whole product.
+         */
+        patch: operations["updateStaffPrice"];
+        trace?: never;
+    };
+    "/staff/prices/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Archive a price. Needs products:update.
+         * @description Stops new sales for good. Past sales keep the price. Repeating the call changes nothing.
+         *     Returns the whole product.
+         */
+        post: operations["archiveStaffPrice"];
         delete?: never;
         options?: never;
         head?: never;
@@ -435,7 +523,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "payments:create" | "check_ins:read" | "check_ins:create";
+        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "payments:create" | "check_ins:read" | "check_ins:create";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -741,6 +829,41 @@ export interface components {
         };
         CheckInResponse: {
             data: components["schemas"]["CheckIn"];
+        };
+        BenefitInput: {
+            name: string;
+            /** @description Uses per period. Null or absent means unlimited. */
+            usage_limit?: number | null;
+            /**
+             * Format: uuid
+             * @description Null or absent means every location.
+             */
+            location_id?: string | null;
+        };
+        ProductInput: {
+            name: string;
+            description?: string | null;
+            /** @description Shown on the gym site. Defaults to false. */
+            published?: boolean;
+            benefits: components["schemas"]["BenefitInput"][];
+        };
+        ProductUpdate: {
+            name?: string;
+            description?: string | null;
+            published?: boolean;
+            benefits?: components["schemas"]["BenefitInput"][];
+        };
+        PriceInput: {
+            label: string;
+            amount_minor: number;
+            duration_days: number;
+        };
+        PriceUpdate: {
+            label?: string;
+            available?: boolean;
+        };
+        StaffProductResponse: {
+            data: components["schemas"]["StaffProduct"];
         };
     };
     responses: {
@@ -1112,6 +1235,160 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffProductResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProductUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffProductResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffProductResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PriceUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffProductResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    archiveStaffPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffProductResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

@@ -10,11 +10,12 @@ class Price < ApplicationRecord
 
   attr_readonly :product_id, :amount_minor, :currency, :duration_days
 
-  validates :label, presence: true
+  validates :label, presence: true, length: { maximum: 200 }
   validates :amount_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :duration_days, numericality: { only_integer: true, greater_than: 0 }
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
   validate :currency_matches_organization, on: :create
+  validate :archived_stays_off_sale, on: :update
 
   def sellable? = available && archived_at.nil?
 
@@ -27,6 +28,10 @@ class Price < ApplicationRecord
   def as_public_api = { id:, label:, amount_minor:, currency:, duration_days: }
 
   private
+    def archived_stays_off_sale
+      errors.add(:available, "cannot change on an archived price") if archived_at_was.present? && available_changed?
+    end
+
     def currency_matches_organization
       return if organization.nil? || currency == organization.currency
 
