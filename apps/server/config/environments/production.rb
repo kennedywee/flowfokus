@@ -30,7 +30,8 @@ Rails.application.configure do
   # Skip http-to-https redirect for the default health check endpoint.
 
   # Log to STDOUT with the current request id as a default log tag.
-  config.log_tags = [ :request_id ]
+  # The client IP is the browser's only when a Worker proved it. See Flowfokus::WorkerRequest.
+  config.log_tags = [ :request_id, ->(request) { request.env[Flowfokus::WorkerRequest::CLIENT_IP] } ]
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)
 
   # Change to "debug" to log everything (including potentially personally-identifiable information!).

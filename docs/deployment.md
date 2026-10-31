@@ -40,7 +40,7 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 ## Rails container preparation
 
 1. Build the image from `apps/server`, or load a candidate image with `gunzip -c server-image.tar.gz | docker load`.
-2. Configure the hosting platform with the image tag or image ID from the manifest. Supply `DATABASE_URL` and `SECRET_KEY_BASE` as runtime secrets. Generate the latter with `bin/rails secret`. Demo mode must remain disabled.
+2. Configure the hosting platform with the image tag or image ID from the manifest. Supply `DATABASE_URL`, `SECRET_KEY_BASE`, and `WORKER_SECRET` as runtime secrets. Give the portal and site Workers the same `WORKER_SECRET`. See [Worker secret and client IP](authentication.md#worker-secret-and-client-ip). Generate the latter with `bin/rails secret`. Demo mode must remain disabled.
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
 4. Run `bin/rails db:migrate` in the API image as a separate release step.
 5. Start the image through the hosting platform. The Dockerfile defines the server command.

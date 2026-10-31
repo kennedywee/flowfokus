@@ -40,6 +40,7 @@ services:
       WORKOS_API_BASE_URL: http://workos:4100
       WORKOS_WEBHOOK_SECRET: whsec_flowfokus_local_only
       RAILS_DEVELOPMENT_HOSTS: server
+      WORKER_SECRET: local-docker-worker-secret-not-for-production
       PIDFILE: /tmp/flowfokus-server.pid
     volumes:
       - ./apps/server:/app
@@ -72,6 +73,7 @@ services:
       WORKOS_API_HTTPS: "false"
       WORKOS_BROWSER_URL: http://localhost:4100
       FLOWFOKUS_DEV_AUTH_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
+      WORKER_SECRET: local-docker-worker-secret-not-for-production
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
       - ./packages/api/src:/app/packages/api/src:ro
@@ -93,6 +95,7 @@ services:
     init: true
     environment:
       API_BASE_URL: http://server:4000
+      WORKER_SECRET: local-docker-worker-secret-not-for-production
     volumes:
       - ./apps/site/src:/app/apps/site/src
       - ./packages/api/src:/app/packages/api/src:ro

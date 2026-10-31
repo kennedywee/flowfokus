@@ -10,6 +10,7 @@ export WORKOS_ISSUER="${WORKOS_ISSUER:-http://localhost:4100/user_management/cli
 export WORKOS_JWKS_URL="${WORKOS_JWKS_URL:-http://127.0.0.1:4100/sso/jwks/client_flowfokus_local}"
 export WORKOS_API_KEY="${WORKOS_API_KEY:-sk_test_default}"
 export WORKOS_API_BASE_URL="${WORKOS_API_BASE_URL:-http://127.0.0.1:4100}"
+export WORKER_SECRET="${WORKER_SECRET:-local-host-worker-secret-not-for-production}"
 export WORKOS_WEBHOOK_SECRET="${WORKOS_WEBHOOK_SECRET:-whsec_flowfokus_local_only}"
 export RAILS_DEVELOPMENT_HOSTS="host.docker.internal${RAILS_DEVELOPMENT_HOSTS:+,$RAILS_DEVELOPMENT_HOSTS}"
 node scripts/configure-workos-webhook.mjs http://host.docker.internal:4000/webhooks/workos

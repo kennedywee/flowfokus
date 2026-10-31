@@ -14,6 +14,9 @@ info:
       token also works, but only when `FLOWFOKUS_DEMO_MODE=true` in development or test.
     - Money uses integer minor units with an ISO 4217 currency code.
     - Times are UTC ISO 8601 strings.
+    - Portal and site Workers send `Flowfokus-Worker-Secret` and `Flowfokus-Client-IP`.
+      Rails trusts the client IP only with a valid secret. Otherwise it uses the
+      connection IP. The secret never replaces the Bearer token.
 servers:
   - url: http://localhost:4000
     description: Local development
@@ -76,6 +79,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /public/products:
     get:
@@ -102,6 +107,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
 
   /staff/organization:
     get:
@@ -794,6 +801,12 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: "`rate_limited`: too many requests from this client IP. Try again later."
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
     Unprocessable:
       description: Validation or business rule failure.
       content:
@@ -832,6 +845,7 @@ components:
         - `not_found` (404)
         - `idempotency_key_reused` (409)
         - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
+        - `rate_limited` (429)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
       enum:
@@ -848,6 +862,7 @@ components:
         - price_unavailable
         - overpayment
         - sale_not_paid
+        - rate_limited
         - internal_error
         - auth_not_configured
         - auth_unavailable

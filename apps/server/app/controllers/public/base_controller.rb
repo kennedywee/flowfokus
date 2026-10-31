@@ -3,6 +3,8 @@ module Public
   class BaseController < ApplicationController
     include OrganizationScoped
 
+    limit_requests to: 300, within: 1.minute
+
     private
       def current_organization
         @current_organization ||= find_organization(Organization.published)

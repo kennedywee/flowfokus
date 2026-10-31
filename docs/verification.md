@@ -141,7 +141,7 @@ horizontal overflow.
 ### Remaining verification
 
 Real WorkOS staging, live webhook sync and reconciliation, member sign-in and
-linking, trusted Worker/client-IP middleware, cloud deployment, and GitHub-hosted
+linking, cloud deployment, and GitHub-hosted
 CI remain unverified or unimplemented. Production staff access remains gated by
 `WORKOS_VERIFIED` in both the portal and Rails. The emulator tests do not replace
 real-service verification.
@@ -195,7 +195,7 @@ The T3 preview snapshot timed out twice. Its alternate browser connector had no 
 
 ### Release boundary
 
-Nothing was pushed, tagged, published, or deployed. Manual payment records do not move money. Production staff and member authentication remains unavailable until WorkOS integration is completed. The API does not yet implement trusted Worker/client-IP middleware.
+Nothing was pushed, tagged, published, or deployed. Manual payment records do not move money. Production staff and member authentication remains unavailable until WorkOS integration is completed.
 
 The Vite CSS plugin reports a source-map warning. App builds pass; CSS debugging maps can be inaccurate.
 

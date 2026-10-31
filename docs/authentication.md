@@ -213,32 +213,15 @@ Flowfokus-Client-IP: 203.0.113.7         # the browser's IP, from CF-Connecting-
 Flowfokus-Worker-Secret: <Worker secret>
 ```
 
-A Rails middleware checks the secret before the app runs:
+`Flowfokus::WorkerRequest` (`apps/server/lib/flowfokus/worker_request.rb`) is Rack middleware. It runs after `ActionDispatch::RemoteIp` and before the app. It removes both headers from the request, so controllers can read only its decision:
 
-```ruby
-class WorkerRequest
-  def initialize(app) = @app = app
-
-  def call(env)
-    request = ActionDispatch::Request.new(env)
-    secret  = request.headers["Flowfokus-Worker-Secret"].to_s
-
-    if ActiveSupport::SecurityUtils.secure_compare(secret, ENV.fetch("WORKER_SECRET"))
-      env["flowfokus.worker"]    = true
-      env["flowfokus.client_ip"] = request.headers["Flowfokus-Client-IP"]
-    else
-      env["flowfokus.client_ip"] = request.remote_ip
-    end
-
-    @app.call(env)
-  end
-end
-```
-
-- With a valid secret, Rails uses `Flowfokus-Client-IP` for rate limits and audit logs.
-- Without it, Rails ignores that header and uses the connection's IP. Mobile requests take this path.
+- With a valid secret, Rails uses `Flowfokus-Client-IP` for rate limits and log tags. The value must be one IPv4 or IPv6 address. Anything else falls back to the connection IP.
+- Without a valid secret, Rails ignores that header and uses the connection IP. Mobile requests take this path.
 - The secret only proves that a request came from our Worker. It never replaces the Bearer token.
-- `WORKER_SECRET` is a Worker secret and a Rails environment variable. Rotate it by accepting the old and new values for one deploy.
+- `WORKER_SECRET` is a Worker secret and a Rails environment variable. It needs at least 32 characters. A shorter value trusts nothing.
+- To rotate it, set the new value as `WORKER_SECRET` and the old one as `WORKER_SECRET_PREVIOUS` for one deploy. Then remove `WORKER_SECRET_PREVIOUS`.
+
+`/public/*` allows 300 requests per minute per trusted client IP. More get `429 rate_limited`. The counter is per Rails process, so Cloudflare rate limits stay the first defense.
 
 ## Calling Rails
 
