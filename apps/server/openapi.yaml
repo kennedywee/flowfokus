@@ -1312,6 +1312,8 @@ paths:
         A denied attempt records `denial_reason` and consumes nothing.
         A retry with the same Idempotency-Key and body returns the first check-in with
         status 200 and never consumes twice. The same key with a different body returns 409.
+        With `override_reason` and check_ins:override, an attempt that would be denied is
+        granted instead. It keeps `denial_reason`, records the reason, and consumes nothing.
       security:
         - bearerAuth: []
           organizationHeader: []
@@ -1828,6 +1830,7 @@ components:
         - memberships:revoke
         - check_ins:read
         - check_ins:create
+        - check_ins:override
         - settings:manage
         - staff:manage
 
@@ -2278,6 +2281,10 @@ components:
         location_id:
           type: string
           format: uuid
+        override_reason:
+          type: string
+          maxLength: 500
+          description: Let the member in even if their rights deny it. Needs check_ins:override.
 
     SaleLineItemTerms:
       type: object
@@ -2515,6 +2522,7 @@ components:
         - result
         - denial_reason
         - entitlement_id
+        - override_reason
         - checked_in_at
       properties:
         id:
@@ -2536,6 +2544,10 @@ components:
           format: uuid
           nullable: true
           description: The right used by a granted check-in.
+        override_reason:
+          type: string
+          nullable: true
+          description: Set when staff let the member in despite `denial_reason`. Nothing was consumed.
         checked_in_at:
           type: string
           format: date-time
@@ -2933,7 +2945,7 @@ components:
     MemberCheckIn:
       type: object
       additionalProperties: false
-      required: [id, location_name, result, denial_reason, checked_in_at]
+      required: [id, location_name, result, denial_reason, overridden, checked_in_at]
       properties:
         id:
           type: string
@@ -2946,6 +2958,9 @@ components:
           allOf:
             - $ref: "#/components/schemas/DenialReason"
           nullable: true
+        overridden:
+          type: boolean
+          description: True when staff let the member in despite a denial.
         checked_in_at:
           type: string
           format: date-time

@@ -618,6 +618,8 @@ export interface paths {
          *     A denied attempt records `denial_reason` and consumes nothing.
          *     A retry with the same Idempotency-Key and body returns the first check-in with
          *     status 200 and never consumes twice. The same key with a different body returns 409.
+         *     With `override_reason` and check_ins:override, an attempt that would be denied is
+         *     granted instead. It keeps `denial_reason`, records the reason, and consumes nothing.
          */
         post: operations["createStaffCheckIn"];
         delete?: never;
@@ -818,7 +820,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage" | "staff:manage";
+        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -1034,6 +1036,8 @@ export interface components {
             member_id: string;
             /** Format: uuid */
             location_id: string;
+            /** @description Let the member in even if their rights deny it. Needs check_ins:override. */
+            override_reason?: string;
         };
         /** @description Terms snapshotted at purchase. Later catalog edits never change them. */
         SaleLineItemTerms: {
@@ -1147,6 +1151,8 @@ export interface components {
              * @description The right used by a granted check-in.
              */
             entitlement_id: string | null;
+            /** @description Set when staff let the member in despite `denial_reason`. Nothing was consumed. */
+            override_reason: string | null;
             /** Format: date-time */
             checked_in_at: string;
         };
@@ -1322,6 +1328,8 @@ export interface components {
             location_name: string;
             result: components["schemas"]["CheckInResult"];
             denial_reason: components["schemas"]["DenialReason"] | null;
+            /** @description True when staff let the member in despite a denial. */
+            overridden: boolean;
             /** Format: date-time */
             checked_in_at: string;
         };

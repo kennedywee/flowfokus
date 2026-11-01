@@ -42,6 +42,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `purchases:void` | Void a sale that delivered nothing and kept no money |
 | `memberships:revoke` | Revoke the access delivered by one sale |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
+| `check_ins:override` | Let a member in despite a denial, with a reason. Consumes nothing. |
 | `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
 | `staff:manage` | See the team, invite staff, revoke invitations, change roles, and remove access |
 

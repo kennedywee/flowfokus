@@ -3,11 +3,13 @@ import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { DENIAL, formatTime } from "../lib/format";
 import { useAction, useIdempotencyKey } from "../lib/hooks";
-import { useDeskLocation, useLocationName, useOrganization } from "../lib/organization";
+import { createIdempotencyKey } from "../lib/idempotency";
+import { useCan, useDeskLocation, useLocationName, useOrganization } from "../lib/organization";
 import { createCheckIn } from "../lib/staff.functions";
 import { Combobox } from "./Combobox";
-import { Field, FailureNotice, Lamp, SubmitButton } from "./ui";
-import { buttonVariants } from "@/components/ui/button";
+import { Field, FailureNotice, Lamp, SubmitButton, describedBy } from "./ui";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 type Input = Parameters<typeof createCheckIn>[0]["data"];
@@ -43,13 +45,42 @@ export function CheckInPanel({
   useEffect(() => setLocationId(deskLocationId), [deskLocationId]);
   const [memberError, setMemberError] = useState<string | undefined>();
   const [fresh, setFresh] = useState(false);
+  const can = useCan();
+  const [overriding, setOverriding] = useState(false);
+  const [overrideReason, setOverrideReason] = useState("");
+  const [overrideError, setOverrideError] = useState<string | undefined>();
 
   function focusMember() {
     formRef.current?.querySelector<HTMLElement>(`#${MEMBER_FIELD}`)?.focus();
   }
 
+  /** Lets the member in after a denial. A new request with its own key and the reason. */
+  async function letIn() {
+    const denied = action.data;
+    if (!denied || denied.result !== "denied") return;
+    if (!overrideReason.trim()) {
+      setOverrideError("Enter why the member may go in. It stays on the record.");
+      return;
+    }
+    setOverrideError(undefined);
+    const result = await action.run({
+      slug: organization.slug,
+      idempotencyKey: createIdempotencyKey(),
+      member_id: denied.member.id,
+      location_id: denied.location_id,
+      override_reason: overrideReason.trim(),
+    });
+    if (result.ok) {
+      setOverriding(false);
+      setOverrideReason("");
+      setFresh(true);
+      void router.invalidate();
+    }
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setOverriding(false);
     if (!memberId) {
       setMemberError("Choose the member who is checking in.");
       focusMember();
@@ -142,8 +173,13 @@ export function CheckInPanel({
           {checkIn ? (
             checkIn.result === "granted" ? (
               <>
-                <p className="result__title">Access granted</p>
-                <p className="result__detail">{checkIn.member.name} may go in.</p>
+                <p className="result__title">{checkIn.override_reason ? "Let in by staff" : "Access granted"}</p>
+                <p className="result__detail">
+                  {checkIn.member.name} may go in.
+                  {checkIn.override_reason
+                    ? ` Their rights said: ${checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title.toLowerCase() : "denied"}. Reason: ${checkIn.override_reason}. Nothing was used.`
+                    : ""}
+                </p>
                 <dl className="facts result__facts">
                   <div>
                     <dt>Member</dt>
@@ -189,6 +225,36 @@ export function CheckInPanel({
           )}
         </div>
       </div>
+
+      {checkIn?.result === "denied" && can("check_ins:override") ? (
+        overriding ? (
+          <div className="checkin__override">
+            <Field id="override-reason" label="Why may they go in?" error={overrideError}>
+              <Textarea
+                id="override-reason"
+                rows={2}
+                maxLength={500}
+                value={overrideReason}
+                aria-invalid={overrideError ? true : undefined}
+                aria-describedby={describedBy("override-reason", undefined, overrideError)}
+                onChange={(event) => setOverrideReason(event.target.value)}
+              />
+            </Field>
+            <div className="actions">
+              <Button type="button" variant="ghost" onClick={() => setOverriding(false)} disabled={action.pending}>
+                Cancel
+              </Button>
+              <Button type="button" variant="destructive" onClick={() => void letIn()} disabled={action.pending} aria-busy={action.pending || undefined}>
+                Let in anyway
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" variant="secondary" onClick={() => setOverriding(true)}>
+            Let in anyway
+          </Button>
+        )
+      ) : null}
 
       {checkIn ? <NextSteps checkIn={checkIn} slug={organization.slug} /> : null}
     </form>

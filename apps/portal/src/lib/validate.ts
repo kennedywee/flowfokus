@@ -188,11 +188,13 @@ export type CreateCheckInInput = IdempotentInput & Schemas["CheckInInput"];
 
 export function createCheckInInput(value: unknown): CreateCheckInInput {
   const input = record(value);
+  const reason = input.override_reason === undefined ? "" : textField(input, "override_reason", 500).trim();
   return {
     slug: slugField(input),
     idempotencyKey: idempotencyKeyField(input),
     member_id: uuidField(input, "member_id"),
     location_id: uuidField(input, "location_id"),
+    ...(reason ? { override_reason: reason } : {}),
   };
 }
 

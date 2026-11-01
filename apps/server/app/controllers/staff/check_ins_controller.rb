@@ -9,9 +9,11 @@ module Staff
 
     def create
       require_permission! "check_ins:create"
+      override_reason = params[:override_reason].to_s.strip.presence
+      require_permission! "check_ins:override" if override_reason
       check_in, created = CheckIn.record!(
         organization: current_organization, actor: Current.user, idempotency_key: idempotency_key!,
-        member_id: params[:member_id], location_id: params[:location_id]
+        member_id: params[:member_id], location_id: params[:location_id], override_reason:
       )
       render_data check_in.as_api, status: created_or_replayed(created)
     end

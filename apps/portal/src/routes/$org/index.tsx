@@ -124,7 +124,8 @@ function FrontDesk() {
                       </Link>
                       <span className="cell-sub">
                         {showLocation ? locationName(checkIn.location_id) : null}
-                        {showLocation && checkIn.result === "denied" ? " · " : null}
+                        {showLocation && (checkIn.result === "denied" || checkIn.override_reason) ? " · " : null}
+                        {checkIn.override_reason ? <span className="desk-recent__reason">Let in by staff</span> : null}
                         {checkIn.result === "denied" ? (
                           <span className="desk-recent__reason">
                             {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : "No reason given"}

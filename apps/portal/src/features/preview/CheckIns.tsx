@@ -83,7 +83,13 @@ export function CheckIns() {
                           <Avatar name={visit.member.name} size={28} />
                           <div>
                             <strong>{visit.member.name}</strong>
-                            <p>{visit.denial_reason ? DENIAL[visit.denial_reason].title : "Membership access"}</p>
+                            <p>
+                              {visit.override_reason
+                                ? `Let in by staff: ${visit.override_reason}`
+                                : visit.denial_reason
+                                  ? DENIAL[visit.denial_reason].title
+                                  : "Membership access"}
+                            </p>
                           </div>
                         </div>
                       </TableCell>

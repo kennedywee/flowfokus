@@ -94,6 +94,7 @@ roles:
       - memberships:revoke
       - check_ins:read
       - check_ins:create
+      - check_ins:override
       - settings:manage
       - staff:manage
   - slug: manager
@@ -152,6 +153,8 @@ permissions:
     name: Read check-ins
   - slug: check_ins:create
     name: Check in members
+  - slug: check_ins:override
+    name: Let a member in despite a denial, with a reason
   - slug: settings:manage
     name: Manage organization settings and locations
   - slug: staff:manage

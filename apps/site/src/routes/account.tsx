@@ -222,7 +222,12 @@ function AccountView({ person, account }: { person: { name: string; email: strin
               <li key={visit.id}>
                 <span className="lamp" data-state={visit.result === "granted" ? "granted" : "denied"} aria-hidden="true" />
                 <span>
-                  {visit.result === "granted" ? "Checked in" : `Not let in: ${visit.denial_reason ? DENIAL[visit.denial_reason] : "denied"}`} at{" "}
+                  {visit.overridden
+                    ? "Let in by staff"
+                    : visit.result === "granted"
+                      ? "Checked in"
+                      : `Not let in: ${visit.denial_reason ? DENIAL[visit.denial_reason] : "denied"}`}{" "}
+                  at{" "}
                   {visit.location_name}
                 </span>
                 <time dateTime={visit.checked_in_at} suppressHydrationWarning>

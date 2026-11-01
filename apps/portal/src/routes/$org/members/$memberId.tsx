@@ -442,10 +442,16 @@ function CheckInHistory({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
         {checkIns.map((checkIn) => (
           <TableRow key={checkIn.id}>
             <TableCell>
-              <Status state={checkIn.result}>{checkIn.result === "granted" ? "Granted" : "Denied"}</Status>
+              <Status state={checkIn.result}>{checkIn.override_reason ? "Let in by staff" : checkIn.result === "granted" ? "Granted" : "Denied"}</Status>
             </TableCell>
             <TableCell className="muted">
-              {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : checkIn.result === "granted" ? "Access valid" : "No reason recorded"}
+              {checkIn.override_reason
+                ? `${checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : "Denied"}. Reason: ${checkIn.override_reason}`
+                : checkIn.denial_reason
+                  ? DENIAL[checkIn.denial_reason].title
+                  : checkIn.result === "granted"
+                    ? "Access valid"
+                    : "No reason recorded"}
             </TableCell>
             <TableCell>{locationName(checkIn.location_id)}</TableCell>
             <TableCell className="num member-date">

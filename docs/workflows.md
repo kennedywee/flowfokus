@@ -46,6 +46,8 @@ Early renewal appends a period after the last one. It does not change the curren
 
 Denied access records a reason. A staff override needs a permission and a reason.
 
+An override sends `override_reason` with the check-in and needs `check_ins:override`. When the rights would deny entry, the check-in is granted, keeps its `denial_reason`, records the reason and the actor, and consumes nothing. When a right allows entry, it is used as usual and no reason is recorded. A database check keeps these three shapes apart.
+
 ## Refund or revoke
 
 1. Find the payment and the affected purchase.

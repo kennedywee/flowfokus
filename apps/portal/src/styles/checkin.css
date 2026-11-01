@@ -58,3 +58,8 @@
 .checkin__next {
   gap: var(--space-2);
 }
+
+.checkin__override {
+  display: grid;
+  gap: var(--space-3);
+}

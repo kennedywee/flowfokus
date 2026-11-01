@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000004) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -44,6 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000004) do
     t.string "request_fingerprint", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "override_reason"
     t.index ["id", "organization_id"], name: "index_check_ins_on_id_and_organization_id", unique: true
     t.index ["member_id", "checked_in_at"], name: "index_check_ins_on_member_id_and_checked_in_at"
     t.index ["organization_id", "checked_in_at"], name: "index_check_ins_on_organization_id_and_checked_in_at"
@@ -51,7 +52,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000004) do
     t.index ["recorded_by_user_id"], name: "index_check_ins_on_recorded_by_user_id"
     t.check_constraint "denial_reason IS NULL OR (denial_reason::text = ANY (ARRAY['no_entitlement'::character varying::text, 'location_not_allowed'::character varying::text, 'usage_limit_reached'::character varying::text]))", name: "check_ins_denial_reason"
     t.check_constraint "entry_method::text = 'staff'::text", name: "check_ins_entry_method"
-    t.check_constraint "result::text = 'granted'::text AND denial_reason IS NULL AND entitlement_id IS NOT NULL OR result::text = 'denied'::text AND denial_reason IS NOT NULL AND entitlement_id IS NULL", name: "check_ins_result_shape"
+    t.check_constraint "result::text = 'granted'::text AND denial_reason IS NULL AND entitlement_id IS NOT NULL AND override_reason IS NULL OR result::text = 'denied'::text AND denial_reason IS NOT NULL AND entitlement_id IS NULL AND override_reason IS NULL OR result::text = 'granted'::text AND denial_reason IS NOT NULL AND entitlement_id IS NULL AND override_reason IS NOT NULL AND length(btrim(override_reason)) > 0", name: "check_ins_result_shape"
     t.check_constraint "result::text = ANY (ARRAY['granted'::character varying::text, 'denied'::character varying::text])", name: "check_ins_result"
   end
 

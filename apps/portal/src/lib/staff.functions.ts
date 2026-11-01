@@ -308,7 +308,11 @@ export const createCheckIn = createServerFn({ method: "POST" })
       callStaff(data.slug, (api) =>
         api.POST("/staff/check_ins", {
           params: { header: { "Idempotency-Key": data.idempotencyKey } },
-          body: { member_id: data.member_id, location_id: data.location_id },
+          body: {
+            member_id: data.member_id,
+            location_id: data.location_id,
+            ...(data.override_reason ? { override_reason: data.override_reason } : {}),
+          },
         }),
       ),
   );

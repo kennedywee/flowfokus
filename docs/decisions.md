@@ -64,7 +64,7 @@ Not yet confirmed.
 | Permission set | Which permissions does each workflow need? Which default roles ship? |
 | Stale sessions | How fast must role changes and revoked access take effect? |
 | Member linking | Which verification flow links a member to a user? Self-service or staff invite? The current implementation uses a staff-issued one-time code. See [Identity](identity.md#member-customer). |
-| Access overrides | Can staff grant access without an entitlement? Which permission controls it? |
+| Access overrides | Can staff grant access without an entitlement? Which permission controls it? The current implementation allows a one-visit override with `check_ins:override` and a reason. Manual grants of new rights are not built. |
 
 ### Monorepo and release
 

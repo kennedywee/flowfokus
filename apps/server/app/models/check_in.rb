@@ -19,9 +19,16 @@ class CheckIn < ApplicationRecord
 
   scope :newest_first, -> { order(checked_in_at: :desc, id: :desc) }
 
+  validates :override_reason, length: { maximum: 500 }
+
   # Returns [check_in, created]. A retry with the same key never consumes twice.
-  def self.record!(organization:, actor:, idempotency_key:, member_id:, location_id:, at: Time.current)
-    fingerprint = Idempotent.fingerprint(member_id:, location_id:)
+  #
+  # `override_reason` lets the member in when the rights would deny them. The
+  # caller checks the permission. A member with a usable right is let in as
+  # usual and the reason is not recorded.
+  def self.record!(organization:, actor:, idempotency_key:, member_id:, location_id:, at: Time.current, override_reason: nil)
+    override_reason = override_reason.to_s.strip.presence
+    fingerprint = Idempotent.fingerprint(member_id:, location_id:, **(override_reason ? { override_reason: } : {}))
     if (existing = replay(organization.check_ins, key: idempotency_key, fingerprint:))
       return [ existing, false ]
     end
@@ -40,15 +47,16 @@ class CheckIn < ApplicationRecord
       # One check-in per member at a time. Serializes retries and parallel attempts.
       member.lock!
       with_idempotency(organization.check_ins, key: idempotency_key, fingerprint:) do
-        check_in.authorize_and_consume!
+        check_in.authorize_and_consume!(override_reason:)
         check_in
       end
     end
   end
 
   def granted? = result == "granted"
+  def overridden? = override_reason.present?
 
-  def authorize_and_consume!
+  def authorize_and_consume!(override_reason: nil)
     rights = member.entitlements.valid_at(checked_in_at).order(:ends_at, :id).lock.to_a
     in_location = rights.select { |right| right.covers_location?(location) }
     usable = in_location.select(&:usable?)
@@ -58,7 +66,8 @@ class CheckIn < ApplicationRecord
       self.result = "granted"
       self.entitlement = chosen
     else
-      self.result = "denied"
+      self.result = override_reason ? "granted" : "denied"
+      self.override_reason = override_reason
       self.denial_reason =
         if rights.empty? then "no_entitlement"
         elsif in_location.empty? then "location_not_allowed"
@@ -68,7 +77,7 @@ class CheckIn < ApplicationRecord
 
     transaction(requires_new: true) do
       save!
-      if granted?
+      if granted? && !overridden?
         chosen.increment!(:used_count)
         create_usage!(organization:, entitlement: chosen, used_at: checked_in_at)
       end
@@ -76,13 +85,13 @@ class CheckIn < ApplicationRecord
   end
 
   def as_member_api
-    { id:, location_name: location.name, result:, denial_reason:, checked_in_at: api_time(checked_in_at) }
+    { id:, location_name: location.name, result:, denial_reason:, overridden: overridden?, checked_in_at: api_time(checked_in_at) }
   end
 
   def as_api
     {
       id:, member: member.as_summary_api, location_id:, result:, denial_reason:,
-      entitlement_id:, checked_in_at: api_time(checked_in_at)
+      entitlement_id:, override_reason:, checked_in_at: api_time(checked_in_at)
     }
   end
 end
