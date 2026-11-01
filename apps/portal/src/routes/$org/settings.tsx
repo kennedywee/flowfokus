@@ -1,4 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Settings } from "../../features/preview/Settings";
+import { SETTINGS_SECTIONS, Settings, type SettingsSection } from "../../features/preview/Settings";
 
-export const Route = createFileRoute("/$org/settings")({ component: Settings });
+interface SettingsSearch {
+  section?: SettingsSection;
+}
+
+export const Route = createFileRoute("/$org/settings")({
+  validateSearch: (search: Record<string, unknown>): SettingsSearch =>
+    SETTINGS_SECTIONS.includes(search.section as SettingsSection) ? { section: search.section as SettingsSection } : {},
+  component: SettingsRoute,
+});
+
+function SettingsRoute() {
+  const { section = "Organization" } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  return <Settings section={section} onSection={(next) => void navigate({ search: next === "Organization" ? {} : { section: next }, replace: true })} />;
+}

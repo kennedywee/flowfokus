@@ -279,10 +279,10 @@ function Shell({
                   searchLabel="Search locations"
                   emptyText="No location matches."
                   footer={() => (
-                    <button type="button" className="switcher__action">
+                    <Link to="/$org/settings" params={{ org: data.slug }} search={{ section: "Locations" }} className="switcher__action">
                       <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
                       Add location
-                    </button>
+                    </Link>
                   )}
                 />
               ) : (

@@ -86,6 +86,7 @@ roles:
       - memberships:revoke
       - check_ins:read
       - check_ins:create
+      - settings:manage
   - slug: receptionist
     name: Receptionist
     permissions:
@@ -126,3 +127,5 @@ permissions:
     name: Read check-ins
   - slug: check_ins:create
     name: Check in members
+  - slug: settings:manage
+    name: Manage organization settings and locations

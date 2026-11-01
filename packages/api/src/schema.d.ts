@@ -86,7 +86,49 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Change the time zone or gym site publication. Needs settings:manage.
+         * @description The name comes from WorkOS and cannot change here. The currency is fixed, because
+         *     prices and sales are recorded in it. Unpublishing hides the gym site and its offers.
+         */
+        patch: operations["updateStaffOrganization"];
+        trace?: never;
+    };
+    "/staff/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a location. Needs settings:manage. */
+        post: operations["createStaffLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/staff/locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Rename a location or change its address. Needs settings:manage.
+         * @description Locations keep their history, so they cannot be deleted.
+         */
+        patch: operations["updateStaffLocation"];
         trace?: never;
     };
     "/staff/memberships": {
@@ -617,7 +659,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create";
+        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -625,6 +667,8 @@ export interface components {
             name: string;
             timezone: string;
             currency: string;
+            /** @description True when the gym site is public. */
+            published: boolean;
             locations: components["schemas"]["Location"][];
             actor: components["schemas"]["Actor"];
         };
@@ -1027,6 +1071,22 @@ export interface components {
             /** Format: date-time */
             refunded_at: string;
         };
+        OrganizationUpdate: {
+            /** @description IANA time zone, for example `Asia/Kuala_Lumpur`. */
+            timezone?: string;
+            /** @description Shows the gym site and its published offers. */
+            published?: boolean;
+        };
+        StaffOrganizationResponse: {
+            data: components["schemas"]["StaffOrganization"];
+        };
+        LocationInput: {
+            name?: string;
+            address?: string | null;
+        };
+        LocationResponse: {
+            data: components["schemas"]["Location"];
+        };
     };
     responses: {
         /** @description Missing header or malformed request. */
@@ -1228,6 +1288,98 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffOrganization: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffOrganizationResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

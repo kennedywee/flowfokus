@@ -327,3 +327,27 @@ export function reasonInput(value: unknown): ReasonInput {
   const input = record(value);
   return { slug: slugField(input), saleId: uuidField(input, "saleId"), reason: textField(input, "reason", 500) };
 }
+
+export type UpdateOrganizationInput = SlugInput & Schemas["OrganizationUpdate"];
+
+export function updateOrganizationInput(value: unknown): UpdateOrganizationInput {
+  const input = record(value);
+  const published = optionalBoolean(input, "published");
+  return {
+    slug: slugField(input),
+    ...(input.timezone === undefined ? {} : { timezone: textField(input, "timezone", 64) }),
+    ...(published === undefined ? {} : { published }),
+  };
+}
+
+export type LocationInput = SlugInput & { id?: string } & Schemas["LocationInput"];
+
+export function locationInput(value: unknown): LocationInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    ...(input.id === undefined ? {} : { id: uuidField(input, "id") }),
+    name: textField(input, "name", 100),
+    address: input.address === null || input.address === undefined || input.address === "" ? null : textField(input, "address", 300),
+  };
+}

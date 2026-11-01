@@ -140,6 +140,113 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+    patch:
+      tags: [staff]
+      operationId: updateStaffOrganization
+      summary: Change the time zone or gym site publication. Needs settings:manage.
+      description: |
+        The name comes from WorkOS and cannot change here. The currency is fixed, because
+        prices and sales are recorded in it. Unpublishing hides the gym site and its offers.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationUpdate"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffOrganizationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/locations:
+    post:
+      tags: [staff]
+      operationId: createStaffLocation
+      summary: Add a location. Needs settings:manage.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/locations/{id}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffLocation
+      summary: Rename a location or change its address. Needs settings:manage.
+      description: |
+        Locations keep their history, so they cannot be deleted.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /staff/memberships:
     get:
@@ -1401,11 +1508,12 @@ components:
         - memberships:revoke
         - check_ins:read
         - check_ins:create
+        - settings:manage
 
     StaffOrganization:
       type: object
       additionalProperties: false
-      required: [id, slug, name, timezone, currency, locations, actor]
+      required: [id, slug, name, timezone, currency, published, locations, actor]
       properties:
         id:
           type: string
@@ -1418,6 +1526,9 @@ components:
           type: string
         currency:
           type: string
+        published:
+          type: boolean
+          description: True when the gym site is public.
         locations:
           type: array
           items:
@@ -2298,3 +2409,43 @@ components:
         refunded_at:
           type: string
           format: date-time
+
+    OrganizationUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        timezone:
+          type: string
+          description: IANA time zone, for example `Asia/Kuala_Lumpur`.
+        published:
+          type: boolean
+          description: Shows the gym site and its published offers.
+
+    StaffOrganizationResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/StaffOrganization"
+
+    LocationInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        address:
+          type: string
+          nullable: true
+          maxLength: 300
+
+    LocationResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Location"

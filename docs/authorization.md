@@ -41,6 +41,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `purchases:void` | Void a sale that delivered nothing and kept no money |
 | `memberships:revoke` | Revoke the access delivered by one sale |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
+| `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
 
 Which roles ship by default is still open. See [Decisions](decisions.md#identity-and-access).
 

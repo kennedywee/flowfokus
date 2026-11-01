@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from "react";
-import { Mail, MessageCircle, QrCode, Save, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { Mail, MessageCircle, QrCode, UserPlus } from "lucide-react";
 import { Avatar, Field, Pill, Plate } from "../../components/ui";
 import { useToast } from "../../components/Toast";
-import { useOrganization } from "../../lib/organization";
+import { Locations, OrganizationDetails } from "../settings/OrganizationSettings";
 import { Filters, PreviewDialog, PreviewPage, Toggle } from "./shared";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,87 +20,26 @@ const integrations = [
   { name: "Email receipts", detail: "A copy of each recorded payment", icon: Mail },
 ];
 
-export function Settings() {
-  const organization = useOrganization();
+export const SETTINGS_SECTIONS = ["Organization", "Locations", "Team", "Notifications", "Integrations"] as const;
+export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
+
+export function Settings({ section, onSection }: { section: SettingsSection; onSection: (section: SettingsSection) => void }) {
   const toast = useToast();
-  const [section, setSection] = useState("Organization");
-  const [name, setName] = useState(organization.name);
-  const [email, setEmail] = useState("hello@chainsaw.example.com");
-  const [timezone, setTimezone] = useState("Asia/Kuala_Lumpur");
-  const [saved, setSaved] = useState({ name, email, timezone });
   const [notifications, setNotifications] = useState({ expiry: true, due: true, denied: false, summary: true });
   const [connected, setConnected] = useState(["Email receipts"]);
   const [team, setTeam] = useState(initialTeam);
   const [inviting, setInviting] = useState(false);
-  const dirty = name !== saved.name || email !== saved.email || timezone !== saved.timezone;
-  function save(event: FormEvent) {
-    event.preventDefault();
-    setSaved({ name, email, timezone });
-    toast.show({
-      tone: "success",
-      title: "Preview settings saved",
-      body: "Your changes stay on this screen until you leave it.",
-    });
-  }
+  const sample = section === "Team" || section === "Notifications" || section === "Integrations";
   return (
-    <PreviewPage title="Settings" description="The details that keep your gym running.">
+    <PreviewPage
+      title="Settings"
+      description="The details that keep your gym running."
+      sample={sample}
+    >
       <div className="stack">
-        <Filters
-          values={["Organization", "Team", "Notifications", "Integrations"]}
-          value={section}
-          onChange={setSection}
-          label="Settings section"
-        />
-        {section === "Organization" ? (
-          <Plate
-            title="Organization details"
-            description="Used on receipts and member-facing pages."
-          >
-            <form className="form preview-settings-form" onSubmit={save}>
-              <Field id="preview-org-name" label="Organization name">
-                <Input
-                  id="preview-org-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  maxLength={100}
-                />
-              </Field>
-              <Field id="preview-org-email" label="Contact email">
-                <Input
-                  id="preview-org-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </Field>
-              <div className="grid-2">
-                <Field id="preview-timezone" label="Time zone">
-                  <NativeSelect
-                    id="preview-timezone"
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                  >
-                    <NativeSelectOption value="Asia/Kuala_Lumpur">Kuala Lumpur (UTC+8)</NativeSelectOption>
-                    <NativeSelectOption value="Asia/Singapore">Singapore (UTC+8)</NativeSelectOption>
-                    <NativeSelectOption value="Asia/Jakarta">Jakarta (UTC+7)</NativeSelectOption>
-                  </NativeSelect>
-                </Field>
-                <Field id="preview-currency" label="Currency" hint="Prices are recorded in Malaysian ringgit.">
-                  <Input id="preview-currency" value="MYR — Malaysian ringgit" readOnly />
-                </Field>
-              </div>
-              <div className="preview-form-actions">
-                <span className="muted">{dirty ? "Unsaved changes" : "No unsaved changes"}</span>
-                <Button type="submit" disabled={!dirty}>
-                  <Save aria-hidden="true" />
-                  Save changes
-                </Button>
-              </div>
-            </form>
-          </Plate>
-        ) : null}
+        <Filters values={[...SETTINGS_SECTIONS]} value={section} onChange={onSection} label="Settings section" />
+        {section === "Organization" ? <OrganizationDetails /> : null}
+        {section === "Locations" ? <Locations /> : null}
         {section === "Team" ? (
           <Plate
             title="Your team"
@@ -230,10 +169,12 @@ export function Settings() {
             </div>
           </Plate>
         ) : null}
-        <p className="preview-footnote">
-          Sample settings only. No invitations, notifications, or external connections are sent. Changes reset when you
-          leave this page.
-        </p>
+        {sample ? (
+          <p className="preview-footnote">
+            Sample settings only. No invitations, notifications, or external connections are sent. Changes reset when you
+            leave this page.
+          </p>
+        ) : null}
       </div>
       {inviting ? (
         <PreviewDialog title="Invite a team member" onClose={() => setInviting(false)}>

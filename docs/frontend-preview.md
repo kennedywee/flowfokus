@@ -17,8 +17,8 @@ status colors, and centered page column.
   offers sign-in and opens the session's selected organization. A chooser is a
   fallback when no organization is selected and several memberships are available.
   The optional fixed demo actor opens Chainsaw directly. The chosen desk location is an HttpOnly cookie per organization. It
-  sets the default location for check-in and new sales. Create organization and
-  Add location are shown but do nothing yet.
+  sets the default location for check-in and new sales. Add location opens
+  Settings. Create organization is shown but does nothing yet.
 - Overview: membership counts, recent visits, and check-in.
 - Members: search, create, and view member records.
 - Sales: list and create sales, record payments, and deliver access.
@@ -27,6 +27,9 @@ status colors, and centered page column.
   benefits, add prices, take prices off sale, and archive them.
 - Check-in: the same member and visit endpoints used by Overview, with filters
   and CSV export.
+- Settings, Organization and Locations: the time zone, gym site publication,
+  and locations, from Rails. Staff with `settings:manage` change them. The
+  name comes from WorkOS. The currency is fixed.
 
 `apps/portal/src/lib/staff.functions.ts` holds the server functions for these
 screens. They call Rails through the existing server boundary. The browser never
@@ -39,9 +42,9 @@ These actions persist in PostgreSQL, including during local demo development.
 - Agents: suggested prompts, prepared replies, and message drafts. No AI service
   is called and no message is sent.
 - Reports: fixed historical sample weeks, period and metric filters, and CSV export.
-- Settings: editable sample organization details, team invitations and roles,
-  notification switches, and integration states. Initial organization name comes
-  from the API. Edits do not update Rails or contact external systems.
+- Settings, Team, Notifications, and Integrations: sample team invitations and
+  roles, notification switches, and integration states. Edits do not update
+  Rails or contact external systems.
 - Changelog: static notes for the preview and portal layout.
 
 These screens display a Sample data label. Local edits reset when the screen

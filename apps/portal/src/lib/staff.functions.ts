@@ -13,6 +13,10 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  locationInput,
+  updateOrganizationInput,
+  type LocationInput,
+  type UpdateOrganizationInput,
   reasonInput,
   refundInput,
   type ReasonInput,
@@ -76,6 +80,23 @@ export const getStaffOrganization = createServerFn({ method: "GET" })
     async ({ data }): Promise<Result<Schemas["StaffOrganization"]>> =>
       callStaff(data.slug, (api) => api.GET("/staff/organization")),
   );
+
+export const updateOrganization = createServerFn({ method: "POST" })
+  .validator((input: UpdateOrganizationInput) => updateOrganizationInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["StaffOrganization"]>> => {
+    const { slug, ...body } = data;
+    return callStaff(slug, (api) => api.PATCH("/staff/organization", { body }));
+  });
+
+/** Adds a location, or changes one when `id` is set. */
+export const saveLocation = createServerFn({ method: "POST" })
+  .validator((input: LocationInput) => locationInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["Location"]>> => {
+    const { slug, id, ...body } = data;
+    return id
+      ? callStaff(slug, (api) => api.PATCH("/staff/locations/{id}", { params: { path: { id } }, body }))
+      : callStaff(slug, (api) => api.POST("/staff/locations", { body }));
+  });
 
 export const getOverview = createServerFn({ method: "GET" })
   .validator((input: SlugInput) => slugInput(input))

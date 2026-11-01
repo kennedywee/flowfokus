@@ -181,7 +181,7 @@ class Organization < ApplicationRecord
 
   def as_staff_api(user:, permissions:, demo:)
     {
-      id:, slug:, name:, timezone:, currency:,
+      id:, slug:, name:, timezone:, currency:, published:,
       locations: locations.map(&:as_api),
       actor: { name: user.name, email: user.email, demo: demo, permissions: permissions }
     }

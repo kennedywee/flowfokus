@@ -8,7 +8,8 @@ Rails.application.routes.draw do
   end
 
   namespace :staff do
-    resource :organization, only: :show
+    resource :organization, only: %i[show update]
+    resources :locations, only: %i[create update]
     resources :memberships, only: :index
     resource :overview, only: :show
     resources :members, only: %i[index show create] do
