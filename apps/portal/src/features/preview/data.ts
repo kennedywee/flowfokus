@@ -112,9 +112,3 @@ export const initialInbox = [
   },
 ];
 
-export const reportWeeks = [
-  { label: "28 Sep", sales: 124000, visits: 116 },
-  { label: "5 Oct", sales: 162000, visits: 143 },
-  { label: "12 Oct", sales: 148000, visits: 128 },
-  { label: "19 Oct", sales: 186000, visits: 162 },
-];

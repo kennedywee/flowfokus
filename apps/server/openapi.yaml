@@ -481,6 +481,44 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/report:
+    get:
+      tags: [staff]
+      operationId: getStaffReport
+      summary: Weekly sales, payments, refunds, check-ins, and new members. Needs purchases:read and check_ins:read.
+      description: |
+        Weeks start on Monday in the organization time zone. The last week is the current,
+        partial week. `weeks` is 1, 2, 4, or 12; anything else gives 4. Void sales are left out.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - name: weeks
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum: [1, 2, 4, 12]
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/members:
     get:
       tags: [staff]
@@ -3038,3 +3076,80 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/MemberAccount"
+
+    ReportWeek:
+      type: object
+      additionalProperties: false
+      required: [starts_on, sale_count, sales_minor, payments_minor, refunds_minor, check_ins_granted, check_ins_denied, new_members]
+      properties:
+        starts_on:
+          type: string
+          format: date
+          description: The Monday that starts the week, in the organization time zone.
+        sale_count:
+          type: integer
+        sales_minor:
+          type: integer
+        payments_minor:
+          type: integer
+        refunds_minor:
+          type: integer
+        check_ins_granted:
+          type: integer
+        check_ins_denied:
+          type: integer
+        new_members:
+          type: integer
+
+    Report:
+      type: object
+      additionalProperties: false
+      required: [currency, timezone, from, through, weeks, by_location, by_method]
+      properties:
+        currency:
+          type: string
+        timezone:
+          type: string
+        from:
+          type: string
+          format: date-time
+        through:
+          type: string
+          format: date-time
+        weeks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportWeek"
+        by_location:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [location_id, name, sales_minor]
+            properties:
+              location_id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              sales_minor:
+                type: integer
+        by_method:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [method, payments_minor]
+            properties:
+              method:
+                $ref: "#/components/schemas/PaymentMethod"
+              payments_minor:
+                type: integer
+
+    ReportResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Report"

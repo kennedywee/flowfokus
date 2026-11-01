@@ -41,7 +41,9 @@ These actions persist in PostgreSQL, including during local demo development.
 - Inbox: filter, read, resolve, and reopen sample updates.
 - Agents: suggested prompts, prepared replies, and message drafts. No AI service
   is called and no message is sent.
-- Reports: fixed historical sample weeks, period and metric filters, and CSV export.
+- Reports: weekly sales, payments, refunds, check-ins, and new members from
+  `/staff/report`, in the organization time zone. Period and metric filters, a
+  breakdown by location and payment method, and CSV export of the shown weeks.
 - Settings, Team: staff, pending invitations, and roles, through Rails and
   WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
   access.
@@ -50,8 +52,7 @@ These actions persist in PostgreSQL, including during local demo development.
 - Changelog: static notes for the preview and portal layout.
 
 These screens display a Sample data label. Local edits reset when the screen
-unmounts. Reports cover a fixed period ending 21 October 2026 and do not summarize
-API sales. The sample fixtures live in `src/features/preview/data.ts` and the
+unmounts. The sample fixtures live in `src/features/preview/data.ts` and the
 individual preview components.
 
 Existing `/<org>/soon?page=…` bookmarks redirect to the new routes.

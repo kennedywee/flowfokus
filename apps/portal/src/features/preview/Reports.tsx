@@ -1,31 +1,76 @@
 import { useState } from "react";
-import { ArrowUpRight, Download } from "lucide-react";
-import { Money, Plate } from "../../components/ui";
-import { reportWeeks } from "./data";
+import { useNavigate } from "@tanstack/react-router";
+import type { Schemas } from "@flowfokus/api";
+import { Download } from "lucide-react";
+import { FailureNotice, Money, Plate } from "../../components/ui";
+import { PAYMENT_METHOD_LABEL, formatDate } from "../../lib/format";
+import type { Result } from "../../lib/result";
+import { useOrganization } from "../../lib/organization";
 import { downloadCsv } from "./export";
 import { Filters, PreviewPage } from "./shared";
 import { Button } from "@/components/ui/button";
 
-export function Reports() {
-  const [period, setPeriod] = useState("Last 4 weeks");
-  const [metric, setMetric] = useState("Sales");
-  const weeks =
-    period === "This week" ? reportWeeks.slice(-1) : period === "Last 2 weeks" ? reportWeeks.slice(-2) : reportWeeks;
-  const sales = weeks.reduce((total, week) => total + week.sales, 0);
-  const visits = weeks.reduce((total, week) => total + week.visits, 0);
-  const max = Math.max(...weeks.map((week) => (metric === "Sales" ? week.sales : week.visits)));
+export const REPORT_PERIODS = { "This week": 1, "Last 2 weeks": 2, "Last 4 weeks": 4, "Last 12 weeks": 12 } as const;
+export type ReportPeriod = keyof typeof REPORT_PERIODS;
+type Metric = "Sales" | "Payments" | "Check-ins";
+
+function weekLabel(startsOn: string): string {
+  return new Intl.DateTimeFormat("en-MY", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${startsOn}T00:00:00Z`));
+}
+
+function share(part: number, total: number): number {
+  return total > 0 ? Math.round((part / total) * 100) : 0;
+}
+
+/** Weekly figures from Rails, in the organization time zone. */
+export function Reports({ report, period }: { report: Result<Schemas["Report"]>; period: ReportPeriod }) {
+  const organization = useOrganization();
+  const navigate = useNavigate({ from: "/$org/reports" });
+  const [metric, setMetric] = useState<Metric>("Sales");
+
+  if (!report.ok) {
+    return (
+      <PreviewPage title="Reports" description="What came in, and who came through." sample={false}>
+        <FailureNotice error={report.error} title="The report did not load" />
+      </PreviewPage>
+    );
+  }
+
+  const { weeks, currency, by_location: byLocation, by_method: byMethod } = report.data;
+  const sales = weeks.reduce((total, week) => total + week.sales_minor, 0);
+  const payments = weeks.reduce((total, week) => total + week.payments_minor, 0);
+  const refunds = weeks.reduce((total, week) => total + week.refunds_minor, 0);
+  const granted = weeks.reduce((total, week) => total + week.check_ins_granted, 0);
+  const denied = weeks.reduce((total, week) => total + week.check_ins_denied, 0);
+  const value = (week: Schemas["ReportWeek"]) =>
+    metric === "Sales" ? week.sales_minor : metric === "Payments" ? week.payments_minor : week.check_ins_granted + week.check_ins_denied;
+  const show = (week: Schemas["ReportWeek"]) =>
+    metric === "Check-ins" ? String(value(week)) : new Intl.NumberFormat("en-MY", { style: "currency", currency }).format(value(week) / 100);
+  const max = Math.max(1, ...weeks.map(value));
+  const methodTotal = byMethod.reduce((total, row) => total + row.payments_minor, 0);
+
   return (
     <PreviewPage
       title="Reports"
-      description="A view of what came in, and who came through."
+      description="What came in, and who came through. Void sales are left out."
+      sample={false}
       actions={
         <Button
           variant="secondary"
           type="button"
           onClick={() =>
-            downloadCsv("sample-weekly-report.csv", [
-              ["Week", "Sales (MYR)", "Visits"],
-              ...weeks.map((week) => [week.label, (week.sales / 100).toFixed(2), week.visits]),
+            downloadCsv(`${organization.slug}-weekly-report.csv`, [
+              ["Week starting", "Sales", `Sales (${currency})`, `Payments (${currency})`, `Refunds (${currency})`, "Check-ins granted", "Check-ins denied", "New members"],
+              ...weeks.map((week) => [
+                week.starts_on,
+                week.sale_count,
+                (week.sales_minor / 100).toFixed(2),
+                (week.payments_minor / 100).toFixed(2),
+                (week.refunds_minor / 100).toFixed(2),
+                week.check_ins_granted,
+                week.check_ins_denied,
+                week.new_members,
+              ]),
             ])
           }
         >
@@ -37,99 +82,86 @@ export function Reports() {
       <div className="stack">
         <div className="preview-report-toolbar">
           <Filters
-            values={["This week", "Last 2 weeks", "Last 4 weeks"]}
+            values={Object.keys(REPORT_PERIODS) as ReportPeriod[]}
             value={period}
-            onChange={setPeriod}
+            onChange={(next) => void navigate({ search: next === "Last 4 weeks" ? {} : { period: next }, replace: true })}
             label="Report period"
           />
-          <span className="muted">Through 21 Oct 2026 · All locations</span>
+          <span className="muted">
+            {formatDate(report.data.from, organization.timezone)} to {formatDate(report.data.through, organization.timezone)} · All locations
+          </span>
         </div>
         <dl className="preview-summary">
           <div>
             <dt>Membership sales</dt>
             <dd>
-              <Money minor={sales} currency="MYR" />
+              <Money minor={sales} currency={currency} />
             </dd>
-            <span>Recorded sample sales</span>
+            <span>{weeks.reduce((total, week) => total + week.sale_count, 0)} sales recorded</span>
+          </div>
+          <div>
+            <dt>Money received</dt>
+            <dd>
+              <Money minor={payments - refunds} currency={currency} />
+            </dd>
+            <span>
+              Payments <Money minor={payments} currency={currency} />, refunds <Money minor={refunds} currency={currency} />
+            </span>
           </div>
           <div>
             <dt>Check-ins</dt>
-            <dd>{visits}</dd>
-            <span>Across both locations</span>
-          </div>
-          <div>
-            <dt>Average per week</dt>
-            <dd>
-              <Money minor={Math.round(sales / weeks.length)} currency="MYR" />
-            </dd>
+            <dd>{granted + denied}</dd>
             <span>
-              {weeks.length} {weeks.length === 1 ? "week" : "weeks"} in this view
+              {granted} granted · {denied} denied
             </span>
           </div>
         </dl>
         <Plate
           title="Week by week"
-          description="Compare sales and visits over the selected period."
-          action={<Filters values={["Sales", "Visits"]} value={metric} onChange={setMetric} label="Chart metric" />}
+          description="Weeks start on Monday. The last week is still running."
+          action={<Filters values={["Sales", "Payments", "Check-ins"] as Metric[]} value={metric} onChange={setMetric} label="Chart metric" />}
         >
-          <div
-            className="preview-chart"
-            role="img"
-            aria-label={`${metric} by week: ${weeks.map((week) => `${week.label}: ${metric === "Sales" ? `RM ${week.sales / 100}` : `${week.visits} visits`}`).join(", ")}`}
-          >
+          <div className="preview-chart" role="img" aria-label={`${metric} by week: ${weeks.map((week) => `${weekLabel(week.starts_on)}: ${show(week)}`).join(", ")}`}>
             {weeks.map((week) => (
-              <div className="preview-chart__column" key={week.label}>
-                <span>{metric === "Sales" ? `RM ${(week.sales / 100).toLocaleString("en-MY")}` : week.visits}</span>
+              <div className="preview-chart__column" key={week.starts_on}>
+                <span>{show(week)}</span>
                 <div className="preview-chart__track">
-                  <div
-                    className="preview-chart__bar"
-                    style={{ height: `${((metric === "Sales" ? week.sales : week.visits) / max) * 100}%` }}
-                  />
+                  <div className="preview-chart__bar" style={{ height: `${(value(week) / max) * 100}%` }} />
                 </div>
-                <span>{week.label}</span>
+                <span>{weekLabel(week.starts_on)}</span>
               </div>
             ))}
           </div>
         </Plate>
         <div className="grid-2">
-          <Plate title="By location" description="Share of the selected sample sales.">
+          <Plate title="Sales by location" description="Where each sale was recorded.">
             <div className="preview-breakdown">
-              {[
-                { name: "Bangsar", share: 60 },
-                { name: "Mont Kiara", share: 40 },
-              ].map((row) => (
-                <div key={row.name}>
+              {byLocation.map((row) => (
+                <div key={row.location_id}>
                   <div>
                     <strong>{row.name}</strong>
-                    <Money minor={Math.round((sales * row.share) / 100)} currency="MYR" />
+                    <Money minor={row.sales_minor} currency={currency} />
                   </div>
-                  <meter min={0} max={100} value={row.share} aria-label={`${row.name} share of sales`} />
-                  <span>{row.share}% of sales</span>
+                  <meter min={0} max={100} value={share(row.sales_minor, sales)} aria-label={`${row.name} share of sales`} />
+                  <span>{share(row.sales_minor, sales)}% of sales</span>
                 </div>
               ))}
             </div>
           </Plate>
-          <Plate title="Payment methods" description="Manual payments in the sample period.">
+          <Plate title="Payment methods" description="Payments recorded at the desk.">
             <div className="preview-breakdown">
-              {[
-                { name: "Bank transfer", share: 70 },
-                { name: "Cash", share: 30 },
-              ].map((row) => (
-                <div key={row.name}>
+              {byMethod.map((row) => (
+                <div key={row.method}>
                   <div>
-                    <strong>{row.name}</strong>
-                    <Money minor={Math.round((sales * row.share) / 100)} currency="MYR" />
+                    <strong>{PAYMENT_METHOD_LABEL[row.method]}</strong>
+                    <Money minor={row.payments_minor} currency={currency} />
                   </div>
-                  <meter min={0} max={100} value={row.share} aria-label={`${row.name} share of payments`} />
-                  <span>{row.share}% of payments</span>
+                  <meter min={0} max={100} value={share(row.payments_minor, methodTotal)} aria-label={`${PAYMENT_METHOD_LABEL[row.method]} share of payments`} />
+                  <span>{share(row.payments_minor, methodTotal)}% of payments</span>
                 </div>
               ))}
             </div>
           </Plate>
-        </div>
-        <div className="preview-report-note">
-          <ArrowUpRight aria-hidden="true" />
-          <p>Figures are sample data for exploring the report. Export downloads the values in this view.</p>
         </div>
       </div>
     </PreviewPage>

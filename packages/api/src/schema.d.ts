@@ -259,6 +259,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Weekly sales, payments, refunds, check-ins, and new members. Needs purchases:read and check_ins:read.
+         * @description Weeks start on Monday in the organization time zone. The last week is the current,
+         *     partial week. `weeks` is 1, 2, 4, or 12; anything else gives 4. Void sales are left out.
+         */
+        get: operations["getStaffReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/members": {
         parameters: {
             query?: never;
@@ -1365,6 +1386,42 @@ export interface components {
         MemberAccountResponse: {
             data: components["schemas"]["MemberAccount"];
         };
+        ReportWeek: {
+            /**
+             * Format: date
+             * @description The Monday that starts the week, in the organization time zone.
+             */
+            starts_on: string;
+            sale_count: number;
+            sales_minor: number;
+            payments_minor: number;
+            refunds_minor: number;
+            check_ins_granted: number;
+            check_ins_denied: number;
+            new_members: number;
+        };
+        Report: {
+            currency: string;
+            timezone: string;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            through: string;
+            weeks: components["schemas"]["ReportWeek"][];
+            by_location: {
+                /** Format: uuid */
+                location_id: string;
+                name: string;
+                sales_minor: number;
+            }[];
+            by_method: {
+                method: components["schemas"]["PaymentMethod"];
+                payments_minor: number;
+            }[];
+        };
+        ReportResponse: {
+            data: components["schemas"]["Report"];
+        };
     };
     responses: {
         /** @description Missing header or malformed request. */
@@ -1854,6 +1911,34 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getStaffReport: {
+        parameters: {
+            query?: {
+                weeks?: 1 | 2 | 4 | 12;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

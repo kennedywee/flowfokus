@@ -366,3 +366,18 @@ export const unlinkMember = createServerFn({ method: "POST" })
     async ({ data }): Promise<Result<Schemas["MemberDetail"]>> =>
       callStaff(data.slug, (api) => api.DELETE("/staff/members/{id}/link", { params: { path: { id: data.id } } })),
   );
+
+export interface ReportInput extends SlugInput {
+  weeks: 1 | 2 | 4 | 12;
+}
+
+export const getReport = createServerFn({ method: "GET" })
+  .validator((input: ReportInput): ReportInput => {
+    const { slug } = slugInput(input);
+    const weeks = [1, 2, 4, 12].includes(input.weeks) ? input.weeks : 4;
+    return { slug, weeks };
+  })
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Report"]>> =>
+      callStaff(data.slug, (api) => api.GET("/staff/report", { params: { query: { weeks: data.weeks } } })),
+  );
