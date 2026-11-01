@@ -18,8 +18,9 @@ function Home() {
           <h1 id="gym-name">{organization.name}</h1>
           {locationNames.length ? (
             <p className="opening__lede">
-              {products.length === 1 ? "One membership" : `${products.length} memberships`} for{" "}
-              {listNames(locationNames)}.
+              {products.length === 1 ? "One membership" : `${products.length} memberships`}
+              {/* Past three names, the sentence gets hard to read. The Locations section lists them all. */}
+              {locationNames.length <= 3 ? ` for ${listNames(locationNames)}.` : ` at ${locationNames.length} locations.`}
             </p>
           ) : null}
           <div className="door-plate">

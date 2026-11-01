@@ -550,6 +550,7 @@ a:hover {
 }
 .location {
   display: grid;
+  align-content: start;
   gap: var(--space-1);
   padding: var(--space-4) var(--space-5);
 }

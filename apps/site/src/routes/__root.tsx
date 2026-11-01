@@ -21,6 +21,8 @@ export const Route = createRootRoute({
       ...(data?.page.kind === "gym" ? [] : [{ name: "robots", content: "noindex" }]),
     ],
     links: [
+      // Gym sites have no icon yet. An empty one stops the browser asking for /favicon.ico.
+      { rel: "icon", href: "data:," },
       { rel: "stylesheet", href: legendFont },
       { rel: "stylesheet", href: appCss },
     ],
