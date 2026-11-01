@@ -14,6 +14,7 @@ class Organization < ApplicationRecord
   has_many :prices, dependent: :restrict_with_exception
   has_many :sales, dependent: :restrict_with_exception
   has_many :payments, dependent: :restrict_with_exception
+  has_many :refunds, dependent: :restrict_with_exception
   has_many :memberships, dependent: :restrict_with_exception
   has_many :membership_periods, dependent: :restrict_with_exception
   has_many :entitlements, dependent: :restrict_with_exception
@@ -165,8 +166,8 @@ class Organization < ApplicationRecord
     {
       member_count: members.count,
       active_membership_count: membership_periods.covering(at).distinct.count(:membership_id),
-      unpaid_sale_count: sales.where("sales.paid_minor < sales.total_minor").count,
-      awaiting_fulfillment_count: sales.where("sales.paid_minor = sales.total_minor").where.missing(:fulfillment).count,
+      unpaid_sale_count: sales.open.where("sales.paid_minor < sales.total_minor").count,
+      awaiting_fulfillment_count: sales.open.where("sales.paid_minor = sales.total_minor").where.missing(:fulfillment).count,
       check_ins_today: { granted: today.fetch("granted", 0), denied: today.fetch("denied", 0) }
     }
   end

@@ -261,7 +261,8 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
   );
 }
 
-const PERIOD_STATE: Record<"current" | "upcoming" | "ended", { lamp: LampState; label: string }> = {
+const PERIOD_STATE: Record<"current" | "upcoming" | "ended" | "revoked", { lamp: LampState; label: string }> = {
+  revoked: { lamp: "denied", label: "Revoked" },
   current: { lamp: "active", label: "Current" },
   upcoming: { lamp: "waiting", label: "Upcoming" },
   ended: { lamp: "off", label: "Ended" },
@@ -291,7 +292,7 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
             {[...periods].reverse().map((period) => {
               const starts = Date.parse(period.starts_at);
               const ends = Date.parse(period.ends_at);
-              const state = now >= ends ? "ended" : now >= starts ? "current" : "upcoming";
+              const state = period.revoked_at ? "revoked" : now >= ends ? "ended" : now >= starts ? "current" : "upcoming";
               return (
                 <TableRow key={period.id}>
                   <TableCell className="member-date">

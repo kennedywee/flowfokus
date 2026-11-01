@@ -81,6 +81,9 @@ roles:
       - purchases:fulfill
       - purchases:fulfill_unpaid
       - payments:create
+      - purchases:refund
+      - purchases:void
+      - memberships:revoke
       - check_ins:read
       - check_ins:create
   - slug: receptionist
@@ -113,6 +116,12 @@ permissions:
     name: Deliver access before full payment
   - slug: payments:create
     name: Record payments
+  - slug: purchases:refund
+    name: Record refunds
+  - slug: purchases:void
+    name: Void sales
+  - slug: memberships:revoke
+    name: Revoke delivered access
   - slug: check_ins:read
     name: Read check-ins
   - slug: check_ins:create

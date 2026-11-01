@@ -10,6 +10,7 @@ class Payment < ApplicationRecord
 
   belongs_to :sale
   belongs_to :recorded_by_user, class_name: "User"
+  has_many :refunds, dependent: :restrict_with_exception
   same_organization_as :sale
 
   validates :amount_minor, numericality: { only_integer: true, greater_than: 0 }
@@ -31,6 +32,8 @@ class Payment < ApplicationRecord
           reference: reference.presence, currency: sale.currency, received_at: at,
           idempotency_key:, request_fingerprint: fingerprint
         )
+        raise Sale::Voided if sale.voided?
+
         payment.validate!
         if payment.amount_minor > sale.balance_minor
           raise Overpayment, "Payment of #{payment.amount_minor} exceeds the balance of #{sale.balance_minor}."
@@ -45,5 +48,10 @@ class Payment < ApplicationRecord
     end
   end
 
-  def as_api = { id:, amount_minor:, currency:, method: payment_method, reference:, received_at: api_time(received_at) }
+  def refunded_minor = refunds.sum(&:amount_minor)
+  def refundable_minor = amount_minor - refunded_minor
+
+  def as_api
+    { id:, amount_minor:, currency:, method: payment_method, reference:, received_at: api_time(received_at), refunded_minor: }
+  end
 end

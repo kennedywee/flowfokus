@@ -37,6 +37,9 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `purchases:fulfill` | Deliver a fully paid sale |
 | `purchases:fulfill_unpaid` | Deliver before full payment, with a reason. Needs `purchases:fulfill` too. |
 | `payments:create` | Record a manual payment |
+| `purchases:refund` | Record a refund against one payment |
+| `purchases:void` | Void a sale that delivered nothing and kept no money |
+| `memberships:revoke` | Revoke the access delivered by one sale |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
 
 Which roles ship by default is still open. See [Decisions](decisions.md#identity-and-access).

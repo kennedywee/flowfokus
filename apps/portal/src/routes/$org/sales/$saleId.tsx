@@ -3,6 +3,7 @@ import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { PackageCheck } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { SaleCorrections } from "../../../components/SaleCorrections";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioCards } from "../../../components/RadioCards";
 import { useToast } from "../../../components/Toast";
@@ -88,6 +89,15 @@ function SalePage() {
         <Status state={saleState(data)}>{saleStateLabel(data)}</Status>
       </PageHead>
 
+      {data.voided_at ? (
+        <Notice tone="warning" title="This sale is void">
+          <p>
+            Voided <Time iso={data.voided_at} timeZone={organization.timezone} />. Reason: {data.void_reason}
+          </p>
+        </Notice>
+      ) : null}
+      <SaleCorrections sale={data} />
+
       <div className="sale-page__layout">
         <Plate title="Payment">
           <div className="sale-page__readouts">
@@ -103,6 +113,12 @@ function SalePage() {
               <span className="readout__label">Balance</span>
               <span className="readout__value">{formatMoney(data.balance_minor, data.currency)}</span>
             </div>
+            {data.refunded_minor > 0 ? (
+              <div className="readout">
+                <span className="readout__label">Refunded</span>
+                <span className="readout__value">{formatMoney(data.refunded_minor, data.currency)}</span>
+              </div>
+            ) : null}
           </div>
           {data.total_minor > 0 ? (
             <div className="meter" data-state={data.balance_minor > 0 ? "due" : undefined}>
@@ -125,13 +141,13 @@ function SalePage() {
               <p>{recorded.text}</p>
             </Notice>
           ) : null}
-          {data.balance_minor > 0 ? (
+          {data.balance_minor > 0 && !data.voided_at ? (
             <PaymentForm sale={data} onRecorded={(text) => setRecorded({ saleId: data.id, text })} />
           ) : null}
         </Plate>
 
         <div className="stack">
-          <Delivery sale={data} />
+          {data.voided_at ? null : <Delivery sale={data} />}
           <Plate title="Purchased terms" description="Saved at purchase. Catalog changes never alter them.">
             <dl className="facts facts--rows">
               <div>
@@ -163,6 +179,7 @@ function SalePage() {
 function Payments({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
   if (!sale.payments.length) {
+    if (sale.voided_at) return null;
     return (
       <Empty title="No payments yet">
         <p>Record cash or a bank transfer when the member pays.</p>
@@ -182,6 +199,16 @@ function Payments({ sale }: { sale: Schemas["Sale"] }) {
             </span>
           </span>
           <Time iso={payment.received_at} timeZone={organization.timezone} />
+        </li>
+      ))}
+      {sale.refunds.map((refund) => (
+        <li key={refund.id}>
+          <Lamp state="off" />
+          <span>
+            <span className="money cell-title">−{formatMoney(refund.amount_minor, refund.currency)} refund</span>
+            <span className="cell-sub">{refund.reason}</span>
+          </span>
+          <Time iso={refund.refunded_at} timeZone={organization.timezone} />
         </li>
       ))}
     </ol>
@@ -360,6 +387,14 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
             </Link>
           </p>
         </Notice>
+        {sale.fulfillment.revoked_at ? (
+          <Notice tone="error" title="Access revoked">
+            <p>
+              Revoked <Time iso={sale.fulfillment.revoked_at} timeZone={organization.timezone} />. Reason:{" "}
+              {sale.fulfillment.revoke_reason}
+            </p>
+          </Notice>
+        ) : null}
         {deliveredEarly ? (
           <Notice tone="warning" title="Delivered before full payment">
             <p>

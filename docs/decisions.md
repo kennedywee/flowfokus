@@ -52,7 +52,7 @@ Not yet confirmed.
 | --- | --- |
 | Access authority | Authorize check-ins through entitlements only. Membership status alone does not grant access. |
 | Purchased terms | Save them when the sale is confirmed. |
-| Revocation | Affect only delivery from the refunded purchase. |
+| Revocation | Affect only delivery from the refunded purchase. Implemented as revoking one sale's delivery. See [Workflows](workflows.md#refund-or-revoke). |
 
 ## Open
 

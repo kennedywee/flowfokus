@@ -55,6 +55,14 @@ Denied access records a reason. A staff override needs a permission and a reason
 
 A refund can keep benefits. A revocation can happen without a refund. Voids are separate from refunds.
 
+Current implementation limits, chosen where [Decisions](decisions.md#catalog-and-purchase) is still open:
+
+- A refund belongs to one payment. Partial refunds are allowed. The total refunded on a payment cannot exceed it. `paid_minor` stays the total received; `refunded_minor` is separate, so a refund never reopens the balance.
+- A refund never changes access. Revoke access as its own action.
+- Revoking a sale ends only its period and entitlements, at once. Other periods, payments, and recorded usage stay. A revoked period no longer blocks a new period over the same dates.
+- A sale can be voided only before delivery and when it keeps no money. Refund any payments first. A void sale takes no payments and cannot be delivered.
+- Refunds, voids, and revocations each record the actor, time, and a required reason. Refunds are immutable in the database.
+
 ## Adjust benefits manually
 
 Record the member, right, actor, reason, time, and change. Keep the original grant and usage.

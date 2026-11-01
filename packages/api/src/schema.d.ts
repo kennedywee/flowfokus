@@ -355,6 +355,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/sales/{id}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record money returned against one payment. Needs purchases:refund.
+         * @description Refunds never edit the payment. The total refunded on a payment cannot exceed it:
+         *     422 `refund_exceeds_payment`. A refund keeps the member's access. Revoke access
+         *     separately. Flowfokus does not move money. Returns the updated sale.
+         */
+        post: operations["createStaffRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/sales/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a sale that delivered nothing and kept no money. Needs purchases:void.
+         * @description A delivered sale, or one that still keeps money, returns 422 `sale_not_voidable`.
+         *     A void sale takes no payments and cannot be delivered (422 `sale_voided`). Repeating
+         *     the call changes nothing. Returns the updated sale.
+         */
+        post: operations["voidStaffSale"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/sales/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End the access delivered by this sale. Needs memberships:revoke.
+         * @description Revokes this delivery's membership period and entitlements now. Other periods,
+         *     payments, and recorded usage stay. A revoked period no longer blocks new periods
+         *     over the same dates. An undelivered sale returns 422 `sale_not_delivered`.
+         *     Repeating the call changes nothing. Returns the updated sale.
+         */
+        post: operations["revokeStaffSale"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/sales/{id}/fulfill": {
         parameters: {
             query?: never;
@@ -470,13 +537,14 @@ export interface components {
          *     - `forbidden` (403), `organization_mismatch` (403)
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
-         *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid` (422)
+         *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
+         *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment` (422)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -549,7 +617,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "check_ins:read" | "check_ins:create";
+        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -649,6 +717,11 @@ export interface components {
              * @description Exclusive.
              */
             ends_at: string;
+            /**
+             * Format: date-time
+             * @description Set when staff revoked this period. It then grants no access.
+             */
+            revoked_at: string | null;
         };
         Entitlement: {
             /** Format: uuid */
@@ -793,6 +866,8 @@ export interface components {
             reference: string | null;
             /** Format: date-time */
             received_at: string;
+            /** @description Total refunded against this payment. */
+            refunded_minor: number;
         };
         Fulfillment: {
             /** Format: uuid */
@@ -809,9 +884,12 @@ export interface components {
             early_reason: string | null;
             /** @description Balance still due at delivery. Zero for a normal delivery. */
             unpaid_minor: number;
+            /** Format: date-time */
+            revoked_at: string | null;
+            revoke_reason: string | null;
         };
         /** @enum {string} */
-        PaymentStatus: "unpaid" | "partially_paid" | "paid";
+        PaymentStatus: "unpaid" | "partially_paid" | "paid" | "void";
         Sale: {
             /** Format: uuid */
             id: string;
@@ -826,6 +904,12 @@ export interface components {
             fulfilled: boolean;
             /** @description True when the sale renews the member's agreed terms. */
             renewal: boolean;
+            /** @description Total refunded. `paid_minor` stays the total received. */
+            refunded_minor: number;
+            /** Format: date-time */
+            voided_at: string | null;
+            void_reason: string | null;
+            refunds: components["schemas"]["Refund"][];
             /** Format: date-time */
             purchased_at: string;
             line_item: components["schemas"]["SaleLineItem"];
@@ -922,6 +1006,26 @@ export interface components {
         FulfillInput: {
             /** @description Why staff deliver before full payment. Needs purchases:fulfill_unpaid. Ignored when the sale is paid in full. */
             early_reason?: string;
+        };
+        RefundInput: {
+            /** Format: uuid */
+            payment_id: string;
+            amount_minor: number;
+            reason: string;
+        };
+        ReasonInput: {
+            reason: string;
+        };
+        Refund: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            payment_id: string;
+            amount_minor: number;
+            currency: string;
+            reason: string;
+            /** Format: date-time */
+            refunded_at: string;
         };
     };
     responses: {
@@ -1635,6 +1739,115 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundInput"];
+            };
+        };
+        responses: {
+            /** @description Replay of an earlier request with the same key. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            /** @description Refund recorded. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    voidStaffSale: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    revokeStaffSale: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };

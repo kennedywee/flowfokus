@@ -13,7 +13,8 @@ class Entitlement < ApplicationRecord
   validates :usage_limit, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :used_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  scope :valid_at, ->(at) { where("starts_at <= :at AND ends_at > :at", at:) }
+  scope :live, -> { where(revoked_at: nil) }
+  scope :valid_at, ->(at) { live.where("starts_at <= :at AND ends_at > :at", at:) }
 
   def unlimited? = usage_limit.nil?
   def remaining = unlimited? ? nil : usage_limit - used_count

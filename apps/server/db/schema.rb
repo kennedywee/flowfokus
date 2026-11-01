@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.integer "used_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "revoked_at"
     t.index ["benefit_grant_id"], name: "index_entitlements_on_benefit_grant_id"
     t.index ["id", "organization_id"], name: "index_entitlements_on_id_and_organization_id", unique: true
     t.index ["member_id", "ends_at"], name: "index_entitlements_on_member_id_and_ends_at"
@@ -99,10 +100,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.datetime "updated_at", null: false
     t.text "early_reason"
     t.bigint "unpaid_minor", default: 0, null: false
+    t.datetime "revoked_at"
+    t.uuid "revoked_by_user_id"
+    t.text "revoke_reason"
     t.index ["fulfilled_by_user_id"], name: "index_fulfillments_on_fulfilled_by_user_id"
     t.index ["id", "organization_id"], name: "index_fulfillments_on_id_and_organization_id", unique: true
     t.index ["membership_id"], name: "index_fulfillments_on_membership_id"
+    t.index ["revoked_by_user_id"], name: "index_fulfillments_on_revoked_by_user_id"
     t.index ["sale_line_item_id"], name: "index_fulfillments_on_sale_line_item_id", unique: true
+    t.check_constraint "revoked_at IS NULL AND revoked_by_user_id IS NULL AND revoke_reason IS NULL OR revoked_at IS NOT NULL AND revoked_by_user_id IS NOT NULL AND revoke_reason IS NOT NULL AND length(btrim(revoke_reason)) > 0", name: "fulfillments_revoke_shape"
     t.check_constraint "unpaid_minor = 0 AND early_reason IS NULL OR unpaid_minor > 0 AND early_reason IS NOT NULL AND length(btrim(early_reason)) > 0", name: "fulfillments_early_reason"
   end
 
@@ -138,11 +144,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.datetime "ends_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "revoked_at"
     t.index ["fulfillment_id"], name: "index_membership_periods_on_fulfillment_id", unique: true
     t.index ["id", "organization_id"], name: "index_membership_periods_on_id_and_organization_id", unique: true
     t.index ["membership_id", "starts_at"], name: "index_membership_periods_on_membership_id_and_starts_at"
     t.check_constraint "ends_at > starts_at", name: "membership_periods_positive_length"
-    t.exclusion_constraint "membership_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", using: :gist, name: "membership_periods_no_overlap"
+    t.exclusion_constraint "membership_id WITH =, tsrange(starts_at, ends_at, '[)'::text) WITH &&", where: "revoked_at IS NULL", using: :gist, name: "membership_periods_no_overlap"
   end
 
   create_table "memberships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -203,6 +210,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.string "request_fingerprint", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["id", "organization_id"], name: "index_payments_on_id_and_organization_id", unique: true
     t.index ["organization_id", "idempotency_key"], name: "index_payments_on_organization_id_and_idempotency_key", unique: true
     t.index ["recorded_by_user_id"], name: "index_payments_on_recorded_by_user_id"
     t.index ["sale_id"], name: "index_payments_on_sale_id"
@@ -256,6 +264,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.check_constraint "kind::text = 'membership'::text", name: "products_kind"
   end
 
+  create_table "refunds", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "sale_id", null: false
+    t.uuid "payment_id", null: false
+    t.uuid "recorded_by_user_id", null: false
+    t.bigint "amount_minor", null: false
+    t.string "currency", limit: 3, null: false
+    t.text "reason", null: false
+    t.datetime "refunded_at", null: false
+    t.string "idempotency_key", null: false
+    t.string "request_fingerprint", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "idempotency_key"], name: "index_refunds_on_organization_id_and_idempotency_key", unique: true
+    t.index ["payment_id"], name: "index_refunds_on_payment_id"
+    t.index ["recorded_by_user_id"], name: "index_refunds_on_recorded_by_user_id"
+    t.index ["sale_id"], name: "index_refunds_on_sale_id"
+    t.check_constraint "amount_minor > 0", name: "refunds_amount_positive"
+    t.check_constraint "length(btrim(reason)) > 0", name: "refunds_reason_present"
+  end
+
   create_table "sale_line_items", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.uuid "sale_id", null: false
@@ -291,15 +320,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.uuid "renews_line_item_id"
+    t.bigint "refunded_minor", default: 0, null: false
+    t.datetime "voided_at"
+    t.uuid "voided_by_user_id"
+    t.text "void_reason"
     t.index ["created_by_user_id"], name: "index_sales_on_created_by_user_id"
     t.index ["id", "organization_id"], name: "index_sales_on_id_and_organization_id", unique: true
     t.index ["member_id"], name: "index_sales_on_member_id"
     t.index ["organization_id", "created_at"], name: "index_sales_on_organization_id_and_created_at"
     t.index ["organization_id", "idempotency_key"], name: "index_sales_on_organization_id_and_idempotency_key", unique: true
     t.index ["renews_line_item_id"], name: "index_sales_on_renews_line_item_id"
+    t.index ["voided_by_user_id"], name: "index_sales_on_voided_by_user_id"
     t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "sales_currency_format"
     t.check_constraint "paid_minor >= 0 AND paid_minor <= total_minor", name: "sales_paid_within_total"
+    t.check_constraint "refunded_minor >= 0 AND refunded_minor <= paid_minor", name: "sales_refunded_within_paid"
     t.check_constraint "total_minor >= 0", name: "sales_total_non_negative"
+    t.check_constraint "voided_at IS NULL AND voided_by_user_id IS NULL AND void_reason IS NULL OR voided_at IS NOT NULL AND voided_by_user_id IS NOT NULL AND void_reason IS NOT NULL AND length(btrim(void_reason)) > 0", name: "sales_void_shape"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -358,6 +394,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
   add_foreign_key "fulfillments", "organizations"
   add_foreign_key "fulfillments", "sale_line_items", column: ["sale_line_item_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "fulfillments", "users", column: "fulfilled_by_user_id"
+  add_foreign_key "fulfillments", "users", column: "revoked_by_user_id"
   add_foreign_key "locations", "organizations"
   add_foreign_key "members", "organizations"
   add_foreign_key "members", "users"
@@ -377,6 +414,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
   add_foreign_key "product_benefits", "organizations"
   add_foreign_key "product_benefits", "products", column: ["product_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "products", "organizations"
+  add_foreign_key "refunds", "organizations"
+  add_foreign_key "refunds", "payments", column: ["payment_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "refunds", "sales", column: ["sale_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "refunds", "users", column: "recorded_by_user_id"
   add_foreign_key "sale_line_items", "organizations"
   add_foreign_key "sale_line_items", "prices", column: ["price_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sale_line_items", "products", column: ["product_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -386,6 +427,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
   add_foreign_key "sales", "organizations"
   add_foreign_key "sales", "sale_line_items", column: ["renews_line_item_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "users", column: "created_by_user_id"
+  add_foreign_key "sales", "users", column: "voided_by_user_id"
 
   create_function :prevent_price_term_changes, sql_definition: <<-'SQL'
       CREATE OR REPLACE FUNCTION public.prevent_price_term_changes()
@@ -449,5 +491,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
 
   create_trigger :workos_events_immutable, sql_definition: <<-SQL
       CREATE TRIGGER workos_events_immutable BEFORE UPDATE ON public.workos_events FOR EACH ROW EXECUTE FUNCTION prevent_workos_event_changes()
+  SQL
+
+  create_trigger :refunds_immutable, sql_definition: <<-SQL
+      CREATE TRIGGER refunds_immutable BEFORE UPDATE ON public.refunds FOR EACH ROW EXECUTE FUNCTION prevent_update()
   SQL
 end

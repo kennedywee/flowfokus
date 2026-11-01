@@ -16,9 +16,10 @@ class Membership < ApplicationRecord
     membership
   end
 
-  # New access starts at purchase time, or after the latest period when that ends later.
+  # New access starts at purchase time, or after the latest live period when
+  # that ends later. Revoked periods leave their dates free.
   def next_start(purchased_at)
-    [ purchased_at, periods.maximum(:ends_at) ].compact.max
+    [ purchased_at, periods.live.maximum(:ends_at) ].compact.max
   end
 
   def as_api

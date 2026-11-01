@@ -27,7 +27,7 @@ module Flowfokus
       members:read members:create
       products:read products:create products:update
       purchases:read purchases:create purchases:fulfill purchases:fulfill_unpaid
-      payments:create
+      payments:create purchases:refund purchases:void memberships:revoke
       check_ins:read check_ins:create
     ].freeze
 

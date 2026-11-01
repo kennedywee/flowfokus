@@ -11,12 +11,13 @@ class MembershipPeriod < ApplicationRecord
   validates :starts_at, :ends_at, presence: true
   validate :ends_after_start
 
-  scope :covering, ->(at) { where("starts_at <= :at AND ends_at > :at", at:) }
+  scope :live, -> { where(revoked_at: nil) }
+  scope :covering, ->(at) { live.where("starts_at <= :at AND ends_at > :at", at:) }
 
   def as_api
     {
       id:, membership_id:, sale_id: fulfillment.sale_line_item.sale_id, fulfillment_id:,
-      starts_at: api_time(starts_at), ends_at: api_time(ends_at)
+      starts_at: api_time(starts_at), ends_at: api_time(ends_at), revoked_at: api_time(revoked_at)
     }
   end
 

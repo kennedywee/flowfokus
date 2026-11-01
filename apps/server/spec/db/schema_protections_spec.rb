@@ -30,6 +30,29 @@ RSpec.describe "Database protections from db/schema.rb" do
     %w[workos_events_status workos_events_payload_object organization_memberships_status].each { expect(schema).to include(%(name: "#{_1}")) }
   end
 
+  it "dumps the refund, void, revocation, and early delivery protections into schema.rb" do
+    schema = Rails.root.join("db/schema.rb").read
+
+    expect(schema).to include("create_trigger :refunds_immutable")
+    expect(schema).to include('where: "revoked_at IS NULL", using: :gist, name: "membership_periods_no_overlap"')
+    %w[refunds_amount_positive refunds_reason_present sales_refunded_within_paid sales_void_shape
+       fulfillments_revoke_shape fulfillments_early_reason].each { expect(schema).to include(%(name: "#{_1}")) }
+  end
+
+  it "rejects overlapping live periods but allows them over a revoked one" do
+    sale = grant_access(chainsaw, member:, location:, duration_days: 30)
+    period = sale.line_item.fulfillment.membership_period
+    other = pay_in_full(record_sale(chainsaw, member:, price:, location:))
+    fulfillment = Fulfillment.create!(organization: chainsaw, sale_line_item: other.line_item, member:,
+      membership: period.membership, fulfilled_by_user: actor, fulfilled_at: Time.current)
+    overlap = { organization_id: chainsaw.id, membership_id: period.membership_id, fulfillment_id: fulfillment.id,
+      starts_at: period.starts_at + 1.day, ends_at: period.ends_at + 1.day }
+
+    expect { in_savepoint { MembershipPeriod.insert!(overlap) } }.to raise_error(ActiveRecord::StatementInvalid, /membership_periods_no_overlap/)
+    period.update!(revoked_at: Time.current)
+    expect { MembershipPeriod.insert!(overlap) }.not_to raise_error
+  end
+
   it "keeps one live staff membership per user and organization, alongside tombstones" do
     user = User.create!(workos_id: "user_unique", email: "unique@example.test")
     chainsaw.organization_memberships.create!(user:, role: "owner", workos_id: "om_old", workos_deleted_at: Time.current)

@@ -42,6 +42,7 @@ export const PAYMENT_STATUS_LABEL: Record<Schemas["PaymentStatus"], string> = {
   unpaid: "Unpaid",
   partially_paid: "Part paid",
   paid: "Paid",
+  void: "Void",
 };
 
 /** What a denial means at the desk, and what staff can do next. */
@@ -61,12 +62,16 @@ export const DENIAL: Record<Schemas["DenialReason"], { title: string; next: stri
 };
 
 /** The lamp state for a sale. */
-export function saleState(sale: Schemas["Sale"]): "delivered" | "waiting" | "due" {
+export function saleState(sale: Schemas["Sale"]): "delivered" | "waiting" | "due" | "off" | "denied" {
+  if (sale.voided_at) return "off";
+  if (sale.fulfillment?.revoked_at) return "denied";
   if (sale.fulfilled) return "delivered";
   return sale.balance_minor === 0 ? "waiting" : "due";
 }
 
 export function saleStateLabel(sale: Schemas["Sale"]): string {
+  if (sale.voided_at) return "Void";
+  if (sale.fulfillment?.revoked_at) return "Access revoked";
   if (sale.fulfilled) return "Delivered";
   if (sale.balance_minor === 0) return "Paid, not delivered";
   return PAYMENT_STATUS_LABEL[sale.payment_status];

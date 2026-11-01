@@ -13,6 +13,10 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  reasonInput,
+  refundInput,
+  type ReasonInput,
+  type RefundInput,
   renewInput,
   type RenewInput,
   createPriceInput,
@@ -226,6 +230,36 @@ export const fulfillSale = createServerFn({ method: "POST" })
           params: { path: { id: data.saleId } },
           ...(data.early_reason ? { body: { early_reason: data.early_reason } } : {}),
         }),
+      ),
+  );
+
+export const recordRefund = createServerFn({ method: "POST" })
+  .validator((input: RefundInput) => refundInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Sale"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/sales/{id}/refunds", {
+          params: { path: { id: data.saleId }, header: { "Idempotency-Key": data.idempotencyKey } },
+          body: { payment_id: data.payment_id, amount_minor: data.amount_minor, reason: data.reason },
+        }),
+      ),
+  );
+
+export const voidSale = createServerFn({ method: "POST" })
+  .validator((input: ReasonInput) => reasonInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Sale"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/sales/{id}/void", { params: { path: { id: data.saleId } }, body: { reason: data.reason } }),
+      ),
+  );
+
+export const revokeSale = createServerFn({ method: "POST" })
+  .validator((input: ReasonInput) => reasonInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Sale"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/sales/{id}/revoke", { params: { path: { id: data.saleId } }, body: { reason: data.reason } }),
       ),
   );
 

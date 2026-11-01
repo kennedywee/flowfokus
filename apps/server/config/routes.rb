@@ -22,7 +22,10 @@ Rails.application.routes.draw do
     end
     resources :sales, only: %i[index show create] do
       resources :payments, only: :create
+      resources :refunds, only: :create
       resource :fulfill, only: :create, controller: "fulfillments"
+      post :void, on: :member
+      post :revoke, on: :member
     end
     resources :check_ins, only: %i[index create]
   end

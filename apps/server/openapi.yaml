@@ -744,6 +744,136 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/sales/{id}/refunds:
+    post:
+      tags: [staff]
+      operationId: createStaffRefund
+      summary: Record money returned against one payment. Needs purchases:refund.
+      description: |
+        Refunds never edit the payment. The total refunded on a payment cannot exceed it:
+        422 `refund_exceeds_payment`. A refund keeps the member's access. Revoke access
+        separately. Flowfokus does not move money. Returns the updated sale.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefundInput"
+      responses:
+        "200":
+          description: Replay of an earlier request with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "201":
+          description: Refund recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales/{id}/void:
+    post:
+      tags: [staff]
+      operationId: voidStaffSale
+      summary: Cancel a sale that delivered nothing and kept no money. Needs purchases:void.
+      description: |
+        A delivered sale, or one that still keeps money, returns 422 `sale_not_voidable`.
+        A void sale takes no payments and cannot be delivered (422 `sale_voided`). Repeating
+        the call changes nothing. Returns the updated sale.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/sales/{id}/revoke:
+    post:
+      tags: [staff]
+      operationId: revokeStaffSale
+      summary: End the access delivered by this sale. Needs memberships:revoke.
+      description: |
+        Revokes this delivery's membership period and entitlements now. Other periods,
+        payments, and recorded usage stay. A revoked period no longer blocks new periods
+        over the same dates. An undelivered sale returns 422 `sale_not_delivered`.
+        Repeating the call changes nothing. Returns the updated sale.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/sales/{id}/fulfill:
     post:
       tags: [staff]
@@ -1087,7 +1217,8 @@ components:
         - `forbidden` (403), `organization_mismatch` (403)
         - `not_found` (404)
         - `idempotency_key_reused` (409)
-        - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid` (422)
+        - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
+          `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment` (422)
         - `rate_limited` (429)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
@@ -1106,6 +1237,10 @@ components:
         - renewal_unavailable
         - overpayment
         - sale_not_paid
+        - sale_voided
+        - sale_not_voidable
+        - sale_not_delivered
+        - refund_exceeds_payment
         - rate_limited
         - internal_error
         - auth_not_configured
@@ -1261,6 +1396,9 @@ components:
         - purchases:fulfill
         - purchases:fulfill_unpaid
         - payments:create
+        - purchases:refund
+        - purchases:void
+        - memberships:revoke
         - check_ins:read
         - check_ins:create
 
@@ -1449,7 +1587,7 @@ components:
     MembershipPeriod:
       type: object
       additionalProperties: false
-      required: [id, membership_id, sale_id, fulfillment_id, starts_at, ends_at]
+      required: [id, membership_id, sale_id, fulfillment_id, starts_at, ends_at, revoked_at]
       properties:
         id:
           type: string
@@ -1471,6 +1609,11 @@ components:
           type: string
           format: date-time
           description: Exclusive.
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Set when staff revoked this period. It then grants no access.
 
     Entitlement:
       type: object
@@ -1770,7 +1913,7 @@ components:
     Payment:
       type: object
       additionalProperties: false
-      required: [id, amount_minor, currency, method, reference, received_at]
+      required: [id, amount_minor, currency, method, reference, received_at, refunded_minor]
       properties:
         id:
           type: string
@@ -1787,11 +1930,14 @@ components:
         received_at:
           type: string
           format: date-time
+        refunded_minor:
+          type: integer
+          description: Total refunded against this payment.
 
     Fulfillment:
       type: object
       additionalProperties: false
-      required: [id, sale_line_item_id, membership_id, membership_period, fulfilled_at, early, early_reason, unpaid_minor]
+      required: [id, sale_line_item_id, membership_id, membership_period, fulfilled_at, early, early_reason, unpaid_minor, revoked_at, revoke_reason]
       properties:
         id:
           type: string
@@ -1816,10 +1962,17 @@ components:
         unpaid_minor:
           type: integer
           description: Balance still due at delivery. Zero for a normal delivery.
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoke_reason:
+          type: string
+          nullable: true
 
     PaymentStatus:
       type: string
-      enum: [unpaid, partially_paid, paid]
+      enum: [unpaid, partially_paid, paid, void]
 
     Sale:
       type: object
@@ -1835,6 +1988,10 @@ components:
         - payment_status
         - fulfilled
         - renewal
+        - refunded_minor
+        - voided_at
+        - void_reason
+        - refunds
         - purchased_at
         - line_item
         - payments
@@ -1863,6 +2020,20 @@ components:
         renewal:
           type: boolean
           description: True when the sale renews the member's agreed terms.
+        refunded_minor:
+          type: integer
+          description: Total refunded. `paid_minor` stays the total received.
+        voided_at:
+          type: string
+          format: date-time
+          nullable: true
+        void_reason:
+          type: string
+          nullable: true
+        refunds:
+          type: array
+          items:
+            $ref: "#/components/schemas/Refund"
         purchased_at:
           type: string
           format: date-time
@@ -2080,3 +2251,50 @@ components:
           type: string
           maxLength: 500
           description: Why staff deliver before full payment. Needs purchases:fulfill_unpaid. Ignored when the sale is paid in full.
+
+    RefundInput:
+      type: object
+      additionalProperties: false
+      required: [payment_id, amount_minor, reason]
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    ReasonInput:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    Refund:
+      type: object
+      additionalProperties: false
+      required: [id, payment_id, amount_minor, currency, reason, refunded_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        payment_id:
+          type: string
+          format: uuid
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        reason:
+          type: string
+        refunded_at:
+          type: string
+          format: date-time

@@ -7,6 +7,12 @@ class Sale < ApplicationRecord
     def initialize(msg = "This price is archived or not available for new sales.") = super
   end
 
+  class Voided < StandardError
+    def initialize(msg = "This sale is void. Record a new sale instead.") = super
+  end
+
+  class NotVoidable < StandardError; end
+
   class RenewalUnavailable < StandardError
     def initialize(msg = "This member has no delivered membership to renew. Sell a new membership instead.") = super
   end
@@ -15,9 +21,11 @@ class Sale < ApplicationRecord
   belongs_to :location
   belongs_to :created_by_user, class_name: "User"
   belongs_to :renews_line_item, class_name: "SaleLineItem", optional: true
+  belongs_to :voided_by_user, class_name: "User", optional: true
   has_one :line_item, class_name: "SaleLineItem", dependent: :restrict_with_exception
   has_one :fulfillment, through: :line_item
   has_many :payments, -> { order(:received_at, :created_at) }, dependent: :restrict_with_exception
+  has_many :refunds, -> { order(:refunded_at, :created_at) }, dependent: :restrict_with_exception
   same_organization_as :member, :location, :renews_line_item
 
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
@@ -25,7 +33,8 @@ class Sale < ApplicationRecord
   validates :paid_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: :total_minor }
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
-  scope :with_details, -> { includes(:member, :payments, line_item: { fulfillment: :membership_period }) }
+  scope :with_details, -> { includes(:member, :refunds, payments: :refunds, line_item: { fulfillment: :membership_period }) }
+  scope :open, -> { where(voided_at: nil) }
 
   # Creates the sale and its snapshotted line in one transaction.
   # Returns [sale, created]. A retry with the same key returns the first sale.
@@ -86,13 +95,32 @@ class Sale < ApplicationRecord
   end
 
   def renewal? = renews_line_item_id.present?
+  def voided? = voided_at.present?
+  def kept_minor = paid_minor - refunded_minor
+
+  def record_refund!(**) = Refund.record!(sale: self, **)
+
+  # Cancels a sale that delivered nothing and kept no money. Payments and
+  # refunds stay as recorded. Returns [sale, changed].
+  def void!(actor:, reason:, at: Time.current)
+    transaction do
+      lock!
+      next [ self, false ] if voided?
+      raise NotVoidable, "A delivered sale cannot be void. Revoke its access instead." if fulfilled?
+      raise NotVoidable, "Refund the #{kept_minor} kept on this sale before you void it." if kept_minor.positive?
+
+      update!(voided_at: at, voided_by_user: actor, void_reason: reason.to_s.strip.presence)
+      [ self, true ]
+    end
+  end
 
   def balance_minor = total_minor - paid_minor
   def paid_in_full? = balance_minor.zero?
   def fulfilled? = fulfillment.present?
 
   def payment_status
-    if paid_in_full? then "paid"
+    if voided? then "void"
+    elsif paid_in_full? then "paid"
     elsif paid_minor.positive? then "partially_paid"
     else "unpaid"
     end
@@ -100,6 +128,7 @@ class Sale < ApplicationRecord
 
   def record_payment!(**) = Payment.record!(sale: self, **)
   def fulfill!(actor:, at: Time.current, early_reason: nil) = Fulfillment.deliver!(line_item, actor:, at:, early_reason:)
+  def revoke!(**) = (fulfillment || raise(Fulfillment::NotDelivered)).revoke!(**)
 
   def as_api
     {
@@ -113,6 +142,10 @@ class Sale < ApplicationRecord
       payment_status:,
       fulfilled: fulfilled?,
       renewal: renewal?,
+      refunded_minor:,
+      voided_at: api_time(voided_at),
+      void_reason:,
+      refunds: refunds.map(&:as_api),
       purchased_at: api_time(purchased_at),
       line_item: line_item.as_api,
       payments: payments.map(&:as_api),

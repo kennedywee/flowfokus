@@ -123,3 +123,10 @@
 .sale-page__deliver .field__hint {
   flex: 1 1 14rem;
 }
+
+.sale-page .sale-corrections {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}

@@ -26,7 +26,7 @@ class Member < ApplicationRecord
 
   # The line item behind the latest delivered period. Renewals copy its terms.
   def agreed_line_item
-    membership&.periods&.reorder(ends_at: :desc)&.first&.fulfillment&.sale_line_item
+    membership&.periods&.live&.reorder(ends_at: :desc)&.first&.fulfillment&.sale_line_item
   end
 
   # What a renewal would sell, and when its period would start if delivered now.
@@ -49,7 +49,7 @@ class Member < ApplicationRecord
       membership: membership&.as_api,
       current_period: current_period(at:)&.as_api,
       renewal: renewal_terms(at:),
-      entitlements: entitlements.where("ends_at > ?", at).order(:starts_at, :created_at).map { |right| right.as_api(at:) }
+      entitlements: entitlements.live.where("ends_at > ?", at).order(:starts_at, :created_at).map { |right| right.as_api(at:) }
     )
   end
 end

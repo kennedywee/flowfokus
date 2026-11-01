@@ -303,3 +303,27 @@ export function renewInput(value: unknown): RenewInput {
     location_id: uuidField(input, "location_id"),
   };
 }
+
+export type RefundInput = IdempotentInput & { saleId: string } & Schemas["RefundInput"];
+
+export function refundInput(value: unknown): RefundInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    idempotencyKey: idempotencyKeyField(input),
+    saleId: uuidField(input, "saleId"),
+    payment_id: uuidField(input, "payment_id"),
+    amount_minor: wholeNumber(input, "amount_minor", 1, Number.MAX_SAFE_INTEGER),
+    reason: textField(input, "reason", 500),
+  };
+}
+
+export interface ReasonInput extends SlugInput {
+  saleId: string;
+  reason: string;
+}
+
+export function reasonInput(value: unknown): ReasonInput {
+  const input = record(value);
+  return { slug: slugField(input), saleId: uuidField(input, "saleId"), reason: textField(input, "reason", 500) };
+}

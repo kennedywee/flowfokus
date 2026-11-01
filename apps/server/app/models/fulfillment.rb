@@ -5,6 +5,9 @@ class Fulfillment < ApplicationRecord
   include TenantOwned
 
   class SaleNotPaid < StandardError; end
+  class NotDelivered < StandardError
+    def initialize(msg = "This sale has not been delivered, so there is no access to revoke.") = super
+  end
 
   validates :early_reason, length: { maximum: 500 }
 
@@ -12,6 +15,7 @@ class Fulfillment < ApplicationRecord
   belongs_to :member
   belongs_to :membership
   belongs_to :fulfilled_by_user, class_name: "User"
+  belongs_to :revoked_by_user, class_name: "User", optional: true
   has_one :membership_period, dependent: :restrict_with_exception
   has_one :benefit_grant, dependent: :restrict_with_exception
   same_organization_as :sale_line_item, :member, :membership
@@ -29,6 +33,7 @@ class Fulfillment < ApplicationRecord
         next [ existing, false ]
       end
       early_reason = early_reason.to_s.strip.presence unless sale.paid_in_full?
+      raise Sale::Voided if sale.voided?
       unless sale.paid_in_full? || early_reason
         raise SaleNotPaid, "The sale has an unpaid balance of #{sale.balance_minor}. Record full payment first."
       end
@@ -51,12 +56,31 @@ class Fulfillment < ApplicationRecord
     end
   end
 
+  def revoked? = revoked_at.present?
+
+  # Ends the access from this delivery only: its period and its entitlements.
+  # Other periods, the sale, and its payments stay as they are. Usage already
+  # recorded stays. Returns [fulfillment, changed].
+  def revoke!(actor:, reason:, at: Time.current)
+    transaction do
+      Membership.lock_for!(member)
+      lock!
+      next [ self, false ] if revoked?
+
+      update!(revoked_at: at, revoked_by_user: actor, revoke_reason: reason.to_s.strip.presence)
+      membership_period.update!(revoked_at: at)
+      benefit_grant.entitlements.update_all(revoked_at: at, updated_at: at)
+      [ self, true ]
+    end
+  end
+
   def as_api
     {
       id:, sale_line_item_id:, membership_id:,
       membership_period: membership_period.as_api,
       fulfilled_at: api_time(fulfilled_at),
-      early: unpaid_minor.positive?, early_reason:, unpaid_minor:
+      early: unpaid_minor.positive?, early_reason:, unpaid_minor:,
+      revoked_at: api_time(revoked_at), revoke_reason:
     }
   end
 end
