@@ -79,6 +79,7 @@ roles:
       - purchases:read
       - purchases:create
       - purchases:fulfill
+      - purchases:fulfill_unpaid
       - payments:create
       - check_ins:read
       - check_ins:create
@@ -108,6 +109,8 @@ permissions:
     name: Create sales
   - slug: purchases:fulfill
     name: Deliver access
+  - slug: purchases:fulfill_unpaid
+    name: Deliver access before full payment
   - slug: payments:create
     name: Record payments
   - slug: check_ins:read

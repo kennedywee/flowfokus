@@ -752,13 +752,21 @@ paths:
       description: |
         Creates the membership (or adds a period to the existing one), the benefit grant,
         and entitlements in one transaction. A repeat call returns the existing
-        fulfillment with status 200 and creates nothing. An unpaid balance returns 422 `sale_not_paid`.
+        fulfillment with status 200 and creates nothing. An unpaid balance returns 422 `sale_not_paid`,
+        unless the body has an `early_reason` and the actor has purchases:fulfill_unpaid.
+        Early delivery keeps the balance due and records the reason and the unpaid amount.
         Returns the updated sale.
       security:
         - bearerAuth: []
           organizationHeader: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FulfillInput"
       responses:
         "200":
           description: Already fulfilled. Nothing changed.
@@ -1251,6 +1259,7 @@ components:
         - purchases:read
         - purchases:create
         - purchases:fulfill
+        - purchases:fulfill_unpaid
         - payments:create
         - check_ins:read
         - check_ins:create
@@ -1782,7 +1791,7 @@ components:
     Fulfillment:
       type: object
       additionalProperties: false
-      required: [id, sale_line_item_id, membership_id, membership_period, fulfilled_at]
+      required: [id, sale_line_item_id, membership_id, membership_period, fulfilled_at, early, early_reason, unpaid_minor]
       properties:
         id:
           type: string
@@ -1798,6 +1807,15 @@ components:
         fulfilled_at:
           type: string
           format: date-time
+        early:
+          type: boolean
+          description: True when staff delivered before full payment.
+        early_reason:
+          type: string
+          nullable: true
+        unpaid_minor:
+          type: integer
+          description: Balance still due at delivery. Zero for a normal delivery.
 
     PaymentStatus:
       type: string
@@ -2053,3 +2071,12 @@ components:
           type: string
           format: date-time
           description: Where the new period starts if it is delivered now.
+
+    FulfillInput:
+      type: object
+      additionalProperties: false
+      properties:
+        early_reason:
+          type: string
+          maxLength: 500
+          description: Why staff deliver before full payment. Needs purchases:fulfill_unpaid. Ignored when the sale is paid in full.

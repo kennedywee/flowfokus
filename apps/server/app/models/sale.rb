@@ -99,7 +99,7 @@ class Sale < ApplicationRecord
   end
 
   def record_payment!(**) = Payment.record!(sale: self, **)
-  def fulfill!(actor:, at: Time.current) = Fulfillment.deliver!(line_item, actor:, at:)
+  def fulfill!(actor:, at: Time.current, early_reason: nil) = Fulfillment.deliver!(line_item, actor:, at:, early_reason:)
 
   def as_api
     {

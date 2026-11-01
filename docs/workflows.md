@@ -19,6 +19,8 @@ Past sales keep their original prices and terms.
 5. Create the membership and first period, or add a period to the existing membership.
 6. Create the period's grants and entitlements.
 
+Early delivery sends an `early_reason` and needs `purchases:fulfill_unpaid`. The fulfillment keeps the reason, the actor, and the balance due at that moment. A database check requires a reason whenever a balance was due. The sale keeps its balance and still accepts payments.
+
 If fulfillment fails, keep the payment and retry the same fulfillment. A partial write must never look complete.
 
 Activation is configurable. The default start is the purchase date.

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -97,10 +97,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000001) do
     t.datetime "fulfilled_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "early_reason"
+    t.bigint "unpaid_minor", default: 0, null: false
     t.index ["fulfilled_by_user_id"], name: "index_fulfillments_on_fulfilled_by_user_id"
     t.index ["id", "organization_id"], name: "index_fulfillments_on_id_and_organization_id", unique: true
     t.index ["membership_id"], name: "index_fulfillments_on_membership_id"
     t.index ["sale_line_item_id"], name: "index_fulfillments_on_sale_line_item_id", unique: true
+    t.check_constraint "unpaid_minor = 0 AND early_reason IS NULL OR unpaid_minor > 0 AND early_reason IS NOT NULL AND length(btrim(early_reason)) > 0", name: "fulfillments_early_reason"
   end
 
   create_table "locations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|

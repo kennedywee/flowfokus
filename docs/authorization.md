@@ -35,6 +35,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `products:update` | Edit an offer, add prices, change a price label or sale status, archive a price |
 | `purchases:read`, `purchases:create` | List, view, and record sales |
 | `purchases:fulfill` | Deliver a fully paid sale |
+| `purchases:fulfill_unpaid` | Deliver before full payment, with a reason. Needs `purchases:fulfill` too. |
 | `payments:create` | Record a manual payment |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
 

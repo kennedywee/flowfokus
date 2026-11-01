@@ -6,6 +6,8 @@ class Fulfillment < ApplicationRecord
 
   class SaleNotPaid < StandardError; end
 
+  validates :early_reason, length: { maximum: 500 }
+
   belongs_to :sale_line_item
   belongs_to :member
   belongs_to :membership
@@ -15,7 +17,10 @@ class Fulfillment < ApplicationRecord
   same_organization_as :sale_line_item, :member, :membership
 
   # Returns [fulfillment, created].
-  def self.deliver!(line_item, actor:, at: Time.current)
+  #
+  # A sale with a balance needs `early_reason`. The caller checks the
+  # permission. A sale paid in full by the time the lock is held ignores it.
+  def self.deliver!(line_item, actor:, at: Time.current, early_reason: nil)
     sale = line_item.sale
 
     transaction(requires_new: true) do
@@ -23,7 +28,8 @@ class Fulfillment < ApplicationRecord
       if (existing = find_by(sale_line_item: line_item))
         next [ existing, false ]
       end
-      unless sale.paid_in_full?
+      early_reason = early_reason.to_s.strip.presence unless sale.paid_in_full?
+      unless sale.paid_in_full? || early_reason
         raise SaleNotPaid, "The sale has an unpaid balance of #{sale.balance_minor}. Record full payment first."
       end
 
@@ -33,7 +39,8 @@ class Fulfillment < ApplicationRecord
 
       fulfillment = create!(
         organization: sale.organization, sale_line_item: line_item, member: sale.member,
-        membership:, fulfilled_by_user: actor, fulfilled_at: at
+        membership:, fulfilled_by_user: actor, fulfilled_at: at,
+        early_reason: (early_reason unless sale.paid_in_full?), unpaid_minor: sale.balance_minor
       )
       period = fulfillment.create_membership_period!(
         organization: sale.organization, membership:, starts_at:, ends_at:
@@ -48,7 +55,8 @@ class Fulfillment < ApplicationRecord
     {
       id:, sale_line_item_id:, membership_id:,
       membership_period: membership_period.as_api,
-      fulfilled_at: api_time(fulfilled_at)
+      fulfilled_at: api_time(fulfilled_at),
+      early: unpaid_minor.positive?, early_reason:, unpaid_minor:
     }
   end
 end

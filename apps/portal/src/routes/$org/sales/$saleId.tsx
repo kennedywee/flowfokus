@@ -3,6 +3,7 @@ import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import { PackageCheck } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { Textarea } from "@/components/ui/textarea";
 import { RadioCards } from "../../../components/RadioCards";
 import { useToast } from "../../../components/Toast";
 import {
@@ -32,7 +33,7 @@ import {
   saleStateLabel,
 } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
-import { useLocationName, useOrganization } from "../../../lib/organization";
+import { useCan, useLocationName, useOrganization } from "../../../lib/organization";
 import { fulfillSale, getSale, recordPayment } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 import { Button } from "@/components/ui/button";
@@ -315,10 +316,22 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendFulfill);
+  const can = useCan();
   const [confirming, setConfirming] = useState(false);
+  const [early, setEarly] = useState(false);
+  const [earlyReason, setEarlyReason] = useState("");
+  const [reasonError, setReasonError] = useState<string | undefined>();
 
   async function deliver() {
-    const result = await action.run({ slug: organization.slug, saleId: sale.id });
+    if (early && !earlyReason.trim()) {
+      setReasonError("Enter why the member gets access before paying in full.");
+      return;
+    }
+    const result = await action.run({
+      slug: organization.slug,
+      saleId: sale.id,
+      ...(early ? { early_reason: earlyReason.trim() } : {}),
+    });
     setConfirming(false);
     if (result.ok) {
       const period = result.data.fulfillment?.membership_period;
@@ -335,6 +348,7 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
 
   if (sale.fulfillment) {
     const period = sale.fulfillment.membership_period;
+    const { early: deliveredEarly, early_reason: deliveredReason, unpaid_minor: unpaidAtDelivery } = sale.fulfillment;
     return (
       <Plate title="Delivery">
         <Notice tone="success" title="Membership delivered" live={action.data !== null}>
@@ -346,12 +360,23 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
             </Link>
           </p>
         </Notice>
+        {deliveredEarly ? (
+          <Notice tone="warning" title="Delivered before full payment">
+            <p>
+              {formatMoney(unpaidAtDelivery, sale.currency)} was due at delivery. Reason: {deliveredReason}
+            </p>
+            {sale.balance_minor > 0 ? <p>{formatMoney(sale.balance_minor, sale.currency)} is still due.</p> : null}
+          </Notice>
+        ) : null}
       </Plate>
     );
   }
 
   const paid = sale.balance_minor === 0;
-  const reason = `Record the full payment first. ${formatMoney(sale.balance_minor, sale.currency)} is still due.`;
+  const canDeliverEarly = !paid && can("purchases:fulfill_unpaid");
+  const reason = canDeliverEarly
+    ? `${formatMoney(sale.balance_minor, sale.currency)} is still due. You can deliver early with a reason.`
+    : `Record the full payment first. ${formatMoney(sale.balance_minor, sale.currency)} is still due.`;
   return (
     <Plate title="Delivery">
       <div className="form">
@@ -365,11 +390,27 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
             type="button"
             disabled={!paid}
             aria-describedby={paid ? undefined : "deliver-reason"}
-            onClick={() => setConfirming(true)}
+            onClick={() => {
+              setEarly(false);
+              setConfirming(true);
+            }}
           >
             <PackageCheck aria-hidden="true" strokeWidth={1.75} />
             Deliver membership
           </Button>
+          {canDeliverEarly ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setEarly(true);
+                setReasonError(undefined);
+                setConfirming(true);
+              }}
+            >
+              Deliver before payment
+            </Button>
+          ) : null}
           {paid ? null : (
             <p className="field__hint" id="deliver-reason">
               {reason}
@@ -385,8 +426,8 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
       </div>
       <ConfirmDialog
         open={confirming}
-        title="Deliver this membership?"
-        confirmLabel="Deliver membership"
+        title={early ? "Deliver before full payment?" : "Deliver this membership?"}
+        confirmLabel={early ? "Deliver early" : "Deliver membership"}
         pendingLabel="Delivering…"
         pending={action.pending}
         onConfirm={() => void deliver()}
@@ -396,6 +437,22 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
           {sale.member.name} gets {sale.line_item.product_name}, {sale.line_item.price_label}, for{" "}
           {formatDuration(sale.line_item.terms.duration_days)}. This creates the membership period and its access rights.
         </p>
+        {early ? (
+          <>
+            <p>{formatMoney(sale.balance_minor, sale.currency)} stays due. Flowfokus records your name and the reason.</p>
+            <Field id="early-reason" label="Reason" error={reasonError}>
+              <Textarea
+                id="early-reason"
+                rows={2}
+                maxLength={500}
+                value={earlyReason}
+                aria-invalid={reasonError ? true : undefined}
+                aria-describedby={describedBy("early-reason", undefined, reasonError)}
+                onChange={(event) => setEarlyReason(event.target.value)}
+              />
+            </Field>
+          </>
+        ) : null}
       </ConfirmDialog>
     </Plate>
   );

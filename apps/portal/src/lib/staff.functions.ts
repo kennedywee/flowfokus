@@ -222,7 +222,10 @@ export const fulfillSale = createServerFn({ method: "POST" })
   .handler(
     async ({ data }): Promise<Result<Schemas["Sale"]>> =>
       callStaff(data.slug, (api) =>
-        api.POST("/staff/sales/{id}/fulfill", { params: { path: { id: data.saleId } } }),
+        api.POST("/staff/sales/{id}/fulfill", {
+          params: { path: { id: data.saleId } },
+          ...(data.early_reason ? { body: { early_reason: data.early_reason } } : {}),
+        }),
       ),
   );
 

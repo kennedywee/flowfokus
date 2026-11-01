@@ -368,7 +368,9 @@ export interface paths {
          * Deliver a fully paid sale. Needs purchases:fulfill.
          * @description Creates the membership (or adds a period to the existing one), the benefit grant,
          *     and entitlements in one transaction. A repeat call returns the existing
-         *     fulfillment with status 200 and creates nothing. An unpaid balance returns 422 `sale_not_paid`.
+         *     fulfillment with status 200 and creates nothing. An unpaid balance returns 422 `sale_not_paid`,
+         *     unless the body has an `early_reason` and the actor has purchases:fulfill_unpaid.
+         *     Early delivery keeps the balance due and records the reason and the unpaid amount.
          *     Returns the updated sale.
          */
         post: operations["fulfillStaffSale"];
@@ -547,7 +549,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "payments:create" | "check_ins:read" | "check_ins:create";
+        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "check_ins:read" | "check_ins:create";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -802,6 +804,11 @@ export interface components {
             membership_period: components["schemas"]["MembershipPeriod"];
             /** Format: date-time */
             fulfilled_at: string;
+            /** @description True when staff delivered before full payment. */
+            early: boolean;
+            early_reason: string | null;
+            /** @description Balance still due at delivery. Zero for a normal delivery. */
+            unpaid_minor: number;
         };
         /** @enum {string} */
         PaymentStatus: "unpaid" | "partially_paid" | "paid";
@@ -911,6 +918,10 @@ export interface components {
              * @description Where the new period starts if it is delivered now.
              */
             starts_at: string;
+        };
+        FulfillInput: {
+            /** @description Why staff deliver before full payment. Needs purchases:fulfill_unpaid. Ignored when the sale is paid in full. */
+            early_reason?: string;
         };
     };
     responses: {
@@ -1637,7 +1648,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FulfillInput"];
+            };
+        };
         responses: {
             /** @description Already fulfilled. Nothing changed. */
             200: {

@@ -172,11 +172,16 @@ export function recordPaymentInput(value: unknown): RecordPaymentInput {
 
 export interface FulfillInput extends SlugInput {
   saleId: string;
+  /** Delivers before full payment. Needs purchases:fulfill_unpaid. */
+  early_reason?: string;
 }
 
 export function fulfillInput(value: unknown): FulfillInput {
   const input = record(value);
-  return { slug: slugField(input), saleId: uuidField(input, "saleId") };
+  const base = { slug: slugField(input), saleId: uuidField(input, "saleId") };
+  if (input.early_reason === undefined) return base;
+  const reason = textField(input, "early_reason", 500).trim();
+  return reason ? { ...base, early_reason: reason } : base;
 }
 
 export type CreateCheckInInput = IdempotentInput & Schemas["CheckInInput"];

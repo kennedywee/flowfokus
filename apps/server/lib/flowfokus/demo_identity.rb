@@ -26,7 +26,7 @@ module Flowfokus
     PERMISSIONS = %w[
       members:read members:create
       products:read products:create products:update
-      purchases:read purchases:create purchases:fulfill
+      purchases:read purchases:create purchases:fulfill purchases:fulfill_unpaid
       payments:create
       check_ins:read check_ins:create
     ].freeze
