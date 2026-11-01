@@ -87,6 +87,20 @@ roles:
       - check_ins:read
       - check_ins:create
       - settings:manage
+      - staff:manage
+  - slug: manager
+    name: Manager
+    permissions:
+      - members:read
+      - members:create
+      - products:read
+      - purchases:read
+      - purchases:create
+      - purchases:fulfill
+      - payments:create
+      - check_ins:read
+      - check_ins:create
+      - staff:manage
   - slug: receptionist
     name: Receptionist
     permissions:
@@ -129,3 +143,5 @@ permissions:
     name: Check in members
   - slug: settings:manage
     name: Manage organization settings and locations
+  - slug: staff:manage
+    name: Invite staff, change roles, and remove access

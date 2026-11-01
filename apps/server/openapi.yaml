@@ -248,6 +248,177 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/team:
+    get:
+      tags: [staff]
+      operationId: getStaffTeam
+      summary: Staff members, pending invitations, and roles. Needs staff:manage.
+      description: |
+        Members come from the synced copy. Roles and invitations come from WorkOS now.
+        `grantable` marks roles whose permissions the actor holds. `manageable` marks
+        members the actor may change.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/team/invitations:
+    post:
+      tags: [staff]
+      operationId: createStaffInvitation
+      summary: Invite someone to join the staff. Needs staff:manage.
+      description: |
+        WorkOS sends the invitation. A role with permissions the actor lacks returns
+        422 `staff_change_refused`. WorkOS can refuse too: 422 `workos_rejected`.
+        Returns the whole team.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/team/invitations/{invitation_id}/revoke:
+    post:
+      tags: [staff]
+      operationId: revokeStaffInvitation
+      summary: Revoke a pending invitation. Needs staff:manage.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/InvitationIdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/team/members/{id}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffTeamMember
+      summary: Change a staff member's role. Needs staff:manage.
+      description: |
+        Refused with 422 `staff_change_refused` when the actor changes themselves, grants
+        or removes permissions they lack, or leaves nobody with staff:manage. The new role
+        reaches the member's token at their next session refresh. Returns the whole team.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    delete:
+      tags: [staff]
+      operationId: removeStaffTeamMember
+      summary: Remove a member's staff access. Needs staff:manage.
+      description: |
+        Deletes the WorkOS membership. The local copy stays as history. The same rules as
+        a role change apply. Their current token works until it expires. Returns the whole team.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/memberships:
     get:
       tags: [staff]
@@ -1242,6 +1413,13 @@ components:
         type: string
         minLength: 8
         maxLength: 255
+    InvitationIdPath:
+      name: invitation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^invitation_[A-Za-z0-9]{1,100}$"
     IdPath:
       name: id
       in: path
@@ -1325,10 +1503,11 @@ components:
         - `not_found` (404)
         - `idempotency_key_reused` (409)
         - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
-          `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment` (422)
+          `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
+          `staff_change_refused`, `workos_rejected` (422)
         - `rate_limited` (429)
         - `internal_error` (500)
-        - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
+        - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
       enum:
         - bad_request
         - organization_required
@@ -1348,11 +1527,14 @@ components:
         - sale_not_voidable
         - sale_not_delivered
         - refund_exceeds_payment
+        - staff_change_refused
+        - workos_rejected
         - rate_limited
         - internal_error
         - auth_not_configured
         - auth_unavailable
         - database_unavailable
+        - workos_unavailable
 
     WorkosWebhookEvent:
       type: object
@@ -1509,6 +1691,7 @@ components:
         - check_ins:read
         - check_ins:create
         - settings:manage
+        - staff:manage
 
     StaffOrganization:
       type: object
@@ -2449,3 +2632,116 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Location"
+
+    InvitationInput:
+      type: object
+      additionalProperties: false
+      required: [email, role]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        role:
+          type: string
+          description: A role slug from `roles`.
+
+    RoleInput:
+      type: object
+      additionalProperties: false
+      required: [role]
+      properties:
+        role:
+          type: string
+
+    TeamMember:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, role, role_name, status, you, manageable]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The local membership ID.
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        role_name:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        you:
+          type: boolean
+        manageable:
+          type: boolean
+          description: True when the actor may change this member. The last-manager rule is checked on change.
+
+    TeamInvitation:
+      type: object
+      additionalProperties: false
+      required: [id, email, role, state, expires_at, accept_url]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          nullable: true
+        state:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        accept_url:
+          type: string
+          nullable: true
+          description: The WorkOS link the invitee opens. WorkOS also emails it.
+
+    TeamRole:
+      type: object
+      additionalProperties: false
+      required: [slug, name, permissions, grantable]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        grantable:
+          type: boolean
+          description: True when the actor holds every permission of this role.
+
+    Team:
+      type: object
+      additionalProperties: false
+      required: [members, invitations, roles]
+      properties:
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamMember"
+        invitations:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamInvitation"
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamRole"
+
+    TeamResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Team"

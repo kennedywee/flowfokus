@@ -42,9 +42,11 @@ These actions persist in PostgreSQL, including during local demo development.
 - Agents: suggested prompts, prepared replies, and message drafts. No AI service
   is called and no message is sent.
 - Reports: fixed historical sample weeks, period and metric filters, and CSV export.
-- Settings, Team, Notifications, and Integrations: sample team invitations and
-  roles, notification switches, and integration states. Edits do not update
-  Rails or contact external systems.
+- Settings, Team: staff, pending invitations, and roles, through Rails and
+  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
+  access.
+- Settings, Notifications and Integrations: sample notification switches and
+  integration states. Edits do not update Rails or contact external systems.
 - Changelog: static notes for the preview and portal layout.
 
 These screens display a Sample data label. Local edits reset when the screen

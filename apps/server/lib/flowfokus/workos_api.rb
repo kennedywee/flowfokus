@@ -2,8 +2,10 @@ require "json"
 require "net/http"
 
 module Flowfokus
-  # Read-only client for the WorkOS REST API. Sync uses it to fetch users,
-  # organizations, and memberships. It never changes anything in WorkOS.
+  # Client for the WorkOS REST API. Sync uses it to fetch users,
+  # organizations, and memberships. Staff management (Team) uses it to invite
+  # staff, change roles, and remove access. WorkOS stays the authority; webhooks
+  # then update the local copy.
   #
   # Settings:
   # - WORKOS_API_KEY: secret key, sent as a Bearer token.
@@ -17,6 +19,8 @@ module Flowfokus
     class NotFound < StandardError; end
     # Any other unexpected answer.
     class Error < StandardError; end
+    # WorkOS rejected a write, for example an invalid email or an existing invitation.
+    class Rejected < StandardError; end
 
     OFFICIAL_BASE_URL = "https://api.workos.com".freeze
     PAGE_LIMIT = 100
@@ -50,6 +54,36 @@ module Flowfokus
     def organization(id) = get("/organizations/#{escape(id)}")
     def user(id) = get("/user_management/users/#{escape(id)}")
     def organization_membership(id) = get("/user_management/organization_memberships/#{escape(id)}")
+
+    def invitation(id) = get("/user_management/invitations/#{escape(id)}")
+
+    # Environment roles, plus custom roles of this organization, by slug. An
+    # organization role replaces an environment role with the same slug.
+    def roles(organization_id)
+      environment = get("/authorization/roles").fetch("data", [])
+      custom = begin
+        get("/authorization/organizations/#{escape(organization_id)}/roles").fetch("data", [])
+      rescue NotFound
+        []
+      end
+      roles = (environment + custom).select { _1.is_a?(Hash) && _1["slug"].is_a?(String) }
+      roles.index_by { _1["slug"] }.values
+    end
+
+    def invitations(organization_id) = list("/user_management/invitations", organization_id:)
+
+    def create_invitation(email:, organization_id:, role_slug:, inviter_user_id: nil)
+      request(Net::HTTP::Post, "/user_management/invitations",
+        body: { email:, organization_id:, role_slug:, inviter_user_id: }.compact)
+    end
+
+    def revoke_invitation(id) = request(Net::HTTP::Post, "/user_management/invitations/#{escape(id)}/revoke")
+
+    def update_membership_role(id, role_slug)
+      request(Net::HTTP::Put, "/user_management/organization_memberships/#{escape(id)}", body: { role_slug: })
+    end
+
+    def delete_membership(id) = request(Net::HTTP::Delete, "/user_management/organization_memberships/#{escape(id)}")
 
     # Every user with a membership in the organization. Reads all pages first.
     def organization_users(organization_id)
@@ -91,18 +125,26 @@ module Flowfokus
       raise Error, "WorkOS #{path} has more than #{MAX_PAGES} pages."
     end
 
-    def get(path, **params)
+    def get(path, **params) = request(Net::HTTP::Get, path, params:)
+
+    def request(method, path, params: {}, body: nil)
       uri = URI.parse("#{base_url}#{path}")
       query = params.compact
       uri.query = URI.encode_www_form(query) if query.any?
 
-      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
-        open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) do |http|
-        http.request(Net::HTTP::Get.new(uri, "Authorization" => "Bearer #{@api_key}", "Accept" => "application/json"))
+      http_request = method.new(uri, "Authorization" => "Bearer #{@api_key}", "Accept" => "application/json")
+      if body
+        http_request["Content-Type"] = "application/json"
+        http_request.body = body.to_json
       end
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
+        open_timeout: OPEN_TIMEOUT, read_timeout: READ_TIMEOUT) { |http| http.request(http_request) }
 
       case response
-      when Net::HTTPSuccess then parse(response.body, path)
+      when Net::HTTPNoContent then {}
+      when Net::HTTPSuccess then response.body.to_s.strip.empty? ? {} : parse(response.body, path)
+      when Net::HTTPBadRequest, Net::HTTPConflict, Net::HTTPUnprocessableEntity
+        raise Rejected, rejection_message(response.body)
       when Net::HTTPNotFound then raise NotFound, "WorkOS has no record at #{path}."
       when Net::HTTPTooManyRequests, Net::HTTPServerError then raise Unavailable, "WorkOS answered #{response.code} for #{path}."
       when Net::HTTPUnauthorized, Net::HTTPForbidden then raise Unavailable, "WorkOS rejected the API key (#{response.code})."
@@ -113,6 +155,14 @@ module Flowfokus
     end
 
     private
+      def rejection_message(body)
+        document = JSON.parse(body.to_s)
+        message = document["message"] if document.is_a?(Hash)
+        message.is_a?(String) && message.present? ? "WorkOS refused the change: #{message.truncate(200)}" : "WorkOS refused the change."
+      rescue JSON::ParserError
+        "WorkOS refused the change."
+      end
+
       def parse(body, path)
         document = JSON.parse(body.to_s)
         raise Error, "WorkOS #{path} did not return an object." unless document.is_a?(Hash)

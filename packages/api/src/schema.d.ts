@@ -131,6 +131,94 @@ export interface paths {
         patch: operations["updateStaffLocation"];
         trace?: never;
     };
+    "/staff/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Staff members, pending invitations, and roles. Needs staff:manage.
+         * @description Members come from the synced copy. Roles and invitations come from WorkOS now.
+         *     `grantable` marks roles whose permissions the actor holds. `manageable` marks
+         *     members the actor may change.
+         */
+        get: operations["getStaffTeam"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/team/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite someone to join the staff. Needs staff:manage.
+         * @description WorkOS sends the invitation. A role with permissions the actor lacks returns
+         *     422 `staff_change_refused`. WorkOS can refuse too: 422 `workos_rejected`.
+         *     Returns the whole team.
+         */
+        post: operations["createStaffInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/team/invitations/{invitation_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke a pending invitation. Needs staff:manage. */
+        post: operations["revokeStaffInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/team/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a member's staff access. Needs staff:manage.
+         * @description Deletes the WorkOS membership. The local copy stays as history. The same rules as
+         *     a role change apply. Their current token works until it expires. Returns the whole team.
+         */
+        delete: operations["removeStaffTeamMember"];
+        options?: never;
+        head?: never;
+        /**
+         * Change a staff member's role. Needs staff:manage.
+         * @description Refused with 422 `staff_change_refused` when the actor changes themselves, grants
+         *     or removes permissions they lack, or leaves nobody with staff:manage. The new role
+         *     reaches the member's token at their next session refresh. Returns the whole team.
+         */
+        patch: operations["updateStaffTeamMember"];
+        trace?: never;
+    };
     "/staff/memberships": {
         parameters: {
             query?: never;
@@ -580,13 +668,14 @@ export interface components {
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
          *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
-         *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment` (422)
+         *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
+         *       `staff_change_refused`, `workos_rejected` (422)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
-         *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
+         *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -659,7 +748,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage";
+        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -1087,6 +1176,56 @@ export interface components {
         LocationResponse: {
             data: components["schemas"]["Location"];
         };
+        InvitationInput: {
+            /** Format: email */
+            email: string;
+            /** @description A role slug from `roles`. */
+            role: string;
+        };
+        RoleInput: {
+            role: string;
+        };
+        TeamMember: {
+            /**
+             * Format: uuid
+             * @description The local membership ID.
+             */
+            id: string;
+            name: string;
+            email: string;
+            role: string;
+            role_name: string;
+            /** @enum {string} */
+            status: "active" | "inactive" | "pending";
+            you: boolean;
+            /** @description True when the actor may change this member. The last-manager rule is checked on change. */
+            manageable: boolean;
+        };
+        TeamInvitation: {
+            id: string;
+            email: string;
+            role: string | null;
+            state: string;
+            /** Format: date-time */
+            expires_at: string | null;
+            /** @description The WorkOS link the invitee opens. WorkOS also emails it. */
+            accept_url: string | null;
+        };
+        TeamRole: {
+            slug: string;
+            name: string;
+            permissions: string[];
+            /** @description True when the actor holds every permission of this role. */
+            grantable: boolean;
+        };
+        Team: {
+            members: components["schemas"]["TeamMember"][];
+            invitations: components["schemas"]["TeamInvitation"][];
+            roles: components["schemas"]["TeamRole"][];
+        };
+        TeamResponse: {
+            data: components["schemas"]["Team"];
+        };
     };
     responses: {
         /** @description Missing header or malformed request. */
@@ -1165,6 +1304,7 @@ export interface components {
     parameters: {
         /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
         IdempotencyKey: string;
+        InvitationIdPath: string;
         IdPath: string;
     };
     requestBodies: never;
@@ -1373,6 +1513,150 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocationResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getStaffTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    revokeStaffInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: components["parameters"]["InvitationIdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    removeStaffTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];

@@ -25,7 +25,7 @@ staff:manage    settings:manage
 
 ### Implemented permissions
 
-The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Receptionist role has the read permissions and `check_ins:create`.
+The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Manager role can sell, deliver, check in, and manage staff, but not change offers, settings, refunds, voids, or revocations. The local Receptionist role has the read permissions and `check_ins:create`.
 
 | Permission | Allows |
 | --- | --- |
@@ -42,6 +42,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `memberships:revoke` | Revoke the access delivered by one sale |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
 | `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
+| `staff:manage` | See the team, invite staff, revoke invitations, change roles, and remove access |
 
 Which roles ship by default is still open. See [Decisions](decisions.md#identity-and-access).
 
@@ -101,11 +102,20 @@ Enforce invariants of sensitive operations inside a database transaction.
 
 Flowfokus has its own staff screens. They call the WorkOS API. WorkOS stays the authority.
 
-Users with `staff:manage` can invite staff, change roles, remove access, and create custom roles.
+Users with `staff:manage` can invite staff, change roles, remove access, and create custom roles. Custom roles are created in WorkOS for now. Flowfokus lists them with the environment roles.
 
 1. The admin makes a change in Flowfokus.
 2. Rails rejects privilege escalation and changes that break ownership rules.
 3. Flowfokus calls WorkOS.
 4. A WorkOS event updates the local copy. See [Identity](identity.md#workos-sync).
+
+The `Team` model enforces these rules before it calls WorkOS:
+
+- Nobody grants a role with a permission they do not hold.
+- Nobody changes or removes a member whose role holds a permission they lack.
+- Nobody changes their own role or removes themselves.
+- At least one active member keeps `staff:manage`.
+
+The checks read current memberships and roles from WorkOS. The actor's own permissions come from their verified token. Rails applies the WorkOS answer to the local copy at once. The webhook that follows then changes nothing.
 
 Existing sessions can hold old permission claims after a role change. The design must account for this.

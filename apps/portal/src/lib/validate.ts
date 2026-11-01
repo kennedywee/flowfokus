@@ -351,3 +351,40 @@ export function locationInput(value: unknown): LocationInput {
     address: input.address === null || input.address === undefined || input.address === "" ? null : textField(input, "address", 300),
   };
 }
+
+const INVITATION_ID = /^invitation_[A-Za-z0-9]{1,100}$/;
+
+export interface InviteInput extends SlugInput {
+  email: string;
+  role: string;
+}
+
+function roleField(input: Record<string, unknown>): string {
+  const role = input.role;
+  if (typeof role !== "string" || !/^[a-z0-9][a-z0-9_:-]{0,99}$/.test(role)) throw new InputError("Invalid role");
+  return role;
+}
+
+export function inviteInput(value: unknown): InviteInput {
+  const input = record(value);
+  return { slug: slugField(input), email: textField(input, "email", 320), role: roleField(input) };
+}
+
+export interface InvitationIdInput extends SlugInput {
+  invitationId: string;
+}
+
+export function invitationIdInput(value: unknown): InvitationIdInput {
+  const input = record(value);
+  if (typeof input.invitationId !== "string" || !INVITATION_ID.test(input.invitationId)) throw new InputError("Invalid invitation");
+  return { slug: slugField(input), invitationId: input.invitationId };
+}
+
+export interface MemberRoleInput extends IdInput {
+  role: string;
+}
+
+export function memberRoleInput(value: unknown): MemberRoleInput {
+  const input = record(value);
+  return { slug: slugField(input), id: uuidField(input, "id"), role: roleField(input) };
+}

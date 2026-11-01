@@ -10,6 +10,12 @@ Rails.application.routes.draw do
   namespace :staff do
     resource :organization, only: %i[show update]
     resources :locations, only: %i[create update]
+    resource :team, only: :show, controller: "team" do
+      resources :invitations, only: :create, controller: "team_invitations" do
+        post :revoke, on: :member
+      end
+      resources :members, only: %i[update destroy], controller: "team_members"
+    end
     resources :memberships, only: :index
     resource :overview, only: :show
     resources :members, only: %i[index show create] do

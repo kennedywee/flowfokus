@@ -52,6 +52,16 @@ module ErrorResponses
     rescue_from Fulfillment::NotDelivered do |error|
       render_error :unprocessable_content, "sale_not_delivered", error.message
     end
+    rescue_from Team::Refused do |error|
+      render_error :unprocessable_content, "staff_change_refused", error.message
+    end
+    rescue_from Flowfokus::WorkosApi::Rejected do |error|
+      render_error :unprocessable_content, "workos_rejected", error.message
+    end
+    rescue_from Flowfokus::WorkosApi::Unavailable, Flowfokus::WorkosApi::Error do |error|
+      Rails.logger.warn("WorkOS call failed: #{error.class}: #{error.message}")
+      render_error :service_unavailable, "workos_unavailable", "WorkOS is not available. Try again in a moment."
+    end
     rescue_from Payment::Overpayment do |error|
       render_error :unprocessable_content, "overpayment", error.message
     end

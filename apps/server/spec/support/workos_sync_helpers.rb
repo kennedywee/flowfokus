@@ -38,14 +38,54 @@ module WorkosSyncHelpers
 
   # In-memory stand-in for Flowfokus::WorkosApi. Records calls.
   class FakeWorkosApi
-    attr_reader :organizations, :users, :memberships, :calls
-    attr_accessor :fail_on
+    attr_reader :organizations, :users, :memberships, :invitations_by_id, :calls
+    attr_accessor :fail_on, :role_list
 
     def initialize
       @organizations = {}
       @users = {}
       @memberships = {}
+      @invitations_by_id = {}
+      @role_list = []
       @calls = []
+    end
+
+    def roles(_organization_id)
+      record(:roles)
+      @role_list
+    end
+
+    def invitation(id) = fetch(:invitation, @invitations_by_id, id)
+
+    def invitations(organization_id)
+      record(:invitations)
+      @invitations_by_id.values.select { _1["organization_id"] == organization_id }
+    end
+
+    def create_invitation(email:, organization_id:, role_slug:, inviter_user_id: nil)
+      record(:create_invitation)
+      id = "invitation_#{SecureRandom.hex(6)}"
+      @invitations_by_id[id] = { "id" => id, "email" => email, "organization_id" => organization_id, "role_slug" => role_slug,
+        "state" => "pending", "inviter_user_id" => inviter_user_id, "expires_at" => 3.days.from_now.iso8601,
+        "accept_invitation_url" => "https://auth.example.test/invite?token=#{id}" }
+    end
+
+    def revoke_invitation(id)
+      record(:revoke_invitation)
+      @invitations_by_id.fetch(id)["state"] = "revoked"
+      @invitations_by_id[id]
+    end
+
+    def update_membership_role(id, role_slug)
+      record(:update_membership_role)
+      membership = @memberships.fetch(id)
+      membership.merge!("role" => { "slug" => role_slug }, "updated_at" => (Time.current + 1.second).iso8601(3))
+    end
+
+    def delete_membership(id)
+      record(:delete_membership)
+      @memberships.delete(id)
+      {}
     end
 
     def organization(id) = fetch(:organization, @organizations, id)

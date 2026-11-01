@@ -13,6 +13,12 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  invitationIdInput,
+  inviteInput,
+  memberRoleInput,
+  type InvitationIdInput,
+  type InviteInput,
+  type MemberRoleInput,
   locationInput,
   updateOrganizationInput,
   type LocationInput,
@@ -305,4 +311,40 @@ export const createCheckIn = createServerFn({ method: "POST" })
           body: { member_id: data.member_id, location_id: data.location_id },
         }),
       ),
+  );
+
+export const getTeam = createServerFn({ method: "GET" })
+  .validator((input: SlugInput) => slugInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["Team"]>> => callStaff(data.slug, (api) => api.GET("/staff/team")));
+
+export const inviteStaff = createServerFn({ method: "POST" })
+  .validator((input: InviteInput) => inviteInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Team"]>> =>
+      callStaff(data.slug, (api) => api.POST("/staff/team/invitations", { body: { email: data.email, role: data.role } })),
+  );
+
+export const revokeInvitation = createServerFn({ method: "POST" })
+  .validator((input: InvitationIdInput) => invitationIdInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Team"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/team/invitations/{invitation_id}/revoke", { params: { path: { invitation_id: data.invitationId } } }),
+      ),
+  );
+
+export const changeStaffRole = createServerFn({ method: "POST" })
+  .validator((input: MemberRoleInput) => memberRoleInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Team"]>> =>
+      callStaff(data.slug, (api) =>
+        api.PATCH("/staff/team/members/{id}", { params: { path: { id: data.id } }, body: { role: data.role } }),
+      ),
+  );
+
+export const removeStaff = createServerFn({ method: "POST" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Team"]>> =>
+      callStaff(data.slug, (api) => api.DELETE("/staff/team/members/{id}", { params: { path: { id: data.id } } })),
   );

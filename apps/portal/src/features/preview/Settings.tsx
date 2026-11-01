@@ -1,19 +1,14 @@
 import { useState } from "react";
-import { Mail, MessageCircle, QrCode, UserPlus } from "lucide-react";
-import { Avatar, Field, Pill, Plate } from "../../components/ui";
+import { Mail, MessageCircle, QrCode } from "lucide-react";
+import { Pill, Plate } from "../../components/ui";
 import { useToast } from "../../components/Toast";
+import type { Schemas } from "@flowfokus/api";
+import type { Result } from "../../lib/result";
 import { Locations, OrganizationDetails } from "../settings/OrganizationSettings";
-import { Filters, PreviewDialog, PreviewPage, Toggle } from "./shared";
+import { TeamSettings } from "../settings/TeamSettings";
+import { Filters, PreviewPage, Toggle } from "./shared";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
-const initialTeam = [
-  { name: "Nadia Hassan", email: "nadia@example.com", role: "Owner", status: "Active" },
-  { name: "Aina Zulkifli", email: "aina@example.com", role: "Front desk", status: "Active" },
-  { name: "Daniel Koh", email: "daniel@example.com", role: "Manager", status: "Active" },
-];
 const integrations = [
   { name: "DuitNow QR", detail: "Payment references and QR collection", icon: QrCode },
   { name: "WhatsApp reminders", detail: "Membership and payment follow-ups", icon: MessageCircle },
@@ -23,13 +18,19 @@ const integrations = [
 export const SETTINGS_SECTIONS = ["Organization", "Locations", "Team", "Notifications", "Integrations"] as const;
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
-export function Settings({ section, onSection }: { section: SettingsSection; onSection: (section: SettingsSection) => void }) {
+export function Settings({
+  section,
+  onSection,
+  team,
+}: {
+  section: SettingsSection;
+  onSection: (section: SettingsSection) => void;
+  team: Result<Schemas["Team"]> | null;
+}) {
   const toast = useToast();
   const [notifications, setNotifications] = useState({ expiry: true, due: true, denied: false, summary: true });
   const [connected, setConnected] = useState(["Email receipts"]);
-  const [team, setTeam] = useState(initialTeam);
-  const [inviting, setInviting] = useState(false);
-  const sample = section === "Team" || section === "Notifications" || section === "Integrations";
+  const sample = section === "Notifications" || section === "Integrations";
   return (
     <PreviewPage
       title="Settings"
@@ -40,71 +41,7 @@ export function Settings({ section, onSection }: { section: SettingsSection; onS
         <Filters values={[...SETTINGS_SECTIONS]} value={section} onChange={onSection} label="Settings section" />
         {section === "Organization" ? <OrganizationDetails /> : null}
         {section === "Locations" ? <Locations /> : null}
-        {section === "Team" ? (
-          <Plate
-            title="Your team"
-            description="People who can work in this organization."
-            action={
-              <Button
-                variant="secondary"
-                size="sm"
-                type="button"
-                onClick={() => setInviting(true)}
-              >
-                <UserPlus aria-hidden="true" />
-                Invite staff
-              </Button>
-            }
-            flush
-          >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead scope="col">Staff member</TableHead>
-                  <TableHead scope="col">Role</TableHead>
-                  <TableHead scope="col">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {team.map((person, index) => (
-                  <TableRow key={person.email}>
-                    <TableCell>
-                      <div className="preview-person">
-                        <Avatar name={person.name} />
-                        <div>
-                          <strong>{person.name}</strong>
-                          <p>{person.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {person.role === "Owner" ? (
-                        "Owner"
-                      ) : (
-                        <NativeSelect
-                          className="input--small"
-                          aria-label={`Role for ${person.name}`}
-                          value={person.role}
-                          onChange={(e) =>
-                            setTeam((items) =>
-                              items.map((item, i) => (i === index ? { ...item, role: e.target.value } : item)),
-                            )
-                          }
-                        >
-                          <NativeSelectOption>Front desk</NativeSelectOption>
-                          <NativeSelectOption>Manager</NativeSelectOption>
-                        </NativeSelect>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Pill tone={person.status === "Active" ? "good" : "warning"}>{person.status}</Pill>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Plate>
-        ) : null}
+        {section === "Team" ? <TeamSettings team={team} /> : null}
         {section === "Notifications" ? (
           <Plate title="Desk notifications" description="Choose what appears in your Inbox.">
             <Toggle
@@ -171,54 +108,11 @@ export function Settings({ section, onSection }: { section: SettingsSection; onS
         ) : null}
         {sample ? (
           <p className="preview-footnote">
-            Sample settings only. No invitations, notifications, or external connections are sent. Changes reset when you
+            Sample settings only. No notifications or external connections are sent. Changes reset when you
             leave this page.
           </p>
         ) : null}
       </div>
-      {inviting ? (
-        <PreviewDialog title="Invite a team member" onClose={() => setInviting(false)}>
-          <form
-            className="form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              const email = String(data.get("email")).trim();
-              if (team.some((person) => person.email.toLowerCase() === email.toLowerCase())) {
-                toast.show({ tone: "error", title: "This person is already on the team" });
-                return;
-              }
-              setTeam((items) => [
-                ...items,
-                { name: String(data.get("name")).trim(), email, role: String(data.get("role")), status: "Pending" },
-              ]);
-              setInviting(false);
-              toast.show({ tone: "info", title: "Sample invitation added", body: "No email was sent." });
-            }}
-          >
-            <Field id="invite-name" label="Full name">
-              <Input id="invite-name" name="name" required autoFocus />
-            </Field>
-            <Field id="invite-email" label="Email">
-              <Input id="invite-email" name="email" type="email" required />
-            </Field>
-            <Field id="invite-role" label="Role">
-              <NativeSelect id="invite-role" name="role">
-                <NativeSelectOption>Front desk</NativeSelectOption>
-                <NativeSelectOption>Manager</NativeSelectOption>
-              </NativeSelect>
-            </Field>
-            <div className="preview-form-actions">
-              <Button variant="ghost" type="button" onClick={() => setInviting(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                Add sample invitation
-              </Button>
-            </div>
-          </form>
-        </PreviewDialog>
-      ) : null}
     </PreviewPage>
   );
 }
