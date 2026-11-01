@@ -2,8 +2,9 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { useToast } from "./Toast";
+import { RadioCards } from "./RadioCards";
 import { Field, FailureNotice, Notice, SubmitButton, describedBy } from "./ui";
-import { failureMessage, formatMoney, minorToInput, parseAmountToMinor } from "../lib/format";
+import { PAYMENT_METHOD_LABEL, failureMessage, formatMoney, formatWhen, minorToInput, parseAmountToMinor } from "../lib/format";
 import { useAction, useIdempotencyKey } from "../lib/hooks";
 import { useCan, useOrganization } from "../lib/organization";
 import { recordRefund, revokeSale, voidSale } from "../lib/staff.functions";
@@ -11,12 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Ban, ShieldOff, Undo2 } from "lucide-react";
 
 const sendRefund = (input: Parameters<typeof recordRefund>[0]["data"]) => recordRefund({ data: input });
 const sendVoid = (input: Parameters<typeof voidSale>[0]["data"]) => voidSale({ data: input });
 const sendRevoke = (input: Parameters<typeof revokeSale>[0]["data"]) => revokeSale({ data: input });
 
-type Correction = { kind: "refund"; payment: Schemas["Payment"] } | { kind: "void" } | { kind: "revoke" } | null;
+type Correction = { kind: "refund" } | { kind: "void" } | { kind: "revoke" } | null;
 
 /**
  * Corrections after a sale: refund money, void the sale, or revoke delivered
@@ -35,40 +37,51 @@ export function SaleCorrections({ sale }: { sale: Schemas["Sale"] }) {
   if (!canVoid && !canRevoke && !canRefund) return null;
   return (
     <div className="sale-corrections">
-      {canRefund
-        ? refundable.map((payment) => (
-            <Button key={payment.id} type="button" variant="secondary" size="sm" onClick={() => setOpen({ kind: "refund", payment })}>
-              Refund {formatMoney(payment.amount_minor - payment.refunded_minor, payment.currency)}
-              {refundable.length > 1 ? ` of ${formatMoney(payment.amount_minor, payment.currency)}` : null}
-            </Button>
-          ))
-        : null}
+      {canRefund ? (
+        <Button type="button" variant="secondary" size="sm" onClick={() => setOpen({ kind: "refund" })}>
+          <Undo2 aria-hidden="true" />
+          Refund
+        </Button>
+      ) : null}
       {canRevoke ? (
         <Button type="button" variant="secondary" size="sm" onClick={() => setOpen({ kind: "revoke" })}>
+          <ShieldOff aria-hidden="true" />
           Revoke access
         </Button>
       ) : null}
       {canVoid ? (
         <Button type="button" variant="secondary" size="sm" onClick={() => setOpen({ kind: "void" })}>
+          <Ban aria-hidden="true" />
           Void sale
         </Button>
       ) : null}
-      {open?.kind === "refund" ? <RefundDialog sale={sale} payment={open.payment} onClose={() => setOpen(null)} /> : null}
+      {open?.kind === "refund" ? <RefundDialog sale={sale} payments={refundable} onClose={() => setOpen(null)} /> : null}
       {open?.kind === "void" ? <ReasonDialog sale={sale} kind="void" onClose={() => setOpen(null)} /> : null}
       {open?.kind === "revoke" ? <ReasonDialog sale={sale} kind="revoke" onClose={() => setOpen(null)} /> : null}
     </div>
   );
 }
 
-function RefundDialog({ sale, payment, onClose }: { sale: Schemas["Sale"]; payment: Schemas["Payment"]; onClose: () => void }) {
+function RefundDialog({ sale, payments, onClose }: { sale: Schemas["Sale"]; payments: Schemas["Payment"][]; onClose: () => void }) {
   useRestoreFocus();
   const organization = useOrganization();
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendRefund);
   const [key, renewKey] = useIdempotencyKey();
+  const [paymentId, setPaymentId] = useState(payments[0]!.id);
+  const payment = payments.find((item) => item.id === paymentId) ?? payments[0]!;
   const left = payment.amount_minor - payment.refunded_minor;
   const [amount, setAmount] = useState(() => minorToInput(left, sale.currency));
+
+  // Another payment has its own limit. Start from its full refundable amount.
+  function choosePayment(id: string) {
+    const next = payments.find((item) => item.id === id);
+    if (!next) return;
+    setPaymentId(id);
+    setAmount(minorToInput(next.amount_minor - next.refunded_minor, sale.currency));
+    setLocal((errors) => ({ ...errors, amount: undefined }));
+  }
   const [reason, setReason] = useState("");
   const [local, setLocal] = useState<{ amount?: string; reason?: string }>({});
   const server = action.error?.code === "validation_failed" ? action.error.details : undefined;
@@ -118,6 +131,20 @@ function RefundDialog({ sale, payment, onClose }: { sale: Schemas["Sale"]; payme
               <FailureNotice error={action.error} title="The refund was not recorded" />
             ) : null}
             <div className="form">
+              {payments.length > 1 ? (
+                <RadioCards
+                  name="payment"
+                  legend="Payment to refund"
+                  value={paymentId}
+                  onChange={choosePayment}
+                  options={payments.map((item) => ({
+                    value: item.id,
+                    title: PAYMENT_METHOD_LABEL[item.method],
+                    meta: formatWhen(item.received_at, organization.timezone),
+                    trailing: <span className="money">{formatMoney(item.amount_minor - item.refunded_minor, item.currency)}</span>,
+                  }))}
+                />
+              ) : null}
               <Field id="refund-amount" label={`Amount (${sale.currency})`} error={amountError}>
                 <Input
                   id="refund-amount"

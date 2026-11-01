@@ -87,6 +87,7 @@ function SalePage() {
         }
       >
         <Status state={saleState(data)}>{saleStateLabel(data)}</Status>
+        <SaleCorrections sale={data} />
       </PageHead>
 
       {data.voided_at ? (
@@ -96,7 +97,6 @@ function SalePage() {
           </p>
         </Notice>
       ) : null}
-      <SaleCorrections sale={data} />
 
       <div className="sale-page__layout">
         <Plate title="Payment">
