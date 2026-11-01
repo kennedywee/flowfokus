@@ -11,7 +11,9 @@ Rails.application.routes.draw do
     resource :organization, only: :show
     resources :memberships, only: :index
     resource :overview, only: :show
-    resources :members, only: %i[index show create]
+    resources :members, only: %i[index show create] do
+      resources :renewals, only: :create
+    end
     resources :products, only: %i[index create update] do
       resources :prices, only: :create
     end

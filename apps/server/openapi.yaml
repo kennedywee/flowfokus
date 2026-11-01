@@ -313,6 +313,57 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/members/{id}/renewals:
+    post:
+      tags: [staff]
+      operationId: renewStaffMembership
+      summary: Sell another period at the member's agreed terms. Needs purchases:create.
+      description: |
+        Copies the price, amount, and terms of the line item behind the member's latest
+        delivered period. It never uses the current catalog price, so it works after that
+        price is archived. Pay and deliver the sale as usual. Delivery appends the new
+        period after the last one. A member without a delivered membership gets 422
+        `renewal_unavailable`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenewalInput"
+      responses:
+        "200":
+          description: Replay of an earlier request with the same key.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SaleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/products:
     get:
       tags: [staff]
@@ -1028,7 +1079,7 @@ components:
         - `forbidden` (403), `organization_mismatch` (403)
         - `not_found` (404)
         - `idempotency_key_reused` (409)
-        - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
+        - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid` (422)
         - `rate_limited` (429)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
@@ -1044,6 +1095,7 @@ components:
         - idempotency_key_reused
         - validation_failed
         - price_unavailable
+        - renewal_unavailable
         - overpayment
         - sale_not_paid
         - rate_limited
@@ -1337,7 +1389,7 @@ components:
     MemberDetail:
       type: object
       additionalProperties: false
-      required: [id, name, email, created_at, membership, current_period, entitlements]
+      required: [id, name, email, created_at, membership, current_period, renewal, entitlements]
       properties:
         id:
           type: string
@@ -1358,6 +1410,10 @@ components:
             - $ref: "#/components/schemas/MembershipPeriod"
           nullable: true
           description: The period that covers now, if any.
+        renewal:
+          allOf:
+            - $ref: "#/components/schemas/RenewalTerms"
+          nullable: true
         entitlements:
           type: array
           description: Rights that are active now or start later. Expired rights are left out.
@@ -1760,6 +1816,7 @@ components:
         - balance_minor
         - payment_status
         - fulfilled
+        - renewal
         - purchased_at
         - line_item
         - payments
@@ -1785,6 +1842,9 @@ components:
           $ref: "#/components/schemas/PaymentStatus"
         fulfilled:
           type: boolean
+        renewal:
+          type: boolean
+          description: True when the sale renews the member's agreed terms.
         purchased_at:
           type: string
           format: date-time
@@ -1962,3 +2022,34 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/StaffProduct"
+
+    RenewalInput:
+      type: object
+      additionalProperties: false
+      required: [location_id]
+      properties:
+        location_id:
+          type: string
+          format: uuid
+          description: Where the renewal is sold.
+
+    RenewalTerms:
+      type: object
+      additionalProperties: false
+      required: [product_name, price_label, amount_minor, currency, duration_days, starts_at]
+      description: What a renewal sells now. Null on the member when nothing was delivered yet.
+      properties:
+        product_name:
+          type: string
+        price_label:
+          type: string
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        duration_days:
+          type: integer
+        starts_at:
+          type: string
+          format: date-time
+          description: Where the new period starts if it is delivered now.

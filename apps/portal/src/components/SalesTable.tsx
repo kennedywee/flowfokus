@@ -34,7 +34,8 @@ export function SalesTable({ sales, showMember = true }: { sales: Schemas["Sale"
                 {sale.line_item.product_name}
               </Link>
               <span className="cell-sub">
-                {sale.line_item.price_label} ·{" "}
+                {sale.line_item.price_label}
+                {sale.renewal ? " · Renewal" : null} ·{" "}
                 <time dateTime={sale.purchased_at} suppressHydrationWarning>
                   {formatWhen(sale.purchased_at, organization.timezone)}
                 </time>

@@ -24,6 +24,23 @@ class Member < ApplicationRecord
 
   def current_period(at: Time.current) = membership&.periods&.covering(at)&.first
 
+  # The line item behind the latest delivered period. Renewals copy its terms.
+  def agreed_line_item
+    membership&.periods&.reorder(ends_at: :desc)&.first&.fulfillment&.sale_line_item
+  end
+
+  # What a renewal would sell, and when its period would start if delivered now.
+  def renewal_terms(at: Time.current)
+    line = agreed_line_item
+    return nil unless line
+
+    {
+      product_name: line.product_name, price_label: line.price_label, amount_minor: line.total_minor,
+      currency: line.currency, duration_days: line.terms.fetch("duration_days"),
+      starts_at: api_time(membership.next_start(at))
+    }
+  end
+
   def as_summary_api = { id:, name:, email: }
   def as_api = { id:, name:, email:, created_at: api_time(created_at) }
 
@@ -31,6 +48,7 @@ class Member < ApplicationRecord
     as_api.merge(
       membership: membership&.as_api,
       current_period: current_period(at:)&.as_api,
+      renewal: renewal_terms(at:),
       entitlements: entitlements.where("ends_at > ?", at).order(:starts_at, :created_at).map { |right| right.as_api(at:) }
     )
   end

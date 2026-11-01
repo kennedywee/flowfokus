@@ -32,6 +32,8 @@ Activation is configurable. The default start is the purchase date.
 
 Early renewal appends a period after the last one. It does not change the current period or the cycle. Reject overlaps, including from concurrent renewals.
 
+`POST /staff/members/{id}/renewals` copies the line item behind the member's latest delivered period: the same price, amount, and terms. It works after that price is archived. The sale records which line item it renews. Expired renewal follows the same rule: the new period starts when it is delivered.
+
 ## Check in
 
 1. Identify the member and location.

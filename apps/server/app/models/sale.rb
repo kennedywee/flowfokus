@@ -7,13 +7,18 @@ class Sale < ApplicationRecord
     def initialize(msg = "This price is archived or not available for new sales.") = super
   end
 
+  class RenewalUnavailable < StandardError
+    def initialize(msg = "This member has no delivered membership to renew. Sell a new membership instead.") = super
+  end
+
   belongs_to :member
   belongs_to :location
   belongs_to :created_by_user, class_name: "User"
+  belongs_to :renews_line_item, class_name: "SaleLineItem", optional: true
   has_one :line_item, class_name: "SaleLineItem", dependent: :restrict_with_exception
   has_one :fulfillment, through: :line_item
   has_many :payments, -> { order(:received_at, :created_at) }, dependent: :restrict_with_exception
-  same_organization_as :member, :location
+  same_organization_as :member, :location, :renews_line_item
 
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
   validates :total_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -51,6 +56,37 @@ class Sale < ApplicationRecord
     end
   end
 
+  # Sells another period at the member's agreed terms: the line item behind
+  # their latest delivered period. The catalog price is never used, so the
+  # agreed price and terms hold even after the price changes or is archived.
+  # Returns [sale, created].
+  def self.renew!(organization:, actor:, idempotency_key:, member_id:, location_id:, at: Time.current)
+    fingerprint = Idempotent.fingerprint(renewal: true, member_id:, location_id:)
+
+    with_idempotency(organization.sales, key: idempotency_key, fingerprint:) do
+      member = organization.members.find_by(id: member_id)
+      location = organization.locations.find_by(id: location_id)
+      sale = organization.sales.new(
+        member:, location:, created_by_user: actor, purchased_at: at,
+        idempotency_key:, request_fingerprint: fingerprint, paid_minor: 0
+      )
+      sale.errors.add(:member_id, "was not found") unless member
+      sale.errors.add(:location_id, "was not found") unless location
+      raise ActiveRecord::RecordInvalid, sale if sale.errors.any?
+
+      agreed = member.agreed_line_item || raise(RenewalUnavailable)
+      sale.renews_line_item = agreed
+      sale.currency = agreed.currency
+      sale.total_minor = agreed.total_minor
+      sale.build_line_item(agreed.renewal_snapshot)
+
+      transaction(requires_new: true) { sale.save! }
+      sale
+    end
+  end
+
+  def renewal? = renews_line_item_id.present?
+
   def balance_minor = total_minor - paid_minor
   def paid_in_full? = balance_minor.zero?
   def fulfilled? = fulfillment.present?
@@ -76,6 +112,7 @@ class Sale < ApplicationRecord
       balance_minor:,
       payment_status:,
       fulfilled: fulfilled?,
+      renewal: renewal?,
       purchased_at: api_time(purchased_at),
       line_item: line_item.as_api,
       payments: payments.map(&:as_api),

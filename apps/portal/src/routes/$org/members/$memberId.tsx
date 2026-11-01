@@ -1,5 +1,8 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { ShoppingBag } from "lucide-react";
+import { useState } from "react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { RefreshCw, ShoppingBag } from "lucide-react";
+import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { useToast } from "../../../components/Toast";
 import type { Schemas } from "@flowfokus/api";
 import { CheckInPanel } from "../../../components/CheckInPanel";
 import { SalesTable } from "../../../components/SalesTable";
@@ -13,12 +16,15 @@ import {
   Status,
   type LampState,
 } from "../../../components/ui";
-import { DENIAL, formatDate, formatUsage, formatWhen } from "../../../lib/format";
-import { useLocationName, useOrganization } from "../../../lib/organization";
-import { getMemberRecord } from "../../../lib/staff.functions";
+import { DENIAL, failureMessage, formatDate, formatDuration, formatMoney, formatUsage, formatWhen } from "../../../lib/format";
+import { useAction, useIdempotencyKey } from "../../../lib/hooks";
+import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
+import { getMemberRecord, renewMembership } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+const sendRenewal = (input: Parameters<typeof renewMembership>[0]["data"]) => renewMembership({ data: input });
 
 export const Route = createFileRoute("/$org/members/$memberId")({
   loader: async ({ params }) => {
@@ -34,6 +40,7 @@ export const Route = createFileRoute("/$org/members/$memberId")({
 function MemberPage() {
   const record = Route.useLoaderData();
   const organization = useOrganization();
+  const can = useCan();
 
   if (!record.ok) {
     return (
@@ -47,6 +54,7 @@ function MemberPage() {
   return (
     <div className="page member-page">
       <PageHead title={member.name}>
+        {member.renewal && can("purchases:create") ? <RenewButton member={member} renewal={member.renewal} /> : null}
         <Link
           to="/$org/sales/new"
           params={{ org: organization.slug }}
@@ -105,6 +113,60 @@ function MemberPage() {
         )}
       </Plate>
     </div>
+  );
+}
+
+/**
+ * Sells another period at the member's agreed price. Rails copies the terms of
+ * the latest delivered sale, never the current catalog price.
+ */
+function RenewButton({ member, renewal }: { member: Schemas["MemberDetail"]; renewal: Schemas["RenewalTerms"] }) {
+  const organization = useOrganization();
+  const location = useDeskLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const action = useAction(sendRenewal);
+  const [key, renewKey] = useIdempotencyKey();
+  const [confirming, setConfirming] = useState(false);
+  const price = formatMoney(renewal.amount_minor, renewal.currency);
+
+  async function renew() {
+    if (!location) return;
+    const result = await action.run({ slug: organization.slug, idempotencyKey: key, memberId: member.id, location_id: location.id });
+    if (result.ok) {
+      renewKey();
+      setConfirming(false);
+      toast.show({ tone: "success", title: "Renewal recorded", body: "Record payment, then deliver the new period." });
+      void navigate({ to: "/$org/sales/$saleId", params: { org: organization.slug, saleId: result.data.id } });
+    }
+  }
+
+  return (
+    <>
+      <Button type="button" variant="secondary" disabled={!location} onClick={() => setConfirming(true)}>
+        <RefreshCw aria-hidden="true" />
+        Renew
+      </Button>
+      <ConfirmDialog
+        open={confirming}
+        title={`Renew ${member.name} for ${price}?`}
+        confirmLabel={`Renew for ${price}`}
+        pendingLabel="Recording…"
+        pending={action.pending}
+        onConfirm={() => void renew()}
+        onCancel={() => {
+          action.reset();
+          setConfirming(false);
+        }}
+      >
+        <p>
+          {renewal.product_name}, {renewal.price_label}: {formatDuration(renewal.duration_days)} at the agreed price. If
+          delivered now, the new period starts {formatDate(renewal.starts_at, organization.timezone)}.
+        </p>
+        <p>Sold at {location?.name ?? "no location"}.</p>
+        {action.error ? <p role="alert">{failureMessage(action.error)}</p> : null}
+      </ConfirmDialog>
+    </>
   );
 }
 

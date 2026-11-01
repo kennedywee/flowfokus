@@ -286,3 +286,15 @@ export function updatePriceInput(value: unknown): UpdatePriceInput {
     ...(available === undefined ? {} : { available }),
   };
 }
+
+export type RenewInput = IdempotentInput & { memberId: string } & Schemas["RenewalInput"];
+
+export function renewInput(value: unknown): RenewInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    idempotencyKey: idempotencyKeyField(input),
+    memberId: uuidField(input, "memberId"),
+    location_id: uuidField(input, "location_id"),
+  };
+}

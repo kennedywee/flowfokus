@@ -76,7 +76,7 @@ function SalePage() {
         title={`${line.product_name}, ${line.price_label}`}
         description={
           <>
-            Sold to{" "}
+            {data.renewal ? "Renewal at the agreed price. " : null}Sold to{" "}
             <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: data.member.id }}>
               {data.member.name}
             </Link>{" "}

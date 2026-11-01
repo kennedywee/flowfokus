@@ -30,6 +30,12 @@ class SaleLineItem < ApplicationRecord
     }
   end
 
+  # The same price, amounts, and terms, for a renewal sale.
+  def renewal_snapshot
+    attributes.slice(*%w[organization_id price_id product_id product_name price_label quantity
+      unit_amount_minor total_minor currency terms]).symbolize_keys
+  end
+
   def duration = terms.fetch("duration_days").days
   def benefit_terms = terms.fetch("benefits")
 

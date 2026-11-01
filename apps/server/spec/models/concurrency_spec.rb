@@ -90,4 +90,21 @@ RSpec.describe "Concurrent writes" do
     expect(results.grep(Payment::Overpayment).size).to eq(3)
     expect(sale.reload.paid_minor).to eq(6_000)
   end
+
+  it "delivers parallel renewals as consecutive periods" do
+    first = grant_access(chainsaw, member:, location:, duration_days: 30)
+    renewals = 3.times.map do
+      sale, = Sale.renew!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid,
+        member_id: member.id, location_id: location.id)
+      pay_in_full(sale)
+    end
+
+    results = in_parallel(3) { |index| renewals[index].fulfill!(actor: demo_user).last }
+
+    expect(results).to all(be(true))
+    periods = member.membership.periods.reload.to_a
+    expect(periods.size).to eq(4)
+    expect(periods.each_cons(2).all? { |a, b| a.ends_at == b.starts_at }).to be(true)
+    expect(periods.first.fulfillment.sale_line_item).to eq(first.line_item)
+  end
 end

@@ -164,6 +164,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/members/{id}/renewals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sell another period at the member's agreed terms. Needs purchases:create.
+         * @description Copies the price, amount, and terms of the line item behind the member's latest
+         *     delivered period. It never uses the current catalog price, so it works after that
+         *     price is archived. Pay and deliver the sale as usual. Delivery appends the new
+         *     period after the last one. A member without a delivered membership gets 422
+         *     `renewal_unavailable`.
+         */
+        post: operations["renewStaffMembership"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/products": {
         parameters: {
             query?: never;
@@ -444,13 +468,13 @@ export interface components {
          *     - `forbidden` (403), `organization_mismatch` (403)
          *     - `not_found` (404)
          *     - `idempotency_key_reused` (409)
-         *     - `validation_failed`, `price_unavailable`, `overpayment`, `sale_not_paid` (422)
+         *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid` (422)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "overpayment" | "sale_not_paid" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -592,6 +616,7 @@ export interface components {
             membership: components["schemas"]["Membership"] | null;
             /** @description The period that covers now, if any. */
             current_period: components["schemas"]["MembershipPeriod"] | null;
+            renewal: components["schemas"]["RenewalTerms"] | null;
             /** @description Rights that are active now or start later. Expired rights are left out. */
             entitlements: components["schemas"]["Entitlement"][];
         };
@@ -792,6 +817,8 @@ export interface components {
             balance_minor: number;
             payment_status: components["schemas"]["PaymentStatus"];
             fulfilled: boolean;
+            /** @description True when the sale renews the member's agreed terms. */
+            renewal: boolean;
             /** Format: date-time */
             purchased_at: string;
             line_item: components["schemas"]["SaleLineItem"];
@@ -864,6 +891,26 @@ export interface components {
         };
         StaffProductResponse: {
             data: components["schemas"]["StaffProduct"];
+        };
+        RenewalInput: {
+            /**
+             * Format: uuid
+             * @description Where the renewal is sold.
+             */
+            location_id: string;
+        };
+        /** @description What a renewal sells now. Null on the member when nothing was delivered yet. */
+        RenewalTerms: {
+            product_name: string;
+            price_label: string;
+            amount_minor: number;
+            currency: string;
+            duration_days: number;
+            /**
+             * Format: date-time
+             * @description Where the new period starts if it is delivered now.
+             */
+            starts_at: string;
         };
     };
     responses: {
@@ -1208,6 +1255,51 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    renewStaffMembership: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenewalInput"];
+            };
+        };
+        responses: {
+            /** @description Replay of an earlier request with the same key. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaleResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -166,7 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
     t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id"
     t.index ["user_id"], name: "index_organization_memberships_on_user_id"
     t.index ["workos_id"], name: "index_organization_memberships_on_workos_id", unique: true
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'inactive'::character varying::text, 'pending'::character varying::text])", name: "organization_memberships_status"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'pending'::character varying]::text[])", name: "organization_memberships_status"
   end
 
   create_table "organizations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -287,11 +287,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
     t.string "request_fingerprint", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "renews_line_item_id"
     t.index ["created_by_user_id"], name: "index_sales_on_created_by_user_id"
     t.index ["id", "organization_id"], name: "index_sales_on_id_and_organization_id", unique: true
     t.index ["member_id"], name: "index_sales_on_member_id"
     t.index ["organization_id", "created_at"], name: "index_sales_on_organization_id_and_created_at"
     t.index ["organization_id", "idempotency_key"], name: "index_sales_on_organization_id_and_idempotency_key", unique: true
+    t.index ["renews_line_item_id"], name: "index_sales_on_renews_line_item_id"
     t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "sales_currency_format"
     t.check_constraint "paid_minor >= 0 AND paid_minor <= total_minor", name: "sales_paid_within_total"
     t.check_constraint "total_minor >= 0", name: "sales_total_non_negative"
@@ -329,7 +331,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
     t.index ["workos_id"], name: "index_workos_events_on_workos_id", unique: true
     t.check_constraint "attempts >= 0", name: "workos_events_attempts_non_negative"
     t.check_constraint "jsonb_typeof(payload) = 'object'::text", name: "workos_events_payload_object"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'processed'::character varying::text, 'ignored'::character varying::text, 'failed'::character varying::text])", name: "workos_events_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'processed'::character varying, 'ignored'::character varying, 'failed'::character varying]::text[])", name: "workos_events_status"
   end
 
   add_foreign_key "benefit_grants", "fulfillments", column: ["fulfillment_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -379,6 +381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_000002) do
   add_foreign_key "sales", "locations", column: ["location_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "organizations"
+  add_foreign_key "sales", "sale_line_items", column: ["renews_line_item_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "users", column: "created_by_user_id"
 
   create_function :prevent_price_term_changes, sql_definition: <<-'SQL'

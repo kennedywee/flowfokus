@@ -13,6 +13,8 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  renewInput,
+  type RenewInput,
   createPriceInput,
   createProductInput,
   updatePriceInput,
@@ -187,6 +189,18 @@ export const createSale = createServerFn({ method: "POST" })
         api.POST("/staff/sales", {
           params: { header: { "Idempotency-Key": data.idempotencyKey } },
           body: { member_id: data.member_id, price_id: data.price_id, location_id: data.location_id },
+        }),
+      ),
+  );
+
+export const renewMembership = createServerFn({ method: "POST" })
+  .validator((input: RenewInput) => renewInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Sale"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/members/{id}/renewals", {
+          params: { path: { id: data.memberId }, header: { "Idempotency-Key": data.idempotencyKey } },
+          body: { location_id: data.location_id },
         }),
       ),
   );

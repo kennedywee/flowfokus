@@ -37,6 +37,9 @@ module ErrorResponses
     rescue_from Sale::PriceUnavailable do |error|
       render_error :unprocessable_content, "price_unavailable", error.message
     end
+    rescue_from Sale::RenewalUnavailable do |error|
+      render_error :unprocessable_content, "renewal_unavailable", error.message
+    end
     rescue_from Payment::Overpayment do |error|
       render_error :unprocessable_content, "overpayment", error.message
     end
