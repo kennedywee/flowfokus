@@ -123,8 +123,9 @@
   align-items: end;
 }
 @media (max-width: 599.98px) {
+  /* The name takes the first row. Visits, location, and the remove button share the second. */
   .offer-dialog__benefit {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   }
   .offer-dialog__benefit > :first-child {
     grid-column: 1 / -1;
