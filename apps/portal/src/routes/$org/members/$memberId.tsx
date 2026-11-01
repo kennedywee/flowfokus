@@ -377,7 +377,9 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
           <TableHeader>
             <TableRow>
               <TableHead scope="col">Starts</TableHead>
-              <TableHead scope="col">Ends</TableHead>
+              <TableHead scope="col" className="col-wide">
+                Ends
+              </TableHead>
               <TableHead scope="col">State</TableHead>
               <TableHead scope="col">Sale</TableHead>
             </TableRow>
@@ -393,8 +395,14 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
                     <time dateTime={period.starts_at} suppressHydrationWarning>
                       {formatDate(period.starts_at, organization.timezone)}
                     </time>
+                    <span className="cell-sub phone-only">
+                      to{" "}
+                      <time dateTime={period.ends_at} suppressHydrationWarning>
+                        {formatDate(period.ends_at, organization.timezone)}
+                      </time>
+                    </span>
                   </TableCell>
-                  <TableCell className="member-date">
+                  <TableCell className="member-date col-wide">
                     <time dateTime={period.ends_at} suppressHydrationWarning>
                       {formatDate(period.ends_at, organization.timezone)}
                     </time>
@@ -432,8 +440,10 @@ function CheckInHistory({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
         <TableRow>
           <TableHead scope="col">Result</TableHead>
           <TableHead scope="col">Reason</TableHead>
-          <TableHead scope="col">Location</TableHead>
-          <TableHead scope="col" className="num">
+          <TableHead scope="col" className="col-wide">
+            Location
+          </TableHead>
+          <TableHead scope="col" className="num col-wide">
             When
           </TableHead>
         </TableRow>
@@ -452,9 +462,15 @@ function CheckInHistory({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
                   : checkIn.result === "granted"
                     ? "Access valid"
                     : "No reason recorded"}
+              <span className="cell-sub phone-only">
+                {locationName(checkIn.location_id)} ·{" "}
+                <time dateTime={checkIn.checked_in_at} suppressHydrationWarning>
+                  {formatWhen(checkIn.checked_in_at, organization.timezone)}
+                </time>
+              </span>
             </TableCell>
-            <TableCell>{locationName(checkIn.location_id)}</TableCell>
-            <TableCell className="num member-date">
+            <TableCell className="col-wide">{locationName(checkIn.location_id)}</TableCell>
+            <TableCell className="num member-date col-wide">
               <time dateTime={checkIn.checked_in_at} suppressHydrationWarning>
                 {formatWhen(checkIn.checked_in_at, organization.timezone)}
               </time>

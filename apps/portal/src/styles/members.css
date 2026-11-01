@@ -60,6 +60,10 @@
   gap: 10px;
   min-width: 0;
 }
+.members-page .members-name__text {
+  display: grid;
+  min-width: 0;
+}
 .members-page .members-email {
   overflow-wrap: anywhere;
 }

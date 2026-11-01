@@ -847,6 +847,10 @@
   align-content: start;
   min-width: 0;
 }
+/* A wide child (a scrolling filter row, a long amount) must not widen the column. */
+.stack > * {
+  min-width: 0;
+}
 .stack--tight {
   gap: var(--space-4);
 }

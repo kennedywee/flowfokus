@@ -138,6 +138,10 @@
 .desk-page .desk-recent__reason {
   color: var(--color-critical);
 }
+/* A staff override let the member in: worth a look, but not a denial. */
+.desk-page .desk-recent__reason[data-tone="override"] {
+  color: var(--color-warning);
+}
 .desk-page .desk-recent__when {
   display: grid;
   justify-items: end;

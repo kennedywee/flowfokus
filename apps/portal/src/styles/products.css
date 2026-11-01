@@ -1,9 +1,10 @@
 /* Screen styles: offers. Scoped under .offers-page so nothing leaks. */
 
+/* The plate head already leaves space above the body, so the meta starts close under the name. */
 .offers-page .offer__meta {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-5) var(--space-6);
+  padding: 0 var(--space-6) var(--space-5);
 }
 .offers-page .offer__description {
   color: var(--color-ink-2);
@@ -40,11 +41,6 @@
 .offers-page .offer__col-amount {
   width: 10rem;
 }
-/* Only the values read in mono. The header keeps the table header style. */
-.offers-page th.num {
-  font-family: inherit;
-  font-variant-numeric: normal;
-}
 .offers-page td.num {
   font-size: var(--text-md);
 }
@@ -64,6 +60,34 @@
   justify-content: flex-end;
   gap: var(--space-1);
   width: 100%;
+}
+.offers-page .offer__price-menu {
+  display: none;
+}
+/*
+ * Narrow screens: three columns. Term and status move under the price name,
+ * and the price actions move into a menu. Fixed widths would crush the name.
+ */
+@media (max-width: 639.98px) {
+  .offers-page .offer__table .table {
+    table-layout: auto;
+    min-width: 0;
+  }
+  .offers-page .offer__table col {
+    width: auto;
+  }
+  .offers-page .offer__col-actions {
+    width: 1px;
+  }
+  .offers-page .offer__price-button {
+    display: none;
+  }
+  .offers-page .offer__price-menu {
+    display: inline-flex;
+  }
+  .offers-page .offer__actions {
+    justify-content: flex-start;
+  }
 }
 
 /* Dialog. Rendered in a portal, so it is not under .offers-page. */

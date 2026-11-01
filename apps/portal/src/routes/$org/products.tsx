@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { EyeOff, Globe, Pencil, Plus } from "lucide-react";
+import { EllipsisVertical, EyeOff, Globe, Pencil, Plus } from "lucide-react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PriceDialog, ProductDialog } from "../../components/OfferDialogs";
 import { useToast } from "../../components/Toast";
@@ -11,6 +11,7 @@ import { useAction } from "../../lib/hooks";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
 import { archivePrice, listProducts, updatePrice } from "../../lib/staff.functions";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const sendPriceChange = (input: Parameters<typeof updatePrice>[0]["data"]) => updatePrice({ data: input });
@@ -61,7 +62,6 @@ function Products() {
             labelledBy={`offer-${product.id}`}
             title={product.name}
             flush
-            description={product.published ? "Shown on the gym site" : "Staff only. Not shown on the gym site."}
             action={
               <span className="offer__actions">
                 {product.published ? (
@@ -108,16 +108,20 @@ function Products() {
               <Table wrapClassName="offer__table">
                 <colgroup>
                   <col />
-                  <col className="offer__col-term" />
-                  <col className="offer__col-status" />
+                  <col className="offer__col-term col-wide" />
+                  <col className="offer__col-status col-wide" />
                   <col className="offer__col-amount" />
                   {canEdit ? <col className="offer__col-actions" /> : null}
                 </colgroup>
                 <TableHeader>
                   <TableRow>
                     <TableHead scope="col">Price</TableHead>
-                    <TableHead scope="col">Term</TableHead>
-                    <TableHead scope="col">Status</TableHead>
+                    <TableHead scope="col" className="col-wide">
+                      Term
+                    </TableHead>
+                    <TableHead scope="col" className="col-wide">
+                      Status
+                    </TableHead>
                     <TableHead scope="col" className="num">
                       Amount
                     </TableHead>
@@ -131,9 +135,14 @@ function Products() {
                 <TableBody>
                   {product.prices.map((price) => (
                     <TableRow key={price.id}>
-                      <TableCell className="cell-title">{price.label}</TableCell>
-                      <TableCell className="offer__term">{formatDuration(price.duration_days)}</TableCell>
                       <TableCell>
+                        <span className="cell-title">{price.label}</span>
+                        <span className="cell-sub phone-only">
+                          {formatDuration(price.duration_days)} · {price.archived_at ? "Archived" : price.available ? "On sale" : "Not on sale"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="offer__term col-wide">{formatDuration(price.duration_days)}</TableCell>
+                      <TableCell className="col-wide">
                         <Status state={price.available ? "active" : "off"}>
                           {price.archived_at ? "Archived" : price.available ? "On sale" : "Not on sale"}
                         </Status>
@@ -191,13 +200,26 @@ function PriceActions({ price }: { price: Schemas["Price"] }) {
 
   return (
     <span className="offer__price-buttons">
-      <Button type="button" variant="ghost" size="sm" disabled={change.pending} onClick={() => void toggle()}>
+      <Button type="button" variant="ghost" size="sm" className="offer__price-button" disabled={change.pending} onClick={() => void toggle()}>
         {price.available ? "Take off sale" : "Put on sale"}
         <span className="visually-hidden"> {price.label}</span>
       </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={() => setConfirming(true)}>
+      <Button type="button" variant="ghost" size="sm" className="offer__price-button" onClick={() => setConfirming(true)}>
         Archive<span className="visually-hidden"> {price.label}</span>
       </Button>
+      {/* Narrow screens: the same two actions, in a menu. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon-sm" className="offer__price-menu" />}>
+          <EllipsisVertical aria-hidden="true" />
+          <span className="visually-hidden">Change {price.label}</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem disabled={change.pending} onClick={() => void toggle()}>
+            {price.available ? "Take off sale" : "Put on sale"}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setConfirming(true)}>Archive</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <ConfirmDialog
         open={confirming}
         tone="critical"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getRouteApi } from "@tanstack/react-router";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
 import { Avatar, Empty, FailureNotice, Plate, Status } from "../../components/ui";
@@ -70,8 +70,12 @@ export function CheckIns() {
                 <TableHeader>
                   <TableRow>
                     <TableHead scope="col">Member</TableHead>
-                    <TableHead scope="col">Location</TableHead>
-                    <TableHead scope="col">Time</TableHead>
+                    <TableHead scope="col" className="col-wide">
+                      Location
+                    </TableHead>
+                    <TableHead scope="col" className="col-wide">
+                      Time
+                    </TableHead>
                     <TableHead scope="col">Result</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -82,7 +86,13 @@ export function CheckIns() {
                         <div className="preview-person">
                           <Avatar name={visit.member.name} size={28} />
                           <div>
-                            <strong>{visit.member.name}</strong>
+                            <Link
+                              to="/$org/members/$memberId"
+                              params={{ org: organization.slug, memberId: visit.member.id }}
+                              className="cell-title"
+                            >
+                              {visit.member.name}
+                            </Link>
                             <p>
                               {visit.override_reason
                                 ? `Let in by staff: ${visit.override_reason}`
@@ -90,11 +100,17 @@ export function CheckIns() {
                                   ? DENIAL[visit.denial_reason].title
                                   : "Membership access"}
                             </p>
+                            <p className="phone-only">
+                              {locationName(visit.location_id)} ·{" "}
+                              <time dateTime={visit.checked_in_at} suppressHydrationWarning>
+                                {formatWhen(visit.checked_in_at, organization.timezone)}
+                              </time>
+                            </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{locationName(visit.location_id)}</TableCell>
-                      <TableCell className="preview-mono">
+                      <TableCell className="col-wide">{locationName(visit.location_id)}</TableCell>
+                      <TableCell className="when col-wide">
                         <time dateTime={visit.checked_in_at} suppressHydrationWarning>
                           {formatWhen(visit.checked_in_at, organization.timezone)}
                         </time>

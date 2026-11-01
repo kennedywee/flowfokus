@@ -138,8 +138,12 @@ function MemberTable({ members }: { members: Schemas["Member"][] }) {
         <TableHeader>
           <TableRow>
             <TableHead scope="col">Name</TableHead>
-            <TableHead scope="col">Email</TableHead>
-            <TableHead scope="col">Added</TableHead>
+            <TableHead scope="col" className="col-wide">
+              Email
+            </TableHead>
+            <TableHead scope="col" className="col-wide">
+              Added
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -148,17 +152,20 @@ function MemberTable({ members }: { members: Schemas["Member"][] }) {
               <TableCell>
                 <span className="members-name">
                   <Avatar name={member.name} />
-                  <Link
-                    to="/$org/members/$memberId"
-                    params={{ org: organization.slug, memberId: member.id }}
-                    className="cell-title"
-                  >
-                    {member.name}
-                  </Link>
+                  <span className="members-name__text">
+                    <Link
+                      to="/$org/members/$memberId"
+                      params={{ org: organization.slug, memberId: member.id }}
+                      className="cell-title"
+                    >
+                      {member.name}
+                    </Link>
+                    <span className="cell-sub phone-only members-email">{member.email}</span>
+                  </span>
                 </span>
               </TableCell>
-              <TableCell className="muted members-email">{member.email}</TableCell>
-              <TableCell className="members-added">
+              <TableCell className="muted members-email col-wide">{member.email}</TableCell>
+              <TableCell className="members-added col-wide">
                 <time dateTime={member.created_at} suppressHydrationWarning>
                   {formatDate(member.created_at, organization.timezone)}
                 </time>

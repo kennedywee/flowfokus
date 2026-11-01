@@ -60,8 +60,12 @@ export function TeamSettings({ team }: { team: Result<Schemas["Team"]> | null })
           <TableHeader>
             <TableRow>
               <TableHead scope="col">Staff member</TableHead>
-              <TableHead scope="col">Role</TableHead>
-              <TableHead scope="col">Status</TableHead>
+              <TableHead scope="col" className="col-wide">
+                Role
+              </TableHead>
+              <TableHead scope="col" className="col-wide">
+                Status
+              </TableHead>
               <TableHead scope="col">
                 <span className="visually-hidden">Actions</span>
               </TableHead>
@@ -80,8 +84,12 @@ export function TeamSettings({ team }: { team: Result<Schemas["Team"]> | null })
             <TableHeader>
               <TableRow>
                 <TableHead scope="col">Email</TableHead>
-                <TableHead scope="col">Role</TableHead>
-                <TableHead scope="col">Expires</TableHead>
+                <TableHead scope="col" className="col-wide">
+                  Role
+                </TableHead>
+                <TableHead scope="col" className="col-wide">
+                  Expires
+                </TableHead>
                 <TableHead scope="col">
                   <span className="visually-hidden">Actions</span>
                 </TableHead>
@@ -130,6 +138,30 @@ function MemberRow({ member, roles }: { member: Schemas["TeamMember"]; roles: Sc
     }
   }
 
+  const role =
+    member.manageable && choices.length ? (
+      <NativeSelect
+        className="input--small team-role"
+        aria-label={`Role for ${member.name}`}
+        value={member.role}
+        disabled={changing.pending}
+        onChange={(event) => void changeRole(event.target.value)}
+      >
+        {choices.map((choice) => (
+          <NativeSelectOption key={choice.slug} value={choice.slug}>
+            {choice.name}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+    ) : (
+      member.role_name
+    );
+  const status = (
+    <Pill tone={member.status === "active" ? "good" : "warning"}>
+      {member.status === "active" ? "Active" : member.status === "pending" ? "Pending" : "Inactive"}
+    </Pill>
+  );
+
   return (
     <TableRow>
       <TableCell>
@@ -141,32 +173,17 @@ function MemberRow({ member, roles }: { member: Schemas["TeamMember"]; roles: Sc
               {member.you ? " (you)" : ""}
             </strong>
             <p>{member.email}</p>
+            {/* Narrow screens: role and status sit under the person. */}
+            <div className="team-person__phone phone-only">
+              {role}
+              {status}
+            </div>
           </div>
         </div>
       </TableCell>
-      <TableCell>
-        {member.manageable && choices.length ? (
-          <NativeSelect
-            className="input--small"
-            aria-label={`Role for ${member.name}`}
-            value={member.role}
-            disabled={changing.pending}
-            onChange={(event) => void changeRole(event.target.value)}
-          >
-            {choices.map((role) => (
-              <NativeSelectOption key={role.slug} value={role.slug}>
-                {role.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        ) : (
-          member.role_name
-        )}
-      </TableCell>
-      <TableCell>
-        <Pill tone={member.status === "active" ? "good" : "warning"}>{member.status === "active" ? "Active" : member.status === "pending" ? "Pending" : "Inactive"}</Pill>
-      </TableCell>
-      <TableCell className="num">
+      <TableCell className="col-wide">{role}</TableCell>
+      <TableCell className="col-wide">{status}</TableCell>
+      <TableCell className="cell-actions">
         {member.manageable ? (
           <Button type="button" variant="ghost" size="sm" onClick={() => setConfirming(true)}>
             Remove<span className="visually-hidden"> {member.name}</span>
@@ -195,6 +212,8 @@ function InvitationRow({ invitation, roles }: { invitation: Schemas["TeamInvitat
   const toast = useToast();
   const action = useAction(sendRevoke);
   const role = roles.find((item) => item.slug === invitation.role);
+  const roleName = role?.name ?? invitation.role ?? "Default";
+  const expires = invitation.expires_at ? formatDate(invitation.expires_at, organization.timezone) : null;
 
   async function revoke() {
     const result = await action.run({ slug: organization.slug, invitationId: invitation.id });
@@ -208,10 +227,15 @@ function InvitationRow({ invitation, roles }: { invitation: Schemas["TeamInvitat
 
   return (
     <TableRow>
-      <TableCell className="cell-title">{invitation.email}</TableCell>
-      <TableCell>{role?.name ?? invitation.role ?? "Default"}</TableCell>
-      <TableCell className="muted">{invitation.expires_at ? formatDate(invitation.expires_at, organization.timezone) : "No expiry"}</TableCell>
-      <TableCell className="num">
+      <TableCell>
+        <span className="cell-title team-invite__email">{invitation.email}</span>
+        <span className="cell-sub phone-only">
+          {roleName} · {expires ? `Expires ${expires}` : "No expiry"}
+        </span>
+      </TableCell>
+      <TableCell className="col-wide">{roleName}</TableCell>
+      <TableCell className="muted col-wide">{expires ?? "No expiry"}</TableCell>
+      <TableCell className="cell-actions">
         {role?.grantable ?? true ? (
           <Button type="button" variant="ghost" size="sm" disabled={action.pending} onClick={() => void revoke()}>
             Revoke<span className="visually-hidden"> invitation for {invitation.email}</span>

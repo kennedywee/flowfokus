@@ -56,7 +56,8 @@
 .preview-page .preview-person > div {
   min-width: 0;
 }
-.preview-page .preview-person strong {
+.preview-page .preview-person strong,
+.preview-page .preview-person .cell-title {
   font-size: var(--text-sm);
   font-weight: 500;
 }
@@ -527,7 +528,16 @@
   color: var(--color-ink-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+  text-align: center;
   white-space: nowrap;
+}
+/* Twelve weeks: narrower columns. The amount may break after the currency. */
+.preview-page .preview-chart[data-weeks="12"] {
+  gap: 8px;
+}
+.preview-page .preview-chart[data-weeks="12"] .preview-chart__column > span:first-child {
+  font-size: 11px;
+  white-space: normal;
 }
 .preview-page .preview-chart__column > span:last-child {
   padding-bottom: 16px;
@@ -566,16 +576,17 @@
   color: var(--color-ink-3);
   font-size: var(--text-xs);
 }
+/* The track uses the well colour: on a white plate, `control` would hide it. */
 .preview-page .preview-breakdown meter {
   width: 100%;
   height: 8px;
   border: 0;
-  background: var(--color-control);
+  background: var(--color-well);
   border-radius: 4px;
 }
 .preview-page .preview-breakdown meter::-webkit-meter-bar {
   height: 8px;
-  background: var(--color-control);
+  background: var(--color-well);
   border: 0;
   border-radius: 4px;
 }
@@ -801,22 +812,32 @@
     gap: 24px;
   }
   .preview-page .preview-summary > div {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 4px 16px;
+    gap: 4px;
   }
   .preview-page .preview-summary dd {
     font-size: 24px;
     line-height: 30px;
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    align-self: center;
   }
   .preview-page .preview-chart {
-    gap: 12px;
+    gap: 8px;
     padding-inline: 0;
   }
   .preview-page .preview-chart__column > span {
     font-size: 11px;
+  }
+  .preview-page .preview-chart__column > span:first-child {
+    white-space: normal;
+  }
+  /* More than four weeks on a phone: the bars carry the shape, the chart label carries the amounts. */
+  .preview-page .preview-chart:not([data-weeks="1"], [data-weeks="2"], [data-weeks="4"]) {
+    gap: 4px;
+    padding-inline: 12px;
+  }
+  .preview-page .preview-chart:not([data-weeks="1"], [data-weeks="2"], [data-weeks="4"]) .preview-chart__column > span:first-child {
+    display: none;
+  }
+  .preview-page .preview-chart[data-weeks="12"] .preview-chart__column:not(:nth-child(3n + 1)) > span:last-child {
+    visibility: hidden;
   }
   .preview-page .preview-chart__track {
     height: 160px;
@@ -841,6 +862,21 @@
   .preview-page .preview-filters .toggle-group__item {
     min-height: 44px;
   }
+}
+
+/* Team: on narrow screens the role picker and status sit under the person. */
+.team-person__phone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.team-person__phone .team-role {
+  min-width: 10rem;
+}
+.team-invite__email {
+  overflow-wrap: anywhere;
 }
 
 .settings-switch {

@@ -137,7 +137,7 @@ export function Locations() {
                 <TableCell className="cell-title">{location.name}</TableCell>
                 <TableCell className="muted">{location.address ?? "No address"}</TableCell>
                 {editable ? (
-                  <TableCell className="num">
+                  <TableCell className="cell-actions">
                     <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(location)}>
                       <Pencil aria-hidden="true" />
                       Edit<span className="visually-hidden"> {location.name}</span>

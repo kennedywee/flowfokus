@@ -121,7 +121,7 @@ export function Reports({ report, period }: { report: Result<Schemas["Report"]>;
           description="Weeks start on Monday. The last week is still running."
           action={<Filters values={["Sales", "Payments", "Check-ins"] as Metric[]} value={metric} onChange={setMetric} label="Chart metric" />}
         >
-          <div className="preview-chart" role="img" aria-label={`${metric} by week: ${weeks.map((week) => `${weekLabel(week.starts_on)}: ${show(week)}`).join(", ")}`}>
+          <div className="preview-chart" data-weeks={weeks.length} role="img" aria-label={`${metric} by week: ${weeks.map((week) => `${weekLabel(week.starts_on)}: ${show(week)}`).join(", ")}`}>
             {weeks.map((week) => (
               <div className="preview-chart__column" key={week.starts_on}>
                 <span>{show(week)}</span>

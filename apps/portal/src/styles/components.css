@@ -7,7 +7,8 @@
  *                 .button--small  .button--large  .button--icon   (links may use them too)
  *   Pills ....... .pill[data-tone=good|warning|critical|info|neutral]  .tag  .demo-tag
  *   Toolbar ..... .toolbar (+ .toolbar__spacer, .search-field, .input--small, .select--small)
- *   Table ....... .table-wrap > .table[.table--stack]  th.num / td.num  .cell-title  .cell-sub
+ *   Table ....... .table-wrap > .table  th.num / td.num  .cell-title  .cell-sub  .cell-actions  .when
+ *                 narrow screens: .col-wide hides a column, .phone-only shows its facts in the first cell
  *   Facts ....... dl.facts  dl.facts.facts--rows
  *   Lists ....... ol.timeline  ul.counter-list  ul.rights
  *   Progress .... .meter > .meter__track + .meter__fill
@@ -922,6 +923,27 @@ a.toggle-group__item {
   align-items: center;
   text-decoration: none;
 }
+/*
+ * Narrow screens: the filters stay on one line and scroll sideways, so a row
+ * of choices never stacks into a second row. The padding keeps focus rings whole.
+ */
+@media (max-width: 639.98px) {
+  .toggle-group {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    margin: -2px;
+    padding: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .toggle-group::-webkit-scrollbar {
+    display: none;
+  }
+  .toggle-group__item {
+    flex: none;
+  }
+}
 
 /* Tooltip (components/ui/tooltip.tsx), from the Paper sidebar kit. */
 .tooltip-positioner {
@@ -1223,8 +1245,44 @@ a.toggle-group__item {
   text-align: right;
   white-space: nowrap;
 }
+/* A numeric column's header aligns with its values but keeps the header type. */
+.table th.num {
+  font-family: inherit;
+  font-variant-numeric: normal;
+}
+/* Row buttons sit at the right edge, in the interface type. */
+.table .cell-actions {
+  text-align: right;
+  white-space: nowrap;
+}
 .table .muted {
   color: var(--color-ink-3);
+}
+/* Times and dates stay on one line, so a column never breaks "2:38 pm" in two. */
+.table .when {
+  color: var(--color-ink-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+/*
+ * Narrow screens. Secondary columns (`.col-wide`) hide, and their facts move
+ * into the first cell as `.phone-only` text. The table keeps its semantics and
+ * never needs a sideways scroll for the facts a person acts on.
+ */
+@media (max-width: 639.98px) {
+  .table .col-wide {
+    display: none;
+  }
+  .table th,
+  .table td {
+    padding-inline: var(--space-3);
+  }
+}
+@media (min-width: 640px) {
+  .table .phone-only {
+    display: none;
+  }
 }
 .cell-title {
   color: var(--color-ink);
