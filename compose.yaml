@@ -1,5 +1,22 @@
 name: flowfokus
 
+# Shared by the API and the jobs process.
+x-server-environment: &server-environment
+  RAILS_ENV: development
+  DATABASE_URL: postgres://flowfokus:flowfokus@db:5432/flowfokus_development
+  SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
+  FLOWFOKUS_DEMO_MODE: "${FLOWFOKUS_DEMO_MODE:-false}"
+  FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
+  WORKOS_CLIENT_ID: client_flowfokus_local
+  WORKOS_ISSUER: http://localhost:4100/user_management/client_flowfokus_local
+  WORKOS_JWKS_URL: http://workos:4100/sso/jwks/client_flowfokus_local
+  WORKOS_API_KEY: sk_test_default
+  WORKOS_API_BASE_URL: http://workos:4100
+  WORKOS_WEBHOOK_SECRET: whsec_flowfokus_local_only
+  RAILS_DEVELOPMENT_HOSTS: server
+  WORKER_SECRET: local-docker-worker-secret-not-for-production
+  PIDFILE: /tmp/flowfokus-server.pid
+
 services:
   workos:
     container_name: flowfokus-workos
@@ -28,21 +45,7 @@ services:
       dockerfile: Dockerfile.dev
     image: flowfokus-server:development
     init: true
-    environment:
-      RAILS_ENV: development
-      DATABASE_URL: postgres://flowfokus:flowfokus@db:5432/flowfokus_development
-      SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
-      FLOWFOKUS_DEMO_MODE: "${FLOWFOKUS_DEMO_MODE:-false}"
-      FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
-      WORKOS_CLIENT_ID: client_flowfokus_local
-      WORKOS_ISSUER: http://localhost:4100/user_management/client_flowfokus_local
-      WORKOS_JWKS_URL: http://workos:4100/sso/jwks/client_flowfokus_local
-      WORKOS_API_KEY: sk_test_default
-      WORKOS_API_BASE_URL: http://workos:4100
-      WORKOS_WEBHOOK_SECRET: whsec_flowfokus_local_only
-      RAILS_DEVELOPMENT_HOSTS: server
-      WORKER_SECRET: local-docker-worker-secret-not-for-production
-      PIDFILE: /tmp/flowfokus-server.pid
+    environment: *server-environment
     volumes:
       - ./apps/server:/app
     ports:
@@ -52,6 +55,25 @@ services:
         condition: service_healthy
       workos:
         condition: service_healthy
+
+  # Retries lost or failed WorkOS events and reconciles gyms every six hours.
+  jobs:
+    container_name: flowfokus-jobs
+    image: flowfokus-server:development
+    init: true
+    command: ["bin/rails", "workos:recover:watch"]
+    environment:
+      <<: *server-environment
+      PIDFILE: /tmp/flowfokus-jobs.pid
+    volumes:
+      - ./apps/server:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      workos:
+        condition: service_healthy
+      server:
+        condition: service_started
 
   portal:
     container_name: flowfokus-portal

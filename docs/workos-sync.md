@@ -126,10 +126,28 @@ that gym unchanged. It preserves records that newer webhook processing already
 updated. Commands exit with a nonzero status on failure.
 
 The default Active Job adapter runs jobs in the Rails process. A restart can
-lose queued jobs, but the saved events remain. Run the retry command to recover
-them. This milestone provides explicit recovery; automatic retry scheduling or
-a durable job queue is still needed before production operation. Keep the
-ledger: it also preserves deletion markers for identities never stored locally.
+lose queued jobs, but the saved events remain. Keep the ledger: it also
+preserves deletion markers for identities never stored locally.
+
+### Automatic recovery
+
+`bin/rails workos:recover:watch` runs a recovery pass every `INTERVAL` seconds
+(default 60). Compose runs it as the `flowfokus-jobs` container. Each pass:
+
+1. Processes pending events older than five minutes, whose job was lost.
+2. Retries failed events after a backoff of 2^attempts minutes, at most one
+   hour. After 20 attempts an event waits for a person to run the retry command.
+3. Reconciles each linked gym not fully synced for `RECONCILE_HOURS` (default 6;
+   `0` turns it off). This repairs webhooks that never arrived.
+
+The schedule is stored in the database, so restarts lose nothing. Sync is
+idempotent, so two runners overlapping is safe. `bin/rails workos:recover` runs
+one pass and prints a summary.
+
+```sh
+docker compose logs -f jobs
+docker compose exec -T server bin/rails workos:recover
+```
 
 ## Verify locally
 
@@ -158,9 +176,9 @@ required revocation delay must be verified and agreed before release.
 Production requires `WORKOS_VERIFIED=true`, a real signing secret, and a real
 API key. The sync client refuses a production API origin other than
 `https://api.workos.com`. Never use the local fake credentials in production.
-Real WorkOS integration, automatic recovery, and cloud deployment remain
-unverified. Invitation screens, profile forms, password resets, and member
-linking are separate work.
+Real WorkOS integration and cloud deployment remain unverified. Run the jobs
+process next to the API in production. Profile forms and password resets stay
+with WorkOS AuthKit.
 
 References: [WorkOS data syncing](https://workos.com/docs/events/data-syncing)
 and [WorkOS Emulate 0.16.0](https://github.com/workos/emulate/tree/v0.16.0).

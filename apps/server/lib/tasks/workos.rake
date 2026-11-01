@@ -22,6 +22,40 @@ namespace :workos do
     abort "#{failures} gym(s) failed to reconcile." if failures.positive?
   end
 
+  desc "Run one recovery pass: retry due events, then reconcile gyms not synced for RECONCILE_HOURS (default 6, 0 turns it off)."
+  task recover: :environment do
+    puts WorkosSyncRecovery.new(reconcile_after: workos_reconcile_after).run_once.to_json
+  end
+
+  namespace :recover do
+    desc "Run recovery passes every INTERVAL seconds (default 60) until stopped. For a long-running jobs process."
+    task watch: :environment do
+      interval = Integer(ENV.fetch("INTERVAL", "60"))
+      abort "INTERVAL must be at least 10 seconds." if interval < 10
+      stopping = false
+      %w[INT TERM].each { |signal| trap(signal) { stopping = true } }
+      $stdout.sync = true
+      puts "WorkOS recovery: every #{interval}s."
+      until stopping
+        begin
+          result = WorkosSyncRecovery.new(reconcile_after: workos_reconcile_after).run_once
+          puts "#{Time.current.iso8601} #{result.to_json}" if result.values.any?(&:present?)
+        rescue StandardError => error
+          puts "#{Time.current.iso8601} recovery failed: #{error.class}: #{error.message}"
+        ensure
+          ActiveRecord::Base.connection_handler.clear_active_connections!
+        end
+        interval.times { break if stopping; sleep 1 }
+      end
+      puts "WorkOS recovery stopped."
+    end
+  end
+
+  def workos_reconcile_after
+    hours = Float(ENV.fetch("RECONCILE_HOURS", "6"))
+    hours.positive? ? hours.hours : nil
+  end
+
   namespace :events do
     desc "Show WorkOS event counts and the events that need attention."
     task status: :environment do

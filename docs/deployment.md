@@ -44,6 +44,7 @@ The full tag promotion, registry publication, preview, and approval-gated deploy
 3. Back up the target database with `pg_dump`. Keep the backup off the server.
 4. Run `bin/rails db:migrate` in the API image as a separate release step.
 5. Start the image through the hosting platform. The Dockerfile defines the server command.
+   Start a second process from the same image with `bin/rails workos:recover:watch` and the same settings. It retries lost or failed WorkOS events and reconciles gyms. See [Automatic recovery](workos-sync.md#automatic-recovery).
 6. Check `/up`, `/ready`, and the public organization endpoint with `Flowfokus-Organization: <slug>`.
 
 Configure a loopback binding and TLS reverse proxy on the VPS. Permit only Cloudflare to reach the VPS. The process never migrates on boot. Do not seed demo records in production. Hosting configuration waits for Sprint 2; Compose is local only.
