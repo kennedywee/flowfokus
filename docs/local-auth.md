@@ -132,10 +132,27 @@ emulator through localhost or an allowed development host on port 4100.
 The token issuer stays fixed at
 `http://localhost:4100/user_management/client_flowfokus_local`.
 
+## Member sign-in on the gym site
+
+The gym site signs members in through the same emulator. Each gym host has its
+own callback, for example `http://chainsaw.localhost:4002/callback`, and its own
+host-only cookie. The emulator allows `*.localhost` callbacks.
+
+1. In the portal, open the member **Mei Lim** and select **Create link code**.
+   The code shows once. It works once and expires after seven days.
+2. Open `http://chainsaw.localhost:4002/sign-in` and sign in as
+   `member@example.com` with password `local-password`. This user has no staff
+   membership.
+3. Enter the code. The account page then shows the membership, rights, visits,
+   and purchases that the desk recorded.
+4. **Sign out** ends the session on this gym host only.
+
+Rails imports a member's WorkOS user on first use, because reconciliation imports
+staff only. A matching email never links a member: only the code does.
+
 ## Scope
 
-This milestone covers staff authentication. Gym member sign-in remains deferred.
-Seeded gym members do not need WorkOS identities unless they must sign in.
+This milestone covers staff and member authentication against the emulator.
 
 The emulator does not prove compatibility with the live WorkOS service. Verify
 AuthKit, refresh, sign-out, organization switching, and token verification against

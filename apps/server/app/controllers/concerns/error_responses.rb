@@ -52,6 +52,12 @@ module ErrorResponses
     rescue_from Fulfillment::NotDelivered do |error|
       render_error :unprocessable_content, "sale_not_delivered", error.message
     end
+    rescue_from MemberLinkCode::Invalid do |error|
+      render_error :unprocessable_content, "link_code_invalid", error.message
+    end
+    rescue_from MemberLinkCode::AlreadyLinked do |error|
+      render_error :unprocessable_content, "member_already_linked", error.message
+    end
     rescue_from Team::Refused do |error|
       render_error :unprocessable_content, "staff_change_refused", error.message
     end

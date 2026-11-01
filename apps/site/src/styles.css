@@ -707,3 +707,89 @@ a:hover {
   font-size: var(--step--1);
   color: var(--ink-3);
 }
+
+/* Member account */
+.account {
+  padding: clamp(var(--space-6), 6vw, 4rem) 0;
+}
+.account .wrap {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 44rem;
+}
+.account h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}
+.account h2 {
+  margin-top: var(--space-4);
+  font-size: var(--step-2);
+}
+.account__status {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+}
+.account__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.account__list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius-control);
+  background: var(--plate);
+}
+.account__list time {
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  white-space: nowrap;
+}
+@media (max-width: 539.98px) {
+  .account__list li {
+    grid-template-columns: auto 1fr;
+  }
+  .account__list time {
+    grid-column: 2;
+  }
+}
+.account__link {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 22rem;
+}
+.account__link label {
+  font-weight: 600;
+}
+.account__link .input {
+  min-height: 2.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--edge-strong);
+  border-radius: var(--radius-control);
+  background: var(--plate);
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font-data);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.account__error {
+  color: var(--denied-ink);
+  font-size: var(--step--1);
+}
+.account__signout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--edge);
+}

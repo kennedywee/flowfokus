@@ -130,6 +130,14 @@ class Sale < ApplicationRecord
   def fulfill!(actor:, at: Time.current, early_reason: nil) = Fulfillment.deliver!(line_item, actor:, at:, early_reason:)
   def revoke!(**) = (fulfillment || raise(Fulfillment::NotDelivered)).revoke!(**)
 
+  # What a member may see about their own purchase.
+  def as_member_api
+    {
+      id:, product_name: line_item.product_name, price_label: line_item.price_label, currency:,
+      total_minor:, paid_minor:, balance_minor:, refunded_minor:, fulfilled: fulfilled?, purchased_at: api_time(purchased_at)
+    }
+  end
+
   def as_api
     {
       id:,

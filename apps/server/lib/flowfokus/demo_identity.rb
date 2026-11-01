@@ -24,7 +24,7 @@ module Flowfokus
     ORGANIZATION_WORKOS_ID = "org_demo_chainsaw".freeze
 
     PERMISSIONS = %w[
-      members:read members:create
+      members:read members:create members:link
       products:read products:create products:update
       purchases:read purchases:create purchases:fulfill purchases:fulfill_unpaid
       payments:create purchases:refund purchases:void memberships:revoke

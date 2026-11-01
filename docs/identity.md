@@ -52,6 +52,7 @@ Columns: `organization_id`, `user_id` (nullable), `name`, `email`.
 
 - Staff can create a member without a login.
 - Link a member to a user only after verified ownership. A matching email is not enough.
+- Ownership is proven with a one-time link code. Staff with `members:link` create it for one member. The person signs in on the gym site and enters it. Rails stores only an HMAC digest. A code works once, expires after seven days, and a new code replaces older open ones. One user links to at most one member per organization. Staff can unlink; the record and its history stay.
 - Creating a member never creates a WorkOS membership.
 
 ## Staff portal and member area

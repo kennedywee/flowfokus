@@ -11,7 +11,7 @@ web
 - **Front-desk staff** (confirmed). They work at a gym's front desk on a laptop or tablet. They create members, sell memberships, record cash or bank-transfer payments, deliver access, and check members in. A customer often waits in front of them, so tasks must be quick and errors must be clear.
 - **Gym owners and managers** (confirmed). They use the same staff portal. They review members, sales that still have a balance, and sales that wait for fulfillment. They have more time but need accurate facts.
 - **The public** (from docs). They visit a gym's site at `<slug>.flowfokus.com` to see the gym's locations and membership offers.
-- **Members** (from docs, deferred). The signed-in member area on the gym site is not available in Sprint 1.
+- **Members** (from docs). They sign in on their gym's site, link their sign-in with a code from the front desk, and see their membership, visits left, and payments.
 
 ## Product Purpose
 
@@ -41,7 +41,7 @@ Sprint 1 limits (implementation limits, not product policy):
 - Local demo sign-in is opt-in, local development only, and uses one fixed seeded actor (Demo Owner, Chainsaw). Production refuses it.
 - WorkOS sign-in is not integrated yet. Production shows sign-in as unavailable and protected actions fail closed.
 
-Deferred: native mobile, recurring billing, classes, reservations, refunds, revocation, overrides, member sign-in, online purchase.
+Deferred: native mobile, recurring billing, classes, reservations, online purchase.
 
 Rails owns all business rules. The web apps only help users fill forms and show results.
 

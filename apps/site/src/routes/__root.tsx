@@ -1,21 +1,24 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import { LogIn } from "lucide-react";
+import { LogIn, UserRound } from "lucide-react";
 import legendFont from "@fontsource/barlow-semi-condensed/600.css?url";
-import { getSitePage } from "../lib/site.functions";
+import { getSession, getSitePage } from "../lib/site.functions";
 import type { SitePage } from "../server/site";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
-  loader: () => getSitePage(),
-  head: ({ loaderData }) => ({
+  loader: async () => {
+    const [page, session] = await Promise.all([getSitePage(), getSession()]);
+    return { page, session };
+  },
+  head: ({ loaderData: data }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#eef0f2" },
-      { title: loaderData?.kind === "gym" ? loaderData.organization.name : "Flowfokus gym site" },
-      ...(loaderData?.kind === "gym" ? [] : [{ name: "robots", content: "noindex" }]),
+      { title: data?.page.kind === "gym" ? data.page.organization.name : "Flowfokus gym site" },
+      ...(data?.page.kind === "gym" ? [] : [{ name: "robots", content: "noindex" }]),
     ],
     links: [
       { rel: "stylesheet", href: legendFont },
@@ -27,11 +30,11 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  const page = Route.useLoaderData();
+  const { page, session } = Route.useLoaderData();
   return (
     <RootDocument>
       {page.kind === "gym" ? (
-        <GymFrame name={page.organization.name}>
+        <GymFrame name={page.organization.name} signedIn={session.person !== null}>
           <Outlet />
         </GymFrame>
       ) : (
@@ -55,7 +58,7 @@ function RootDocument({ children }: { children: ReactNode }) {
   );
 }
 
-function GymFrame({ name, children }: { name: string; children: ReactNode }) {
+function GymFrame({ name, signedIn, children }: { name: string; signedIn: boolean; children: ReactNode }) {
   return (
     <div className="site">
       <a className="skip-link" href="#main">
@@ -73,10 +76,17 @@ function GymFrame({ name, children }: { name: string; children: ReactNode }) {
             <Link to="/" hash="locations">
               Locations
             </Link>
-            <Link to="/sign-in">
-              <LogIn aria-hidden="true" />
-              Member sign-in
-            </Link>
+            {signedIn ? (
+              <Link to="/account">
+                <UserRound aria-hidden="true" />
+                Your account
+              </Link>
+            ) : (
+              <Link to="/sign-in">
+                <LogIn aria-hidden="true" />
+                Member sign-in
+              </Link>
+            )}
           </nav>
         </div>
       </header>

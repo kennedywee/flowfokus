@@ -30,6 +30,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | Permission | Allows |
 | --- | --- |
 | `members:read`, `members:create` | List, view, and add members |
+| `members:link` | Create a member's one-time link code, and unlink a sign-in |
 | `products:read` | List offers and prices |
 | `products:create` | Add an offer with its benefits |
 | `products:update` | Edit an offer, add prices, change a price label or sale status, archive a price |

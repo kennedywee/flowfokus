@@ -8,8 +8,9 @@ Staff development uses WorkOS Emulate in Docker with fake users and fixed IDs.
 See [Local staff authentication](local-auth.md) for setup and verification.
 Plain HTTP development uses the encrypted HttpOnly `hf_session` cookie; HTTPS
 uses `__Host-hf_session`. Both are host-only.
-The flows below describe the target integration. Member sign-in, live WorkOS
-sync, and production deployment still need separate verification.
+The flows below describe the target integration. Staff and member sign-in run
+locally against the emulator. Live WorkOS and production deployment still need
+separate verification.
 
 ## Hosts
 
@@ -256,7 +257,7 @@ Flowfokus-Worker-Secret: <Worker secret>
 
 1. The Site Worker sends the slug from its host. Rails finds the organization.
 2. Rails finds the `Member` that belongs to both the user and that organization.
-3. If there is no such member, the site starts the linking or sign-up flow. Linking requires verified ownership. See [Identity](identity.md#member-customer).
+3. If there is no such member, Rails returns `403 member_not_linked`. The site asks for a link code. Staff create the code for one member record and give it to that person. `POST /member/link` with the code links the record to the signed-in user. See [Identity](identity.md#member-customer).
 
 ## One person, two roles
 

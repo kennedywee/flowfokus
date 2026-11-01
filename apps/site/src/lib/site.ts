@@ -4,7 +4,12 @@ const rootRoute = getRouteApi("__root__");
 
 /** The gym for this host. Child routes render only when the root found one. */
 export function useGym() {
-  const page = rootRoute.useLoaderData();
+  const { page } = rootRoute.useLoaderData();
   if (page.kind !== "gym") throw new Error("Gym is not loaded");
   return page;
+}
+
+/** Whether member sign-in is on here, and who is signed in. */
+export function useSession() {
+  return rootRoute.useLoaderData().session;
 }

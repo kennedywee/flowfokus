@@ -40,6 +40,13 @@ users:
     last_name: Manager
     password: local-password
     email_verified: true
+  # A gym member, not staff. Links to a member record with a code from the desk.
+  - id: user_demo_member
+    email: member@example.com
+    first_name: Mei
+    last_name: Lim
+    password: local-password
+    email_verified: true
 
 organizations:
   - id: org_demo_chainsaw
@@ -73,6 +80,7 @@ roles:
     permissions:
       - members:read
       - members:create
+      - members:link
       - products:read
       - products:create
       - products:update
@@ -93,6 +101,7 @@ roles:
     permissions:
       - members:read
       - members:create
+      - members:link
       - products:read
       - purchases:read
       - purchases:create
@@ -115,6 +124,8 @@ permissions:
     name: Read members
   - slug: members:create
     name: Create members
+  - slug: members:link
+    name: Give members a sign-in link code, and unlink them
   - slug: products:read
     name: Read offers
   - slug: products:create

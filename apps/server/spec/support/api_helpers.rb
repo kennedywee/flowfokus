@@ -77,8 +77,6 @@ RSpec.configure do |config|
     request_specs = Rails.root.glob("spec/requests/**/*_spec.rb").map(&:to_s)
     ran_all = (request_specs - RSpec.configuration.files_to_run.map { |file| File.expand_path(file) }).empty?
     skipped = ContractCoverage.missing_success
-    # /member/profile has no success path until WorkOS member sessions ship.
-    skipped.reject! { |method, template, _| method == "GET" && template == "/member/profile" }
     if ran_all && RSpec.configuration.filter_manager.inclusions.empty? && skipped.any?
       raise "OpenAPI success responses without a checked spec response:\n" + skipped.map { |entry| "  #{entry.join(' ')}" }.join("\n")
     end

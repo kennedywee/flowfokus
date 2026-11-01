@@ -75,6 +75,10 @@ class CheckIn < ApplicationRecord
     end
   end
 
+  def as_member_api
+    { id:, location_name: location.name, result:, denial_reason:, checked_in_at: api_time(checked_in_at) }
+  end
+
   def as_api
     {
       id:, member: member.as_summary_api, location_id:, result:, denial_reason:,

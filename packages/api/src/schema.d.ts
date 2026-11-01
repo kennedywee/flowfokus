@@ -318,6 +318,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/members/{id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a one-time code that links this member to a sign-in. Needs members:link.
+         * @description The plain code is returned once. Give it to the member. A new code replaces any
+         *     open code for the member. A linked member returns 422 `member_already_linked`.
+         */
+        post: operations["createStaffMemberLinkCode"];
+        /**
+         * Remove the member's link to a sign-in. Needs members:link.
+         * @description The member record and its history stay. Open codes expire.
+         */
+        delete: operations["unlinkStaffMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/products": {
         parameters: {
             query?: never;
@@ -609,13 +634,57 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * The signed-in member. Not available until WorkOS verification ships.
-         * @description Always fails closed in Sprint 1. No token gives 401. The demo token gives 403
-         *     because demo actors are staff only. Any other token gives 503 or 401.
+         * The signed-in member.
+         * @description Needs a verified WorkOS user token and a member of this organization linked
+         *     to that user. An unlinked user gets 403 `member_not_linked`. The demo token
+         *     gets 403, because demo actors are staff only.
          */
         get: operations["getMemberProfile"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/account": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The signed-in member's membership, rights, visits, and purchases.
+         * @description Staff permissions never apply here. An unlinked user gets 403 `member_not_linked`.
+         */
+        get: operations["getMemberAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link the signed-in user to a member record with a code from the front desk.
+         * @description The code is single use and expires after seven days. A wrong, used, or expired code
+         *     returns 422 `link_code_invalid`. A user already linked here, or a member already
+         *     linked to someone else, returns 422 `member_already_linked`. Limited to 10 tries
+         *     per 10 minutes per client IP.
+         */
+        post: operations["linkMemberAccount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -669,13 +738,14 @@ export interface components {
          *     - `idempotency_key_reused` (409)
          *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
          *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
-         *       `staff_change_refused`, `workos_rejected` (422)
+         *       `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked` (422)
+         *     - `member_not_linked` (403)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -748,7 +818,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage" | "staff:manage";
+        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -820,6 +890,8 @@ export interface components {
             /** @description The period that covers now, if any. */
             current_period: components["schemas"]["MembershipPeriod"] | null;
             renewal: components["schemas"]["RenewalTerms"] | null;
+            /** @description The email of the sign-in linked to this member, if any. */
+            linked_email: string | null;
             /** @description Rights that are active now or start later. Expired rights are left out. */
             entitlements: components["schemas"]["Entitlement"][];
         };
@@ -1225,6 +1297,65 @@ export interface components {
         };
         TeamResponse: {
             data: components["schemas"]["Team"];
+        };
+        LinkCodeInput: {
+            /** @description The code from the front desk. Dashes, spaces, and case are ignored. */
+            code: string;
+        };
+        MemberLinkCode: {
+            /** Format: uuid */
+            member_id: string;
+            /** @example K7Q2-M9XD-4HPR */
+            code: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        MemberLinkCodeResponse: {
+            data: components["schemas"]["MemberLinkCode"];
+        };
+        MemberDetailResponse: {
+            data: components["schemas"]["MemberDetail"];
+        };
+        MemberCheckIn: {
+            /** Format: uuid */
+            id: string;
+            location_name: string;
+            result: components["schemas"]["CheckInResult"];
+            denial_reason: components["schemas"]["DenialReason"] | null;
+            /** Format: date-time */
+            checked_in_at: string;
+        };
+        MemberSale: {
+            /** Format: uuid */
+            id: string;
+            product_name: string;
+            price_label: string;
+            currency: string;
+            total_minor: number;
+            paid_minor: number;
+            balance_minor: number;
+            refunded_minor: number;
+            fulfilled: boolean;
+            /** Format: date-time */
+            purchased_at: string;
+        };
+        MemberAccount: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            email: string;
+            /** Format: date-time */
+            created_at: string;
+            membership: components["schemas"]["Membership"] | null;
+            current_period: components["schemas"]["MembershipPeriod"] | null;
+            entitlements: components["schemas"]["Entitlement"][];
+            /** @description The 20 latest visits, newest first. */
+            check_ins: components["schemas"]["MemberCheckIn"][];
+            /** @description The 20 latest purchases that are not void, newest first. */
+            sales: components["schemas"]["MemberSale"][];
+        };
+        MemberAccountResponse: {
+            data: components["schemas"]["MemberAccount"];
         };
     };
     responses: {
@@ -1854,6 +1985,62 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
+    createStaffMemberLinkCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberLinkCodeResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    unlinkStaffMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
     listStaffProducts: {
         parameters: {
             query?: never;
@@ -2425,6 +2612,62 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getMemberAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberAccountResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    linkMemberAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCodeInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberAccountResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            429: components["responses"]["TooManyRequests"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000003) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_01_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -120,6 +120,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000003) do
     t.datetime "updated_at", null: false
     t.index ["id", "organization_id"], name: "index_locations_on_id_and_organization_id", unique: true
     t.index ["organization_id", "name"], name: "index_locations_on_organization_id_and_name", unique: true
+  end
+
+  create_table "member_link_codes", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "member_id", null: false
+    t.uuid "created_by_user_id", null: false
+    t.string "code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "used_at"
+    t.uuid "used_by_user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code_digest"], name: "index_member_link_codes_on_code_digest", unique: true
+    t.index ["created_by_user_id"], name: "index_member_link_codes_on_created_by_user_id"
+    t.index ["organization_id", "member_id"], name: "index_member_link_codes_on_organization_id_and_member_id"
+    t.index ["used_by_user_id"], name: "index_member_link_codes_on_used_by_user_id"
+    t.check_constraint "(used_at IS NULL) = (used_by_user_id IS NULL)", name: "member_link_codes_use_shape"
   end
 
   create_table "members", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -396,6 +413,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000003) do
   add_foreign_key "fulfillments", "users", column: "fulfilled_by_user_id"
   add_foreign_key "fulfillments", "users", column: "revoked_by_user_id"
   add_foreign_key "locations", "organizations"
+  add_foreign_key "member_link_codes", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "member_link_codes", "organizations"
+  add_foreign_key "member_link_codes", "users", column: "created_by_user_id"
+  add_foreign_key "member_link_codes", "users", column: "used_by_user_id"
   add_foreign_key "members", "organizations"
   add_foreign_key "members", "users"
   add_foreign_key "membership_periods", "fulfillments", column: ["fulfillment_id", "organization_id"], primary_key: ["id", "organization_id"]

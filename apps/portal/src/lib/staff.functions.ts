@@ -348,3 +348,17 @@ export const removeStaff = createServerFn({ method: "POST" })
     async ({ data }): Promise<Result<Schemas["Team"]>> =>
       callStaff(data.slug, (api) => api.DELETE("/staff/team/members/{id}", { params: { path: { id: data.id } } })),
   );
+
+export const createLinkCode = createServerFn({ method: "POST" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["MemberLinkCode"]>> =>
+      callStaff(data.slug, (api) => api.POST("/staff/members/{id}/link", { params: { path: { id: data.id } } })),
+  );
+
+export const unlinkMember = createServerFn({ method: "POST" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["MemberDetail"]>> =>
+      callStaff(data.slug, (api) => api.DELETE("/staff/members/{id}/link", { params: { path: { id: data.id } } })),
+  );

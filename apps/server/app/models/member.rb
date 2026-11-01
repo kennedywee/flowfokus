@@ -7,6 +7,7 @@ class Member < ApplicationRecord
   has_many :sales, dependent: :restrict_with_exception
   has_many :entitlements, dependent: :restrict_with_exception
   has_many :check_ins, dependent: :restrict_with_exception
+  has_many :link_codes, class_name: "MemberLinkCode", dependent: :restrict_with_exception
 
   normalizes :name, with: ->(name) { name.squish }
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -44,8 +45,26 @@ class Member < ApplicationRecord
   def as_summary_api = { id:, name:, email: }
   def as_api = { id:, name:, email:, created_at: api_time(created_at) }
 
+  # Removes the link to a sign-in. The member record and its history stay.
+  def unlink!
+    transaction do
+      lock!
+      link_codes.open.update_all(expires_at: Time.current, updated_at: Time.current)
+      update!(user: nil)
+    end
+  end
+
+  # The member's own view: membership, rights, visits, and purchases.
+  def as_account_api(at: Time.current)
+    as_detail_api(at:).except(:renewal, :linked_email).merge(
+      check_ins: check_ins.newest_first.limit(20).map { |check_in| check_in.as_member_api },
+      sales: sales.open.newest_first.includes(:line_item).limit(20).map(&:as_member_api)
+    )
+  end
+
   def as_detail_api(at: Time.current)
     as_api.merge(
+      linked_email: user&.email,
       membership: membership&.as_api,
       current_period: current_period(at:)&.as_api,
       renewal: renewal_terms(at:),

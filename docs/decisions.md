@@ -63,7 +63,7 @@ Not yet confirmed.
 | Staff locations | Can staff access be limited to some locations? WorkOS roles cover the whole organization. |
 | Permission set | Which permissions does each workflow need? Which default roles ship? |
 | Stale sessions | How fast must role changes and revoked access take effect? |
-| Member linking | Which verification flow links a member to a user? Self-service or staff invite? |
+| Member linking | Which verification flow links a member to a user? Self-service or staff invite? The current implementation uses a staff-issued one-time code. See [Identity](identity.md#member-customer). |
 | Access overrides | Can staff grant access without an entitlement? Which permission controls it? |
 
 ### Monorepo and release

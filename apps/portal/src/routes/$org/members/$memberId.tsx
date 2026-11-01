@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { RefreshCw, ShoppingBag } from "lucide-react";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { useToast } from "../../../components/Toast";
@@ -19,11 +19,13 @@ import {
 import { DENIAL, failureMessage, formatDate, formatDuration, formatMoney, formatUsage, formatWhen } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
-import { getMemberRecord, renewMembership } from "../../../lib/staff.functions";
+import { createLinkCode, getMemberRecord, renewMembership, unlinkMember } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+const sendLinkCode = (input: Parameters<typeof createLinkCode>[0]["data"]) => createLinkCode({ data: input });
+const sendUnlink = (input: Parameters<typeof unlinkMember>[0]["data"]) => unlinkMember({ data: input });
 const sendRenewal = (input: Parameters<typeof renewMembership>[0]["data"]) => renewMembership({ data: input });
 
 export const Route = createFileRoute("/$org/members/$memberId")({
@@ -188,6 +190,12 @@ function Details({ member }: { member: Schemas["MemberDetail"] }) {
           </dd>
         </div>
         <div>
+          <dt>Gym site account</dt>
+          <dd>
+            <AccountLink member={member} />
+          </dd>
+        </div>
+        <div>
           <dt>Membership started</dt>
           <dd>
             {member.membership ? (
@@ -201,6 +209,92 @@ function Details({ member }: { member: Schemas["MemberDetail"] }) {
         </div>
       </dl>
     </Plate>
+  );
+}
+
+/**
+ * The member's link to a gym site sign-in. Staff give a one-time code; the
+ * member enters it after signing in. Rails shows the code once.
+ */
+function AccountLink({ member }: { member: Schemas["MemberDetail"] }) {
+  const organization = useOrganization();
+  const router = useRouter();
+  const toast = useToast();
+  const can = useCan();
+  const issue = useAction(sendLinkCode);
+  const unlink = useAction(sendUnlink);
+  const [code, setCode] = useState<Schemas["MemberLinkCode"] | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const allowed = can("members:link");
+
+  if (member.linked_email) {
+    return (
+      <span className="member-link">
+        Linked to {member.linked_email}
+        {allowed ? (
+          <>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setConfirming(true)}>
+              Unlink
+            </Button>
+            <ConfirmDialog
+              open={confirming}
+              tone="critical"
+              title={`Unlink ${member.name}'s sign-in?`}
+              confirmLabel="Unlink"
+              pendingLabel="Unlinking…"
+              pending={unlink.pending}
+              onConfirm={async () => {
+                const result = await unlink.run({ slug: organization.slug, id: member.id });
+                setConfirming(false);
+                if (result.ok) {
+                  toast.show({ tone: "success", title: "Sign-in unlinked", body: "The member record and its history stay." });
+                  void router.invalidate();
+                } else {
+                  toast.show({ tone: "error", title: "The sign-in was not unlinked", body: failureMessage(result.error) });
+                }
+              }}
+              onCancel={() => setConfirming(false)}
+            >
+              <p>They can no longer see this membership on the gym site until they link again with a new code.</p>
+            </ConfirmDialog>
+          </>
+        ) : null}
+      </span>
+    );
+  }
+
+  if (code) {
+    return (
+      <span className="member-link">
+        <span>
+          Give this code to {member.name}: <strong className="member-link__code">{code.code}</strong>
+        </span>
+        <span className="muted">
+          Works once, until {formatDate(code.expires_at, organization.timezone)}. They sign in on the gym site and enter it.
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="member-link">
+      <span className="muted">Not linked</span>
+      {allowed ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={issue.pending}
+          onClick={async () => {
+            const result = await issue.run({ slug: organization.slug, id: member.id });
+            if (result.ok) setCode(result.data);
+            else toast.show({ tone: "error", title: "No code was created", body: failureMessage(result.error) });
+          }}
+        >
+          Create link code
+        </Button>
+      ) : null}
+    </span>
   );
 }
 

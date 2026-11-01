@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     resource :overview, only: :show
     resources :members, only: %i[index show create] do
       resources :renewals, only: :create
+      resource :link, only: %i[create destroy], controller: "member_links"
     end
     resources :products, only: %i[index create update] do
       resources :prices, only: :create
@@ -43,5 +44,7 @@ Rails.application.routes.draw do
 
   scope :member, module: :member_area, as: :member do
     resource :profile, only: :show
+    resource :account, only: :show
+    resource :link, only: :create
   end
 end

@@ -111,6 +111,9 @@ ActiveRecord::Base.transaction do
   seed_member.(chainsaw, "Aisyah Rahman", "aisyah@example.com")
   seed_member.(chainsaw, "Ben Tan", "ben@example.com")
   seed_member.(chainsaw, "Chloe Lim", "chloe@example.com")
+  # Not linked to a sign-in. Staff give Mei a link code; she signs in on the
+  # gym site as member@example.com and enters it.
+  seed_member.(chainsaw, "Mei Lim", "member@example.com")
 
   # Ironworks: a second tenant for isolation checks. The demo token has no access.
   ironworks = seed_organization.(slug: "ironworks", workos_id: "org_demo_ironworks",

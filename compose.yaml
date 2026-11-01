@@ -9,7 +9,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
+      # Gym sites sign members in on <slug>.localhost.
+      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1},*.localhost"
     volumes:
       - ./workos-emulate.config.yaml:/app/workos-emulate.config.yaml:ro
     ports:
@@ -96,13 +97,25 @@ services:
     environment:
       API_BASE_URL: http://server:4000
       WORKER_SECRET: local-docker-worker-secret-not-for-production
+      WORKOS_CLIENT_ID: client_flowfokus_local
+      WORKOS_API_KEY: sk_test_default
+      # Any gym callback. Each request signs in on its own host.
+      WORKOS_REDIRECT_URI: http://chainsaw.localhost:4002/callback
+      WORKOS_COOKIE_PASSWORD: local-only-site-cookie-password-0123456789abcdef
+      WORKOS_API_HOSTNAME: workos
+      WORKOS_API_PORT: "4100"
+      WORKOS_API_HTTPS: "false"
+      WORKOS_BROWSER_URL: http://localhost:4100
     volumes:
       - ./apps/site/src:/app/apps/site/src
       - ./packages/api/src:/app/packages/api/src:ro
     ports:
       - "0.0.0.0:4002:4002"
     depends_on:
-      - server
+      server:
+        condition: service_started
+      workos:
+        condition: service_healthy
 
   db:
     container_name: flowfokus-db

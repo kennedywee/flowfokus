@@ -642,6 +642,69 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/members/{id}/link:
+    post:
+      tags: [staff]
+      operationId: createStaffMemberLinkCode
+      summary: Create a one-time code that links this member to a sign-in. Needs members:link.
+      description: |
+        The plain code is returned once. Give it to the member. A new code replaces any
+        open code for the member. A linked member returns 422 `member_already_linked`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberLinkCodeResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    delete:
+      tags: [staff]
+      operationId: unlinkStaffMember
+      summary: Remove the member's link to a sign-in. Needs members:link.
+      description: |
+        The member record and its history stay. Open codes expire.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/products:
     get:
       tags: [staff]
@@ -1292,10 +1355,11 @@ paths:
     get:
       tags: [member]
       operationId: getMemberProfile
-      summary: The signed-in member. Not available until WorkOS verification ships.
+      summary: The signed-in member.
       description: |
-        Always fails closed in Sprint 1. No token gives 401. The demo token gives 403
-        because demo actors are staff only. Any other token gives 503 or 401.
+        Needs a verified WorkOS user token and a member of this organization linked
+        to that user. An unlinked user gets 403 `member_not_linked`. The demo token
+        gets 403, because demo actors are staff only.
       security:
         - bearerAuth: []
           organizationHeader: []
@@ -1319,6 +1383,75 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/account:
+    get:
+      tags: [member]
+      operationId: getMemberAccount
+      summary: The signed-in member's membership, rights, visits, and purchases.
+      description: |
+        Staff permissions never apply here. An unlinked user gets 403 `member_not_linked`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAccountResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/link:
+    post:
+      tags: [member]
+      operationId: linkMemberAccount
+      summary: Link the signed-in user to a member record with a code from the front desk.
+      description: |
+        The code is single use and expires after seven days. A wrong, used, or expired code
+        returns 422 `link_code_invalid`. A user already linked here, or a member already
+        linked to someone else, returns 422 `member_already_linked`. Limited to 10 tries
+        per 10 minutes per client IP.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkCodeInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAccountResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
@@ -1504,7 +1637,8 @@ components:
         - `idempotency_key_reused` (409)
         - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
           `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
-          `staff_change_refused`, `workos_rejected` (422)
+          `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked` (422)
+        - `member_not_linked` (403)
         - `rate_limited` (429)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
@@ -1529,6 +1663,9 @@ components:
         - refund_exceeds_payment
         - staff_change_refused
         - workos_rejected
+        - link_code_invalid
+        - member_already_linked
+        - member_not_linked
         - rate_limited
         - internal_error
         - auth_not_configured
@@ -1677,6 +1814,7 @@ components:
       enum:
         - members:read
         - members:create
+        - members:link
         - products:read
         - products:create
         - products:update
@@ -1830,7 +1968,7 @@ components:
     MemberDetail:
       type: object
       additionalProperties: false
-      required: [id, name, email, created_at, membership, current_period, renewal, entitlements]
+      required: [id, name, email, created_at, linked_email, membership, current_period, renewal, entitlements]
       properties:
         id:
           type: string
@@ -1855,6 +1993,10 @@ components:
           allOf:
             - $ref: "#/components/schemas/RenewalTerms"
           nullable: true
+        linked_email:
+          type: string
+          nullable: true
+          description: The email of the sign-in linked to this member, if any.
         entitlements:
           type: array
           description: Rights that are active now or start later. Expired rights are left out.
@@ -2745,3 +2887,139 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Team"
+
+    LinkCodeInput:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 40
+          description: The code from the front desk. Dashes, spaces, and case are ignored.
+
+    MemberLinkCode:
+      type: object
+      additionalProperties: false
+      required: [member_id, code, expires_at]
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          example: K7Q2-M9XD-4HPR
+        expires_at:
+          type: string
+          format: date-time
+
+    MemberLinkCodeResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/MemberLinkCode"
+
+    MemberDetailResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/MemberDetail"
+
+    MemberCheckIn:
+      type: object
+      additionalProperties: false
+      required: [id, location_name, result, denial_reason, checked_in_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        location_name:
+          type: string
+        result:
+          $ref: "#/components/schemas/CheckInResult"
+        denial_reason:
+          allOf:
+            - $ref: "#/components/schemas/DenialReason"
+          nullable: true
+        checked_in_at:
+          type: string
+          format: date-time
+
+    MemberSale:
+      type: object
+      additionalProperties: false
+      required: [id, product_name, price_label, currency, total_minor, paid_minor, balance_minor, refunded_minor, fulfilled, purchased_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_name:
+          type: string
+        price_label:
+          type: string
+        currency:
+          type: string
+        total_minor:
+          type: integer
+        paid_minor:
+          type: integer
+        balance_minor:
+          type: integer
+        refunded_minor:
+          type: integer
+        fulfilled:
+          type: boolean
+        purchased_at:
+          type: string
+          format: date-time
+
+    MemberAccount:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, created_at, membership, current_period, entitlements, check_ins, sales]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        membership:
+          allOf:
+            - $ref: "#/components/schemas/Membership"
+          nullable: true
+        current_period:
+          allOf:
+            - $ref: "#/components/schemas/MembershipPeriod"
+          nullable: true
+        entitlements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Entitlement"
+        check_ins:
+          type: array
+          description: The 20 latest visits, newest first.
+          items:
+            $ref: "#/components/schemas/MemberCheckIn"
+        sales:
+          type: array
+          description: The 20 latest purchases that are not void, newest first.
+          items:
+            $ref: "#/components/schemas/MemberSale"
+
+    MemberAccountResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/MemberAccount"

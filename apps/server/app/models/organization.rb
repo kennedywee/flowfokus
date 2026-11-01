@@ -19,6 +19,7 @@ class Organization < ApplicationRecord
   has_many :membership_periods, dependent: :restrict_with_exception
   has_many :entitlements, dependent: :restrict_with_exception
   has_many :check_ins, dependent: :restrict_with_exception
+  has_many :member_link_codes, dependent: :restrict_with_exception
 
   scope :published, -> { where(published: true) }
   scope :linked_to_workos, -> { live.where.not(workos_id: nil) }
