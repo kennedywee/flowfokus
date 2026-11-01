@@ -66,3 +66,15 @@ See [WorkOS identity sync](workos-sync.md) for setup and recovery, and
 [Verification](verification.md) for the local evidence and release limits.
 Live WorkOS verification, automatic recovery scheduling, staff management
 screens, and member linking remain separate work.
+
+## Follow-up: first-release workflows
+
+Staff manage offers, prices, locations, settings, and the team. Sales support
+renewal at the agreed price, early delivery with a reason, refunds, voids, and
+revocation. Check-in supports a staff override. Members sign in on the gym
+site, link with a desk code, and see their account. Reports use real data.
+Workers prove the client IP with a shared secret. A jobs process recovers
+WorkOS sync automatically.
+
+See [Verification](verification.md#first-release-workflows--1-november-2026)
+for the evidence, limits, and what still needs credentials.

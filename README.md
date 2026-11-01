@@ -78,6 +78,7 @@ bun run check
 bun run smoke:auth
 bun run smoke:identity
 bun run smoke:session
+bun run smoke:workflows
 ```
 
 The smoke workflow creates records in the local database. Tests use a separate database.

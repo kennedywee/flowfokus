@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "bun@1.2.21",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "setup": "bash scripts/setup",
     "dev": "bash scripts/dev",
@@ -12,6 +15,7 @@
     "smoke": "node scripts/smoke.mjs",
     "smoke:auth": "node scripts/smoke-auth.mjs",
     "smoke:identity": "node scripts/smoke-identity-sync.mjs",
+    "smoke:workflows": "node scripts/smoke-workflows.mjs",
     "workos:webhook": "node scripts/configure-workos-webhook.mjs",
     "smoke:session": "bun run --cwd apps/portal smoke:session",
     "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",

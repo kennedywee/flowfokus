@@ -1,5 +1,59 @@
 # Verification
 
+## First-release workflows — 1 November 2026
+
+Local Docker stack with WorkOS Emulate. Nothing was pushed, tagged, or deployed.
+
+### Checks completed
+
+- `bash scripts/check-docker` passes: 315 Rails examples, OpenAPI coverage of
+  every success response, generated types, 107 portal tests, 56 site tests,
+  type checks, both Worker builds, and Worker artifacts.
+- `bun run contract:check` and `bun run test:tooling` pass.
+- `bun run smoke:workflows` passes twice in a row against Rails and the
+  emulator with real emulator tokens. It covers the catalog, early delivery,
+  payments, refunds, check-in denial and override, renewal at an archived
+  price, revocation, void, locations, settings, the team through WorkOS,
+  member linking, the member account, staff and member isolation, and the report.
+- `smoke:auth`, `smoke:identity`, and `smoke:session` still pass.
+- Browser checks, signed in through the emulator:
+  - Owner: add an offer with two benefits, add a price, take it off sale,
+    archive it, and edit the offer. The gym site showed the offer, then hid it.
+  - Renew a member, pay, and deliver. The new period starts where the last one ends.
+  - Deliver early with a required reason; refund within the payment; revoke
+    access; void an unpaid sale.
+  - Settings: add a location (duplicate names refused), change the time zone,
+    and unpublish the gym site (404), then publish it again.
+  - Team: invite, revoke, and change a role through WorkOS. The webhook that
+    followed changed nothing more.
+  - Let a denied member in with a reason. The history keeps both attempts.
+  - Reports show real weekly figures.
+  - Receptionist: no catalog actions, and the Team section names the missing permission.
+- Member, on `chainsaw.localhost:4002`: sign in as `member@example.com`, refuse a
+  wrong code, link with the desk code, see the membership, visits left, visit,
+  and payment, then sign out.
+- HTTP checks on the gym site: GET `/sign-out` gives 405, a cross-site sign-out
+  POST gives 403, PUT gives 405, unknown server functions give 404, and sign-in
+  on a reserved or unknown host gives 404. The site's browser bundle contains
+  no token code.
+- The jobs container processed a planted stuck WorkOS event within one pass.
+
+### Not verified
+
+- Layouts at 390 pixels for the new screens. The preview tab used for these
+  checks could not change its width.
+- Live WorkOS, Cloudflare Workers, the VPS, and GitHub-hosted CI. They still need
+  credentials.
+
+### Implementation limits
+
+Where `decisions.md` is still open, the build takes the narrowest rule and says
+so in the topic documents: partial refunds per payment that never change
+access, revocation of one delivery, voids only before delivery with no money
+kept, a staff-issued one-time link code, and a one-visit check-in override.
+Manual grants of new rights, organization creation, and the sample Inbox,
+Agents, Notifications, and Integrations screens are not built.
+
 ## Local WorkOS identity sync — 22 October 2026
 
 Opus implemented the Rails sync. Coordinator review and follow-up fixes covered
