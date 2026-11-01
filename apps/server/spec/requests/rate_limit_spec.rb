@@ -3,10 +3,7 @@ require "rails_helper"
 RSpec.describe "Public rate limit" do
   let(:secret) { "w" * 40 }
 
-  before do
-    chainsaw
-    ApplicationController::RATE_LIMIT_STORE.clear
-  end
+  before { chainsaw }
 
   around { |example| with_env("WORKER_SECRET" => secret) { example.run } }
 

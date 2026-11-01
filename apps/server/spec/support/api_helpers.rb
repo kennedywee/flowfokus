@@ -70,6 +70,8 @@ end
 
 RSpec.configure do |config|
   config.include ApiHelpers, type: :request
+  # Rate limit counters live in process memory. Each example starts at zero.
+  config.before(type: :request) { ApplicationController::RATE_LIMIT_STORE.clear }
 
   config.after(:suite) do
     request_specs = Rails.root.glob("spec/requests/**/*_spec.rb").map(&:to_s)
