@@ -18,7 +18,7 @@ status colors, and centered page column.
   fallback when no organization is selected and several memberships are available.
   The optional fixed demo actor opens Chainsaw directly. The chosen desk location is an HttpOnly cookie per organization. It
   sets the default location for check-in and new sales. Add location opens
-  Settings. Create organization is shown but does nothing yet.
+  Settings.
 - Overview: membership counts, recent visits, and check-in.
 - Members: search, create, and view member records.
 - Sales: list and create sales, record payments, and deliver access.
@@ -31,6 +31,13 @@ status colors, and centered page column.
   and locations, from Rails. Staff with `settings:manage` change them. The
   name comes from WorkOS. The currency is fixed.
 
+- Reports: weekly sales, payments, refunds, check-ins, and new members from
+  `/staff/report`, in the organization time zone. Period and metric filters, a
+  breakdown by location and payment method, and CSV export of the shown weeks.
+- Settings, Team: staff, pending invitations, and roles, through Rails and
+  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
+  access.
+
 `apps/portal/src/lib/staff.functions.ts` holds the server functions for these
 screens. They call Rails through the existing server boundary. The browser never
 holds an API token. Rails owns validation, tenant isolation, and business rules.
@@ -41,19 +48,15 @@ These actions persist in PostgreSQL, including during local demo development.
 - Inbox: filter, read, resolve, and reopen sample updates.
 - Agents: suggested prompts, prepared replies, and message drafts. No AI service
   is called and no message is sent.
-- Reports: weekly sales, payments, refunds, check-ins, and new members from
-  `/staff/report`, in the organization time zone. Period and metric filters, a
-  breakdown by location and payment method, and CSV export of the shown weeks.
-- Settings, Team: staff, pending invitations, and roles, through Rails and
-  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
-  access.
 - Settings, Notifications and Integrations: sample notification switches and
   integration states. Edits do not update Rails or contact external systems.
 - Changelog: static notes for the preview and portal layout.
 
 These screens display a Sample data label. Local edits reset when the screen
 unmounts. The sample fixtures live in `src/features/preview/data.ts` and the
-individual preview components.
+individual preview components. Real check-in, report, and settings views live
+in their domain folders. Shared filters live in `components/Filters.tsx`, CSV
+export in `lib/export.ts`, and feature layouts in `styles/features.css`.
 
 Existing `/<org>/soon?page=…` bookmarks redirect to the new routes.
 

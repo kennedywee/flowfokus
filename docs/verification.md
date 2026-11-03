@@ -292,3 +292,27 @@ The Vite CSS plugin reports a source-map warning. App builds pass; CSS debugging
 An additional Claude API review could not complete because the provider rate limit was reached. The coordinating agent reviewed the authentication boundary, tenant queries, payment and fulfillment transactions, check-in locking, and schema protections. The completed tests and browser checks are the release evidence; no successful independent final review is claimed.
 
 See [Deployment candidate](deployment.md) for runtime configuration, migration steps, and credentials required next sprint.
+
+## Interface simplification — 3 November 2026
+
+Removed instructional page/section subtitles, routine hints, the idle check-in
+panel, numbered sale cards, large overview tiles, and the sidebar promotion.
+Moved live check-in, reports, and settings views out of `features/preview`.
+Kept current endpoints, permissions, validation, action consequences, and
+real record metadata. The changelog remains a normal navigation link.
+
+Passed: 166 web tests, five tooling tests, type checks, design checks, OpenAPI
+type generation with no contract drift, both Worker builds/artifact checks,
+and the local WorkOS session refresh/revocation smoke check. The build still
+reports its existing non-blocking CSS source-map warning.
+
+Live read-only browser checks covered ten authenticated staff screens and four
+gym-site screens. They checked sale validation and dependent price choices,
+empty check-in state, dialog label references, light/dark desktop/mobile sale
+layout, no horizontal overflow in the inspected views, and no JavaScript errors.
+The shell check confirms that the promotion, unused shortcut hint, and inert
+account items are gone. No business records were changed by these browser checks.
+
+Backend specs and the full payment, delivery, and override flows were not rerun.
+No Rails code, database schema, API contract, or authentication rules changed.
+Nothing was pushed or deployed.

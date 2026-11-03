@@ -21,6 +21,35 @@ components, defaults, states, and good/bad uses. Source CSS and component APIs
 remain the authority for exact values and props. Do not copy token values into
 another theme configuration.
 
+## Simplicity standard
+
+Each screen has one task. Layout, field labels, and action names carry that task.
+Do not add a tagline, instructional subtitle, or routine helper paragraph.
+Fix grouping, order, or the control when a screen needs an explanation.
+
+Keep record facts and decision requirements: prices, terms, dates, locations,
+identity, permission limits, error recovery, and the consequences of payments,
+early access, refunds, and overrides. These are data and action feedback.
+Do not hide them to make a screen appear simpler.
+
+Use `PageHead` for a title and actions. Its optional `meta` slot holds record
+metadata, such as a sale date or program location. It has no description prop.
+Show dependent controls when their prerequisite is chosen. Keep labels and
+validation attached to the controls. Show check-in feedback after an attempt;
+do not fill the idle form with a description of where the result will appear.
+
+Prefer one implementation with one owner. Real views live in `features/check-ins`,
+`features/reports`, and `features/settings`. `features/preview` owns simulated
+features only. `components/Filters.tsx` owns selection filters; `lib/export.ts`
+owns CSV export. Keep fetching and mutations at their current request boundaries.
+Feature layout styles live in `styles/features.css`. No new service layer, UI
+framework, or dependency is needed. Do not show no-op controls or advertise
+keyboard shortcuts that are not implemented.
+
+A change should reduce effort for the user, the developer, and the next agent.
+Use concrete tests for behavior, and keep type checks and live workflow checks.
+Do not promise perfection from a build or a visual inspection alone.
+
 ## Proposed visual directions
 
 The current app design files describe the implementation, not a final visual

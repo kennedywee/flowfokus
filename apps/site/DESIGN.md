@@ -5,8 +5,9 @@ description: Light aluminum surfaces with graphite offer boards and clear access
 
 ## Overview
 
-The gym site serves public visitors and signed-in members. Preserve the existing
-light aluminum appearance. The gym name and offers come from Rails. The staff
+The gym site serves public visitors and signed-in members. Lead with the gym
+name, schedule, offers, and account actions. Cut taglines, helper paragraphs,
+and duplicate status panels. The current site uses light aluminum surfaces. The gym name and offers come from Rails. The staff
 portal has its own visual system. Read [the system guide](../../docs/design-system.md).
 
 ## Colors
@@ -29,7 +30,7 @@ benefit; it does not prove that the visitor currently holds that entitlement.
 Use Barlow Semi Condensed for headings (`--font-legend`), the system sans stack
 for body text (`--font-body`), and mono for data (`--font-data`). Body uses
 `--step-0` (0.9375rem). Use the existing `--step-*` scale and fluid heading rules.
-Keep prices and fixed terms legible together.
+Keep prices, fixed terms, and purchase methods together in the offer.
 
 ## Layout
 

@@ -5,9 +5,10 @@ description: Quiet operational UI with neutral surfaces and explicit state.
 
 ## Overview
 
-Mode: Operate. Staff serve a customer at the desk. Keep actions and facts easy
-to scan. Preserve the existing Paper-derived identity: black surfaces in dark
-mode, warm pale surfaces in light mode, hairline borders, and restrained color.
+Mode: Operate. Staff serve a customer at the desk. Each screen has one task.
+Use a title, clear controls, and direct actions. Cut taglines, routine helper
+text, and repeated labels. Keep facts and action consequences. The current
+palette has dark and light surfaces, thin borders, and restrained status color.
 The live source is `src/styles/tokens.css`, not the older gym-site style or a
 new shadcn preset. Read [the system guide](../../docs/design-system.md) first.
 
@@ -39,7 +40,8 @@ Do not use mono as decoration. Use `Money` and `Time` for domain values.
 
 ## Layout
 
-Use `PageHead`, `.stack`, and the existing `.grid-2` variants. Keep the page
+Use `PageHead`, `.stack`, and the existing `.grid-2` variants. `PageHead` has
+a title, optional factual `meta`, and actions; it has no instructional subtitle. Keep the page
 heading and its main action together. Use one primary action per decision group;
 use secondary or ghost buttons for alternatives. Keep table reading order on
 small screens, and preserve key facts in the existing phone summaries.
@@ -90,10 +92,10 @@ with no disabled, focus, or pending behavior.
 
 Existing blocks to compose before adding another abstraction:
 
-- `PageHead`: title, supporting text, and actions.
+- `PageHead`: title, optional record metadata, and actions.
 - `Plate`: named section with body and optional action/footer.
 - `SalesTable`: organization links, current sale state, money, mobile summary.
-- `CheckInPanel`: member/location choice and granted or denied response.
+- `CheckInPanel`: member/location choice and a response after an attempt.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
 
@@ -102,6 +104,9 @@ A data block's parent owns loading, empty and failure branches; presentational
 pieces do not each need their own request.
 
 ## Do's and Don'ts
+
+- Make grouping and actions clear before adding words. Avoid card stacks around a single form.
+- Keep real views in their domain folders and sample features in `features/preview`.
 
 - Use semantic tokens in screens. Change raw swatches only in the palette.
 - Reuse existing components before adding another variant.

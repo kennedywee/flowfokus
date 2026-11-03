@@ -31,19 +31,12 @@ Every right a member uses traces back to a purchase. Sale, payment, fulfillment,
 
 ## Capabilities and Constraints
 
-Sprint 1 limits (implementation limits, not product policy):
+Use [Workflows](docs/workflows.md) for business behavior, the OpenAPI contract
+for the implemented API, and [Verification](docs/verification.md) for tested
+capabilities and release limits. Do not copy those rules into this file.
 
-- One recipient and one line per sale, quantity one.
-- Manual payments only: cash or bank transfer. Partial payment is allowed. No card processor, and no claim that money moved.
-- Fixed-duration terms, snapshotted at purchase.
-- Fulfill only fully paid sales. Fulfillment is idempotent.
-- Check-in denials record one of: no entitlement, location not allowed, usage limit reached. Denied attempts consume nothing.
-- Local demo sign-in is opt-in, local development only, and uses one fixed seeded actor (Demo Owner, Chainsaw). Production refuses it.
-- WorkOS sign-in is not integrated yet. Production shows sign-in as unavailable and protected actions fail closed.
-
-Deferred: native mobile, recurring billing, classes, reservations, online purchase.
-
-Rails owns all business rules. The web apps only help users fill forms and show results.
+Rails owns business rules. Web apps show records, collect input, and display
+confirmed results. The stack and ownership are in [Architecture](docs/architecture.md).
 
 ## Brand Commitments
 
@@ -53,10 +46,16 @@ Rails owns all business rules. The web apps only help users fill forms and show 
 ## Evidence on Hand
 
 - Product docs in `docs/`. API contract in `apps/server/openapi.yaml`.
-- No logos, photography, testimonials, customer quotes, or usage metrics exist. Do not invent them.
+- The portal has existing logo assets. Do not invent photography, testimonials, customer quotes, or usage metrics.
 - Gym names, locations, offers, and prices come only from the API.
 
 ## Product Principles
+
+Simple purpose, architecture, design, and implementation. Each change should
+make the product easier to use and its code easier for people and agents to
+understand. Use layout and clear controls instead of taglines and routine helper
+text. Preserve facts, accessibility, and the consequences of an action.
+
 
 1. The record is the truth. Show what Rails returned; never imply an outcome that did not happen.
 2. Every denial and error names the reason and the next step.

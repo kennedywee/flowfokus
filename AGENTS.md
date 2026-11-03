@@ -60,3 +60,11 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 - Keep status labels tied to Rails responses. Payment, fulfillment, and access are separate facts.
 - For screen reviews, use `.agents/skills/flowfokus-review-screen/SKILL.md`. It checks the app's real states and conventions.
 - Run `bun run design:check` after styling changes. It catches color values added outside the token layers.
+
+## Simplicity
+
+- Give each screen one clear purpose. Use layout and action names to explain it.
+- Cut taglines, instructional subtitles, routine helper text, and repeated secondary labels. Keep field labels, record facts, errors, and consequences needed for a decision.
+- Prefer changes that make the app easier to use, the code easier to change, and the next agent's work easier to understand. Remove indirection instead of adding a framework.
+- Put live features in their domain folders. Keep sample data and simulated actions in `features/preview`.
+- Use the existing stack and business rules. Simplicity must preserve permissions, tenant boundaries, accessibility, validation, and working features.
