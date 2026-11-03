@@ -370,7 +370,8 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const period = member.current_period;
-  const rights = member.entitlements;
+  // A ticket's one-use right is shown by its booking, so it is left out here.
+  const rights = member.entitlements.filter((right) => right.occurrence_id === null);
 
   return (
     <Plate title="Access now">

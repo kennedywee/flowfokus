@@ -96,7 +96,7 @@ function RosterPage() {
         }${data.program.host_name ? ` · ${data.program.host_name}` : ""}`}
       >
         <Status state={data.cancelled_at ? "off" : data.spots_left === 0 ? "due" : "active"}>
-          {data.cancelled_at ? "Cancelled" : data.spots_left === 0 ? "Full" : `${data.spots_left} spots left`}
+          {data.cancelled_at ? "Cancelled" : data.spots_left === 0 ? "Full" : spotsLeft(data.spots_left)}
         </Status>
         <Link
           to="/$org/programs/$programId"
@@ -140,7 +140,13 @@ function RosterPage() {
         <Plate title="Bookings" description={live.length ? "Mark members present when they arrive." : undefined} flush>
           {live.length === 0 ? (
             <Empty title="No bookings yet">
-              <p>{open ? "Book a member here, or members book on the gym site." : "Nobody was booked."}</p>
+              <p>
+                {past.length
+                  ? "Every booking here was cancelled. See them below."
+                  : open
+                    ? "Book a member here, or members book on the gym site."
+                    : "Nobody was booked."}
+              </p>
             </Empty>
           ) : (
             <BookingTable bookings={live} />
@@ -159,6 +165,10 @@ function RosterPage() {
       <CancelTimeDialog roster={data} open={cancellingTime} onClose={() => setCancellingTime(false)} />
     </div>
   );
+}
+
+function spotsLeft(count: number): string {
+  return count === 1 ? "1 spot left" : `${count} spots left`;
 }
 
 function BookingTable({ bookings }: { bookings: Schemas["Booking"][] }) {
@@ -322,7 +332,11 @@ function CancelTimeDialog({ roster, open, onClose }: { roster: Schemas["Roster"]
     const result = await action.run({ slug: organization.slug, id: roster.id, reason: reason.trim() });
     if (result.ok) {
       onClose();
-      toast.show({ tone: "success", title: "Time cancelled", body: `${roster.spots_taken} bookings were cancelled and their uses returned.` });
+      toast.show({
+        tone: "success",
+        title: "Time cancelled",
+        body: roster.spots_taken ? "Its bookings were cancelled and their uses returned." : "Nobody was booked.",
+      });
       void router.invalidate();
     }
   }
@@ -341,7 +355,7 @@ function CancelTimeDialog({ roster, open, onClose }: { roster: Schemas["Roster"]
     >
       <p>
         {roster.spots_taken
-          ? `${roster.spots_taken} bookings are cancelled and each pass or membership gets its use back. Ticket payments stay; refund them from each sale.`
+          ? `${roster.spots_taken === 1 ? "1 booking is" : `${roster.spots_taken} bookings are`} cancelled, and each pass or membership gets its use back. Ticket payments stay; refund them from each sale.`
           : "Nobody is booked yet."}
       </p>
       {action.error ? <p className="field__error">{failureMessage(action.error)}</p> : null}

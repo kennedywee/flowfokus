@@ -26,6 +26,13 @@ RSpec.describe "Production boot and container" do
     expect(output).to include("FLOWFOKUS_DEMO_MODE=true is not allowed in production")
   end
 
+  it "refuses to boot with test payments" do
+    output, status = boot(production_env.merge("FLOWFOKUS_DEMO_MODE" => "false", "FLOWFOKUS_TEST_PAYMENTS" => "true"))
+
+    expect(status).not_to be_success
+    expect(output).to include("FLOWFOKUS_TEST_PAYMENTS=true is not allowed in production")
+  end
+
   it "boots without demo mode" do
     output, status = boot(production_env.merge("FLOWFOKUS_DEMO_MODE" => "false"))
 
