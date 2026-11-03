@@ -50,7 +50,7 @@ An override sends `override_reason` with the check-in and needs `check_ins:overr
 
 ## Run a program
 
-1. Add a program: kind, location, spots per time, length, and host.
+1. Add a program: kind, location, spots per time, length, and host. Adding a program or a ticket price uses an Idempotency-Key, so a retry never makes a duplicate.
 2. Add times: a date and a start time in the gym's time zone, repeated weekly for up to 26 weeks. Existing times are skipped.
 3. Add ticket prices on the program's page. The first price creates its ticket product.
 4. To let passes or memberships book it, add a program benefit to the offer.
@@ -64,6 +64,10 @@ A booking always uses one entitlement.
 - **With a pass or membership.** Pick the time and a right that covers it. Rails locks the time, checks the spot, the scope, the location, and the validity, then books and records one use. Members do this on the gym site; staff do it from the roster.
 - **With a ticket at the desk.** Record a sale for the time, take payment, and deliver. Delivery checks the spot and books it. A full or cancelled time delivers nothing.
 - **With a ticket online.** The member opens a checkout. It holds the spot for 30 minutes. When the provider confirms payment, the sale, payment, delivery, and booking are recorded together.
+
+**Several spots in one purchase.** A ticket sale or online checkout can buy up to ten spots for one time, and names who comes to each. Staff can name members or guests; a member buying online can name only themself and guests. The checkout holds every spot or none, and delivery checks the whole group fits. The buyer holds one right with a use per spot, and each attendee gets a booking. Staff cancel and refund a single spot on its own.
+
+If a member leaves an online payment unfinished, the booking page shows the held spot with "Continue paying" and "Cancel and free the spot".
 
 Members can cancel pass and membership bookings before the start; the use comes back. Ticket bookings are changed by staff. Staff can cancel any live booking and choose whether the use comes back. An attended booking cannot be cancelled.
 

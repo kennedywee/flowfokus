@@ -47,6 +47,7 @@ Status of each design decision. The rules themselves live in the linked document
 | Product stays. A ticket is a product kind made from a program. Passes are a product kind too. | [Models](models.md#product-stage) |
 | A booking always uses one entitlement. Program benefits cover every program, one kind, or selected programs. | [Workflows](workflows.md#book) |
 | Members book and pay on the gym site. Online checkout holds the spot; the sale is created when payment succeeds. | [Workflows](workflows.md#buy-online) |
+| One ticket purchase can book up to ten spots. The buyer holds the right; attendees are members or guests by name. Online buyers name only themselves and guests. | [Workflows](workflows.md#book) |
 
 ## Proposed
 
@@ -115,4 +116,4 @@ Waitlists, courses, cancellation deadlines and fees, staff calendars for appoint
 
 Custom gym site domains are deferred. The BFF design already supports them. When they arrive, add `OrganizationDomain`, domain verification, Cloudflare custom hostnames, a WorkOS redirect URI per domain (or a central callback with a handoff code), and a domain lookup in the host resolver. See [Authentication](authentication.md#custom-domains-deferred). Decide then how a gym verifies its domain and who pays for custom hostnames.
 
-Classes, events, and appointments share the Program model. Open: which payment provider (Stripe, or a Malaysian provider such as Billplz or FPX), cancellation deadlines, no-show rules, and refunds for cancelled times.
+Classes, events, and appointments share the Program model. Open: whether a pass can book other people (shareable passes), which payment provider (Stripe, or a Malaysian provider such as Billplz or FPX), cancellation deadlines, no-show rules, and refunds for cancelled times.

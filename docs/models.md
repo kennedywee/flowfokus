@@ -31,7 +31,7 @@ Programs sit beside the cycle. They describe what people attend. They sell nothi
 
 **Sale.** Groups line items and payments. Belongs to an organization. Records the buyer and the channel. A desk sale records the staff member and the sale location. An online sale has neither. A ticket sale names its occurrence.
 
-**SaleLineItem.** Belongs to a sale. References the selected price. Keeps quantity, discounts, taxes, totals, a product name snapshot, and the purchased benefit terms. Does not require a membership. Later catalog edits never change it.
+**SaleLineItem.** Belongs to a sale. References the selected price. A ticket line can buy up to ten spots; other lines buy one. Keeps quantity, discounts, taxes, totals, a product name snapshot, and the purchased benefit terms. Does not require a membership. Later catalog edits never change it.
 
 **Payment.** Money received toward a sale: amount, currency, method, external reference. A sale can be partly paid or unpaid. Staff record cash and bank transfers. An `online` payment comes from a payment provider and has no staff actor.
 
@@ -57,7 +57,7 @@ Programs sit beside the cycle. They describe what people attend. They sell nothi
 
 **CheckIn.** An access attempt by a member at a location: time, method, result. Denied attempts and staff overrides record a reason and do not consume an entitlement. Only `gym_access` rights open the gym floor.
 
-**Booking.** One member's spot in one occurrence. A confirmed booking uses one entitlement when the spot is taken. Cancelling can return the use; the usage row keeps its return time. A held booking waits for a checkout and stops counting when the hold ends. One live booking per member and occurrence. Staff mark attendance on the booking.
+**Booking.** One spot in one occurrence. The holder is the member whose right pays for the spot; the attendee takes it, as a member or a guest known by name. They differ only when one ticket purchase booked several spots. A confirmed booking uses one entitlement when the spot is taken. Cancelling can return the use; the usage row keeps its return time. A held booking waits for a checkout and stops counting when the hold ends. One live booking per member attendee and occurrence. Staff mark attendance on the booking.
 
 ## Shared rules
 

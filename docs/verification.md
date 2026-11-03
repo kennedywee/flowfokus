@@ -1,5 +1,12 @@
 # Verification
 
+## Group tickets and retry-safe setup — 3 November 2026
+
+- Server: 360 RSpec examples, 0 failures. New specs cover desk and online group sales, members and guests, all-or-none holds, a group that no longer fits, an attendee who already has a spot, cancelling one spot, guest-only purchases, and replayed program and ticket price writes. RuboCop is clean.
+- Portal: 110 tests pass. Site: 56 tests pass. Both apps typecheck and build. Generated types match the contract.
+- Browser (T3 preview): staff sold Ben Tan three Yoga Flow spots for Ben, Chloe Lim, and guest Sara Lee, took cash, and delivered. The roster showed all three, the guest tag, and "Booked by Ben Tan". On the gym site Mei bought two spots for herself and guest Tom Wong, left the payment page, returned through "Continue paying", and paid. Her account listed both spots. Staff added a program through the dialog with an idempotency key.
+- Note: the running Rails process had to be restarted after the migration, because it kept the old column list.
+
 ## Programs, bookings, and online checkout — 3 November 2026
 
 Scope: programs, occurrences, bookings, passes, tickets, and online checkout with the local test provider. See the [design](superpowers/specs/2026-11-03-programs-and-bookings-design.md).
