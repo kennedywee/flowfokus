@@ -101,3 +101,20 @@
   gap: var(--space-2);
   font-size: var(--text-sm);
 }
+
+.roster-page__group {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-line);
+}
+.roster-page__spots {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.roster-page__spot {
+  display: grid;
+  gap: var(--space-2);
+}

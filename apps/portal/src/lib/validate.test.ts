@@ -72,6 +72,31 @@ describe("parseAmountToMinor", () => {
   ])("%s → %p", (text, expected) => expect(parseAmountToMinor(text, "MYR")).toBe(expected));
 });
 
+describe("group ticket sales", () => {
+  test("keeps members and named guests, and drops empty emails", () => {
+    const input = createSaleInput({
+      slug: "chainsaw",
+      idempotencyKey: id,
+      member_id: id,
+      price_id: id,
+      location_id: id,
+      occurrence_id: id,
+      quantity: 2,
+      attendees: [{ member_id: id.toUpperCase() }, { guest_name: "  Sara ", guest_email: "" }],
+    });
+    expect(input.quantity).toBe(2);
+    expect(input.attendees).toEqual([{ member_id: id }, { guest_name: "Sara", guest_email: null }]);
+  });
+
+  test("rejects bad group input", () => {
+    const base = { slug: "chainsaw", idempotencyKey: id, member_id: id, price_id: id, location_id: id };
+    expect(() => createSaleInput({ ...base, quantity: 11 })).toThrow();
+    expect(() => createSaleInput({ ...base, attendees: [] })).toThrow();
+    expect(() => createSaleInput({ ...base, attendees: [{ guest_name: "   " }] })).toThrow();
+    expect(() => createSaleInput({ ...base, attendees: [{ member_id: "nope" }] })).toThrow();
+  });
+});
+
 describe("catalog inputs", () => {
   test("product input keeps contract fields and lowercases location IDs", () => {
     const input = createProductInput({

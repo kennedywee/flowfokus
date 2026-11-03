@@ -4,7 +4,7 @@ import type { Schemas } from "@flowfokus/api";
 import { useToast } from "./Toast";
 import { Field, FailureNotice, Notice, SubmitButton, describedBy } from "./ui";
 import { PROGRAM_KIND_LABEL, currencyDigits, formatMoney, parseAmountToMinor } from "../lib/format";
-import { useAction } from "../lib/hooks";
+import { useAction, useIdempotencyKey } from "../lib/hooks";
 import { useDeskLocation, useOrganization } from "../lib/organization";
 import { addTicket, createProgram, scheduleProgram, updateProgram } from "../lib/staff.functions";
 import { PROGRAM_KINDS } from "../lib/validate";
@@ -53,6 +53,8 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
   const toast = useToast();
   const creating = useAction(sendNewProgram);
   const editing = useAction(sendProgramChange);
+  // One key per dialog: a retry after a network error cannot add a second program.
+  const [programKey] = useIdempotencyKey();
   const action = program ? editing : creating;
   const [name, setName] = useState(program?.name ?? "");
   const [kind, setKind] = useState<Schemas["ProgramKind"]>(program?.kind ?? "group_class");
@@ -93,7 +95,7 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
       host_name: host.trim() || null,
       published,
     };
-    const result = program ? await editing.run({ ...fields, id: program.id }) : await creating.run({ ...fields, kind });
+    const result = program ? await editing.run({ ...fields, id: program.id }) : await creating.run({ ...fields, kind, idempotencyKey: programKey });
     if (!result.ok) return;
     toast.show({
       tone: "success",
@@ -292,6 +294,7 @@ export function TicketDialog({ program, onClose }: { program: Schemas["ProgramDe
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendTicket);
+  const [ticketKey, renewTicketKey] = useIdempotencyKey();
   const currency = organization.currency;
   const [label, setLabel] = useState(program.ticket ? "" : program.kind === "appointment" ? "Single session" : "Drop-in");
   const [amount, setAmount] = useState("");
@@ -309,7 +312,15 @@ export function TicketDialog({ program, onClose }: { program: Schemas["ProgramDe
     setLocal(errors);
     if (errors.label || errors.amount || amountMinor === null) return;
 
-    const result = await action.run({ slug: organization.slug, id: program.id, label: label.trim(), amount_minor: amountMinor });
+    const result = await action.run({
+      slug: organization.slug,
+      id: program.id,
+      idempotencyKey: ticketKey,
+      label: label.trim(),
+      amount_minor: amountMinor,
+    });
+    // A changed form is a new request; a plain retry keeps the key.
+    if (!result.ok && result.error.code === "idempotency_key_reused") renewTicketKey();
     if (result.ok) {
       toast.show({ tone: "success", title: "Ticket price added", body: `${label.trim()} is on sale for ${program.name}.` });
       void router.invalidate();

@@ -5,7 +5,7 @@ import { CalendarX2, Check, Ticket, UserPlus, X } from "lucide-react";
 import { Combobox } from "../../../components/Combobox";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { useToast } from "../../../components/Toast";
-import { Empty, FailureNotice, Field, Notice, PageHead, Plate, SkeletonRows, Status, describedBy } from "../../../components/ui";
+import { Empty, FailureNotice, Field, Notice, PageHead, Pill, Plate, SkeletonRows, Status, describedBy } from "../../../components/ui";
 import {
   BOOKING_STATUS_LABEL,
   PROGRAM_KIND_LABEL,
@@ -29,6 +29,8 @@ import {
 import { isUuid } from "../../../lib/validate";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -191,10 +193,24 @@ function BookingTable({ bookings }: { bookings: Schemas["Booking"][] }) {
         {bookings.map((booking) => (
           <TableRow key={booking.id}>
             <TableCell>
-              <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: booking.member.id }} className="cell-title">
-                {booking.member.name}
-              </Link>
-              <span className="cell-sub">{booking.member.email}</span>
+              {booking.member ? (
+                <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: booking.member.id }} className="cell-title">
+                  {booking.member.name}
+                </Link>
+              ) : (
+                <span className="cell-title">
+                  {booking.attendee_name} <Pill tone="neutral">Guest</Pill>
+                </span>
+              )}
+              <span className="cell-sub">{booking.member?.email ?? booking.guest_email ?? "No email"}</span>
+              {booking.holder.id !== booking.member?.id ? (
+                <span className="cell-sub">
+                  Booked by{" "}
+                  <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: booking.holder.id }}>
+                    {booking.holder.name}
+                  </Link>
+                </span>
+              ) : null}
               <span className="cell-sub phone-only">{bookedWith(booking)}</span>
             </TableCell>
             <TableCell className="col-wide">
@@ -243,7 +259,7 @@ function BookingActions({ booking }: { booking: Schemas["Booking"] }) {
   async function markPresent() {
     const result = await attend.run({ slug: organization.slug, id: booking.id });
     if (result.ok) {
-      toast.show({ tone: "success", title: "Marked present", body: booking.member.name });
+      toast.show({ tone: "success", title: "Marked present", body: booking.attendee_name });
       void router.invalidate();
     } else {
       toast.show({ tone: "error", title: "Not marked present", body: failureMessage(result.error) });
@@ -261,7 +277,7 @@ function BookingActions({ booking }: { booking: Schemas["Booking"] }) {
       toast.show({
         tone: "success",
         title: "Booking cancelled",
-        body: returnUse ? `${booking.member.name} got the use back.` : `${booking.member.name}'s use was kept.`,
+        body: returnUse ? `${booking.holder.name} got the use back.` : `${booking.holder.name}'s use was kept.`,
       });
       void router.invalidate();
     }
@@ -272,19 +288,19 @@ function BookingActions({ booking }: { booking: Schemas["Booking"] }) {
       {booking.status === "confirmed" ? (
         <Button type="button" size="sm" variant="secondary" disabled={attend.pending} onClick={() => void markPresent()}>
           <Check aria-hidden="true" />
-          Present<span className="visually-hidden">: {booking.member.name}</span>
+          Present<span className="visually-hidden">: {booking.attendee_name}</span>
         </Button>
       ) : null}
       {booking.status === "confirmed" ? (
         <Button type="button" size="sm" variant="ghost" onClick={() => setCancelling(true)}>
           <X aria-hidden="true" />
-          Cancel<span className="visually-hidden"> {booking.member.name}'s booking</span>
+          Cancel<span className="visually-hidden"> {booking.attendee_name}'s booking</span>
         </Button>
       ) : null}
       <ConfirmDialog
         open={cancelling}
         tone="critical"
-        title={`Cancel ${booking.member.name}'s booking?`}
+        title={`Cancel ${booking.attendee_name}'s booking?`}
         confirmLabel="Cancel booking"
         cancelLabel="Keep booking"
         pendingLabel="Cancelling…"
@@ -390,6 +406,8 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
 
   async function choose(id: string | null) {
     setMemberId(id);
+    setSpots([]);
+    setSpotError(null);
     booking.reset();
     sale.reset();
     options.reset();
@@ -408,8 +426,26 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
     }
   }
 
+  // Who comes to each spot. The buyer takes the first spot unless staff change it.
+  const [spots, setSpots] = useState<Spot[]>([]);
+  const [spotError, setSpotError] = useState<string | null>(null);
+
+  function resize(count: number) {
+    setSpots((list) => {
+      const base = list.length ? list : [{ kind: "member" as const, memberId: memberId ?? "", name: "", email: "" }];
+      return Array.from({ length: count }, (_, index) => base[index] ?? { kind: "guest" as const, memberId: "", name: "", email: "" });
+    });
+  }
+
   async function sell(price: Schemas["Price"]) {
     if (!memberId || !desk) return;
+    const group = spots.length > 1 ? spots : [];
+    const missing = group.findIndex((spot) => (spot.kind === "member" ? !spot.memberId : !spot.name.trim()));
+    if (missing >= 0) {
+      setSpotError(`Choose a member or type a guest name for spot ${missing + 1}.`);
+      return;
+    }
+    setSpotError(null);
     const result = await sale.run({
       slug: organization.slug,
       idempotencyKey: saleKey,
@@ -417,6 +453,14 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
       price_id: price.id,
       location_id: desk.id,
       occurrence_id: roster.id,
+      ...(group.length
+        ? {
+            quantity: group.length,
+            attendees: group.map((spot) =>
+              spot.kind === "member" ? { member_id: spot.memberId } : { guest_name: spot.name.trim(), guest_email: spot.email.trim() || null },
+            ),
+          }
+        : {}),
     });
     if (result.ok) {
       renewSaleKey();
@@ -475,16 +519,50 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
               )
             ) : null}
             {can("purchases:create") && loaded.ticket_prices.length ? (
-              <ul className="roster-page__options" aria-label="Sell a ticket">
-                {loaded.ticket_prices.map((price) => (
-                  <li key={price.id}>
-                    <Button type="button" disabled={full || sale.pending || !desk} onClick={() => void sell(price)}>
-                      <Ticket aria-hidden="true" />
-                      Sell {price.label}, {formatMoney(price.amount_minor, price.currency)}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
+              <div className="roster-page__group">
+                <Field id="roster-spots" label="Spots to sell" hint="One ticket per person. Name everyone who is coming.">
+                  <NativeSelect
+                    id="roster-spots"
+                    value={String(Math.max(spots.length, 1))}
+                    aria-describedby={describedBy("roster-spots", "hint")}
+                    onChange={(event) => resize(Number(event.target.value))}
+                  >
+                    {Array.from({ length: Math.max(1, Math.min(10, roster.spots_left)) }, (_, index) => (
+                      <NativeSelectOption key={index} value={String(index + 1)}>
+                        {index + 1}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                {spots.length > 1 ? (
+                  <ol className="roster-page__spots" aria-label="Who is coming">
+                    {spots.map((spot, index) => (
+                      <SpotRow
+                        key={index}
+                        index={index}
+                        spot={spot}
+                        members={members}
+                        onChange={(next) => setSpots((list) => list.map((item, at) => (at === index ? next : item)))}
+                      />
+                    ))}
+                  </ol>
+                ) : null}
+                {spotError ? <p className="field__error">{spotError}</p> : null}
+                <ul className="roster-page__options" aria-label="Sell a ticket">
+                  {loaded.ticket_prices.map((price) => {
+                    const count = Math.max(spots.length, 1);
+                    return (
+                      <li key={price.id}>
+                        <Button type="button" disabled={full || sale.pending || !desk} onClick={() => void sell(price)}>
+                          <Ticket aria-hidden="true" />
+                          Sell {price.label}
+                          {count > 1 ? ` ×${count}` : ""}, {formatMoney(price.amount_minor * count, price.currency)}
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             ) : null}
           </>
         ) : (
@@ -492,5 +570,67 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
         )}
       </div>
     </Plate>
+  );
+}
+
+/** One spot of a group sale: a member of this gym, or a guest by name. */
+interface Spot {
+  kind: "member" | "guest";
+  memberId: string;
+  name: string;
+  email: string;
+}
+
+function SpotRow({
+  index,
+  spot,
+  members,
+  onChange,
+}: {
+  index: number;
+  spot: Spot;
+  members: Schemas["Member"][];
+  onChange: (spot: Spot) => void;
+}) {
+  const id = `spot-${index}`;
+  return (
+    <li className="roster-page__spot">
+      <NativeSelect
+        id={`${id}-who`}
+        aria-label={`Spot ${index + 1}`}
+        value={spot.kind === "guest" ? "guest" : spot.memberId}
+        onChange={(event) =>
+          onChange(event.target.value === "guest" ? { ...spot, kind: "guest", memberId: "" } : { ...spot, kind: "member", memberId: event.target.value })
+        }
+      >
+        <NativeSelectOption value="guest">Guest (not a member)</NativeSelectOption>
+        {members.map((member) => (
+          <NativeSelectOption key={member.id} value={member.id}>
+            {member.name}
+          </NativeSelectOption>
+        ))}
+      </NativeSelect>
+      {spot.kind === "guest" ? (
+        <>
+          <Input
+            id={`${id}-name`}
+            aria-label={`Spot ${index + 1}: guest name`}
+            placeholder="Guest name"
+            maxLength={200}
+            value={spot.name}
+            onChange={(event) => onChange({ ...spot, name: event.target.value })}
+          />
+          <Input
+            id={`${id}-email`}
+            aria-label={`Spot ${index + 1}: guest email, optional`}
+            placeholder="Email (optional)"
+            type="email"
+            maxLength={320}
+            value={spot.email}
+            onChange={(event) => onChange({ ...spot, email: event.target.value })}
+          />
+        </>
+      ) : null}
+    </li>
   );
 }

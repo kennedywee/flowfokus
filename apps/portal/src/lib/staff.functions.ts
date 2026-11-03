@@ -241,7 +241,9 @@ export const createSale = createServerFn({ method: "POST" })
             member_id: data.member_id,
             price_id: data.price_id,
             location_id: data.location_id,
+            quantity: data.quantity ?? 1,
             ...(data.occurrence_id ? { occurrence_id: data.occurrence_id } : {}),
+            ...(data.attendees ? { attendees: data.attendees } : {}),
           },
         }),
       ),
@@ -421,8 +423,8 @@ export const getProgram = createServerFn({ method: "GET" })
 export const createProgram = createServerFn({ method: "POST" })
   .validator((input: CreateProgramInput) => createProgramInput(input))
   .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
-    const { slug, ...body } = data;
-    return callStaff(slug, (api) => api.POST("/staff/programs", { body }));
+    const { slug, idempotencyKey, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/programs", { params: { header: { "Idempotency-Key": idempotencyKey } }, body }));
   });
 
 export const updateProgram = createServerFn({ method: "POST" })
@@ -442,8 +444,10 @@ export const scheduleProgram = createServerFn({ method: "POST" })
 export const addTicket = createServerFn({ method: "POST" })
   .validator((input: AddTicketInput) => addTicketInput(input))
   .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
-    const { slug, id, ...body } = data;
-    return callStaff(slug, (api) => api.POST("/staff/programs/{id}/tickets", { params: { path: { id } }, body }));
+    const { slug, id, idempotencyKey, ...body } = data;
+    return callStaff(slug, (api) =>
+      api.POST("/staff/programs/{id}/tickets", { params: { path: { id }, header: { "Idempotency-Key": idempotencyKey } }, body }),
+    );
   });
 
 export const listSchedule = createServerFn({ method: "GET" })

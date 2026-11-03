@@ -131,10 +131,26 @@ export function createMemberInput(value: unknown): CreateMemberInput {
   };
 }
 
-export type CreateSaleInput = IdempotentInput & Schemas["SaleInput"];
+export type CreateSaleInput = IdempotentInput & Omit<Schemas["SaleInput"], "quantity"> & { quantity?: number };
+
+/** Who attends a spot: a member of this gym, or a guest by name. */
+function attendeesField(input: Record<string, unknown>): Schemas["AttendeeInput"][] | undefined {
+  if (input.attendees === undefined) return undefined;
+  const list = input.attendees;
+  if (!Array.isArray(list) || list.length < 1 || list.length > 10) throw new InputError("Invalid attendees");
+  return list.map((item) => {
+    const entry = record(item);
+    if (entry.member_id !== undefined) return { member_id: uuidField(entry, "member_id") };
+    const name = textField(entry, "guest_name", 200).trim();
+    if (!name) throw new InputError("Invalid guest_name");
+    const email = entry.guest_email === undefined || entry.guest_email === null || entry.guest_email === "" ? null : textField(entry, "guest_email", 320);
+    return { guest_name: name, guest_email: email };
+  });
+}
 
 export function createSaleInput(value: unknown): CreateSaleInput {
   const input = record(value);
+  const attendees = attendeesField(input);
   return {
     slug: slugField(input),
     idempotencyKey: idempotencyKeyField(input),
@@ -142,6 +158,8 @@ export function createSaleInput(value: unknown): CreateSaleInput {
     price_id: uuidField(input, "price_id"),
     location_id: uuidField(input, "location_id"),
     ...(input.occurrence_id === undefined ? {} : { occurrence_id: uuidField(input, "occurrence_id") }),
+    ...(input.quantity === undefined ? {} : { quantity: wholeNumber(input, "quantity", 1, 10) }),
+    ...(attendees ? { attendees } : {}),
   };
 }
 
@@ -419,7 +437,7 @@ function optionalText(input: Record<string, unknown>, name: string, max: number)
   return textField(input, name, max);
 }
 
-export type CreateProgramInput = SlugInput & Schemas["ProgramInput"];
+export type CreateProgramInput = IdempotentInput & Schemas["ProgramInput"];
 
 export function createProgramInput(value: unknown): CreateProgramInput {
   const input = record(value);
@@ -427,6 +445,7 @@ export function createProgramInput(value: unknown): CreateProgramInput {
   const published = optionalBoolean(input, "published");
   return {
     slug: slugField(input),
+    idempotencyKey: idempotencyKeyField(input),
     name: textField(input, "name", 200),
     description: optionalText(input, "description", 2000),
     kind: input.kind,
@@ -467,12 +486,13 @@ export function scheduleProgramInput(value: unknown): ScheduleProgramInput {
   return { slug: slugField(input), id: uuidField(input, "id"), date, time, weeks: wholeNumber(input, "weeks", 1, 26) };
 }
 
-export type AddTicketInput = IdInput & Schemas["TicketInput"];
+export type AddTicketInput = IdInput & { idempotencyKey: string } & Schemas["TicketInput"];
 
 export function addTicketInput(value: unknown): AddTicketInput {
   const input = record(value);
   return {
     slug: slugField(input),
+    idempotencyKey: idempotencyKeyField(input),
     id: uuidField(input, "id"),
     label: textField(input, "label", 200),
     amount_minor: wholeNumber(input, "amount_minor", 0, Number.MAX_SAFE_INTEGER),

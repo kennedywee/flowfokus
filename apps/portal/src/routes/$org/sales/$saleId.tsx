@@ -158,6 +158,20 @@ function SalePage() {
                 <dt>Price</dt>
                 <dd className="money">{formatMoney(line.unit_amount_minor, line.currency)}</dd>
               </div>
+              {line.quantity > 1 ? (
+                <div>
+                  <dt>Spots</dt>
+                  <dd>
+                    {line.quantity} × {formatMoney(line.unit_amount_minor, line.currency)} = {formatMoney(line.total_minor, line.currency)}
+                  </dd>
+                </div>
+              ) : null}
+              {data.attendees.length ? (
+                <div>
+                  <dt>Who is coming</dt>
+                  <dd>{data.attendees.map((person) => (person.guest ? `${person.name} (guest)` : person.name)).join(", ")}</dd>
+                </div>
+              ) : null}
               <div>
                 <dt>{data.occurrence ? "Time" : "Term"}</dt>
                 <dd>
@@ -382,7 +396,8 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
       return `${done.member.name} has access from ${formatDate(period.starts_at, organization.timezone)} until ${formatDate(period.ends_at, organization.timezone)}.`;
     }
     if (done.occurrence) {
-      return `${done.member.name} is booked for ${done.occurrence.program_name} on ${formatDateTime(done.occurrence.starts_at, organization.timezone)}.`;
+      const who = done.attendees.length > 1 ? `${done.attendees.length} people are` : `${done.attendees[0]?.name ?? done.member.name} is`;
+      return `${who} booked for ${done.occurrence.program_name} on ${formatDateTime(done.occurrence.starts_at, organization.timezone)}.`;
     }
     return `${done.member.name} can book with this pass for ${formatDuration(done.line_item.terms.duration_days)} from the purchase.`;
   }
@@ -490,7 +505,7 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
       >
         <p>
           {sale.occurrence
-            ? `${sale.member.name} gets a spot in ${sale.occurrence.program_name} on ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}. This books the spot if one is free.`
+            ? `${sale.attendees.length > 1 ? `${sale.attendees.length} people get spots` : `${sale.attendees[0]?.name ?? sale.member.name} gets a spot`} in ${sale.occurrence.program_name} on ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}. This books ${sale.attendees.length > 1 ? "every spot if they all fit" : "the spot if one is free"}.`
             : `${sale.member.name} gets ${sale.line_item.product_name}, ${sale.line_item.price_label}, for ${formatDuration(sale.line_item.terms.duration_days)}. This creates the ${kindWord}'s access rights.`}
         </p>
         {early ? (
