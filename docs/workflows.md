@@ -48,6 +48,29 @@ Denied access records a reason. A staff override needs a permission and a reason
 
 An override sends `override_reason` with the check-in and needs `check_ins:override`. When the rights would deny entry, the check-in is granted, keeps its `denial_reason`, records the reason and the actor, and consumes nothing. When a right allows entry, it is used as usual and no reason is recorded. A database check keeps these three shapes apart.
 
+## Run a program
+
+1. Add a program: kind, location, spots per time, length, and host.
+2. Add times: a date and a start time in the gym's time zone, repeated weekly for up to 26 weeks. Existing times are skipped.
+3. Add ticket prices on the program's page. The first price creates its ticket product.
+4. To let passes or memberships book it, add a program benefit to the offer.
+
+Cancelling a time cancels every booking and returns each use. Ticket payments stay; refund them from each sale.
+
+## Book
+
+A booking always uses one entitlement.
+
+- **With a pass or membership.** Pick the time and a right that covers it. Rails locks the time, checks the spot, the scope, the location, and the validity, then books and records one use. Members do this on the gym site; staff do it from the roster.
+- **With a ticket at the desk.** Record a sale for the time, take payment, and deliver. Delivery checks the spot and books it. A full or cancelled time delivers nothing.
+- **With a ticket online.** The member opens a checkout. It holds the spot for 30 minutes. When the provider confirms payment, the sale, payment, delivery, and booking are recorded together.
+
+Members can cancel pass and membership bookings before the start; the use comes back. Ticket bookings are changed by staff. Staff can cancel any live booking and choose whether the use comes back. An attended booking cannot be cancelled.
+
+## Buy online
+
+The gym site sells published passes, memberships, and tickets to linked members. Only the local test provider exists. It is opt-in with `FLOWFOKUS_TEST_PAYMENTS=true`, moves no money, and production refuses to boot with it. A real provider needs a decision, credentials, and a signed webhook that completes the checkout.
+
 ## Refund or revoke
 
 1. Find the payment and the affected purchase.
@@ -61,7 +84,7 @@ Current implementation limits, chosen where [Decisions](decisions.md#catalog-and
 
 - A refund belongs to one payment. Partial refunds are allowed. The total refunded on a payment cannot exceed it. `paid_minor` stays the total received; `refunded_minor` is separate, so a refund never reopens the balance.
 - A refund never changes access. Revoke access as its own action.
-- Revoking a sale ends only its period and entitlements, at once. Other periods, payments, and recorded usage stay. A revoked period no longer blocks a new period over the same dates.
+- Revoking a sale ends only its period and entitlements, at once. Other periods, payments, and recorded usage stay. A revoked period no longer blocks a new period over the same dates. Bookings that used those rights for times that have not started are cancelled.
 - A sale can be voided only before delivery and when it keeps no money. Refund any payments first. A void sale takes no payments and cannot be delivered.
 - Refunds, voids, and revocations each record the actor, time, and a required reason. Refunds are immutable in the database.
 

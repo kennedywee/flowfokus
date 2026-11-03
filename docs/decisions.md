@@ -43,6 +43,10 @@ Status of each design decision. The rules themselves live in the linked document
 | Partial payment allowed. Fulfill after full payment unless staff authorize. | [Workflows](workflows.md#purchase-and-fulfill) |
 | Activation is configurable. Default is the purchase date. | [Workflows](workflows.md#purchase-and-fulfill) |
 | Early renewal keeps the cycle. Renewal keeps the agreed price. | [Workflows](workflows.md#renew) |
+| Programs (group classes, events, appointments) with dated occurrences. Not "listing" or "activity". | [Models](models.md#program-stage) |
+| Product stays. A ticket is a product kind made from a program. Passes are a product kind too. | [Models](models.md#product-stage) |
+| A booking always uses one entitlement. Program benefits cover every program, one kind, or selected programs. | [Workflows](workflows.md#book) |
+| Members book and pay on the gym site. Online checkout holds the spot; the sale is created when payment succeeds. | [Workflows](workflows.md#buy-online) |
 
 ## Proposed
 
@@ -107,8 +111,8 @@ Not yet confirmed.
 
 ## Deferred
 
-Standalone passes, classes, events, reservations, waitlists, recurring billing, a native mobile app, and a Flowfokus staging environment.
+Waitlists, courses, cancellation deadlines and fees, staff calendars for appointments, a real payment provider, recurring billing, a native mobile app, and a Flowfokus staging environment.
 
 Custom gym site domains are deferred. The BFF design already supports them. When they arrive, add `OrganizationDomain`, domain verification, Cloudflare custom hostnames, a WorkOS redirect URI per domain (or a central callback with a handoff code), and a domain lookup in the host resolver. See [Authentication](authentication.md#custom-domains-deferred). Decide then how a gym verifies its domain and who pays for custom hostnames.
 
-When reservations arrive, define holds, releases, cancellation, no-shows, capacity, and expiry. Decide then whether classes and events share one model.
+Classes, events, and appointments share the Program model. Open: which payment provider (Stripe, or a Malaysian provider such as Billplz or FPX), cancellation deadlines, no-show rules, and refunds for cancelled times.

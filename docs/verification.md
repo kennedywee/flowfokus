@@ -1,5 +1,34 @@
 # Verification
 
+## Programs, bookings, and online checkout — 3 November 2026
+
+Scope: programs, occurrences, bookings, passes, tickets, and online checkout with the local test provider. See the [design](superpowers/specs/2026-11-03-programs-and-bookings-design.md).
+
+### Automated checks
+
+- Server: 349 RSpec examples, 0 failures, with every documented success response checked against `openapi.yaml`. New request specs cover programs, weekly times in the gym's time zone, tickets, desk and member bookings, capacity, cancellation, attendance, revocation, online checkout holds, expiry, idempotency, free tickets, permissions, and tenant isolation. The production boot spec refuses `FLOWFOKUS_TEST_PAYMENTS=true`.
+- RuboCop: no offenses. Generated types match the contract.
+- Portal: 108 tests pass. Site: 56 tests pass. Both apps typecheck and build.
+
+### Browser workflow
+
+The T3 preview browser ran the Docker stack with `FLOWFOKUS_TEST_PAYMENTS=true` and the WorkOS emulator:
+
+1. Staff signed in as the demo owner, added the program Spin Express, four weekly times, and a Drop-in ticket price.
+2. From a time's roster, staff sold Aisyah Rahman a ticket, recorded cash, and delivered it. The roster showed her booking; staff marked her present.
+3. Staff added the pass Spin 5-Pack with a program benefit for Spin Express only. The program page listed it under "Also books it".
+4. Mei Lim signed in on `chainsaw.localhost:4002`, bought the 10-Class Pass online, and paid on the test page.
+5. Mei booked the last Spin Express spot with the pass. The schedule then showed the time as full.
+6. Mei bought a Deadlift Seminar Early bird ticket online. The checkout held the spot; payment confirmed the booking. The portal showed the online sale with no staff actor or location.
+7. Mei cancelled the Spin booking on her account page. The pass showed 10 of 10 again.
+8. Staff cancelled the seminar time with a reason. Mei's booking was cancelled.
+
+Desktop and 390-pixel phone layouts were checked for the site schedule and the portal roster.
+
+### Limits
+
+Only the local test provider exists. No card processor, webhook, or provider refund is built. A real provider needs a decision and credentials. Refunds remain records; they move no money.
+
 ## First-release workflows — 1 November 2026
 
 Local Docker stack with WorkOS Emulate. Nothing was pushed, tagged, or deployed.

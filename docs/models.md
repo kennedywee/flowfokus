@@ -4,7 +4,7 @@ Domain records and their rules. Fields are conceptual, not a migration spec. Ide
 
 ## Product stage
 
-**Product.** The offer. Has many prices and product benefits. In the first release, every product is a membership.
+**Product.** The offer. Has many prices and product benefits. Its kind is `membership`, `pass`, or `ticket`. A ticket is made from a program's page, keeps its program, and buys one spot at one time. The kind never changes.
 
 **Price.** Belongs to one product. Has an amount, currency, availability, and commercial terms.
 
@@ -15,21 +15,33 @@ Domain records and their rules. Fields are conceptual, not a migration spec. Ide
 
 This follows [Stripe's product and price model](https://docs.stripe.com/products-prices/manage-prices). Stripe is not required.
 
-**ProductBenefit.** A promised benefit, such as gym access for a period. A catalog template, not a usable right.
+- A ticket price has no duration. Its validity comes from the time it is bought for.
+
+**ProductBenefit.** A promised benefit, such as gym access for a period or ten class bookings. A catalog template, not a usable right. `gym_access` opens the gym floor. `program_access` books programs: every program, every program of one kind, or selected programs.
+
+## Program stage
+
+Programs sit beside the cycle. They describe what people attend. They sell nothing.
+
+**Program.** A group class, an event, or an appointment at one location. Has a default capacity, a length, a host name, and a published flag.
+
+**Occurrence.** One dated time of a program, with its own capacity. A cancelled time keeps its reason. Times are entered in the gym's time zone.
 
 ## Purchase stage
 
-**Sale.** Groups line items and payments. Belongs to an organization. Records the buyer and the sale location.
+**Sale.** Groups line items and payments. Belongs to an organization. Records the buyer and the channel. A desk sale records the staff member and the sale location. An online sale has neither. A ticket sale names its occurrence.
 
 **SaleLineItem.** Belongs to a sale. References the selected price. Keeps quantity, discounts, taxes, totals, a product name snapshot, and the purchased benefit terms. Does not require a membership. Later catalog edits never change it.
 
-**Payment.** Money received toward a sale: amount, currency, method, external reference. A sale can be partly paid or unpaid.
+**Payment.** Money received toward a sale: amount, currency, method, external reference. A sale can be partly paid or unpaid. Staff record cash and bank transfers. An `online` payment comes from a payment provider and has no staff actor.
+
+**Checkout.** An online purchase waiting for the payment provider. It keeps the price and, for a ticket, holds a spot until it expires. Nothing is sold until the provider confirms payment. Then one transaction creates the sale, records the payment, delivers it, and confirms the spot.
 
 **Refund.** Money returned against a payment: amount, reason, actor. It never edits the original payment. Refunding money and revoking benefits are separate actions.
 
 ## Fulfillment stage
 
-**Fulfillment.** Delivers one line item's purchased terms. Keeps the line item, recipient, delivered records, and outcome. A retry must not duplicate periods or entitlements.
+**Fulfillment.** Delivers one line item's purchased terms. Keeps the line item, recipient, delivered records, and outcome. A retry must not duplicate periods or entitlements. A membership gets a period. A pass gets rights valid from the purchase for its days. A ticket gets a one-use right for its time and the booking that uses it.
 
 **Membership.** A member's continuing membership. Has many periods. A renewal adds a period; it does not create a new membership. Default: one membership per member per organization.
 
@@ -41,9 +53,11 @@ This follows [Stripe's product and price model](https://docs.stripe.com/products
 
 **Entitlement.** A usable right. Belongs to a grant. Has validity, location scope, and a usage limit (counted or unlimited). Access rules live here, not on memberships or grants.
 
-**EntitlementUsage.** One authorization or consumption of an entitlement, linked to a check-in. Unlimited access still records usage. Processing the same access twice must not consume twice.
+**EntitlementUsage.** One authorization or consumption of an entitlement, linked to a check-in or a booking. Unlimited access still records usage. Processing the same access twice must not consume twice.
 
-**CheckIn.** An access attempt by a member at a location: time, method, result. Denied attempts and staff overrides record a reason and do not consume an entitlement.
+**CheckIn.** An access attempt by a member at a location: time, method, result. Denied attempts and staff overrides record a reason and do not consume an entitlement. Only `gym_access` rights open the gym floor.
+
+**Booking.** One member's spot in one occurrence. A confirmed booking uses one entitlement when the spot is taken. Cancelling can return the use; the usage row keeps its return time. A held booking waits for a checkout and stops counting when the hold ends. One live booking per member and occurrence. Staff mark attendance on the booking.
 
 ## Shared rules
 

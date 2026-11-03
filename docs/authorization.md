@@ -25,7 +25,7 @@ staff:manage    settings:manage
 
 ### Implemented permissions
 
-The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Manager role can sell, deliver, check in, and manage staff, but not change offers, settings, refunds, voids, or revocations. The local Receptionist role has the read permissions and `check_ins:create`.
+The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Manager role can sell, deliver, check in, book members, and manage staff, but not change offers, programs, settings, refunds, voids, or revocations. The local Receptionist role has the read permissions, `check_ins:create`, `bookings:create`, and `bookings:manage`.
 
 | Permission | Allows |
 | --- | --- |
@@ -43,6 +43,10 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `memberships:revoke` | Revoke the access delivered by one sale |
 | `check_ins:read`, `check_ins:create` | List and record check-ins |
 | `check_ins:override` | Let a member in despite a denial, with a reason. Consumes nothing. |
+| `programs:read` | See programs, the schedule, rosters, and how a member could book |
+| `programs:manage` | Add and change programs, add times, add ticket prices, and cancel a time |
+| `bookings:create` | Book a member with a pass or membership they hold |
+| `bookings:manage` | Cancel a booking and mark a member present |
 | `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
 | `staff:manage` | See the team, invite staff, revoke invitations, change roles, and remove access |
 

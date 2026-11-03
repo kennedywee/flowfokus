@@ -150,6 +150,16 @@ host-only cookie. The emulator allows `*.localhost` callbacks.
 Rails imports a member's WorkOS user on first use, because reconciliation imports
 staff only. A matching email never links a member: only the code does.
 
+## Online payment in development
+
+The gym site can sell passes, memberships, and tickets online. Only a local test provider exists. Turn it on explicitly:
+
+```sh
+FLOWFOKUS_TEST_PAYMENTS=true docker compose up -d server jobs
+```
+
+The site then shows "Buy online" and "Pay" buttons and a clearly marked test payment page. No money moves. Production refuses to boot with this setting.
+
 ## Scope
 
 This milestone covers staff and member authentication against the emulator.
