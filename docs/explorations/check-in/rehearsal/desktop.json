@@ -1,0 +1,35 @@
+{
+  "status": "inconclusive",
+  "mode": "motion",
+  "stages": [
+    {
+      "key": "stage-1",
+      "label": "ss-fit explore explore--grove",
+      "coverage": {
+        "status": "inconclusive",
+        "frames": 676,
+        "durationMs": 11259.799999998882,
+        "medianMs": 16.600000001490116,
+        "maxGapMs": 48.09999999962747,
+        "skippedGaps": 18,
+        "cameraFrames": 0,
+        "reasons": [
+          "18 sampling gap(s) exceeded 27ms; motion during those gaps was not judged"
+        ],
+        "framingSamples": 16,
+        "layout": {
+          "controls": 4,
+          "paddedContainers": 3,
+          "compositionCrops": 0
+        }
+      },
+      "findings": [],
+      "manual": [
+        "same-box content change: search-meta \"3 matching members\" changes text or drawing at 1.72s [search]; inspect the transition in motion (geometry alone cannot judge it)"
+      ]
+    }
+  ],
+  "errors": [],
+  "manualReviewRequired": true,
+  "exitCode": 2
+}

@@ -21,6 +21,14 @@ components, defaults, states, and good/bad uses. Source CSS and component APIs
 remain the authority for exact values and props. Do not copy token values into
 another theme configuration.
 
+## Proposed visual directions
+
+The current app design files describe the implementation, not a final visual
+choice. The [component lab](explorations/check-in/PLAN.md) explores three new
+directions with Stageshow. Open `explorations/check-in/index.html` to compare
+components and simulated check-in states. No direction has been selected or
+applied to production screens.
+
 ## How to change a screen
 
 1. Start with the app's existing blocks. Add a block only after repeated screens

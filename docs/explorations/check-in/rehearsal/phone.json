@@ -1,0 +1,40 @@
+{
+  "status": "inconclusive",
+  "mode": "motion",
+  "stages": [
+    {
+      "key": "stage-1",
+      "label": "ss-fit explore explore--night",
+      "coverage": {
+        "status": "inconclusive",
+        "frames": 675,
+        "durationMs": 11228.39999999851,
+        "medianMs": 16.600000001490116,
+        "maxGapMs": 33.30000000074506,
+        "skippedGaps": 15,
+        "cameraFrames": 0,
+        "reasons": [
+          "15 sampling gap(s) exceeded 27ms; motion during those gaps was not judged"
+        ],
+        "framingSamples": 16,
+        "layout": {
+          "controls": 4,
+          "paddedContainers": 3,
+          "compositionCrops": 0
+        }
+      },
+      "findings": [
+        "uneven gutters: section.detail-pane sits 20px from the left of div.scene, 20px from the right and 223px from the bottom; bleed it off an edge, or keep one gutter on every side it doesn't bleed (11 frames from 3.5s)",
+        "uneven gutters: div.result-lane sits 16px from the left of section.detail-pane, 16px from the right and 106px from the bottom; bleed it off an edge, or keep one gutter on every side it doesn't bleed (11 frames from 3.5s)",
+        "loose stack: strong \"30-day membership\" sits 11.0px of ink above div.membership-facts \"Bangsar accessUnlimited \"; a name and its preview are one item, 4 to 6px of ink apart, and the row's padding carries the air, not the gap between the lines (11 frames from 3.5s)",
+        "half-pixel glyph: a 16px svg.lucide centered in the 75x16 span sits on a half pixel, so it draws there while span.ss-states__item moves and hops sideways when it settles; size it 16px in an even box (even inside even) (3.5s, 4.2s)"
+      ],
+      "manual": [
+        "same-box content change: search-meta \"3 matching members\" changes text or drawing at 1.74s [search]; inspect the transition in motion (geometry alone cannot judge it)"
+      ]
+    }
+  ],
+  "errors": [],
+  "manualReviewRequired": true,
+  "exitCode": 2
+}
