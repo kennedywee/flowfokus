@@ -17,39 +17,20 @@
 .checkin__submit .button {
   flex: 1 1 12rem;
 }
-.checkin__where {
-  flex: 1 1 8rem;
-  align-self: center;
-  color: var(--color-ink-3);
-  font-size: var(--text-sm);
-}
+.checkin__feedback:empty { display: none; }
 
 /* The result is the answer at the desk, so it is the largest thing in the panel. */
 .checkin .result__title {
-  font-size: var(--text-xl);
-  line-height: 32px;
+  font-size: var(--text-lg);
+  line-height: 28px;
 }
 .checkin .result > .lamp {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 .checkin .result > .lamp svg {
   width: 20px;
   height: 20px;
-}
-.checkin .result__facts {
-  grid-column: 2;
-  margin-top: var(--space-3);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-good-line);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
-  gap: var(--space-3) var(--space-5);
-}
-.checkin .result__facts dt {
-  color: var(--color-ink-2);
-}
-.checkin .result__facts code {
-  font-size: var(--text-sm);
 }
 .checkin .result[data-state="granted"] .result__detail {
   color: var(--color-ink);

@@ -53,7 +53,6 @@ export function Agents() {
   return (
     <PreviewPage
       title="Agents"
-      description="A second pair of eyes for your front desk."
       actions={
         <Button
           variant="secondary"

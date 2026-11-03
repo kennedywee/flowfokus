@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getTeam } from "../../lib/staff.functions";
-import { SETTINGS_SECTIONS, Settings, type SettingsSection } from "../../features/preview/Settings";
+import { SETTINGS_SECTIONS, Settings, type SettingsSection } from "../../features/settings/Settings";
 
 interface SettingsSearch {
   section?: SettingsSection;

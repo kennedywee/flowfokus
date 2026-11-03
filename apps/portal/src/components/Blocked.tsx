@@ -15,7 +15,7 @@ export function Blocked({
   children,
 }: {
   title: string;
-  description: string;
+  description?: string;
   homeLink?: boolean;
   children?: ReactNode;
 }) {
@@ -25,7 +25,7 @@ export function Blocked({
         <Wordmark />
         <div className="entry__text">
           <h1>{title}</h1>
-          <p>{description}</p>
+          {description ? <p>{description}</p> : null}
         </div>
         {children}
         {homeLink ? (

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SkeletonRows } from "../../components/ui";
-import { REPORT_PERIODS, Reports, type ReportPeriod } from "../../features/preview/Reports";
+import { REPORT_PERIODS, Reports, type ReportPeriod } from "../../features/reports/Reports";
 import { getReport } from "../../lib/staff.functions";
 
 interface ReportsSearch {

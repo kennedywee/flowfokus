@@ -58,17 +58,13 @@ export function OrganizationDetails() {
   }
 
   return (
-    <Plate title="Organization details" description="Times show in this time zone. The gym site shows only when published.">
+    <Plate title="Organization details">
       <form className="form" onSubmit={onSubmit} noValidate>
         {action.error ? <FailureNotice error={action.error} title="Settings were not saved" /> : null}
-        <div className="grid-2">
-          <Field id="org-name" label="Name" hint="Managed in WorkOS. Changes there sync here.">
-            <Input id="org-name" value={organization.name} readOnly aria-describedby={describedBy("org-name", "hint")} />
-          </Field>
-          <Field id="org-currency" label="Currency" hint="Fixed. Prices and sales are recorded in it.">
-            <Input id="org-currency" value={organization.currency} readOnly aria-describedby={describedBy("org-currency", "hint")} />
-          </Field>
-        </div>
+        <dl className="facts facts--rows">
+          <div><dt>Name</dt><dd>{organization.name}</dd></div>
+          <div><dt>Currency</dt><dd>{organization.currency}</dd></div>
+        </dl>
         <Field id="org-timezone" label="Time zone">
           <NativeSelect id="org-timezone" value={timezone} disabled={!editable} onChange={(event) => setTimezone(event.target.value)}>
             {zones.map((zone) => (
@@ -84,7 +80,7 @@ export function OrganizationDetails() {
         </div>
         {editable ? (
           <div className="actions actions--end">
-            <span className="muted">{dirty ? "Unsaved changes" : "No unsaved changes"}</span>
+            {dirty ? <span className="muted">Unsaved changes</span> : null}
             <SubmitButton pending={action.pending} pendingLabel="Saving…" disabled={!dirty}>
               <Save aria-hidden="true" />
               Save changes
@@ -107,7 +103,6 @@ export function Locations() {
   return (
     <Plate
       title="Locations"
-      description="Branches where staff sell and check members in. Locations keep their history, so they cannot be removed."
       flush
       action={
         editable ? (
@@ -214,12 +209,12 @@ function LocationDialog({ location, onClose }: { location?: Schemas["Location"];
                   onChange={(event) => setName(event.target.value)}
                 />
               </Field>
-              <Field id="location-address" label="Address" hint="Optional. Shown on the gym site." error={addressError}>
+              <Field id="location-address" label="Address (optional)" error={addressError}>
                 <Input
                   id="location-address"
                   value={address}
                   maxLength={300}
-                  aria-describedby={describedBy("location-address", "hint", addressError)}
+                  aria-describedby={describedBy("location-address", undefined, addressError)}
                   onChange={(event) => setAddress(event.target.value)}
                 />
               </Field>

@@ -1,7 +1,6 @@
-import type { ReactNode } from "react";
 import type { Schemas } from "@flowfokus/api";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, CircleAlert, CircleCheck, Clock, Plus, Users } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
 import { Avatar, Empty, FailureNotice, PageHead, Plate, SkeletonRows, Status } from "../../components/ui";
 import { DENIAL, formatWhen } from "../../lib/format";
@@ -25,39 +24,6 @@ export const Route = createFileRoute("/$org/")({
   component: FrontDesk,
 });
 
-/** The inside of a stat tile: a label, the count, a note, and an optional link cue. */
-function TileBody({
-  label,
-  icon,
-  value,
-  note,
-  go,
-}: {
-  label: string;
-  icon: ReactNode;
-  value: number;
-  note: ReactNode;
-  /** Text for the link cue, for example "View sales". Set it only on a link tile. */
-  go?: string;
-}) {
-  return (
-    <>
-      <span className="desk-tile__label">
-        {icon}
-        {label}
-      </span>
-      <span className="desk-tile__value">{value}</span>
-      <span className="desk-tile__note">{note}</span>
-      {go ? (
-        <span className="desk-tile__go">
-          {go}
-          <ArrowRight strokeWidth={2} aria-hidden="true" focusable="false" />
-        </span>
-      ) : null}
-    </>
-  );
-}
-
 function FrontDesk() {
   const { overview, members, checkIns } = Route.useLoaderData();
   const organization = useOrganization();
@@ -66,7 +32,7 @@ function FrontDesk() {
 
   return (
     <div className="page desk-page">
-      <PageHead title="Overview" description="Check members in. Then follow up on sales that need payment or delivery.">
+      <PageHead title="Overview">
         <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants()}>
           <Plus aria-hidden="true" strokeWidth={1.75} />
           New sale
@@ -81,8 +47,11 @@ function FrontDesk() {
                 <CheckInPanel members={members.data} />
               ) : (
                 <Empty title="No members yet">
-                  <p>Add a member before the first check-in.</p>
-                  <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary" })}>
+                  <Link
+                    to="/$org/members"
+                    params={{ org: organization.slug }}
+                    className={buttonVariants({ variant: "secondary" })}
+                  >
                     Add a member
                   </Link>
                 </Empty>
@@ -93,21 +62,13 @@ function FrontDesk() {
           </Plate>
 
           {overview.ok ? (
-            <Tiles counts={overview.data} slug={organization.slug} />
+            <OverviewCounts counts={overview.data} slug={organization.slug} />
           ) : (
             <FailureNotice error={overview.error} title="Counts did not load" />
           )}
         </div>
 
-        <Plate
-          title="Recent check-ins"
-          flush
-          description={
-            overview.ok
-              ? `Today: ${overview.data.check_ins_today.granted} granted, ${overview.data.check_ins_today.denied} denied`
-              : undefined
-          }
-        >
+        <Plate title="Recent check-ins" flush>
           {checkIns.ok ? (
             checkIns.data.length ? (
               <ol className="desk-recent">
@@ -125,7 +86,11 @@ function FrontDesk() {
                       <span className="cell-sub">
                         {showLocation ? locationName(checkIn.location_id) : null}
                         {showLocation && (checkIn.result === "denied" || checkIn.override_reason) ? " · " : null}
-                        {checkIn.override_reason ? <span className="desk-recent__reason" data-tone="override">Let in by staff</span> : null}
+                        {checkIn.override_reason ? (
+                          <span className="desk-recent__reason" data-tone="override">
+                            Let in by staff
+                          </span>
+                        ) : null}
                         {checkIn.result === "denied" ? (
                           <span className="desk-recent__reason">
                             {checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : "No reason given"}
@@ -143,9 +108,7 @@ function FrontDesk() {
                 ))}
               </ol>
             ) : (
-              <Empty title="No check-ins yet">
-                <p>Each check-in appears here with its result and time.</p>
-              </Empty>
+              <Empty title="No check-ins yet" />
             )
           ) : (
             <FailureNotice error={checkIns.error} title="Check-ins did not load" />
@@ -156,69 +119,43 @@ function FrontDesk() {
   );
 }
 
-/** The five counts from the overview. The sales and member tiles link to their lists. */
-function Tiles({ counts, slug }: { counts: Schemas["StaffOverview"]; slug: string }) {
+/** Read-only totals and direct links to the work behind each count. */
+function OverviewCounts({ counts, slug }: { counts: Schemas["StaffOverview"]; slug: string }) {
   const today = counts.check_ins_today;
-  const due = counts.unpaid_sale_count;
-  const waiting = counts.awaiting_fulfillment_count;
-  const icon = { strokeWidth: 2, "aria-hidden": true, focusable: false } as const;
   return (
-    <div className="desk-tiles">
-      <div className="desk-tile">
-        <TileBody
-          label="Check-ins today"
-          icon={<CircleCheck {...icon} />}
-          value={today.granted + today.denied}
-          note={
-            <>
-              <b>{today.granted}</b> granted, <b>{today.denied}</b> denied
-            </>
-          }
-        />
+    <dl className="desk-summary">
+      <div>
+        <dt>Check-ins today</dt>
+        <dd>{today.granted + today.denied}</dd>
+        <span className="desk-summary__detail">
+          {today.granted} granted · {today.denied} denied
+        </span>
       </div>
-      <Link to="/$org/members" params={{ org: slug }} className="desk-tile">
-        <TileBody
-          label="Members"
-          icon={<Users {...icon} />}
-          value={counts.member_count}
-          note={
-            <>
-              <b>{counts.active_membership_count}</b> with access now
-            </>
-          }
-          go="View members"
-        />
-      </Link>
-      <Link
-        to="/$org/sales"
-        params={{ org: slug }}
-        search={{ view: "due" }}
-        className="desk-tile"
-        data-tone={due ? "warning" : undefined}
-      >
-        <TileBody
-          label="Balance due"
-          icon={<CircleAlert {...icon} />}
-          value={due}
-          note="Sales with a balance due"
-          go="View sales"
-        />
-      </Link>
-      <Link
-        to="/$org/sales"
-        params={{ org: slug }}
-        search={{ view: "deliver" }}
-        className="desk-tile"
-        data-tone={waiting ? "info" : undefined}
-      >
-        <TileBody
-          label="Awaiting delivery"
-          icon={<Clock {...icon} />}
-          value={waiting}
-          note="Paid sales not yet delivered"
-          go="View sales"
-        />
-      </Link>
-    </div>
+      <div>
+        <dt>
+          <Link to="/$org/members" params={{ org: slug }}>
+            Members <ArrowRight aria-hidden="true" />
+          </Link>
+        </dt>
+        <dd>{counts.member_count}</dd>
+        <span className="desk-summary__detail">{counts.active_membership_count} with access</span>
+      </div>
+      <div>
+        <dt>
+          <Link to="/$org/sales" params={{ org: slug }} search={{ view: "due" }}>
+            Unpaid sales <ArrowRight aria-hidden="true" />
+          </Link>
+        </dt>
+        <dd>{counts.unpaid_sale_count}</dd>
+      </div>
+      <div>
+        <dt>
+          <Link to="/$org/sales" params={{ org: slug }} search={{ view: "deliver" }}>
+            Awaiting delivery <ArrowRight aria-hidden="true" />
+          </Link>
+        </dt>
+        <dd>{counts.awaiting_fulfillment_count}</dd>
+      </div>
+    </dl>
   );
 }

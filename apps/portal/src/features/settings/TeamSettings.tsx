@@ -47,7 +47,6 @@ export function TeamSettings({ team }: { team: Result<Schemas["Team"]> | null })
     <>
       <Plate
         title="Your team"
-        description="People with staff access here. Role changes reach a person's session at their next refresh."
         flush
         action={
           <Button type="button" variant="secondary" size="sm" disabled={!grantable.length} onClick={() => setInviting(true)}>
@@ -79,7 +78,7 @@ export function TeamSettings({ team }: { team: Result<Schemas["Team"]> | null })
         </Table>
       </Plate>
       {invitations.length ? (
-        <Plate title="Pending invitations" description="WorkOS emails each invitation. It expires unless accepted." flush>
+        <Plate title="Pending invitations" flush>
           <Table>
             <TableHeader>
               <TableRow>

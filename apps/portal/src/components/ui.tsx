@@ -309,13 +309,13 @@ export function SkeletonRows({ rows = 4 }: { rows?: number }) {
   );
 }
 
-/** The page title, a description, and actions on the right. */
-export function PageHead({ title, description, children }: { title: string; description?: ReactNode; children?: ReactNode }) {
+/** A page title, optional record metadata, and actions. No instructional subtitle. */
+export function PageHead({ title, meta, children }: { title: string; meta?: ReactNode; children?: ReactNode }) {
   return (
     <header className="page-head">
       <div className="page-head__text">
         <h1>{title}</h1>
-        {description ? <p>{description}</p> : null}
+        {meta ? <p>{meta}</p> : null}
       </div>
       {children ? <div className="page-head__actions">{children}</div> : null}
     </header>

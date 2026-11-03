@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Check, CheckCheck, ChevronLeft, Inbox as InboxIcon } from "lucide-react";
 import { Avatar, Empty, Pill } from "../../components/ui";
 import { initialInbox } from "./data";
-import { Filters, PreviewPage } from "./shared";
+import { Filters } from "../../components/Filters";
+import { PreviewPage } from "./shared";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 export function Inbox() {
@@ -27,7 +28,6 @@ export function Inbox() {
   return (
     <PreviewPage
       title="Inbox"
-      description="The things that need a person at the desk."
       actions={
         <Button
           variant="secondary"

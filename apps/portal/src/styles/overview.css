@@ -1,104 +1,43 @@
 /* Screen styles: front desk overview. Scoped under .desk-page so nothing leaks. */
 
-/* Stat tiles: a small caps label, a mono readout, and a note. */
-/* The column is the container. Two by two from about 420px, one column on phones. */
-.desk-page .stack {
-  container-type: inline-size;
-}
-.desk-page .desk-tiles {
+/* Totals use the same reading order as a record list. */
+.desk-summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  margin: 0;
 }
-@container (min-width: 26rem) {
-  .desk-page .desk-tiles {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-.desk-page .desk-tile {
+.desk-summary > div {
   display: grid;
-  align-content: start;
-  gap: 10px;
-  min-width: 0;
-  padding: var(--space-5) 22px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-xl);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.desk-summary dt {
+  font-weight: var(--font-weight-medium);
+}
+.desk-summary dt a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-ink);
   text-decoration: none;
 }
-.desk-page a.desk-tile {
-  transition:
-    background-color var(--duration-press) var(--ease-out),
-    border-color var(--duration-press) var(--ease-out);
+.desk-summary dt a:hover {
+  text-decoration: underline;
 }
-.desk-page a.desk-tile:hover {
-  background: var(--color-well);
-  border-color: var(--color-line-strong);
-  color: var(--color-ink);
-}
-.desk-page .desk-tile[data-tone="warning"] {
-  border-color: var(--color-warning-line);
-}
-.desk-page .desk-tile[data-tone="info"] {
-  border-color: var(--color-accent-line);
-}
-.desk-page .desk-tile__label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-ink-2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: var(--tracking-caps);
-  line-height: 14px;
-  text-transform: uppercase;
-}
-.desk-page .desk-tile__label svg {
-  flex: none;
-  width: 13px;
-  height: 13px;
-}
-.desk-page .desk-tile[data-tone="warning"] .desk-tile__label {
-  color: var(--color-warning);
-}
-.desk-page .desk-tile[data-tone="info"] .desk-tile__label {
-  color: var(--color-accent);
-}
-.desk-page .desk-tile__value {
-  font-family: var(--font-mono);
-  font-feature-settings: "tnum";
-  font-size: var(--text-readout);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: -0.04em;
-  line-height: 64px;
-}
-.desk-page .desk-tile[data-tone="warning"] .desk-tile__value {
-  color: var(--color-warning);
-}
-.desk-page .desk-tile__note {
-  color: var(--color-ink-2);
-  font-size: var(--text-sm);
-  line-height: 16px;
-}
-.desk-page .desk-tile__note b {
-  font-family: var(--font-mono);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-ink);
-}
-.desk-page .desk-tile__go {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--color-accent);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 16px;
-}
-.desk-page .desk-tile__go svg {
+.desk-summary dt svg {
   width: 14px;
   height: 14px;
+}
+.desk-summary dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+}
+.desk-summary__detail {
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
 }
 
 /* Recent check-ins: avatar, member and place, then result and time. */

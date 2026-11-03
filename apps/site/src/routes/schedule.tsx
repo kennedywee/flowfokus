@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { formatMoney, listNames, PROGRAM_KIND_LABEL } from "../lib/format";
-import { useDates, useGym } from "../lib/site";
+import { useDates } from "../lib/site";
 import { getSchedulePage } from "../lib/site.functions";
 
 export const Route = createFileRoute("/schedule")({
@@ -11,7 +11,6 @@ export const Route = createFileRoute("/schedule")({
 
 function Schedule() {
   const page = Route.useLoaderData();
-  const { organization } = useGym();
   const dates = useDates();
 
   if (page.kind === "error") {
@@ -41,9 +40,6 @@ function Schedule() {
     <section className="schedule" aria-labelledby="schedule-heading">
       <div className="wrap">
         <h1 id="schedule-heading">Schedule</h1>
-        <p className="opening__lede">
-          Classes, events, and appointments at {organization.name} for the next two weeks. Times are in the gym's local time.
-        </p>
         {days.size === 0 ? (
           <div className="empty">
             <p className="empty__title">Nothing on the schedule yet</p>

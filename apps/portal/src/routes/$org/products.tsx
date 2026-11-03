@@ -38,7 +38,6 @@ function Products() {
     <div className="page offers-page">
       <PageHead
         title="Plans & offers"
-        description="Memberships and passes, and their prices. Ticket prices live on each program. To change a price, add a new one."
       >
         {can("products:create") ? (
           <Button type="button" onClick={() => setEditing({ kind: "new" })}>

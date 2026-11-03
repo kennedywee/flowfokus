@@ -50,7 +50,7 @@ function Start() {
 
   if (data.view === "unavailable") {
     return (
-      <Blocked title="Staff access is turned off" description="Nothing in the portal can open until staff sign-in is set up.">
+      <Blocked title="Staff access is turned off">
         <AccessUnavailable reason={data.reason} />
       </Blocked>
     );
@@ -58,7 +58,7 @@ function Start() {
 
   if (data.view === "signed_out") {
     return (
-      <Blocked title="Sign in to the staff portal" description="Use your staff account. If you work at more than one organization, you pick one during sign-in.">
+      <Blocked title="Sign in">
         {data.failed ? (
           <Notice tone="error" title="Sign-in did not finish" live>
             <p>The sign-in link expired or was already used. Start again.</p>
@@ -74,7 +74,7 @@ function Start() {
   const { user, organizations } = data;
   if (!organizations.ok) {
     return (
-      <Blocked title="Your organizations did not load" description={`Signed in as ${user.email}.`}>
+      <Blocked title="Your organizations did not load" description={user.email}>
         <FailureNotice error={organizations.error} title="The list did not load" />
         <div className="actions">
           <SignOutForm />
@@ -85,7 +85,7 @@ function Start() {
 
   if (organizations.data.length === 0) {
     return (
-      <Blocked title="No staff access yet" description={`Signed in as ${user.email}.`}>
+      <Blocked title="No staff access yet" description={user.email}>
         <Notice tone="warning" title="You are not staff at any organization">
           <p>Ask an owner to add you as staff, then sign in again.</p>
         </Notice>
@@ -97,7 +97,7 @@ function Start() {
   }
 
   return (
-    <Blocked title="Choose an organization" description={`Signed in as ${user.email}. You can switch later from the top bar.`}>
+    <Blocked title="Choose an organization" description={user.email}>
       <OrganizationChoices organizations={organizations.data} />
       <div className="actions">
         <SignOutForm />

@@ -24,7 +24,7 @@ function Programs() {
 
   return (
     <div className="page programs-page">
-      <PageHead title="Programs" description="Group classes, events, and appointments. Each one has times, spots, and ways to book.">
+      <PageHead title="Programs">
         <Link to="/$org/schedule" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary" })}>
           <CalendarDays aria-hidden="true" />
           Schedule

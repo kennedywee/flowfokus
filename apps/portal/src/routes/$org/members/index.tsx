@@ -58,7 +58,7 @@ function Members() {
 
   return (
     <div className="page members-page">
-      <PageHead title="Members" description="Find a member, or add a new one before their first sale.">
+      <PageHead title="Members">
         <Button type="button" onClick={() => setAdding(true)}>
           <UserPlus aria-hidden="true" />
           Add member
@@ -80,15 +80,13 @@ function Members() {
               <div className="members-state">
                 {q ? (
                   <Empty title={`No member matches “${q}”`}>
-                    <p>Check the spelling, search by email, or add them as a new member.</p>
+
                     <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
                       Clear search
                     </Link>
                   </Empty>
                 ) : (
-                  <Empty title="No members yet">
-                    <p>Select Add member to add the first member. You can then sell them a membership.</p>
-                  </Empty>
+                  <Empty title="No members yet" />
                 )}
               </div>
             )

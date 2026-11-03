@@ -78,7 +78,7 @@ function SalePage() {
     <div className="page sale-page">
       <PageHead
         title={`${line.product_name}, ${line.price_label}`}
-        description={
+        meta={
           <>
             {data.renewal ? "Renewal at the agreed price. " : null}
             {data.channel === "online" ? "Bought online by " : "Sold to "}
@@ -152,7 +152,7 @@ function SalePage() {
 
         <div className="stack">
           {data.voided_at ? null : <Delivery sale={data} />}
-          <Plate title="Purchased terms" description="Saved at purchase. Catalog changes never alter them.">
+          <Plate title="Purchased terms">
             <dl className="facts facts--rows">
               <div>
                 <dt>Price</dt>
@@ -254,7 +254,6 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
     localError ??
     server?.amount_minor?.join(" ") ??
     (action.error?.code === "overpayment" ? action.error.message : undefined);
-  const amountHint = `Balance: ${formatMoney(sale.balance_minor, sale.currency)}. A smaller amount leaves the rest due.`;
 
   function edited() {
     if (action.error) {
@@ -313,7 +312,7 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
           edited();
         }}
       />
-      <Field id="payment-amount" label="Amount" hint={amountHint} error={amountError}>
+      <Field id="payment-amount" label="Amount" error={amountError}>
         <InputGroup>
           <InputGroupAddon>{sale.currency}</InputGroupAddon>
           <InputGroupInput
@@ -328,11 +327,11 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
               edited();
             }}
             aria-invalid={amountError ? true : undefined}
-            aria-describedby={describedBy("payment-amount", amountHint, amountError)}
+            aria-describedby={describedBy("payment-amount", undefined, amountError)}
           />
         </InputGroup>
       </Field>
-      <Field id="payment-reference" label="Reference (optional)" hint="Receipt number or bank reference.">
+      <Field id="payment-reference" label="Reference (optional)">
         <Input
           id="payment-reference"
           maxLength={200}
@@ -342,7 +341,6 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
             setReference(event.target.value);
             edited();
           }}
-          aria-describedby="payment-reference-hint"
         />
       </Field>
       {action.error && action.error.code !== "overpayment" && !server?.amount_minor ? (

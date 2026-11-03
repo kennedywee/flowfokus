@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, createFileRoute, notFound, redirect, rootRouteId, useLoaderData, useRouter, useRouterState } from "@tanstack/react-router";
 import {
-  ArrowRight,
   Bot,
   CalendarDays,
   ChartColumn,
   ChevronRight,
-  CircleHelp,
-  CircleUserRound,
   Inbox,
   LayoutGrid,
   LogIn,
@@ -21,7 +18,7 @@ import {
   Plus,
   Receipt,
   Search,
-  Sparkle,
+  History,
   Sun,
   Tag,
   Ticket,
@@ -69,7 +66,6 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/$org")({
   beforeLoad: ({ params }) => {
@@ -129,6 +125,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/$org/programs", label: "Programs", icon: Ticket, exact: false, path: "/programs" },
       { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
       { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
+      { to: "/$org/changelog", label: "What’s new", icon: History, exact: true, path: "/changelog" },
     ],
   },
 ];
@@ -141,7 +138,6 @@ function OrganizationLayout() {
     return (
       <Blocked
         title="Staff access is turned off"
-        description="Nothing in the portal can open until staff sign-in is set up."
       >
         <AccessUnavailable reason={access.reason} />
       </Blocked>
@@ -152,7 +148,6 @@ function OrganizationLayout() {
       <Blocked
         homeLink
         title={`Cannot open “${org}”`}
-        description="Check the address name, or go to the staff portal."
       >
         {organization ? <FailureNotice error={organization.error} title="The organization did not open" /> : null}
         {access.kind === "workos" ? (
@@ -257,12 +252,6 @@ function Shell({
                 }}
                 searchLabel="Search organizations"
                 emptyText="No organization matches."
-                footer={() => (
-                  <button type="button" className="switcher__action">
-                    <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                    Create organization
-                  </button>
-                )}
               />
               <span className="topbar__slash" aria-hidden="true">
                 /
@@ -315,13 +304,10 @@ function Shell({
             </div>
           </div>
           <div className="topbar__end">
-            {/* Visual only for now. The members page has the search. */}
+            {/* Search opens the searchable member list. */}
             <Link to="/$org/members" params={{ org: data.slug }} className="topbar__search">
               <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
               <span className="topbar__search-label">Search</span>
-              <kbd className="topbar__kbd" aria-hidden="true">
-                ⌘K
-              </kbd>
             </Link>
             <AccountMenu actor={data.actor} canSignOut={canSignOut} />
           </div>
@@ -340,8 +326,7 @@ function Shell({
  */
 function AppSidebar({ data }: { data: OrganizationData }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const { open, isRail, setOpenMobile } = useSidebar();
-  const [showWhatsNew, setShowWhatsNew] = useState(true);
+  const { open, setOpenMobile } = useSidebar();
   const closeDrawer = () => setOpenMobile(false);
 
   // A link inside the drawer was used. Close it, so the new page shows.
@@ -413,62 +398,6 @@ function AppSidebar({ data }: { data: OrganizationData }) {
           );
         })}
       </SidebarContent>
-      {showWhatsNew ? (
-        <>
-          <aside className="whatsnew" aria-labelledby="whatsnew-title">
-            <div className="whatsnew__head">
-              <span className="whatsnew__tag">
-                <span className="whatsnew__dot" aria-hidden="true" />
-                What&rsquo;s new
-              </span>
-              <button type="button" className="whatsnew__dismiss" onClick={() => setShowWhatsNew(false)}>
-                <X strokeWidth={2} aria-hidden="true" focusable="false" />
-                <span className="visually-hidden">Hide what&rsquo;s new</span>
-              </button>
-            </div>
-            <div className="whatsnew__body">
-              <p className="whatsnew__title" id="whatsnew-title">
-                New look for the staff portal
-              </p>
-              <p className="whatsnew__text">Same tasks, new dark design.</p>
-            </div>
-            <div className="whatsnew__foot">
-              <span className="whatsnew__version">v0.4</span>
-              <Link
-                to="/$org/changelog"
-                params={{ org: data.slug }}
-                activeOptions={{ exact: true }}
-                className="whatsnew__link"
-                onClick={closeDrawer}
-              >
-                Changelog
-                <ArrowRight strokeWidth={2} aria-hidden="true" focusable="false" />
-              </Link>
-            </div>
-          </aside>
-          {/* On the rail the card becomes one icon with a dot. */}
-          <Tooltip disabled={!isRail}>
-            <TooltipTrigger
-              render={
-                <Link
-                  to="/$org/changelog"
-                  params={{ org: data.slug }}
-                  activeOptions={{ exact: true }}
-                  className="whatsnew-rail"
-                  onClick={closeDrawer}
-                />
-              }
-            >
-              <Sparkle strokeWidth={1.75} aria-hidden="true" focusable="false" />
-              <span className="whatsnew-rail__dot" aria-hidden="true" />
-              <span className="visually-hidden">What&rsquo;s new</span>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={12}>
-              What&rsquo;s new
-            </TooltipContent>
-          </Tooltip>
-        </>
-      ) : null}
     </Sidebar>
   );
 }
@@ -488,14 +417,11 @@ function applyTheme(theme: Theme) {
 
 /**
  * The account menu, on the shadcn dropdown menu. The theme choice and sign-out
- * work. Help and account settings respond like menu items, but do nothing yet.
- * Sign-out submits a hidden form, so it is a same-origin POST, not a script call.
+ * work. Sign-out submits a hidden form, so it is a same-origin POST, not a script call.
  */
 function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; canSignOut: boolean }) {
   const signOutForm = useRef<HTMLFormElement>(null);
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
-  // The items do nothing yet, so a click leaves the menu open.
-  const item = { closeOnClick: false } as const;
   const router = useRouter();
   const toast = useToast();
   const saved = useLoaderData({ from: rootRouteId });
@@ -531,13 +457,6 @@ function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; 
           <span className="menu__email">{actor.email}</span>
         </DropdownMenuHeader>
         <DropdownMenuSeparator />
-        <DropdownMenuItem {...item}>
-          <CircleHelp {...icon} />
-          Help &amp; feedback
-          <DropdownMenuShortcut>
-            <ChevronRight {...icon} />
-          </DropdownMenuShortcut>
-        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <current.icon {...icon} />
@@ -558,10 +477,6 @@ function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; 
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuItem {...item}>
-          <CircleUserRound {...icon} />
-          Account settings
-        </DropdownMenuItem>
         {canSignOut ? (
           <>
             <DropdownMenuSeparator />

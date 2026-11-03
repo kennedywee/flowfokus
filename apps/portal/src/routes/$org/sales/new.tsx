@@ -11,7 +11,6 @@ import {
   Money,
   Notice,
   PageHead,
-  Plate,
   SkeletonRows,
   SubmitButton,
   describedBy,
@@ -69,14 +68,14 @@ function NewSale() {
 
   return (
     <div className="page new-sale-page">
-      <PageHead
-        title="New sale"
-        description="One membership or pass for one member. Sell tickets from a time on the schedule. Record payment on the next screen."
-      />
+      <PageHead title="New sale" />
       {members.data.length === 0 ? (
         <Empty title="Add a member first">
-          <p>A sale needs a member. Add one, then come back.</p>
-          <Link to="/$org/members" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "sm" })}>
+          <Link
+            to="/$org/members"
+            params={{ org: organization.slug }}
+            className={buttonVariants({ variant: "secondary", size: "sm" })}
+          >
             Add a member
           </Link>
         </Empty>
@@ -114,14 +113,18 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
   const memberError = local.member ?? server?.member_id?.join(" ");
   const productError = local.product;
   const priceError =
-    local.price ?? server?.price_id?.join(" ") ?? (action.error?.code === "price_unavailable" ? action.error.message : undefined);
+    local.price ??
+    server?.price_id?.join(" ") ??
+    (action.error?.code === "price_unavailable" ? action.error.message : undefined);
   const locationError = local.location ?? server?.location_id?.join(" ");
 
   const member = members.find((item) => item.id === memberId);
   const offer = offers.find((item) => item.product.id === productId);
   const price = offer?.prices.find((item) => item.id === priceId);
   const benefitsText = (product: Schemas["StaffProduct"]) =>
-    product.benefits.map((benefit) => `${formatBenefitUsage(benefit)}, ${locationName(benefit.location_id)}`).join("; ");
+    product.benefits
+      .map((benefit) => `${formatBenefitUsage(benefit)}, ${locationName(benefit.location_id)}`)
+      .join("; ");
 
   /** Changed values are a new request, so they need a new key. */
   function edited() {
@@ -161,12 +164,14 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
 
   const fieldErrorsShown = Boolean(memberError || productError || priceError || locationError);
   const showNotice =
-    action.error && !(action.error.code === "validation_failed" && fieldErrorsShown) && action.error.code !== "price_unavailable";
+    action.error &&
+    !(action.error.code === "validation_failed" && fieldErrorsShown) &&
+    action.error.code !== "price_unavailable";
 
   return (
     <form className="new-sale-page__layout" onSubmit={onSubmit} noValidate>
-      <div className="stack">
-        <Plate title="Member" icon={<span className="new-sale-page__step">1</span>} description="Who is buying?">
+      <div className="new-sale-page__fields">
+        <section aria-label="Member">
           <div className="form">
             <Combobox
               id="sale-member"
@@ -204,9 +209,9 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
               </NativeSelect>
             </Field>
           </div>
-        </Plate>
+        </section>
 
-        <Plate title="Offer" icon={<span className="new-sale-page__step">2</span>} description="What is the member buying?">
+        <section aria-label="Offer">
           {offers.length > OFFER_CARD_LIMIT ? (
             <Combobox
               id="sale-offer"
@@ -234,7 +239,6 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
               <RadioCards
                 name="product"
                 legend="Offer"
-                hideLegend
                 options={offers.map(({ product }) => ({
                   value: product.id,
                   title: `${product.name}${product.published ? "" : " (staff only)"}`,
@@ -256,75 +260,67 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
               ) : null}
             </>
           )}
-        </Plate>
+        </section>
 
-        <Plate title="Price" icon={<span className="new-sale-page__step">3</span>} description="Which price and term?">
-          {offer ? (
-            <>
-              <RadioCards
-                name="price"
-                legend="Price"
-                hideLegend
-                options={offer.prices.map((item) => ({
-                  value: item.id,
-                  title: item.label,
-                  meta: formatDuration(item.duration_days),
-                  trailing: <Money minor={item.amount_minor} currency={item.currency} />,
-                }))}
-                value={priceId || null}
-                onChange={(value) => {
-                  setPriceId(value);
-                  setLocal((current) => ({ ...current, price: undefined }));
-                  edited();
-                }}
-                describedBy={priceError ? "sale-price-error" : undefined}
-              />
-              {priceError ? (
-                <p className="field__error" id="sale-price-error">
-                  {priceError}
-                </p>
-              ) : null}
-            </>
-          ) : (
-            <p className="field__hint">Choose an offer first. Its prices show here.</p>
-          )}
-        </Plate>
+        {offer ? (
+          <section aria-label="Price">
+            <RadioCards
+              name="price"
+              legend="Price"
+              options={offer.prices.map((item) => ({
+                value: item.id,
+                title: item.label,
+                meta: formatDuration(item.duration_days),
+                trailing: <Money minor={item.amount_minor} currency={item.currency} />,
+              }))}
+              value={priceId || null}
+              onChange={(value) => {
+                setPriceId(value);
+                setLocal((current) => ({ ...current, price: undefined }));
+                edited();
+              }}
+              describedBy={priceError ? "sale-price-error" : undefined}
+            />
+            {priceError ? (
+              <p className="field__error" id="sale-price-error">
+                {priceError}
+              </p>
+            ) : null}
+          </section>
+        ) : null}
       </div>
 
-      <div className="stack new-sale-page__summary">
-        <Plate title="Sale summary">
-          <div className="readout">
-            <span className="readout__label">Total</span>
-            <span className="readout__value">{price ? formatMoney(price.amount_minor, price.currency) : "—"}</span>
+      <section className="new-sale-page__summary" aria-label="Sale summary">
+        <div className="readout">
+          <span className="readout__label">Total</span>
+          <span className="readout__value">{price ? formatMoney(price.amount_minor, price.currency) : "—"}</span>
+        </div>
+        <dl className="facts facts--rows">
+          <div>
+            <dt>Member</dt>
+            <dd>{member?.name ?? "—"}</dd>
           </div>
-          <dl className="facts facts--rows">
-            <div>
-              <dt>Member</dt>
-              <dd>{member?.name ?? "—"}</dd>
-            </div>
-            <div>
-              <dt>Offer</dt>
-              <dd>{offer?.product.name ?? "—"}</dd>
-            </div>
-            <div>
-              <dt>Term</dt>
-              <dd>{price ? formatDuration(price.duration_days) : "—"}</dd>
-            </div>
-          </dl>
-          <p className="field__hint">The price and terms are saved with the sale. Later catalog changes do not affect it.</p>
-          {showNotice && action.error ? (
-            <Notice tone="error" title="The sale was not recorded" live>
-              <p>{failureMessage(action.error)}</p>
-              <p>Your choices are kept. Check them, then try again.</p>
-            </Notice>
-          ) : null}
-          <div className="actions">
-            <SubmitButton pending={action.pending} pendingLabel="Recording…" large>
-              Record sale
-            </SubmitButton>
+          <div>
+            <dt>Offer</dt>
+            <dd>{offer?.product.name ?? "—"}</dd>
           </div>
-        </Plate>
-      </div>
+          <div>
+            <dt>Term</dt>
+            <dd>{price ? formatDuration(price.duration_days) : "—"}</dd>
+          </div>
+        </dl>
+
+        {showNotice && action.error ? (
+          <Notice tone="error" title="The sale was not recorded" live>
+            <p>{failureMessage(action.error)}</p>
+          </Notice>
+        ) : null}
+        <div className="actions">
+          <SubmitButton pending={action.pending} pendingLabel="Recording…" large>
+            Record sale
+          </SubmitButton>
+        </div>
+      </section>
     </form>
   );
 }

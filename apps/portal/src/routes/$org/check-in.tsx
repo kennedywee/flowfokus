@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckIns } from "../../features/preview/CheckIns";
+import { CheckIns } from "../../features/check-ins/CheckIns";
 import { listCheckIns, listMembers } from "../../lib/staff.functions";
 
 export const Route = createFileRoute("/$org/check-in")({

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { describeBenefit, formatDuration, formatMoney, listNames } from "../lib/format";
+import { describeBenefit, formatDuration, formatMoney } from "../lib/format";
 import { useGym, useSession } from "../lib/site";
 import { submitCheckout } from "../lib/site.functions";
 
@@ -11,34 +11,15 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const { organization, products } = useGym();
-  const locationNames = organization.locations.map((location) => location.name);
 
   return (
     <>
       <section className="opening" aria-labelledby="gym-name">
         <div className="wrap">
           <h1 id="gym-name">{organization.name}</h1>
-          {locationNames.length ? (
-            <p className="opening__lede">
-              {products.length === 1 ? "One plan" : `${products.length} memberships and passes`}
-              {/* Past three names, the sentence gets hard to read. The Locations section lists them all. */}
-              {locationNames.length <= 3 ? ` for ${listNames(locationNames)}.` : ` at ${locationNames.length} locations.`}
-            </p>
-          ) : null}
-          <div className="door-plate">
-            <span className="status">
-              <span className="lamp" data-state="active" aria-hidden="true" />
-              {organization.online_payments ? "Book and pay online" : "Join at the front desk"}
-            </span>
-            <span className="field__hint">
-              {organization.online_payments
-                ? "Members book classes and buy passes here. The front desk links your account the first time."
-                : "Online payment is not available yet. Book and pay at the front desk."}
-            </span>
-          </div>
           <div className="actions">
             <Link to="/schedule" className="button button--large">
-              See the schedule
+              Schedule
             </Link>
             <a href="#offers" className="button button--quiet button--large">
               Memberships and passes
@@ -54,7 +35,6 @@ function Home() {
         <div className="wrap">
           <div className="board__head">
             <h2 id="offers-heading">Memberships and passes</h2>
-            <p>Prices in {organization.currency}. Each one runs for the term shown, from the day you buy it.</p>
           </div>
           {products.length ? (
             <ul className="offers">
@@ -68,11 +48,7 @@ function Home() {
               <p>Ask at the front desk about joining.</p>
             </div>
           )}
-          <p className="board__note">
-            {organization.online_payments
-              ? "Pay online when signed in, or by cash or bank transfer at the front desk."
-              : "Pay by cash or bank transfer at the front desk."}
-          </p>
+
         </div>
       </section>
 
@@ -119,7 +95,7 @@ function Offer({ product }: { product: Schemas["PublicProduct"] }) {
           <div key={price.id} className="price">
             <dt>{price.label}</dt>
             <dd className="price__amount">{formatMoney(price.amount_minor, price.currency)}</dd>
-            <dd className="price__term">{formatDuration(price.duration_days)}</dd>
+            <dd className="price__term">{formatDuration(price.duration_days)}{price.duration_days === null ? null : " from purchase"}</dd>
             <dd className="price__action">
               <BuyButton price={price} label={`${product.name}, ${price.label}`} />
             </dd>
@@ -139,7 +115,7 @@ function BuyButton({ price, label }: { price: Schemas["PublicPrice"]; label: str
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<{ message: string; link: boolean } | null>(null);
 
-  if (!organization.online_payments || !session.signInOn) return null;
+  if (!organization.online_payments || !session.signInOn) return <span className="price__desk">Cash or bank transfer at the front desk</span>;
   if (!session.person) {
     return (
       <a className="button button--quiet price__buy" href="/auth/start?returnTo=/%23offers">

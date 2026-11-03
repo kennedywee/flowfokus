@@ -7,7 +7,7 @@ import { createIdempotencyKey } from "../lib/idempotency";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../lib/organization";
 import { createCheckIn } from "../lib/staff.functions";
 import { Combobox } from "./Combobox";
-import { Field, FailureNotice, Lamp, SubmitButton, describedBy } from "./ui";
+import { Field, FailureNotice, Lamp, Notice, SubmitButton, describedBy } from "./ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -118,7 +118,7 @@ export function CheckInPanel({
   const state = checkIn ? checkIn.result : "off";
   const noLocations = organization.locations.length === 0;
   const manyLocations = organization.locations.length > 1;
-  const denial = checkIn?.result === "denied" && checkIn.denial_reason ? DENIAL[checkIn.denial_reason] : null;
+  const denial = checkIn?.denial_reason ? DENIAL[checkIn.denial_reason] : null;
 
   return (
     <form className="form checkin" ref={formRef} onSubmit={onSubmit} noValidate aria-label="Check in">
@@ -134,7 +134,6 @@ export function CheckInPanel({
             onChange();
           }}
           placeholder="Type a name or email"
-          hint="Press Enter to choose a member, then Enter again to check in."
           emptyText="No member matches. Check the spelling, or add the member on the Members page."
           error={memberError}
         />
@@ -162,68 +161,40 @@ export function CheckInPanel({
         <SubmitButton pending={action.pending} pendingLabel="Checking…" disabled={noLocations} large>
           Check in{fixedMember ? ` ${fixedMember.name.split(" ")[0]}` : ""}
         </SubmitButton>
-        {!manyLocations && !noLocations ? <p className="checkin__where">at {locationName(locationId)}</p> : null}
       </div>
 
       {action.error ? <FailureNotice error={action.error} title="Check-in was not recorded" /> : null}
 
-      <div role="status" aria-live="polite" aria-atomic="true">
-        <div className="result" data-state={state} data-fresh={fresh}>
-          <Lamp state={state} />
-          {checkIn ? (
-            checkIn.result === "granted" ? (
-              <>
-                <p className="result__title">{checkIn.override_reason ? "Let in by staff" : "Access granted"}</p>
-                <p className="result__detail">
-                  {checkIn.member.name} may go in.
-                  {checkIn.override_reason
-                    ? ` Their rights said: ${checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title.toLowerCase() : "denied"}. Reason: ${checkIn.override_reason}. Nothing was used.`
-                    : ""}
-                </p>
-                <dl className="facts result__facts">
-                  <div>
-                    <dt>Member</dt>
-                    <dd>{checkIn.member.name}</dd>
-                  </div>
-                  <div>
-                    <dt>Location</dt>
-                    <dd>{locationName(checkIn.location_id)}</dd>
-                  </div>
-                  <div>
-                    <dt>Time</dt>
-                    <dd>
-                      <time dateTime={checkIn.checked_in_at}>{formatTime(checkIn.checked_in_at, organization.timezone)}</time>
-                    </dd>
-                  </div>
-                  {checkIn.entitlement_id ? (
-                    <div>
-                      <dt>Right used</dt>
-                      <dd>
-                        <code>{checkIn.entitlement_id.slice(0, 8)}</code>
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </>
-            ) : (
-              <>
-                <p className="result__title">Denied: {denial ? denial.title : "No reason given"}</p>
-                <p className="result__detail">
-                  {checkIn.member.name} at {locationName(checkIn.location_id)}. {denial?.next} Nothing was used.
-                </p>
-              </>
-            )
-          ) : (
-            <>
-              <p className="result__title">Ready</p>
+      {noLocations ? (
+        <Notice tone="warning" title="No locations">
+          Add a location in Settings to check members in.
+        </Notice>
+      ) : null}
+
+      <div className="checkin__feedback" role="status" aria-live="polite" aria-atomic="true">
+        {checkIn ? (
+          <div className="result" data-state={state} data-fresh={fresh}>
+            <Lamp state={state} />
+            <p className="result__title">
+              {checkIn.result === "granted"
+                ? checkIn.override_reason
+                  ? "Let in by staff"
+                  : "Access granted"
+                : `Denied: ${denial?.title ?? "No reason given"}`}
+            </p>
+            <p className="result__detail">
+              {checkIn.member.name} · {locationName(checkIn.location_id)} ·{" "}
+              <time dateTime={checkIn.checked_in_at}>{formatTime(checkIn.checked_in_at, organization.timezone)}</time>
+            </p>
+            {checkIn.override_reason ? (
               <p className="result__detail">
-                {noLocations
-                  ? "This organization has no locations, so check-in is not possible."
-                  : "The result shows here. A denial always names its reason."}
+                {checkIn.override_reason}. {denial?.title}. Nothing was used.
               </p>
-            </>
-          )}
-        </div>
+            ) : checkIn.result === "denied" ? (
+              <p className="result__detail">{denial?.next} Nothing was used.</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {checkIn?.result === "denied" && can("check_ins:override") ? (
@@ -244,7 +215,13 @@ export function CheckInPanel({
               <Button type="button" variant="ghost" onClick={() => setOverriding(false)} disabled={action.pending}>
                 Cancel
               </Button>
-              <Button type="button" variant="destructive" onClick={() => void letIn()} disabled={action.pending} aria-busy={action.pending || undefined}>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => void letIn()}
+                disabled={action.pending}
+                aria-busy={action.pending || undefined}
+              >
                 Let in anyway
               </Button>
             </div>

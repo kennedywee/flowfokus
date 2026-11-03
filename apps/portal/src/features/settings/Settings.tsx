@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Mail, MessageCircle, QrCode } from "lucide-react";
-import { Pill, Plate } from "../../components/ui";
+import { PageHead, Pill, Plate } from "../../components/ui";
 import { useToast } from "../../components/Toast";
 import type { Schemas } from "@flowfokus/api";
 import type { Result } from "../../lib/result";
-import { Locations, OrganizationDetails } from "../settings/OrganizationSettings";
-import { TeamSettings } from "../settings/TeamSettings";
-import { Filters, PreviewPage, Toggle } from "./shared";
+import { Locations, OrganizationDetails } from "./OrganizationSettings";
+import { TeamSettings } from "./TeamSettings";
+import { Filters } from "../../components/Filters";
+import { Toggle } from "../preview/shared";
 import { Button } from "@/components/ui/button";
 
 const integrations = [
-  { name: "DuitNow QR", detail: "Payment references and QR collection", icon: QrCode },
-  { name: "WhatsApp reminders", detail: "Membership and payment follow-ups", icon: MessageCircle },
-  { name: "Email receipts", detail: "A copy of each recorded payment", icon: Mail },
+  { name: "DuitNow QR", icon: QrCode },
+  { name: "WhatsApp reminders", icon: MessageCircle },
+  { name: "Email receipts", icon: Mail },
 ];
 
 export const SETTINGS_SECTIONS = ["Organization", "Locations", "Team", "Notifications", "Integrations"] as const;
@@ -32,52 +33,41 @@ export function Settings({
   const [connected, setConnected] = useState(["Email receipts"]);
   const sample = section === "Notifications" || section === "Integrations";
   return (
-    <PreviewPage
-      title="Settings"
-      description="The details that keep your gym running."
-      sample={sample}
-    >
+    <div className="page settings-page">
+      <PageHead title="Settings">{sample ? <Pill>Sample data</Pill> : null}</PageHead>
       <div className="stack">
         <Filters values={[...SETTINGS_SECTIONS]} value={section} onChange={onSection} label="Settings section" />
         {section === "Organization" ? <OrganizationDetails /> : null}
         {section === "Locations" ? <Locations /> : null}
         {section === "Team" ? <TeamSettings team={team} /> : null}
         {section === "Notifications" ? (
-          <Plate title="Desk notifications" description="Choose what appears in your Inbox.">
+          <Plate title="Desk notifications">
             <Toggle
               label="Membership ending soon"
-              description="A reminder before a member’s access ends."
               checked={notifications.expiry}
               onChange={(expiry) => setNotifications((value) => ({ ...value, expiry }))}
             />
             <Toggle
               label="Unpaid balances"
-              description="Follow up on sales that still need payment."
               checked={notifications.due}
               onChange={(due) => setNotifications((value) => ({ ...value, due }))}
             />
             <Toggle
               label="Denied check-ins"
-              description="See when a member needs help getting access."
               checked={notifications.denied}
               onChange={(denied) => setNotifications((value) => ({ ...value, denied }))}
             />
             <Toggle
               label="Daily desk summary"
-              description="A short recap of payments and visits."
               checked={notifications.summary}
               onChange={(summary) => setNotifications((value) => ({ ...value, summary }))}
             />
           </Plate>
         ) : null}
         {section === "Integrations" ? (
-          <Plate
-            title="Connected tools"
-            description="Try the connection states. No external account will be connected."
-            flush
-          >
+          <Plate title="Connected tools" flush>
             <div className="preview-integrations">
-              {integrations.map(({ name, detail, icon: Icon }) => {
+              {integrations.map(({ name, icon: Icon }) => {
                 const active = connected.includes(name);
                 return (
                   <div className="preview-integration" key={name}>
@@ -86,7 +76,6 @@ export function Settings({
                     </span>
                     <div>
                       <strong>{name}</strong>
-                      <p>{detail}</p>
                     </div>
                     <Button
                       variant="secondary"
@@ -108,11 +97,11 @@ export function Settings({
         ) : null}
         {sample ? (
           <p className="preview-footnote">
-            Sample settings only. No notifications or external connections are sent. Changes reset when you
-            leave this page.
+            Sample settings only. No notifications or external connections are sent. Changes reset when you leave this
+            page.
           </p>
         ) : null}
       </div>
-    </PreviewPage>
+    </div>
   );
 }

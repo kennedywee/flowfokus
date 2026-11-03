@@ -21,13 +21,8 @@ function SignIn() {
     return (
       <section className="message" aria-labelledby="sign-in-heading">
         <div className="wrap">
-          <h1 id="sign-in-heading">Member sign-in is not available here</h1>
-          <p>Your membership, payments, and visits are still recorded by the front desk.</p>
-          <div className="notice" data-tone="warning">
-            <span className="lamp" data-state="due" aria-hidden="true" />
-            <p className="notice__title">Sign-in is turned off</p>
-            <p className="notice__body">This site has no sign-in settings. For questions about your membership, ask at the front desk.</p>
-          </div>
+          <h1 id="sign-in-heading">Sign-in unavailable</h1>
+          <p>Ask the front desk for account access.</p>
           <p>
             <Link to="/">Back to {organization.name}</Link>
           </p>
@@ -39,8 +34,7 @@ function SignIn() {
   return (
     <section className="message" aria-labelledby="sign-in-heading">
       <div className="wrap">
-        <h1 id="sign-in-heading">Sign in to your {organization.name} account</h1>
-        <p>See your membership, visits left, and payments. The first time, the front desk gives you a code to link your account.</p>
+        <h1 id="sign-in-heading">Sign in</h1>
         {failed ? (
           <div className="notice" data-tone="error" role="alert">
             <span className="lamp" data-state="denied" aria-hidden="true" />

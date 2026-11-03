@@ -32,7 +32,6 @@ function Account() {
   if (page.kind === "signed_out") {
     return (
       <Shell title="Sign in to see your account">
-        <p>Your account shows your membership, visits left, and payments at {organization.name}.</p>
         <div className="actions">
           <a className="button" href="/auth/start?returnTo=/account">
             <LogIn aria-hidden="true" />
@@ -56,7 +55,7 @@ function Account() {
   if (page.kind === "not_linked") {
     return (
       <Shell title={`Link your account to ${organization.name}`} signedInAs={page.person.email}>
-        <p>Ask the front desk for a link code. It proves this sign-in belongs to you. Each code works once and expires after seven days.</p>
+        <p>Enter the link code from the front desk.</p>
         <LinkForm />
       </Shell>
     );
@@ -234,7 +233,7 @@ function AccountView({ person, account }: { person: { name: string; email: strin
   return (
     <section className="account" aria-labelledby="account-heading">
       <div className="wrap">
-        <h1 id="account-heading">Hello, {account.name}</h1>
+        <h1 id="account-heading">{account.name}</h1>
         <div className="plate account__status">
           {current ? (
             <>
@@ -244,7 +243,7 @@ function AccountView({ person, account }: { person: { name: string; email: strin
               </p>
               <p>
                 Until {date(current.ends_at)}.
-                {upcoming.length ? ` Renewed: the next period starts ${date(upcoming[0]!.starts_at)}.` : " Renew at the front desk before it ends."}
+                {upcoming.length ? ` Renewed: the next period starts ${date(upcoming[0]!.starts_at)}.` : ""}
               </p>
             </>
           ) : (
@@ -343,11 +342,7 @@ function AccountView({ person, account }: { person: { name: string; email: strin
         ) : (
           <p className="empty">No purchases yet.</p>
         )}
-        <p className="field__hint">
-          {organization.online_payments
-            ? "This page shows purchases made online and at the front desk."
-            : "Payments are made at the front desk. This page shows what the desk recorded."}
-        </p>
+
         <SignOut email={person.email} />
       </div>
     </section>

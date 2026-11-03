@@ -93,7 +93,7 @@ function RosterPage() {
     <div className="page roster-page">
       <PageHead
         title={data.program.name}
-        description={`${formatDate(data.starts_at, tz)}, ${formatTime(data.starts_at, tz)} to ${formatTime(data.ends_at, tz)} · ${
+        meta={`${formatDate(data.starts_at, tz)}, ${formatTime(data.starts_at, tz)} to ${formatTime(data.ends_at, tz)} · ${
           data.program.location_name
         }${data.program.host_name ? ` · ${data.program.host_name}` : ""}`}
       >
@@ -139,7 +139,7 @@ function RosterPage() {
       </div>
 
       <div className="program-page__layout">
-        <Plate title="Bookings" description={live.length ? "Mark members present when they arrive." : undefined} flush>
+        <Plate title="Bookings" flush>
           {live.length === 0 ? (
             <Empty title="No bookings yet">
               <p>
@@ -520,11 +520,10 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
             ) : null}
             {can("purchases:create") && loaded.ticket_prices.length ? (
               <div className="roster-page__group">
-                <Field id="roster-spots" label="Spots to sell" hint="One ticket per person. Name everyone who is coming.">
+                <Field id="roster-spots" label="Tickets">
                   <NativeSelect
                     id="roster-spots"
                     value={String(Math.max(spots.length, 1))}
-                    aria-describedby={describedBy("roster-spots", "hint")}
                     onChange={(event) => resize(Number(event.target.value))}
                   >
                     {Array.from({ length: Math.max(1, Math.min(10, roster.spots_left)) }, (_, index) => (

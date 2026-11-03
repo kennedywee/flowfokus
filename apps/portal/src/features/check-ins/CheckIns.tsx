@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { CheckInPanel } from "../../components/CheckInPanel";
-import { Avatar, Empty, FailureNotice, Plate, Status } from "../../components/ui";
+import { Avatar, Empty, FailureNotice, PageHead, Plate, Status } from "../../components/ui";
 import { useLocationName, useOrganization } from "../../lib/organization";
 import { DENIAL, formatWhen } from "../../lib/format";
-import { downloadCsv } from "./export";
-import { Filters, PreviewPage } from "./shared";
+import { downloadCsv } from "../../lib/export";
+import { Filters } from "../../components/Filters";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -21,11 +21,8 @@ export function CheckIns() {
     (visit) => filter === "All visits" || visit.result === (filter === "Granted" ? "granted" : "denied"),
   );
   return (
-    <PreviewPage
-      sample={false}
-      title="Check-in"
-      description="A clear answer for the person in front of you."
-      actions={
+    <div className="page check-in-page">
+      <PageHead title="Check-in">
         <Button
           variant="secondary"
           type="button"
@@ -44,18 +41,12 @@ export function CheckIns() {
           <Download aria-hidden="true" />
           Export visits
         </Button>
-      }
-    >
+      </PageHead>
       <div className="preview-checkin-layout">
-        <Plate title="Front desk" description="Choose a member and location to record a visit.">
+        <Plate title="Front desk">
           {members.ok ? <CheckInPanel members={members.data} /> : <FailureNotice error={members.error} />}
-
         </Plate>
-        <Plate
-          title="Recent visits"
-          description={`${records.filter((visit) => visit.result === "granted").length} granted · ${records.filter((visit) => visit.result === "denied").length} denied`}
-          flush
-        >
+        <Plate title="Recent visits" flush>
           <div className="preview-table-toolbar">
             <Filters
               values={["All visits", "Granted", "Denied"]}
@@ -93,13 +84,15 @@ export function CheckIns() {
                             >
                               {visit.member.name}
                             </Link>
-                            <p>
-                              {visit.override_reason
-                                ? `Let in by staff: ${visit.override_reason}`
-                                : visit.denial_reason
-                                  ? DENIAL[visit.denial_reason].title
-                                  : "Membership access"}
-                            </p>
+                            {visit.override_reason || visit.denial_reason ? (
+                              <p>
+                                {visit.override_reason
+                                  ? `Let in by staff: ${visit.override_reason}`
+                                  : visit.denial_reason
+                                    ? DENIAL[visit.denial_reason].title
+                                    : null}
+                              </p>
+                            ) : null}
                             <p className="phone-only">
                               {locationName(visit.location_id)} ·{" "}
                               <time dateTime={visit.checked_in_at} suppressHydrationWarning>
@@ -122,17 +115,13 @@ export function CheckIns() {
                   ))}
                 </TableBody>
               </Table>
-              {!visible.length ? (
-                <Empty title="No visits in this view">
-                  <p>Try a different filter.</p>
-                </Empty>
-              ) : null}
+              {!visible.length ? <Empty title="No visits in this view" /> : null}
             </>
           ) : (
             <FailureNotice error={visits.error} />
           )}
         </Plate>
       </div>
-    </PreviewPage>
+    </div>
   );
 }

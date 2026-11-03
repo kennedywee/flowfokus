@@ -32,7 +32,7 @@ const updates = [
 ];
 export function Changelog() {
   return (
-    <PreviewPage title="What’s new" description="Small improvements for the work you do every day.">
+    <PreviewPage title="What’s new">
       <div className="preview-changelog">
         {updates.map((update) => (
           <article className="preview-release" key={update.version}>

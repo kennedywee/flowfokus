@@ -46,7 +46,7 @@ function Sales() {
 
   return (
     <div className="page sales-page">
-      <PageHead title="Sales" description="Every membership sale, with what is paid and what is delivered.">
+      <PageHead title="Sales">
         <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants()}>
           <Plus aria-hidden="true" strokeWidth={1.75} />
           New sale

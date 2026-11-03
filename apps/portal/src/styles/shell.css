@@ -214,110 +214,7 @@
 .nav-item[aria-current="page"] svg {
   color: var(--color-ink);
 }
-
-/* What's new. Pinned to the bottom of the sidebar. */
-.whatsnew {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px;
-  background: var(--color-control);
-  border: 1px solid var(--color-line);
-  border-radius: 12px;
-}
-.whatsnew__head,
-.whatsnew__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.whatsnew__tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-ink-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: var(--tracking-caps);
-  line-height: 14px;
-  text-transform: uppercase;
-}
-.whatsnew__dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-accent);
-}
-.whatsnew__dismiss {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin: -5px -5px -5px 0;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-ink-3);
-  cursor: pointer;
-  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
-}
-.whatsnew__dismiss:hover {
-  background: var(--color-hover);
-  color: var(--color-ink);
-}
-.whatsnew__dismiss svg {
-  width: 14px;
-  height: 14px;
-}
-.whatsnew__body {
-  display: grid;
-  gap: var(--space-1);
-}
-.whatsnew__title {
-  margin: 0;
-  color: var(--color-ink);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 18px;
-}
-.whatsnew__text {
-  margin: 0;
-  color: var(--color-ink-3);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.whatsnew__version {
-  /* Paper uses ink-4 here. It is text, so it takes ink-3 to reach 4.5:1. */
-  color: var(--color-ink-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 14px;
-}
-.whatsnew__link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  border-radius: var(--radius-sm);
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-  text-decoration: none;
-}
-.whatsnew__link:hover {
-  color: var(--color-ink);
-}
-.whatsnew__link svg {
-  width: 12px;
-  height: 12px;
-}
 /* The rail form of the card. Only the rail shows it. */
-.whatsnew-rail {
-  display: none;
-}
 
 /* ---------- Top bar ---------- */
 
@@ -369,19 +266,6 @@
   flex: none;
   width: 16px;
   height: 16px;
-}
-.topbar__kbd {
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 6px;
-  background: var(--color-control);
-  border: 1px solid var(--color-line-strong);
-  border-radius: 5px;
-  color: var(--color-ink-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 14px;
 }
 
 .nav-toggle {
@@ -822,10 +706,8 @@
 .page-head__text {
   display: grid;
   align-content: start;
-  gap: 2px;
+  gap: var(--space-2);
   min-width: 0;
-  /* A title and a one-line description. Pages without a description keep the same height. */
-  min-height: 52px;
 }
 .page-head__text p {
   color: var(--color-ink-3);
@@ -1001,7 +883,6 @@
     height: 40px;
     border-radius: var(--radius-md);
   }
-  .shell .whatsnew,
   .shell .sidebar__collapse {
     display: none;
   }
@@ -1035,40 +916,6 @@
     justify-content: center;
     width: 40px;
     padding: 0;
-  }
-  /* What's new becomes one icon with a dot. */
-  .shell .whatsnew-rail {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 40px;
-    height: 40px;
-    background: var(--color-control);
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    color: var(--color-ink-2);
-    transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
-  }
-  .shell .whatsnew-rail:hover {
-    background: var(--color-hover);
-    color: var(--color-ink);
-  }
-  .shell .whatsnew-rail svg {
-    width: 18px;
-    height: 18px;
-  }
-  .shell .whatsnew-rail__dot {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
-    border: 2px solid var(--color-control);
-    border-radius: 50%;
-    background: var(--color-accent);
-    box-sizing: border-box;
   }
   .shell .topbar,
   .shell .main {
@@ -1112,9 +959,6 @@
     height: 40px;
     border-radius: var(--radius-md);
   }
-  .shell[data-collapsed="true"] .whatsnew {
-    display: none;
-  }
   .shell[data-collapsed="true"] .nav {
     flex: 1;
     width: 40px;
@@ -1145,40 +989,6 @@
     justify-content: center;
     width: 40px;
     padding: 0;
-  }
-  /* What's new becomes one icon with a dot. */
-  .shell[data-collapsed="true"] .whatsnew-rail {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: none;
-    width: 40px;
-    height: 40px;
-    background: var(--color-control);
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius-md);
-    color: var(--color-ink-2);
-    transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
-  }
-  .shell[data-collapsed="true"] .whatsnew-rail:hover {
-    background: var(--color-hover);
-    color: var(--color-ink);
-  }
-  .shell[data-collapsed="true"] .whatsnew-rail svg {
-    width: 18px;
-    height: 18px;
-  }
-  .shell[data-collapsed="true"] .whatsnew-rail__dot {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
-    border: 2px solid var(--color-control);
-    border-radius: 50%;
-    background: var(--color-accent);
-    box-sizing: border-box;
   }
   .shell[data-collapsed="true"] .topbar,
   .shell[data-collapsed="true"] .main {
@@ -1251,9 +1061,6 @@
    * Cards keep their open width while the column widens. The edge cuts them
    * instead of squeezing them, so their text never rewraps mid-animation.
    */
-  .whatsnew {
-    width: var(--sidebar-content-width);
-  }
   .shell[data-collapsed="true"] .sidebar .wordmark__text {
     opacity: 0;
     transition: none;
@@ -1312,9 +1119,6 @@
   .sidebar__collapse {
     display: none;
   }
-  .whatsnew-rail {
-    display: none;
-  }
   .topbar {
     padding-inline: var(--space-3) var(--space-4);
   }
@@ -1347,8 +1151,7 @@
     padding: 0;
     justify-content: center;
   }
-  .topbar__search-label,
-  .topbar__kbd {
+  .topbar__search-label {
     position: absolute;
     width: 1px;
     height: 1px;

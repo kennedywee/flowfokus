@@ -20,12 +20,6 @@ const sendProgramChange = (input: Parameters<typeof updateProgram>[0]["data"]) =
 const sendSchedule = (input: Parameters<typeof scheduleProgram>[0]["data"]) => scheduleProgram({ data: input });
 const sendTicket = (input: Parameters<typeof addTicket>[0]["data"]) => addTicket({ data: input });
 
-const KIND_HINT: Record<Schemas["ProgramKind"], string> = {
-  group_class: "A class that repeats, such as Yoga Flow every Tuesday.",
-  event: "A one-off date, such as a seminar or a competition.",
-  appointment: "One-to-one slots, such as personal training. Capacity is usually 1.",
-};
-
 function serverMessages(details?: Record<string, string[]>): string[] {
   if (!details) return [];
   return Object.entries(details).map(([field, messages]) => `${field.replace(/_/g, " ")} ${messages.join(", ")}`);
@@ -128,11 +122,10 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
                 <Input id="program-name" value={name} maxLength={200} autoFocus onChange={(event) => setName(event.target.value)} />
               </Field>
               {program ? null : (
-                <Field id="program-kind" label="Kind" hint={KIND_HINT[kind]}>
+                <Field id="program-kind" label="Kind">
                   <NativeSelect
                     id="program-kind"
                     value={kind}
-                    aria-describedby={describedBy("program-kind", "hint")}
                     onChange={(event) => chooseKind(event.target.value as Schemas["ProgramKind"])}
                   >
                     {PROGRAM_KINDS.map((value) => (
@@ -161,23 +154,21 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
                     ))}
                   </NativeSelect>
                 </Field>
-                <Field id="program-host" label="Coach or host" hint="Optional. Members see this name.">
+                <Field id="program-host" label="Coach or host (optional)">
                   <Input
                     id="program-host"
                     value={host}
                     maxLength={200}
-                    aria-describedby={describedBy("program-host", "hint")}
                     onChange={(event) => setHost(event.target.value)}
                   />
                 </Field>
               </div>
-              <Field id="program-description" label="Description" hint="Optional. Shown on the gym site.">
+              <Field id="program-description" label="Description (optional)">
                 <Textarea
                   id="program-description"
                   rows={3}
                   maxLength={2000}
                   value={description}
-                  aria-describedby={describedBy("program-description", "hint")}
                   onChange={(event) => setDescription(event.target.value)}
                 />
               </Field>
@@ -253,15 +244,14 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
                 <Field id="schedule-date" label="First date">
                   <Input id="schedule-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} autoFocus />
                 </Field>
-                <Field id="schedule-time" label="Start time">
+                <Field id="schedule-time" label={`Start time (${organization.timezone.replace(/_/g, " ")})`}>
                   <Input id="schedule-time" type="time" value={time} step={300} onChange={(event) => setTime(event.target.value)} />
                 </Field>
               </div>
-              <Field id="schedule-weeks" label="Repeat weekly for" hint="1 adds a single time. Times are in the gym's time zone.">
+              <Field id="schedule-weeks" label="Repeat weekly for">
                 <NativeSelect
                   id="schedule-weeks"
                   value={weeks}
-                  aria-describedby={describedBy("schedule-weeks", "hint")}
                   onChange={(event) => setWeeks(event.target.value)}
                 >
                   {[1, 2, 4, 8, 12, 26].map((count) => (

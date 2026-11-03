@@ -45,7 +45,7 @@ function ProgramPage() {
     <div className="page program-page">
       <PageHead
         title={data.name}
-        description={[
+        meta={[
           PROGRAM_KIND_LABEL[data.kind],
           data.location_name,
           `${data.duration_minutes} min`,
@@ -77,7 +77,7 @@ function ProgramPage() {
         <Times program={data} onAdd={manage ? () => setOpen("schedule") : undefined} />
         <div className="stack">
           <Tickets program={data} onAdd={manage ? () => setOpen("ticket") : undefined} />
-          <Plate title="Also books it" description="Passes and memberships whose rights cover this program.">
+          <Plate title="Also books it">
             {data.accepted_by.length ? (
               <ul className="rights">
                 {data.accepted_by.map((offer) => (
@@ -115,7 +115,6 @@ function Times({ program, onAdd }: { program: Schemas["ProgramDetail"]; onAdd?: 
   return (
     <Plate
       title="Times"
-      description="From today. Open a time to see who is booked."
       flush
       action={
         onAdd ? (
@@ -179,7 +178,6 @@ function Tickets({ program, onAdd }: { program: Schemas["ProgramDetail"]; onAdd?
   return (
     <Plate
       title="Tickets"
-      description="A ticket buys one spot at one time."
       icon={<Ticket />}
       action={
         onAdd ? (

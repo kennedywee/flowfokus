@@ -173,16 +173,11 @@ export function ProductDialog({
                 <Field
                   id="offer-kind"
                   label="Kind"
-                  hint={
-                    kind === "pass"
-                      ? "A pass is bought once and used across programs, for example 10 classes in 60 days."
-                      : "A membership runs for a term and can be renewed. It can include classes too."
-                  }
+
                 >
                   <NativeSelect
                     id="offer-kind"
                     value={kind}
-                    aria-describedby={describedBy("offer-kind", "hint")}
                     onChange={(event) => chooseKind(event.target.value as "membership" | "pass")}
                   >
                     <NativeSelectOption value="membership">Membership</NativeSelectOption>
@@ -193,13 +188,12 @@ export function ProductDialog({
               <Field id="offer-name" label="Name">
                 <Input id="offer-name" value={name} maxLength={200} onChange={(event) => setName(event.target.value)} autoFocus />
               </Field>
-              <Field id="offer-description" label="Description" hint="Optional. Shown on the gym site when published.">
+              <Field id="offer-description" label="Description (optional)">
                 <Textarea
                   id="offer-description"
                   value={description}
                   maxLength={2000}
                   rows={3}
-                  aria-describedby={describedBy("offer-description", "hint")}
                   onChange={(event) => setDescription(event.target.value)}
                 />
               </Field>
@@ -209,10 +203,6 @@ export function ProductDialog({
               </div>
               <fieldset className="offer-dialog__benefits">
                 <legend>Benefits</legend>
-                <p className="field__hint">
-                  Each sale copies these benefits. Gym access opens the gym at check-in. Program bookings book classes, events,
-                  or appointments. Leave uses empty for unlimited.
-                </p>
                 {benefits.map((benefit, index) => (
                   <div key={benefit.key} className="offer-dialog__benefit">
                     <Field id={`benefit-name-${benefit.key}`} label={`Benefit ${index + 1}`}>

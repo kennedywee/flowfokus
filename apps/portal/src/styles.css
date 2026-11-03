@@ -24,7 +24,7 @@
 @import "./styles/overview.css" layer(components);
 @import "./styles/products.css" layer(components);
 @import "./styles/programs.css" layer(components);
-@import "./styles/preview.css" layer(components);
+@import "./styles/features.css" layer(components);
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

@@ -2,7 +2,7 @@
  * Screen styles: sales. Add rules here, not in components.css.
  * Every rule is scoped to a page class so it cannot leak:
  *   .sales-page ..... list
- *   .new-sale-page .. new sale (three steps and a summary)
+ *   .new-sale-page .. new sale (fields and a summary)
  *   .sale-page ...... sale detail
  */
 
@@ -69,12 +69,20 @@
     top: calc(var(--topbar-height) + var(--space-6));
   }
 }
-/* The step number sits in the card's icon tile. */
-.new-sale-page__step {
-  font-family: var(--font-mono);
-  font-size: var(--text-md);
-  font-weight: var(--font-weight-medium);
-  line-height: 1;
+.new-sale-page__fields {
+  display: grid;
+  gap: var(--space-6);
+}
+.new-sale-page__fields > section {
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-line);
+}
+.new-sale-page__summary {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-well);
+  border-radius: var(--radius-lg);
 }
 .new-sale-page .readout__value {
   overflow-wrap: anywhere;
@@ -129,4 +137,11 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--space-2);
+}
+
+/* One surface groups the summary and total. */
+.new-sale-page__summary .readout {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }

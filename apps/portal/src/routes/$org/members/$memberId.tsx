@@ -89,7 +89,6 @@ function MemberPage() {
 
       <Plate
         title="Sales"
-        description="Newest first. Open a sale to record payment or deliver it."
         flush
       >
         {sales.length ? (
@@ -314,7 +313,7 @@ function AccountLink({ member }: { member: Schemas["MemberDetail"] }) {
 function Bookings({ bookings }: { bookings: Schemas["Booking"][] }) {
   const organization = useOrganization();
   return (
-    <Plate title="Bookings" description="Classes, events, and appointments. Open a time to change a booking." flush>
+    <Plate title="Bookings" flush>
       {bookings.length ? (
         <Table>
           <TableHeader>
@@ -439,7 +438,6 @@ function Periods({ member }: { member: Schemas["MemberDetail"] }) {
   return (
     <Plate
       title="Membership periods"
-      description="Each period comes from one delivered sale. Periods never overlap."
       flush
     >
       {periods.length ? (
