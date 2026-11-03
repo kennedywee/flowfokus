@@ -794,3 +794,191 @@ a:hover {
   padding-top: var(--space-4);
   border-top: 1px solid var(--edge);
 }
+
+/* Schedule: one plate per time, grouped by day. */
+.schedule {
+  padding: clamp(var(--space-6), 6vw, 4rem) 0;
+}
+.schedule .wrap {
+  display: grid;
+  gap: var(--space-5);
+}
+.schedule h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+}
+.schedule__day {
+  display: grid;
+  gap: var(--space-3);
+}
+.schedule__day h2,
+.schedule__programs h2 {
+  font-size: var(--step-2);
+}
+.slots,
+.ways,
+.choices {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.slot {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) 9rem 6rem;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+.slot__time {
+  display: grid;
+  font-family: var(--font-data);
+  font-size: var(--step-1);
+}
+.slot__what {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+.slot__what .field__hint,
+.slot__time .field__hint {
+  font-family: var(--font-body);
+}
+.slot__book {
+  justify-self: end;
+}
+.slot[data-cancelled] strong {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+@media (max-width: 639.98px) {
+  /* Time and spots on the first row, the program below, Book on the right. */
+  .slot {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .slot__time {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+  .slot__what {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .slot__spots {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .slot__book {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+.schedule__programs {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.way {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+.way h3 {
+  font-size: var(--step-1);
+}
+.way p {
+  margin: 0;
+}
+
+/* Booking and checkout pages. */
+.book__kind {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: var(--step--1);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.book__when {
+  margin: 0;
+  font-size: var(--step-1);
+  color: var(--ink-2);
+}
+.book h2 {
+  margin-top: var(--space-3);
+  font-size: var(--step-2);
+}
+.choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+.choice > span {
+  display: grid;
+  gap: 0.125rem;
+}
+.checkout__summary {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+}
+.checkout__summary div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.checkout__summary dt {
+  color: var(--ink-3);
+}
+.checkout__summary dd {
+  margin: 0;
+}
+.checkout__amount {
+  font-family: var(--font-data);
+  font-size: var(--step-2);
+}
+
+/* Account bookings have a cancel button at the end of the row. */
+.account__bookings li {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+.account__bookings .field__hint {
+  display: block;
+}
+@media (max-width: 539.98px) {
+  .account__bookings li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .account__bookings time,
+  .account__bookings .button {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* Buying a price from the board. */
+.price__action {
+  grid-column: 1 / -1;
+}
+.price__action:empty {
+  display: none;
+}
+.price .price__buy {
+  margin-top: var(--space-2);
+}
+.price__problem {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--board-ink);
+  font-size: var(--step--1);
+}
+.price__problem a {
+  color: inherit;
+}

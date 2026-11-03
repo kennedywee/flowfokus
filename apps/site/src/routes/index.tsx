@@ -1,7 +1,9 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { formatDuration, formatMoney, formatUsage, listNames } from "../lib/format";
-import { useGym } from "../lib/site";
+import { describeBenefit, formatDuration, formatMoney, listNames } from "../lib/format";
+import { useGym, useSession } from "../lib/site";
+import { submitCheckout } from "../lib/site.functions";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -18,7 +20,7 @@ function Home() {
           <h1 id="gym-name">{organization.name}</h1>
           {locationNames.length ? (
             <p className="opening__lede">
-              {products.length === 1 ? "One membership" : `${products.length} memberships`}
+              {products.length === 1 ? "One plan" : `${products.length} memberships and passes`}
               {/* Past three names, the sentence gets hard to read. The Locations section lists them all. */}
               {locationNames.length <= 3 ? ` for ${listNames(locationNames)}.` : ` at ${locationNames.length} locations.`}
             </p>
@@ -26,13 +28,20 @@ function Home() {
           <div className="door-plate">
             <span className="status">
               <span className="lamp" data-state="active" aria-hidden="true" />
-              Join at the front desk
+              {organization.online_payments ? "Book and pay online" : "Join at the front desk"}
             </span>
-            <span className="field__hint">Online sign-up and payment are not available yet.</span>
+            <span className="field__hint">
+              {organization.online_payments
+                ? "Members book classes and buy passes here. The front desk links your account the first time."
+                : "Online payment is not available yet. Book and pay at the front desk."}
+            </span>
           </div>
           <div className="actions">
-            <a href="#offers" className="button button--large">
-              See memberships
+            <Link to="/schedule" className="button button--large">
+              See the schedule
+            </Link>
+            <a href="#offers" className="button button--quiet button--large">
+              Memberships and passes
             </a>
             <Link to="/sign-in" className="button button--quiet button--large">
               Member sign-in
@@ -44,8 +53,8 @@ function Home() {
       <section className="board" id="offers" aria-labelledby="offers-heading">
         <div className="wrap">
           <div className="board__head">
-            <h2 id="offers-heading">Memberships</h2>
-            <p>Prices in {organization.currency}. Each membership runs for the term shown, from the day you join.</p>
+            <h2 id="offers-heading">Memberships and passes</h2>
+            <p>Prices in {organization.currency}. Each one runs for the term shown, from the day you buy it.</p>
           </div>
           {products.length ? (
             <ul className="offers">
@@ -55,11 +64,15 @@ function Home() {
             </ul>
           ) : (
             <div className="empty">
-              <p className="empty__title">No memberships listed yet</p>
+              <p className="empty__title">Nothing listed yet</p>
               <p>Ask at the front desk about joining.</p>
             </div>
           )}
-          <p className="board__note">Pay by cash or bank transfer at the front desk.</p>
+          <p className="board__note">
+            {organization.online_payments
+              ? "Pay online when signed in, or by cash or bank transfer at the front desk."
+              : "Pay by cash or bank transfer at the front desk."}
+          </p>
         </div>
       </section>
 
@@ -96,7 +109,7 @@ function Offer({ product }: { product: Schemas["PublicProduct"] }) {
           {product.benefits.map((benefit, index) => (
             <li key={index}>
               <span className="lamp" aria-hidden="true" />
-              {benefit.name}: {formatUsage(benefit.usage_limit)}, {benefit.location_name ?? "every location"}
+              {describeBenefit(benefit)}
             </li>
           ))}
         </ul>
@@ -107,9 +120,66 @@ function Offer({ product }: { product: Schemas["PublicProduct"] }) {
             <dt>{price.label}</dt>
             <dd className="price__amount">{formatMoney(price.amount_minor, price.currency)}</dd>
             <dd className="price__term">{formatDuration(price.duration_days)}</dd>
+            <dd className="price__action">
+              <BuyButton price={price} label={`${product.name}, ${price.label}`} />
+            </dd>
           </div>
         ))}
       </dl>
     </li>
+  );
+}
+
+/** Online purchase of a pass or membership. Signed-out visitors sign in first. */
+function BuyButton({ price, label }: { price: Schemas["PublicPrice"]; label: string }) {
+  const { organization } = useGym();
+  const session = useSession();
+  const navigate = useNavigate();
+  const [key] = useState(() => crypto.randomUUID());
+  const [pending, setPending] = useState(false);
+  const [problem, setProblem] = useState<{ message: string; link: boolean } | null>(null);
+
+  if (!organization.online_payments || !session.signInOn) return null;
+  if (!session.person) {
+    return (
+      <a className="button button--quiet price__buy" href="/auth/start?returnTo=/%23offers">
+        Sign in to buy<span className="visually-hidden"> {label}</span>
+      </a>
+    );
+  }
+
+  async function buy() {
+    setPending(true);
+    setProblem(null);
+    try {
+      const result = await submitCheckout({ data: { key, priceId: price.id } });
+      if (!result.ok) {
+        setProblem({ message: result.message, link: result.code === "member_not_linked" });
+        setPending(false);
+        return;
+      }
+      if (result.data.payment_url) {
+        window.location.assign(result.data.payment_url);
+        return;
+      }
+      await navigate({ to: "/checkout/$checkoutId", params: { checkoutId: result.data.id } });
+    } catch {
+      setProblem({ message: "The payment did not start. Reload the page and try again.", link: false });
+      setPending(false);
+    }
+  }
+
+  return (
+    <>
+      <button type="button" className="button price__buy" disabled={pending} aria-busy={pending || undefined} onClick={() => void buy()}>
+        {pending ? "Starting…" : "Buy online"}
+        <span className="visually-hidden"> {label}</span>
+      </button>
+      {problem ? (
+        <span className="price__problem" role="alert">
+          {problem.message} {problem.link ? <Link to="/account">Enter your link code</Link> : null}
+        </span>
+      ) : null}
+    </>
   );
 }

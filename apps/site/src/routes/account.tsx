@@ -3,8 +3,8 @@ import { Link, createFileRoute, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { LogIn, LogOut } from "lucide-react";
 import { formatMoney, formatUsage } from "../lib/format";
-import { useGym } from "../lib/site";
-import { getAccountPage, submitLinkCode } from "../lib/site.functions";
+import { useDates, useGym } from "../lib/site";
+import { getAccountPage, submitBookingCancel, submitLinkCode } from "../lib/site.functions";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
@@ -17,13 +17,6 @@ const DENIAL: Record<Schemas["DenialReason"], string> = {
   location_not_allowed: "Not valid at this location",
   usage_limit_reached: "No visits left",
 };
-
-function useDates() {
-  const { organization } = useGym();
-  const date = new Intl.DateTimeFormat("en-MY", { dateStyle: "medium", timeZone: organization.timezone });
-  const dateTime = new Intl.DateTimeFormat("en-MY", { dateStyle: "medium", timeStyle: "short", timeZone: organization.timezone });
-  return { date: (iso: string) => date.format(new Date(iso)), dateTime: (iso: string) => dateTime.format(new Date(iso)) };
-}
 
 function Account() {
   const page = Route.useLoaderData();
@@ -154,10 +147,87 @@ function LinkForm() {
   );
 }
 
+const BOOKING_LABEL: Record<Schemas["BookingStatus"], string> = {
+  held: "Waiting for payment",
+  confirmed: "Booked",
+  attended: "Attended",
+  cancelled: "Cancelled",
+  expired: "Payment ran out of time",
+};
+
+function Bookings({ bookings }: { bookings: Schemas["MemberBooking"][] }) {
+  const { dateTime } = useDates();
+  const router = useRouter();
+  const [pending, setPending] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  async function cancel(booking: Schemas["MemberBooking"]) {
+    if (!window.confirm(`Cancel ${booking.program.name} on ${dateTime(booking.starts_at)}? You get the booking back on your pass.`)) return;
+    setPending(booking.id);
+    setProblem(null);
+    try {
+      const result = await submitBookingCancel({ data: { bookingId: booking.id } });
+      if (!result.ok) setProblem(result.message);
+      await router.invalidate();
+    } catch {
+      setProblem("The cancellation was not sent. Reload the page and try again.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  if (!bookings.length) return <p className="empty">No bookings yet.</p>;
+  return (
+    <>
+      {problem ? (
+        <div className="notice" data-tone="error" role="alert">
+          <span className="lamp" data-state="denied" aria-hidden="true" />
+          <p className="notice__title">Not cancelled</p>
+          <p className="notice__body">{problem}</p>
+        </div>
+      ) : null}
+      <ul className="account__list account__bookings">
+        {bookings.map((booking) => {
+          const off = booking.status === "cancelled" || booking.status === "expired";
+          return (
+            <li key={booking.id}>
+              <span className="lamp" data-state={off ? "off" : booking.status === "held" ? "waiting" : "active"} aria-hidden="true" />
+              <span>
+                <strong>{booking.program.name}</strong> at {booking.location_name}
+                <span className="field__hint">
+                  {BOOKING_LABEL[booking.status]}
+                  {booking.source === "ticket" ? " · ticket" : booking.entitlement ? ` · ${booking.entitlement.name}` : ""}
+                </span>
+              </span>
+              <time dateTime={booking.starts_at} suppressHydrationWarning>
+                {dateTime(booking.starts_at)}
+              </time>
+              {booking.cancellable ? (
+                <button
+                  type="button"
+                  className="button button--quiet"
+                  disabled={pending !== null}
+                  aria-busy={pending === booking.id || undefined}
+                  onClick={() => void cancel(booking)}
+                >
+                  {pending === booking.id ? "Cancelling…" : "Cancel"}
+                  <span className="visually-hidden"> {booking.program.name}</span>
+                </button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
 function AccountView({ person, account }: { person: { name: string; email: string }; account: Schemas["MemberAccount"] }) {
   const { organization } = useGym();
   const { date, dateTime } = useDates();
   const current = account.current_period;
+  // A ticket's one-use right is shown by its booking below.
+  const rights = account.entitlements.filter((right) => right.occurrence_id === null);
   const upcoming = (account.membership?.periods ?? []).filter((period) => !period.revoked_at && Date.parse(period.starts_at) > Date.now());
 
   return (
@@ -193,9 +263,9 @@ function AccountView({ person, account }: { person: { name: string; email: strin
         </div>
 
         <h2>Your access</h2>
-        {account.entitlements.length ? (
+        {rights.length ? (
           <ul className="rights">
-            {account.entitlements.map((right) => (
+            {rights.map((right) => (
               <li key={right.id} className="right plate">
                 <div className="right__head">
                   <strong>{right.name}</strong>
@@ -205,8 +275,14 @@ function AccountView({ person, account }: { person: { name: string; email: strin
                   </span>
                 </div>
                 <p>
-                  {right.usage_limit === null ? formatUsage(null) : `${right.remaining} of ${right.usage_limit} visits left`} ·{" "}
-                  {right.location_id === null ? "All locations" : "One location"} · until {date(right.ends_at)}
+                  {right.kind === "program_access"
+                    ? right.usage_limit === null
+                      ? "Unlimited bookings"
+                      : `${right.remaining} of ${right.usage_limit} bookings left`
+                    : right.usage_limit === null
+                      ? formatUsage(null)
+                      : `${right.remaining} of ${right.usage_limit} visits left`}{" "}
+                  · {right.location_id === null ? "All locations" : "One location"} · until {date(right.ends_at)}
                 </p>
               </li>
             ))}
@@ -214,6 +290,12 @@ function AccountView({ person, account }: { person: { name: string; email: strin
         ) : (
           <p className="empty">No access rights right now.</p>
         )}
+
+        <h2>Your bookings</h2>
+        <Bookings bookings={account.bookings} />
+        <p>
+          <Link to="/schedule">Book from the schedule</Link>
+        </p>
 
         <h2>Recent visits</h2>
         {account.check_ins.length ? (
@@ -260,7 +342,11 @@ function AccountView({ person, account }: { person: { name: string; email: strin
         ) : (
           <p className="empty">No purchases yet.</p>
         )}
-        <p className="field__hint">Payments are made at the front desk. This page shows what the desk recorded.</p>
+        <p className="field__hint">
+          {organization.online_payments
+            ? "This page shows purchases made online and at the front desk."
+            : "Payments are made at the front desk. This page shows what the desk recorded."}
+        </p>
         <SignOut email={person.email} />
       </div>
     </section>

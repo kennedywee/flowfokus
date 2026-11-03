@@ -7,6 +7,8 @@ x-server-environment: &server-environment
   SECRET_KEY_BASE: local-docker-demo-only-not-a-production-secret
   FLOWFOKUS_DEMO_MODE: "${FLOWFOKUS_DEMO_MODE:-false}"
   FLOWFOKUS_DEMO_TOKEN: flowfokus-local-demo-token
+  # Opt-in local test payment provider. Moves no money. Production refuses it.
+  FLOWFOKUS_TEST_PAYMENTS: "${FLOWFOKUS_TEST_PAYMENTS:-false}"
   WORKOS_CLIENT_ID: client_flowfokus_local
   WORKOS_ISSUER: http://localhost:4100/user_management/client_flowfokus_local
   WORKOS_JWKS_URL: http://workos:4100/sso/jwks/client_flowfokus_local

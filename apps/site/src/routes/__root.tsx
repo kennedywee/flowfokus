@@ -72,6 +72,7 @@ function GymFrame({ name, signedIn, children }: { name: string; signedIn: boolea
             {name}
           </Link>
           <nav className="topnav" aria-label="Site">
+            <Link to="/schedule">Schedule</Link>
             <Link to="/" hash="offers">
               Memberships
             </Link>
@@ -96,7 +97,7 @@ function GymFrame({ name, signedIn, children }: { name: string; signedIn: boolea
         {children}
       </main>
       <footer className="footer">
-        <div className="wrap">Memberships and check-in run on Flowfokus.</div>
+        <div className="wrap">Memberships, bookings, and check-in run on Flowfokus.</div>
       </footer>
     </div>
   );

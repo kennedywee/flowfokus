@@ -13,3 +13,22 @@ export function useGym() {
 export function useSession() {
   return rootRoute.useLoaderData().session;
 }
+
+/** Dates and times in the gym's time zone. */
+export function useDates() {
+  const { organization } = useGym();
+  const timeZone = organization.timezone;
+  const date = new Intl.DateTimeFormat("en-MY", { dateStyle: "medium", timeZone });
+  const dateTime = new Intl.DateTimeFormat("en-MY", { dateStyle: "medium", timeStyle: "short", timeZone });
+  const time = new Intl.DateTimeFormat("en-MY", { timeStyle: "short", timeZone });
+  const day = new Intl.DateTimeFormat("en-MY", { weekday: "long", day: "numeric", month: "long", timeZone });
+  const key = new Intl.DateTimeFormat("en-CA", { dateStyle: "short", timeZone });
+  return {
+    date: (iso: string) => date.format(new Date(iso)),
+    dateTime: (iso: string) => dateTime.format(new Date(iso)),
+    time: (iso: string) => time.format(new Date(iso)),
+    day: (iso: string) => day.format(new Date(iso)),
+    /** YYYY-MM-DD in the gym's time zone, for grouping by day. */
+    dayKey: (iso: string) => key.format(new Date(iso)),
+  };
+}

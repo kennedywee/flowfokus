@@ -133,3 +133,92 @@ export async function loadSitePage(): Promise<SitePage> {
   setResponseStatus(503);
   return { kind: "unavailable" };
 }
+
+/** The public schedule for this gym host. */
+export type SchedulePage = { kind: "schedule"; schedule: Schemas["PublicSchedule"] } | { kind: "error"; message: string };
+
+export async function loadSchedulePage(): Promise<SchedulePage> {
+  const host = currentHost();
+  if (host.kind !== "gym") return { kind: "error", message: "This address is not a gym site." };
+  const api = publicClient(host.slug);
+  if (!api) return { kind: "error", message: "The site cannot reach Flowfokus right now." };
+  try {
+    const result = await api.GET("/public/schedule", { params: { query: { days: 14 } } });
+    if (result.data) return { kind: "schedule", schedule: result.data.data };
+  } catch {
+    // Network failure.
+  }
+  return { kind: "error", message: "The schedule did not load. Try again in a minute." };
+}
+
+/** Member pages share these states before their own data. */
+type MemberGate =
+  | { kind: "off" }
+  | { kind: "signed_out" }
+  | { kind: "not_linked" }
+  | { kind: "error"; message: string };
+
+function gateFor(code: string, message: string): MemberGate {
+  if (code === "member_not_linked") return { kind: "not_linked" };
+  if (code === "signed_out" || code === "unauthenticated" || code === "invalid_token") return { kind: "signed_out" };
+  if (code === "not_found") return { kind: "error", message: "This page was not found. It may have been removed." };
+  return { kind: "error", message };
+}
+
+async function memberGate(): Promise<MemberGate | null> {
+  const { currentMemberAccess, signedInPerson } = await import("./member-auth");
+  if (currentMemberAccess().kind !== "workos") return { kind: "off" };
+  if (!signedInPerson()) return { kind: "signed_out" };
+  return null;
+}
+
+export type BookingPage = MemberGate | { kind: "options"; options: Schemas["MemberBookingOptions"] };
+
+/** One time of a program, and how the signed-in member could book it. */
+export async function loadBookingPage(occurrenceId: string): Promise<BookingPage> {
+  const gate = await memberGate();
+  if (gate) return gate;
+  const result = await memberCall((api) => api.GET("/member/occurrences/{id}", { params: { path: { id: occurrenceId } } }));
+  return result.ok ? { kind: "options", options: result.data } : gateFor(result.code, result.message);
+}
+
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; code: string; message: string };
+
+export async function bookWithRight(occurrenceId: string, entitlementId: string): Promise<ActionResult<Schemas["MemberBooking"]>> {
+  return memberCall((api) => api.POST("/member/bookings", { body: { occurrence_id: occurrenceId, entitlement_id: entitlementId } }));
+}
+
+export async function cancelMemberBooking(bookingId: string): Promise<ActionResult<Schemas["MemberBooking"]>> {
+  return memberCall((api) => api.POST("/member/bookings/{id}/cancel", { params: { path: { id: bookingId } } }));
+}
+
+/** Opens a checkout. The browser sends the key, so a retry returns the same checkout. */
+export async function startCheckout(input: {
+  key: string;
+  priceId: string;
+  occurrenceId?: string;
+}): Promise<ActionResult<Schemas["Checkout"]>> {
+  return memberCall((api) =>
+    api.POST("/member/checkouts", {
+      params: { header: { "Idempotency-Key": input.key } },
+      body: { price_id: input.priceId, ...(input.occurrenceId ? { occurrence_id: input.occurrenceId } : {}) },
+    }),
+  );
+}
+
+export type CheckoutPage = MemberGate | { kind: "checkout"; checkout: Schemas["Checkout"] };
+
+export async function loadCheckoutPage(checkoutId: string): Promise<CheckoutPage> {
+  const gate = await memberGate();
+  if (gate) return gate;
+  const result = await memberCall((api) => api.GET("/member/checkouts/{id}", { params: { path: { id: checkoutId } } }));
+  return result.ok ? { kind: "checkout", checkout: result.data } : gateFor(result.code, result.message);
+}
+
+export async function payTestCheckout(checkoutId: string): Promise<ActionResult<Schemas["Checkout"]>> {
+  return memberCall((api) => api.POST("/member/checkouts/{id}/test_payment", { params: { path: { id: checkoutId } } }));
+}
+
+export async function cancelCheckout(checkoutId: string): Promise<ActionResult<Schemas["Checkout"]>> {
+  return memberCall((api) => api.POST("/member/checkouts/{id}/cancel", { params: { path: { id: checkoutId } } }));
+}

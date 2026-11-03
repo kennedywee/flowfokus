@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignOutRouteImport } from './routes/sign-out'
 import { Route as AuthStartRouteImport } from './routes/auth/start'
+import { Route as BookOccurrenceIdRouteImport } from './routes/book.$occurrenceId'
+import { Route as CheckoutCheckoutIdRouteImport } from './routes/checkout.$checkoutId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +32,11 @@ const AccountRoute = AccountRouteImport.update({
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -46,55 +54,97 @@ const AuthStartRoute = AuthStartRouteImport.update({
   path: '/auth/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookOccurrenceIdRoute = BookOccurrenceIdRouteImport.update({
+  id: '/book/$occurrenceId',
+  path: '/book/$occurrenceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutCheckoutIdRoute = CheckoutCheckoutIdRouteImport.update({
+  id: '/checkout/$checkoutId',
+  path: '/checkout/$checkoutId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/callback': typeof CallbackRoute
+  '/schedule': typeof ScheduleRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
   '/auth/start': typeof AuthStartRoute
+  '/book/$occurrenceId': typeof BookOccurrenceIdRoute
+  '/checkout/$checkoutId': typeof CheckoutCheckoutIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/callback': typeof CallbackRoute
+  '/schedule': typeof ScheduleRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
   '/auth/start': typeof AuthStartRoute
+  '/book/$occurrenceId': typeof BookOccurrenceIdRoute
+  '/checkout/$checkoutId': typeof CheckoutCheckoutIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/callback': typeof CallbackRoute
+  '/schedule': typeof ScheduleRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
   '/auth/start': typeof AuthStartRoute
+  '/book/$occurrenceId': typeof BookOccurrenceIdRoute
+  '/checkout/$checkoutId': typeof CheckoutCheckoutIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/account' | '/callback' | '/sign-in' | '/sign-out' | '/auth/start'
+    | '/'
+    | '/account'
+    | '/callback'
+    | '/schedule'
+    | '/sign-in'
+    | '/sign-out'
+    | '/auth/start'
+    | '/book/$occurrenceId'
+    | '/checkout/$checkoutId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/account' | '/callback' | '/sign-in' | '/sign-out' | '/auth/start'
+  to:
+    | '/'
+    | '/account'
+    | '/callback'
+    | '/schedule'
+    | '/sign-in'
+    | '/sign-out'
+    | '/auth/start'
+    | '/book/$occurrenceId'
+    | '/checkout/$checkoutId'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/callback'
+    | '/schedule'
     | '/sign-in'
     | '/sign-out'
     | '/auth/start'
+    | '/book/$occurrenceId'
+    | '/checkout/$checkoutId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   CallbackRoute: typeof CallbackRoute
+  ScheduleRoute: typeof ScheduleRoute
   SignInRoute: typeof SignInRoute
   SignOutRoute: typeof SignOutRoute
   AuthStartRoute: typeof AuthStartRoute
+  BookOccurrenceIdRoute: typeof BookOccurrenceIdRoute
+  CheckoutCheckoutIdRoute: typeof CheckoutCheckoutIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -120,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
@@ -141,6 +198,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthStartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/$occurrenceId': {
+      id: '/book/$occurrenceId'
+      path: '/book/$occurrenceId'
+      fullPath: '/book/$occurrenceId'
+      preLoaderRoute: typeof BookOccurrenceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$checkoutId': {
+      id: '/checkout/$checkoutId'
+      path: '/checkout/$checkoutId'
+      fullPath: '/checkout/$checkoutId'
+      preLoaderRoute: typeof CheckoutCheckoutIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -148,9 +219,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   CallbackRoute: CallbackRoute,
+  ScheduleRoute: ScheduleRoute,
   SignInRoute: SignInRoute,
   SignOutRoute: SignOutRoute,
   AuthStartRoute: AuthStartRoute,
+  BookOccurrenceIdRoute: BookOccurrenceIdRoute,
+  CheckoutCheckoutIdRoute: CheckoutCheckoutIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
