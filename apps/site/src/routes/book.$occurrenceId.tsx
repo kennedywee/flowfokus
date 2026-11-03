@@ -4,7 +4,7 @@ import type { Schemas } from "@flowfokus/api";
 import { LogIn } from "lucide-react";
 import { formatMoney, PROGRAM_KIND_LABEL } from "../lib/format";
 import { useDates, useGym } from "../lib/site";
-import { getBookingPage, submitBooking, submitCheckout } from "../lib/site.functions";
+import { getBookingPage, submitBooking, submitCheckout, submitCheckoutCancel } from "../lib/site.functions";
 
 export const Route = createFileRoute("/book/$occurrenceId")({
   head: () => ({ meta: [{ name: "robots", content: "noindex" }] }),
@@ -100,8 +100,36 @@ function Options({ options }: { options: Schemas["MemberBookingOptions"] }) {
   const { occurrence, program, rights, ticket_prices: prices, booking } = options;
   const [pending, setPending] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
-  // One key per page visit: a retry of the same purchase returns the same checkout.
-  const [checkoutKey] = useState(() => crypto.randomUUID());
+  // One key per purchase attempt: a retry returns the same checkout. A changed group is a new purchase.
+  const [checkoutKey, setCheckoutKey] = useState(() => crypto.randomUUID());
+  // A ticket can buy several spots: the member, guests, or both.
+  const [count, setCount] = useState(1);
+  const [meComing, setMeComing] = useState(true);
+  const [guests, setGuests] = useState<{ name: string; email: string }[]>([]);
+  const guestCount = count - (meComing ? 1 : 0);
+  const maxSpots = Math.max(1, Math.min(10, occurrence.spots_left));
+
+  function changeGroup(nextCount: number, nextMe: boolean) {
+    const needed = Math.max(nextCount - (nextMe ? 1 : 0), 0);
+    setCount(nextCount);
+    setMeComing(nextMe);
+    setGuests((list) => Array.from({ length: needed }, (_, index) => list[index] ?? { name: "", email: "" }));
+    setCheckoutKey(crypto.randomUUID());
+  }
+
+  async function cancelHold(checkoutId: string) {
+    setPending("cancel");
+    setProblem(null);
+    try {
+      const result = await submitCheckoutCancel({ data: { checkoutId } });
+      if (!result.ok) setProblem(result.message);
+      await router.invalidate();
+    } catch {
+      setProblem("Nothing was sent. Reload the page and try again.");
+    } finally {
+      setPending(null);
+    }
+  }
 
   async function book(right: Schemas["Entitlement"]) {
     setPending(right.id);
@@ -121,10 +149,22 @@ function Options({ options }: { options: Schemas["MemberBookingOptions"] }) {
   }
 
   async function buy(price: Schemas["Price"]) {
+    if (guests.some((guest) => !guest.name.trim())) {
+      setProblem("Give each guest a name.");
+      return;
+    }
+    if (count < 1) return;
     setPending(price.id);
     setProblem(null);
+    const group = count === 1 && meComing ? {} : {
+      quantity: count,
+      attendees: [
+        ...(meComing ? [{ self: true as const }] : []),
+        ...guests.map((guest) => ({ guest_name: guest.name.trim(), guest_email: guest.email.trim() || null })),
+      ],
+    };
     try {
-      const result = await submitCheckout({ data: { key: checkoutKey, priceId: price.id, occurrenceId: occurrence.id } });
+      const result = await submitCheckout({ data: { key: checkoutKey, priceId: price.id, occurrenceId: occurrence.id, ...group } });
       if (!result.ok) {
         setProblem(result.message);
         setPending(null);
@@ -164,11 +204,28 @@ function Options({ options }: { options: Schemas["MemberBookingOptions"] }) {
             <p className="notice__title">{booking.status === "held" ? "Your spot is held for payment" : "You're booked"}</p>
             <p className="notice__body">
               {booking.status === "held"
-                ? "Finish paying to keep it. The hold ends after 30 minutes."
+                ? "Finish paying to keep it. The hold ends 30 minutes after you started."
                 : booking.source === "ticket"
                   ? "Paid with a ticket. See it on your account page."
                   : `Booked with ${booking.entitlement?.name ?? "your pass"}. You can cancel on your account page before it starts.`}
             </p>
+            {booking.status === "held" && booking.checkout_id ? (
+              <div className="actions">
+                <Link to="/checkout/$checkoutId" params={{ checkoutId: booking.checkout_id }} className="button">
+                  Continue paying
+                </Link>
+                <button
+                  type="button"
+                  className="button button--quiet"
+                  disabled={pending !== null}
+                  aria-busy={pending === "cancel" || undefined}
+                  onClick={() => void cancelHold(booking.checkout_id!)}
+                >
+                  {pending === "cancel" ? "Cancelling…" : "Cancel and free the spot"}
+                </button>
+              </div>
+            ) : null}
+            {problem ? <p className="account__error">{problem}</p> : null}
           </div>
         ) : occurrence.cancelled ? (
           <Problem title="This time was cancelled" body="Choose another time on the schedule." />
@@ -218,12 +275,65 @@ function Options({ options }: { options: Schemas["MemberBookingOptions"] }) {
               <>
                 <h2>Buy a ticket</h2>
                 {organization.online_payments ? (
+                  <>
+                  <div className="plate group">
+                    <label className="group__row" htmlFor="group-count">
+                      <span>Spots</span>
+                      <select
+                        id="group-count"
+                        className="input group__count"
+                        value={count}
+                        onChange={(event) => changeGroup(Number(event.target.value), meComing)}
+                      >
+                        {Array.from({ length: maxSpots }, (_, index) => (
+                          <option key={index} value={index + 1}>
+                            {index + 1}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="group__row group__me">
+                      <input type="checkbox" checked={meComing} onChange={(event) => changeGroup(count, event.target.checked)} />
+                      <span>I'm coming too</span>
+                    </label>
+                    {guests.map((guest, index) => (
+                      <div key={index} className="group__guest">
+                        <input
+                          className="input"
+                          aria-label={`Guest ${index + 1} name`}
+                          placeholder={`Guest ${index + 1} name`}
+                          maxLength={200}
+                          value={guest.name}
+                          onChange={(event) => {
+                            setGuests((list) => list.map((item, at) => (at === index ? { ...item, name: event.target.value } : item)));
+                            setCheckoutKey(crypto.randomUUID());
+                          }}
+                        />
+                        <input
+                          className="input"
+                          type="email"
+                          aria-label={`Guest ${index + 1} email, optional`}
+                          placeholder="Email (optional)"
+                          maxLength={320}
+                          value={guest.email}
+                          onChange={(event) => {
+                            setGuests((list) => list.map((item, at) => (at === index ? { ...item, email: event.target.value } : item)));
+                            setCheckoutKey(crypto.randomUUID());
+                          }}
+                        />
+                      </div>
+                    ))}
+                    {count === 0 || (!meComing && guestCount === 0) ? <p className="field__hint">Add at least one person.</p> : null}
+                    <p className="field__hint">
+                      {count === 1 ? "One spot." : `${count} spots, one payment.`} Guests don't need an account; the front desk sees their names.
+                    </p>
+                  </div>
                   <ul className="choices">
                     {prices.map((price) => (
                       <li key={price.id} className="plate choice">
                         <span>
                           <strong>{price.label}</strong>
-                          <span className="field__hint">One spot at this time</span>
+                          <span className="field__hint">{formatMoney(price.amount_minor, price.currency)} per spot</span>
                         </span>
                         <button
                           type="button"
@@ -232,11 +342,12 @@ function Options({ options }: { options: Schemas["MemberBookingOptions"] }) {
                           aria-busy={pending === price.id || undefined}
                           onClick={() => void buy(price)}
                         >
-                          {pending === price.id ? "Starting payment…" : `Pay ${formatMoney(price.amount_minor, price.currency)}`}
+                          {pending === price.id ? "Starting payment…" : `Pay ${formatMoney(price.amount_minor * count, price.currency)}`}
                         </button>
                       </li>
                     ))}
                   </ul>
+                  </>
                 ) : (
                   <p className="field__hint">
                     Tickets: {prices.map((price) => `${price.label} ${formatMoney(price.amount_minor, price.currency)}`).join(", ")}. Online

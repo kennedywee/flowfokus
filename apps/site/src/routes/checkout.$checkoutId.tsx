@@ -68,6 +68,12 @@ function Summary({ checkout }: { checkout: Schemas["Checkout"] }) {
           </dd>
         </div>
       ) : null}
+      {checkout.quantity > 1 || checkout.attendees.some((person) => person.guest) ? (
+        <div>
+          <dt>Who</dt>
+          <dd>{checkout.attendees.map((person) => (person.guest ? `${person.name} (guest)` : `${person.name} (you)`)).join(", ")}</dd>
+        </div>
+      ) : null}
       <div>
         <dt>Amount</dt>
         <dd className="checkout__amount">{formatMoney(checkout.amount_minor, checkout.currency)}</dd>
@@ -107,7 +113,7 @@ function Checkout({ checkout }: { checkout: Schemas["Checkout"] }) {
           <p className="notice__title">Paid {formatMoney(checkout.amount_minor, checkout.currency)}</p>
           <p className="notice__body">
             {checkout.occurrence
-              ? `Your spot in ${checkout.occurrence.program_name} on ${dates.dateTime(checkout.occurrence.starts_at)} is confirmed.`
+              ? `${checkout.quantity === 2 ? "Both spots" : checkout.quantity > 2 ? `All ${checkout.quantity} spots` : "Your spot"} in ${checkout.occurrence.program_name} on ${dates.dateTime(checkout.occurrence.starts_at)} ${checkout.quantity > 1 ? "are" : "is"} confirmed.`
               : `${checkout.product_name} is on your account. Use it to book classes from the schedule.`}
           </p>
         </div>
@@ -157,7 +163,7 @@ function Checkout({ checkout }: { checkout: Schemas["Checkout"] }) {
       </div>
       <Summary checkout={checkout} />
       <p className="field__hint">
-        {checkout.occurrence ? "Your spot is held until " : "This payment is open until "}
+        {checkout.occurrence ? (checkout.quantity > 1 ? `Your ${checkout.quantity} spots are held until ` : "Your spot is held until ") : "This payment is open until "}
         <time dateTime={checkout.expires_at} suppressHydrationWarning>
           {dates.dateTime(checkout.expires_at)}
         </time>

@@ -76,13 +76,35 @@ export const submitBookingCancel = createServerFn({ method: "POST" })
   .handler(async ({ data }) => cancelMemberBooking(data.bookingId));
 
 /** Starts an online purchase: a ticket for one time, or a pass or membership. */
+type AttendeeInput = { self: true } | { guest_name: string; guest_email: string | null };
+
+/** The member, or guests by name. Members never name other members. */
+function attendees(value: unknown): AttendeeInput[] | undefined {
+  if (value === undefined) return undefined;
+  if (!Array.isArray(value) || value.length < 1 || value.length > 10) throw new Error("Invalid attendees");
+  return value.map((item) => {
+    const entry = object(item);
+    if (entry.self === true) return { self: true };
+    const name = typeof entry.guest_name === "string" ? entry.guest_name.trim() : "";
+    if (!name || name.length > 200) throw new Error("Invalid guest name");
+    const email = typeof entry.guest_email === "string" && entry.guest_email.trim() ? entry.guest_email.trim() : null;
+    if (email && email.length > 320) throw new Error("Invalid guest email");
+    return { guest_name: name, guest_email: email };
+  });
+}
+
 export const submitCheckout = createServerFn({ method: "POST" })
-  .validator((input: { key: string; priceId: string; occurrenceId?: string }) => {
+  .validator((input: { key: string; priceId: string; occurrenceId?: string; quantity?: number; attendees?: AttendeeInput[] }) => {
     const value = object(input);
+    const quantity = value.quantity === undefined ? undefined : Number(value.quantity);
+    if (quantity !== undefined && (!Number.isInteger(quantity) || quantity < 1 || quantity > 10)) throw new Error("Invalid quantity");
+    const list = attendees(value.attendees);
     return {
       key: uuid(value.key, "key"),
       priceId: uuid(value.priceId, "price"),
       ...(value.occurrenceId === undefined ? {} : { occurrenceId: uuid(value.occurrenceId, "time") }),
+      ...(quantity === undefined ? {} : { quantity }),
+      ...(list ? { attendees: list } : {}),
     };
   })
   .handler(async ({ data }) => startCheckout(data));

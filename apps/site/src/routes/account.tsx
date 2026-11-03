@@ -195,6 +195,7 @@ function Bookings({ bookings }: { bookings: Schemas["MemberBooking"][] }) {
               <span>
                 <strong>{booking.program.name}</strong> at {booking.location_name}
                 <span className="field__hint">
+                  {booking.for_someone_else ? `${booking.attendee_name}${booking.guest_name ? " (guest)" : ""} · ` : ""}
                   {BOOKING_LABEL[booking.status]}
                   {booking.source === "ticket" ? " · ticket" : booking.entitlement ? ` · ${booking.entitlement.name}` : ""}
                 </span>

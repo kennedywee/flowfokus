@@ -982,3 +982,51 @@ a:hover {
 .price__problem a {
   color: inherit;
 }
+
+/* A ticket for several people: spots, the member, and guest names. */
+.group {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.group__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.group__count {
+  width: 5rem;
+}
+.group__me input {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.group__guest {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2);
+}
+@media (max-width: 539.98px) {
+  .group__guest {
+    grid-template-columns: 1fr;
+  }
+}
+.group .input {
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--edge-strong);
+  border-radius: var(--radius-control);
+  background: var(--plate);
+  color: var(--ink);
+  font: inherit;
+}
+.group .input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+/* Buttons and messages inside a notice sit under its text. */
+.notice > .actions,
+.notice > .account__error {
+  grid-column: 2;
+  margin: var(--space-2) 0 0;
+}

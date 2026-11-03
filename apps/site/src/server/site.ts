@@ -197,11 +197,18 @@ export async function startCheckout(input: {
   key: string;
   priceId: string;
   occurrenceId?: string;
+  quantity?: number;
+  attendees?: Schemas["MemberAttendeeInput"][];
 }): Promise<ActionResult<Schemas["Checkout"]>> {
   return memberCall((api) =>
     api.POST("/member/checkouts", {
       params: { header: { "Idempotency-Key": input.key } },
-      body: { price_id: input.priceId, ...(input.occurrenceId ? { occurrence_id: input.occurrenceId } : {}) },
+      body: {
+        price_id: input.priceId,
+        quantity: input.quantity ?? 1,
+        ...(input.occurrenceId ? { occurrence_id: input.occurrenceId } : {}),
+        ...(input.attendees ? { attendees: input.attendees } : {}),
+      },
     }),
   );
 }
