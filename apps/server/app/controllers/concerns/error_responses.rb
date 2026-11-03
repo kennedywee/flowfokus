@@ -74,6 +74,27 @@ module ErrorResponses
     rescue_from Fulfillment::SaleNotPaid do |error|
       render_error :unprocessable_content, "sale_not_paid", error.message
     end
+    rescue_from Program::InvalidSchedule do |error|
+      render_error :unprocessable_content, "schedule_invalid", error.message
+    end
+    rescue_from Occurrence::Full do |error|
+      render_error :unprocessable_content, "occurrence_full", error.message
+    end
+    rescue_from Occurrence::Unavailable do |error|
+      render_error :unprocessable_content, "occurrence_unavailable", error.message
+    end
+    rescue_from Booking::NotAllowed do |error|
+      render_error :unprocessable_content, "booking_not_allowed", error.message
+    end
+    rescue_from Sale::OccurrenceRequired do |error|
+      render_error :unprocessable_content, "occurrence_required", error.message
+    end
+    rescue_from Checkout::Closed do |error|
+      render_error :unprocessable_content, "checkout_closed", error.message
+    end
+    rescue_from Flowfokus::Payments::NotConfigured do |error|
+      render_error :service_unavailable, "payments_unavailable", error.message
+    end
   end
 
   private

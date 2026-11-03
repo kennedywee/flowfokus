@@ -29,6 +29,7 @@ module Flowfokus
       purchases:read purchases:create purchases:fulfill purchases:fulfill_unpaid
       payments:create purchases:refund purchases:void memberships:revoke
       check_ins:read check_ins:create check_ins:override
+      programs:read programs:manage bookings:create bookings:manage
       settings:manage staff:manage
     ].freeze
 

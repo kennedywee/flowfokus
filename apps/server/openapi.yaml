@@ -110,6 +110,41 @@ paths:
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
+  /public/schedule:
+    get:
+      tags: [public]
+      operationId: getPublicSchedule
+      summary: Published programs and their times for the next days.
+      description: |
+        Times start today in the gym's time zone. Cancelled times stay listed with `cancelled: true`.
+      security:
+        - organizationHeader: []
+      parameters:
+        - name: days
+          in: query
+          required: false
+          description: How many days to include, from today.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 31
+            default: 14
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicScheduleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/organization:
     get:
       tags: [staff]
@@ -1391,6 +1426,466 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/programs:
+    get:
+      tags: [staff]
+      operationId: listStaffPrograms
+      summary: List programs. Needs programs:read.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [staff]
+      operationId: createStaffProgram
+      summary: Add a program. Needs programs:manage.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/programs/{id}:
+    get:
+      tags: [staff]
+      operationId: getStaffProgram
+      summary: One program with its times from today, tickets, and the offers that cover it. Needs programs:read.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    patch:
+      tags: [staff]
+      operationId: updateStaffProgram
+      summary: Change a program. Needs programs:manage.
+      description: |
+        The kind never changes. New capacity and duration apply to times added later.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramUpdate"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/programs/{id}/occurrences:
+    post:
+      tags: [staff]
+      operationId: scheduleStaffProgram
+      summary: Add times to a program. Needs programs:manage.
+      description: |
+        The date and time are in the gym's time zone. `weeks` repeats the time weekly. Times that already exist are skipped.
+        A bad date, time, or week count returns 422 `schedule_invalid`. Returns the program.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/programs/{id}/tickets:
+    post:
+      tags: [staff]
+      operationId: addStaffProgramTicket
+      summary: Add a ticket price for a program. Needs programs:manage.
+      description: |
+        The first ticket price creates the program's ticket product. A ticket buys one spot at one time.
+        Change or archive ticket prices with `/staff/prices/{id}`. Returns the program.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/occurrences:
+    get:
+      tags: [staff]
+      operationId: listStaffOccurrences
+      summary: The schedule of every program. Needs programs:read.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - name: from
+          in: query
+          required: false
+          description: First day, in the gym's time zone. Defaults to today.
+          schema:
+            type: string
+            format: date
+        - name: days
+          in: query
+          required: false
+          description: How many days to include.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 62
+            default: 14
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleEntryListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/occurrences/{id}:
+    get:
+      tags: [staff]
+      operationId: getStaffOccurrence
+      summary: The roster for one time. Needs programs:read.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/occurrences/{id}/cancel:
+    post:
+      tags: [staff]
+      operationId: cancelStaffOccurrence
+      summary: Cancel a time. Needs programs:manage.
+      description: |
+        Cancels every live booking and returns each use. Refund ticket payments separately. A repeat call changes nothing.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/occurrences/{id}/options:
+    get:
+      tags: [staff]
+      operationId: getStaffBookingOptions
+      summary: How a member could book this time. Needs programs:read.
+      description: |
+        Lists the member's usable rights for the time and the program's ticket prices.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+        - name: member_id
+          in: query
+          required: true
+          description: The member.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffBookingOptionsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/bookings:
+    post:
+      tags: [staff]
+      operationId: createStaffBooking
+      summary: Book a member with a right they hold. Needs bookings:create.
+      description: |
+        Uses one use of the right. The same member, time, and right again returns 200 and changes nothing.
+        A full time returns 422 `occurrence_full`. A cancelled or started time returns 422 `occurrence_unavailable`.
+        A right that does not cover the time returns 422 `booking_not_allowed`. To sell a ticket, record a sale with `occurrence_id`. Returns the roster.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffBookingInput"
+      responses:
+        "200":
+          description: Already booked. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "201":
+          description: Booked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/bookings/{id}/cancel:
+    post:
+      tags: [staff]
+      operationId: cancelStaffBooking
+      summary: Cancel a booking. Needs bookings:manage.
+      description: |
+        Returns the use unless `return_use` is false. An attended booking cannot be cancelled. Returns the roster.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingCancelInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/bookings/{id}/attend:
+    post:
+      tags: [staff]
+      operationId: attendStaffBooking
+      summary: Mark a member present. Needs bookings:manage.
+      description: |
+        Only a confirmed booking can be marked present. A repeat call changes nothing. Returns the roster.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RosterResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /member/profile:
     get:
       tags: [member]
@@ -1492,6 +1987,274 @@ paths:
           $ref: "#/components/responses/Unprocessable"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/occurrences/{id}:
+    get:
+      tags: [member]
+      operationId: getMemberOccurrence
+      summary: One time of a published program, and how the member could book it.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberBookingOptionsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/bookings:
+    get:
+      tags: [member]
+      operationId: listMemberBookings
+      summary: The member's coming bookings, then the 10 latest earlier ones.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberBookingListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      tags: [member]
+      operationId: createMemberBooking
+      summary: Book a spot with a pass or membership the member holds.
+      description: |
+        The same time and right again returns 200 and changes nothing. Errors match `POST /staff/bookings`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberBookingInput"
+      responses:
+        "200":
+          description: Already booked. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberBookingResponse"
+        "201":
+          description: Booked.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/bookings/{id}/cancel:
+    post:
+      tags: [member]
+      operationId: cancelMemberBooking
+      summary: Cancel a pass or membership booking before the time starts.
+      description: |
+        The use comes back. Ticket bookings are changed at the front desk (422 `booking_not_allowed`).
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberBookingResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/checkouts:
+    post:
+      tags: [member]
+      operationId: createMemberCheckout
+      summary: Start an online purchase.
+      description: |
+        Holds a spot for a ticket until `expires_at`. Nothing is sold until the provider confirms payment.
+        A free price completes at once. Without an online payment provider, returns 503 `payments_unavailable`.
+        A ticket needs `occurrence_id` (422 `occurrence_required`). Limited to 30 per 10 minutes per client IP.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Replayed. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/checkouts/{id}:
+    get:
+      tags: [member]
+      operationId: getMemberCheckout
+      summary: One of the member's checkouts.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/checkouts/{id}/cancel:
+    post:
+      tags: [member]
+      operationId: cancelMemberCheckout
+      summary: Leave a checkout without paying. Frees the held spot.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /member/checkouts/{id}/test_payment:
+    post:
+      tags: [member]
+      operationId: payMemberCheckoutTest
+      summary: Pay with the local test provider. Development and test only.
+      description: |
+        Moves no money. Returns 404 unless `FLOWFOKUS_TEST_PAYMENTS=true` and the checkout uses the test provider.
+        Creates the sale, records an online payment, delivers the purchase, and confirms the held spot.
+        An expired or cancelled checkout returns 422 `checkout_closed`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Paid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
@@ -1677,11 +2440,13 @@ components:
         - `idempotency_key_reused` (409)
         - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
           `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
-          `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked` (422)
+          `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked`,
+          `schedule_invalid`, `occurrence_full`, `occurrence_unavailable`, `occurrence_required`,
+          `booking_not_allowed`, `checkout_closed` (422)
         - `member_not_linked` (403)
         - `rate_limited` (429)
         - `internal_error` (500)
-        - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
+        - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable`, `payments_unavailable` (503)
       enum:
         - bad_request
         - organization_required
@@ -1706,12 +2471,20 @@ components:
         - link_code_invalid
         - member_already_linked
         - member_not_linked
+        - schedule_invalid
+        - occurrence_full
+        - occurrence_unavailable
+        - occurrence_required
+        - booking_not_allowed
+        - checkout_closed
+        - payments_unavailable
         - rate_limited
         - internal_error
         - auth_not_configured
         - auth_unavailable
         - database_unavailable
         - workos_unavailable
+        - payments_unavailable
 
     WorkosWebhookEvent:
       type: object
@@ -1807,8 +2580,11 @@ components:
     PublicOrganization:
       type: object
       additionalProperties: false
-      required: [slug, name, timezone, currency, locations]
+      required: [slug, name, timezone, currency, online_payments, locations]
       properties:
+        online_payments:
+          type: boolean
+          description: True when members can pay online on the gym site.
         slug:
           type: string
         name:
@@ -1869,6 +2645,10 @@ components:
         - check_ins:read
         - check_ins:create
         - check_ins:override
+        - programs:read
+        - programs:manage
+        - bookings:create
+        - bookings:manage
         - settings:manage
         - staff:manage
 
@@ -2009,7 +2789,7 @@ components:
     MemberDetail:
       type: object
       additionalProperties: false
-      required: [id, name, email, created_at, linked_email, membership, current_period, renewal, entitlements]
+      required: [id, name, email, created_at, linked_email, membership, current_period, renewal, entitlements, bookings]
       properties:
         id:
           type: string
@@ -2043,6 +2823,11 @@ components:
           description: Rights that are active now or start later. Expired rights are left out.
           items:
             $ref: "#/components/schemas/Entitlement"
+        bookings:
+          type: array
+          description: Coming bookings, then the 10 latest earlier ones.
+          items:
+            $ref: "#/components/schemas/Booking"
 
     Membership:
       type: object
@@ -2106,6 +2891,9 @@ components:
         - used_count
         - remaining
         - active
+        - program_ids
+        - program_kind
+        - occurrence_id
       properties:
         id:
           type: string
@@ -2138,15 +2926,32 @@ components:
         active:
           type: boolean
           description: True when now is inside the validity window.
+        program_ids:
+          type: array
+          description: Program access only. Selected programs. Empty means the kind decides.
+          items:
+            type: string
+            format: uuid
+        program_kind:
+          allOf:
+            - $ref: "#/components/schemas/ProgramKind"
+          nullable: true
+          description: Program access only. With no selected programs, every program of this kind. Null means every program.
+        occurrence_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: A ticket's right is valid for this one time only.
 
     BenefitKind:
       type: string
-      enum: [gym_access]
+      description: "`gym_access` opens the gym floor at check-in. `program_access` books spots in programs."
+      enum: [gym_access, program_access]
 
     Benefit:
       type: object
       additionalProperties: false
-      required: [id, kind, name, usage_limit, location_id]
+      required: [id, kind, name, usage_limit, location_id, program_ids, program_kind]
       properties:
         id:
           type: string
@@ -2164,12 +2969,30 @@ components:
           format: uuid
           nullable: true
           description: Null means every location.
+        program_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        program_kind:
+          allOf:
+            - $ref: "#/components/schemas/ProgramKind"
+          nullable: true
 
     PublicBenefit:
       type: object
       additionalProperties: false
-      required: [kind, name, usage_limit, location_name]
+      required: [kind, name, usage_limit, location_name, program_kind, program_names]
       properties:
+        program_kind:
+          allOf:
+            - $ref: "#/components/schemas/ProgramKind"
+          nullable: true
+        program_names:
+          type: array
+          description: Selected published programs. Empty means the kind, or every program.
+          items:
+            type: string
         kind:
           $ref: "#/components/schemas/BenefitKind"
         name:
@@ -2200,7 +3023,8 @@ components:
         duration_days:
           type: integer
           minimum: 1
-          description: Fixed duration of each membership period.
+          nullable: true
+          description: Days of access from delivery. Null for a ticket, which lasts until its time ends.
         available:
           type: boolean
           description: True when the price can be used for a new sale.
@@ -2225,12 +3049,15 @@ components:
           type: string
         duration_days:
           type: integer
+          nullable: true
 
     PublicProduct:
       type: object
       additionalProperties: false
-      required: [id, name, description, benefits, prices]
+      required: [id, name, description, kind, benefits, prices]
       properties:
+        kind:
+          $ref: "#/components/schemas/ProductKind"
         id:
           type: string
           format: uuid
@@ -2251,8 +3078,15 @@ components:
     StaffProduct:
       type: object
       additionalProperties: false
-      required: [id, name, description, published, benefits, prices]
+      required: [id, name, description, published, kind, program_id, benefits, prices]
       properties:
+        kind:
+          $ref: "#/components/schemas/ProductKind"
+        program_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The program a ticket was made from. Null for other kinds.
         id:
           type: string
           format: uuid
@@ -2287,8 +3121,17 @@ components:
           type: string
           format: uuid
           description: Where the sale happened.
+        occurrence_id:
+          type: string
+          format: uuid
+          description: Required for a ticket, and only for a ticket. Delivery books this time.
 
     PaymentMethod:
+      type: string
+      description: "`online` payments come from a payment provider through a checkout."
+      enum: [cash, bank_transfer, online]
+
+    ManualPaymentMethod:
       type: string
       enum: [cash, bank_transfer]
 
@@ -2301,7 +3144,7 @@ components:
           type: integer
           minimum: 1
         method:
-          $ref: "#/components/schemas/PaymentMethod"
+          $ref: "#/components/schemas/ManualPaymentMethod"
         reference:
           type: string
           maxLength: 200
@@ -2327,18 +3170,31 @@ components:
     SaleLineItemTerms:
       type: object
       additionalProperties: false
-      required: [duration_days, benefits]
+      required: [kind, duration_days, benefits]
       description: Terms snapshotted at purchase. Later catalog edits never change them.
       properties:
+        kind:
+          $ref: "#/components/schemas/ProductKind"
         duration_days:
           type: integer
+          nullable: true
+          description: Null for a ticket.
         benefits:
           type: array
           items:
             type: object
             additionalProperties: false
-            required: [kind, name, usage_limit, location_id]
+            required: [kind, name, usage_limit, location_id, program_ids, program_kind]
             properties:
+              program_ids:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+              program_kind:
+                allOf:
+                  - $ref: "#/components/schemas/ProgramKind"
+                nullable: true
               kind:
                 $ref: "#/components/schemas/BenefitKind"
               name:
@@ -2394,8 +3250,12 @@ components:
     Payment:
       type: object
       additionalProperties: false
-      required: [id, amount_minor, currency, method, reference, received_at, refunded_minor]
+      required: [id, amount_minor, currency, method, provider, reference, received_at, refunded_minor]
       properties:
+        provider:
+          type: string
+          nullable: true
+          description: The payment provider for an online payment, for example `test`.
         id:
           type: string
           format: uuid
@@ -2429,8 +3289,12 @@ components:
         membership_id:
           type: string
           format: uuid
+          nullable: true
+          description: Null for a pass or a ticket.
         membership_period:
-          $ref: "#/components/schemas/MembershipPeriod"
+          allOf:
+            - $ref: "#/components/schemas/MembershipPeriod"
+          nullable: true
         fulfilled_at:
           type: string
           format: date-time
@@ -2462,6 +3326,9 @@ components:
         - id
         - member
         - location_id
+        - channel
+        - occurrence
+        - booking_id
         - currency
         - total_minor
         - paid_minor
@@ -2486,6 +3353,20 @@ components:
         location_id:
           type: string
           format: uuid
+          nullable: true
+          description: Where a desk sale happened. Null for an online sale.
+        channel:
+          $ref: "#/components/schemas/SaleChannel"
+        occurrence:
+          allOf:
+            - $ref: "#/components/schemas/SaleOccurrence"
+          nullable: true
+          description: The time a ticket is for.
+        booking_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The booking a delivered ticket made.
         currency:
           type: string
         total_minor:
@@ -2603,6 +3484,20 @@ components:
       additionalProperties: false
       required: [name]
       properties:
+        kind:
+          $ref: "#/components/schemas/BenefitKind"
+        program_ids:
+          type: array
+          maxItems: 50
+          description: Program access only. Selected programs.
+          items:
+            type: string
+            format: uuid
+        program_kind:
+          allOf:
+            - $ref: "#/components/schemas/ProgramKind"
+          nullable: true
+          description: Program access only. Every program of this kind, when no programs are selected.
         name:
           type: string
           minLength: 1
@@ -2623,6 +3518,10 @@ components:
       additionalProperties: false
       required: [name, benefits]
       properties:
+        kind:
+          type: string
+          enum: [membership, pass]
+          description: Defaults to membership. Tickets are added from a program.
         name:
           type: string
           minLength: 1
@@ -3006,8 +3905,10 @@ components:
     MemberSale:
       type: object
       additionalProperties: false
-      required: [id, product_name, price_label, currency, total_minor, paid_minor, balance_minor, refunded_minor, fulfilled, purchased_at]
+      required: [id, product_name, price_label, currency, channel, total_minor, paid_minor, balance_minor, refunded_minor, fulfilled, purchased_at]
       properties:
+        channel:
+          $ref: "#/components/schemas/SaleChannel"
         id:
           type: string
           format: uuid
@@ -3034,7 +3935,7 @@ components:
     MemberAccount:
       type: object
       additionalProperties: false
-      required: [id, name, email, created_at, membership, current_period, entitlements, check_ins, sales]
+      required: [id, name, email, created_at, membership, current_period, entitlements, check_ins, sales, bookings]
       properties:
         id:
           type: string
@@ -3068,6 +3969,11 @@ components:
           description: The 20 latest purchases that are not void, newest first.
           items:
             $ref: "#/components/schemas/MemberSale"
+        bookings:
+          type: array
+          description: Coming bookings, then the 10 latest earlier ones.
+          items:
+            $ref: "#/components/schemas/MemberBooking"
 
     MemberAccountResponse:
       type: object
@@ -3076,6 +3982,800 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/MemberAccount"
+
+    ProductKind:
+      type: string
+      description: "`membership` and `pass` are offers. A `ticket` is made from a program and buys one spot at one time."
+      enum: [membership, pass, ticket]
+
+    SaleChannel:
+      type: string
+      description: "`desk` sales are recorded by staff. `online` sales come from a paid checkout and have no sale location."
+      enum: [desk, online]
+
+    SaleOccurrence:
+      type: object
+      additionalProperties: false
+      required: [id, program_id, program_name, starts_at, ends_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        program_id:
+          type: string
+          format: uuid
+        program_name:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+
+    ProgramKind:
+      type: string
+      enum: [group_class, event, appointment]
+
+    Program:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, kind, location_id, capacity, duration_minutes, host_name, published, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        kind:
+          $ref: "#/components/schemas/ProgramKind"
+        location_id:
+          type: string
+          format: uuid
+        capacity:
+          type: integer
+          minimum: 1
+          description: Spots for each new time. One for an appointment slot.
+        duration_minutes:
+          type: integer
+          minimum: 1
+        host_name:
+          type: string
+          nullable: true
+          description: The coach, instructor, or host shown to members.
+        published:
+          type: boolean
+          description: Shown on the gym site schedule.
+        created_at:
+          type: string
+          format: date-time
+
+    ProgramListItem:
+      allOf:
+        - $ref: "#/components/schemas/Program"
+        - type: object
+          required: [upcoming_count]
+          properties:
+            upcoming_count:
+              type: integer
+              description: Times that have not ended and are not cancelled.
+
+    ProgramSummary:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind, location_id, host_name, published]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/ProgramKind"
+        location_id:
+          type: string
+          format: uuid
+        host_name:
+          type: string
+          nullable: true
+        published:
+          type: boolean
+
+    ProgramInput:
+      type: object
+      additionalProperties: false
+      required: [name, kind, location_id, capacity, duration_minutes]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+        kind:
+          $ref: "#/components/schemas/ProgramKind"
+        location_id:
+          type: string
+          format: uuid
+        capacity:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        host_name:
+          type: string
+          nullable: true
+          maxLength: 200
+        published:
+          type: boolean
+
+    ProgramUpdate:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          maxLength: 2000
+        location_id:
+          type: string
+          format: uuid
+        capacity:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        duration_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        host_name:
+          type: string
+          nullable: true
+          maxLength: 200
+        published:
+          type: boolean
+
+    ProgramTicket:
+      type: object
+      additionalProperties: false
+      required: [product_id, prices]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Price"
+
+    AcceptedOffer:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/ProductKind"
+
+    ProgramDetail:
+      allOf:
+        - $ref: "#/components/schemas/Program"
+        - type: object
+          required: [location_name, occurrences, ticket, accepted_by]
+          properties:
+            location_name:
+              type: string
+            occurrences:
+              type: array
+              description: Times from the start of today, earliest first. Includes cancelled times.
+              items:
+                $ref: "#/components/schemas/Occurrence"
+            ticket:
+              allOf:
+                - $ref: "#/components/schemas/ProgramTicket"
+              nullable: true
+              description: Null until staff add a ticket price.
+            accepted_by:
+              type: array
+              description: Passes and memberships whose program rights cover this program.
+              items:
+                $ref: "#/components/schemas/AcceptedOffer"
+
+    Occurrence:
+      type: object
+      additionalProperties: false
+      required: [id, program_id, starts_at, ends_at, capacity, spots_taken, spots_left, bookable, cancelled_at, cancel_reason]
+      properties:
+        id:
+          type: string
+          format: uuid
+        program_id:
+          type: string
+          format: uuid
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        spots_taken:
+          type: integer
+          description: Confirmed bookings and holds that have not ended.
+        spots_left:
+          type: integer
+        bookable:
+          type: boolean
+          description: Not cancelled, not started, and not full.
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_reason:
+          type: string
+          nullable: true
+
+    ScheduleEntry:
+      allOf:
+        - $ref: "#/components/schemas/Occurrence"
+        - type: object
+          required: [program]
+          properties:
+            program:
+              $ref: "#/components/schemas/ProgramSummary"
+
+    ScheduleInput:
+      type: object
+      additionalProperties: false
+      required: [date, time]
+      properties:
+        date:
+          type: string
+          format: date
+          description: The first day, in the gym's time zone.
+        time:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Start time, HH:MM, in the gym's time zone.
+        weeks:
+          type: integer
+          minimum: 1
+          maximum: 26
+          default: 1
+          description: Repeat the same day and time for this many weeks.
+
+    TicketInput:
+      type: object
+      additionalProperties: false
+      required: [label, amount_minor]
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        amount_minor:
+          type: integer
+          minimum: 0
+
+    BookingStatus:
+      type: string
+      description: |
+        - `held`: an online checkout holds the spot until `held_until`.
+        - `confirmed`: the spot is taken and a use is recorded.
+        - `attended`: staff marked the member present.
+        - `cancelled`: the spot is free again.
+        - `expired`: the checkout ended without payment.
+      enum: [held, confirmed, attended, cancelled, expired]
+
+    BookingSource:
+      type: string
+      description: "`entitlement`: booked with a pass or membership. `ticket`: bought for this time."
+      enum: [entitlement, ticket]
+
+    BookingProgram:
+      type: object
+      additionalProperties: false
+      required: [id, name, kind]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: "#/components/schemas/ProgramKind"
+
+    BookingRight:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    BookingBase:
+      type: object
+      required:
+        - id
+        - status
+        - occurrence_id
+        - program
+        - starts_at
+        - ends_at
+        - entitlement
+        - source
+        - sale_id
+        - held_until
+        - confirmed_at
+        - cancelled_at
+        - cancel_reason
+        - attended_at
+        - use_returned
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/BookingStatus"
+        occurrence_id:
+          type: string
+          format: uuid
+        program:
+          $ref: "#/components/schemas/BookingProgram"
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        entitlement:
+          allOf:
+            - $ref: "#/components/schemas/BookingRight"
+          nullable: true
+          description: The right this booking used. Null while a checkout holds the spot.
+        source:
+          $ref: "#/components/schemas/BookingSource"
+        sale_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The ticket sale behind this booking.
+        held_until:
+          type: string
+          format: date-time
+          nullable: true
+        confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_reason:
+          type: string
+          nullable: true
+        attended_at:
+          type: string
+          format: date-time
+          nullable: true
+        use_returned:
+          type: boolean
+          description: True when cancelling gave the use back.
+
+    Booking:
+      allOf:
+        - $ref: "#/components/schemas/BookingBase"
+        - type: object
+          required: [member]
+          properties:
+            member:
+              $ref: "#/components/schemas/MemberSummary"
+
+    MemberBooking:
+      allOf:
+        - $ref: "#/components/schemas/BookingBase"
+        - type: object
+          required: [location_name, cancellable]
+          properties:
+            location_name:
+              type: string
+            cancellable:
+              type: boolean
+              description: True when the member can cancel it now.
+
+    Roster:
+      allOf:
+        - $ref: "#/components/schemas/Occurrence"
+        - type: object
+          required: [program, bookings]
+          properties:
+            program:
+              allOf:
+                - $ref: "#/components/schemas/Program"
+                - type: object
+                  required: [location_name]
+                  properties:
+                    location_name:
+                      type: string
+            bookings:
+              type: array
+              description: Every booking, including cancelled ones, oldest first.
+              items:
+                $ref: "#/components/schemas/Booking"
+
+    StaffBookingOptions:
+      type: object
+      additionalProperties: false
+      required: [occurrence, member, rights, ticket_prices, booking]
+      properties:
+        occurrence:
+          $ref: "#/components/schemas/Occurrence"
+        member:
+          $ref: "#/components/schemas/MemberSummary"
+        rights:
+          type: array
+          description: The member's rights that can book this time now.
+          items:
+            $ref: "#/components/schemas/Entitlement"
+        ticket_prices:
+          type: array
+          description: Ticket prices on sale for this program.
+          items:
+            $ref: "#/components/schemas/Price"
+        booking:
+          allOf:
+            - $ref: "#/components/schemas/MemberBooking"
+          nullable: true
+          description: The member's live booking for this time, if any.
+
+    StaffBookingInput:
+      type: object
+      additionalProperties: false
+      required: [occurrence_id, member_id, entitlement_id]
+      properties:
+        occurrence_id:
+          type: string
+          format: uuid
+        member_id:
+          type: string
+          format: uuid
+        entitlement_id:
+          type: string
+          format: uuid
+
+    BookingCancelInput:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+        return_use:
+          type: boolean
+          default: true
+          description: Give the use back to the member's pass or membership.
+
+    MemberBookingInput:
+      type: object
+      additionalProperties: false
+      required: [occurrence_id, entitlement_id]
+      properties:
+        occurrence_id:
+          type: string
+          format: uuid
+        entitlement_id:
+          type: string
+          format: uuid
+
+    PublicProgram:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, kind, location_name, duration_minutes, host_name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        kind:
+          $ref: "#/components/schemas/ProgramKind"
+        location_name:
+          type: string
+        duration_minutes:
+          type: integer
+        host_name:
+          type: string
+          nullable: true
+
+    PublicScheduleProgram:
+      allOf:
+        - $ref: "#/components/schemas/PublicProgram"
+        - type: object
+          required: [ticket_prices, accepted_by]
+          properties:
+            ticket_prices:
+              type: array
+              items:
+                $ref: "#/components/schemas/PublicPrice"
+            accepted_by:
+              type: array
+              description: Names of passes and memberships on sale that cover this program.
+              items:
+                type: string
+
+    PublicOccurrence:
+      type: object
+      additionalProperties: false
+      required: [id, program_id, starts_at, ends_at, capacity, spots_left, bookable, cancelled]
+      properties:
+        id:
+          type: string
+          format: uuid
+        program_id:
+          type: string
+          format: uuid
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        spots_left:
+          type: integer
+        bookable:
+          type: boolean
+        cancelled:
+          type: boolean
+
+    PublicSchedule:
+      type: object
+      additionalProperties: false
+      required: [programs, occurrences]
+      properties:
+        programs:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicScheduleProgram"
+        occurrences:
+          type: array
+          description: Earliest first.
+          items:
+            $ref: "#/components/schemas/PublicOccurrence"
+
+    MemberBookingOptions:
+      type: object
+      additionalProperties: false
+      required: [occurrence, program, rights, ticket_prices, booking]
+      properties:
+        occurrence:
+          $ref: "#/components/schemas/PublicOccurrence"
+        program:
+          $ref: "#/components/schemas/PublicProgram"
+        rights:
+          type: array
+          description: The member's passes and memberships that can book this time now.
+          items:
+            $ref: "#/components/schemas/Entitlement"
+        ticket_prices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Price"
+        booking:
+          allOf:
+            - $ref: "#/components/schemas/MemberBooking"
+          nullable: true
+          description: The member's live booking for this time, if any.
+
+    CheckoutInput:
+      type: object
+      additionalProperties: false
+      required: [price_id]
+      properties:
+        price_id:
+          type: string
+          format: uuid
+        occurrence_id:
+          type: string
+          format: uuid
+          description: Required for a ticket, and only for a ticket.
+
+    CheckoutStatus:
+      type: string
+      description: "`expired` means the checkout ended unpaid and its held spot is free."
+      enum: [open, paid, cancelled, expired]
+
+    Checkout:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - status
+        - provider
+        - payment_url
+        - amount_minor
+        - currency
+        - expires_at
+        - completed_at
+        - product_name
+        - product_kind
+        - price_label
+        - occurrence
+        - sale_id
+        - booking_id
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/CheckoutStatus"
+        provider:
+          type: string
+          description: "`test` for the local test provider. `free` when nothing was due."
+        payment_url:
+          type: string
+          nullable: true
+          description: Where the provider takes payment. Null for the test provider, whose page the gym site shows.
+        amount_minor:
+          type: integer
+        currency:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        product_name:
+          type: string
+        product_kind:
+          $ref: "#/components/schemas/ProductKind"
+        price_label:
+          type: string
+        occurrence:
+          allOf:
+            - $ref: "#/components/schemas/CheckoutOccurrence"
+          nullable: true
+        sale_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Set when paid.
+        booking_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    CheckoutOccurrence:
+      type: object
+      additionalProperties: false
+      required: [id, program_name, starts_at, ends_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        program_name:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+
+    ProgramListResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgramListItem"
+
+    ProgramDetailResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/ProgramDetail"
+
+    ScheduleEntryListResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleEntry"
+
+    RosterResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Roster"
+
+    StaffBookingOptionsResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/StaffBookingOptions"
+
+    MemberBookingOptionsResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/MemberBookingOptions"
+
+    MemberBookingResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/MemberBooking"
+
+    MemberBookingListResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberBooking"
+
+    CheckoutResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Checkout"
+
+    PublicScheduleResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/PublicSchedule"
 
     ReportWeek:
       type: object

@@ -29,7 +29,9 @@ RSpec.configure do |config|
       "WORKOS_VERIFIED" => nil,
       "WORKOS_API_KEY" => nil,
       "WORKOS_API_BASE_URL" => nil,
-      "WORKOS_WEBHOOK_SECRET" => example.metadata[:webhook_secret] == false ? nil : WorkosSyncHelpers::WEBHOOK_SECRET
+      "WORKOS_WEBHOOK_SECRET" => example.metadata[:webhook_secret] == false ? nil : WorkosSyncHelpers::WEBHOOK_SECRET,
+      # `payments: true` turns on the local test payment provider.
+      "FLOWFOKUS_TEST_PAYMENTS" => example.metadata[:payments] ? "true" : nil
     ) { example.run }
   end
 end

@@ -16,8 +16,9 @@ RSpec.describe "Sales" do
       "payment_status" => "unpaid", "fulfilled" => false, "fulfillment" => nil, "payments" => [], "currency" => "MYR")
     expect(data["line_item"]).to include("product_name" => "Monthly 8", "quantity" => 1, "unit_amount_minor" => 8_000)
     expect(data["line_item"]["terms"]).to eq(
-      "duration_days" => 30,
-      "benefits" => [ { "kind" => "gym_access", "name" => "Gym access", "usage_limit" => 8, "location_id" => nil } ]
+      "kind" => "membership", "duration_days" => 30,
+      "benefits" => [ { "kind" => "gym_access", "name" => "Gym access", "usage_limit" => 8, "location_id" => nil,
+        "program_ids" => [], "program_kind" => nil } ]
     )
   end
 

@@ -5,7 +5,7 @@ module Staff
     before_action { require_permission! "products:update" }
 
     def create
-      product = current_organization.products.find(params[:product_id])
+      product = current_organization.products.offers.find(params[:product_id])
       product.add_price!(label: params[:label], amount_minor: params[:amount_minor], duration_days: params[:duration_days])
       render_product product, status: :created
     end

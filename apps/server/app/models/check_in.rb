@@ -57,7 +57,8 @@ class CheckIn < ApplicationRecord
   def overridden? = override_reason.present?
 
   def authorize_and_consume!(override_reason: nil)
-    rights = member.entitlements.valid_at(checked_in_at).order(:ends_at, :id).lock.to_a
+    # Only gym access opens the gym floor. Program rights are used by bookings.
+    rights = member.entitlements.gym_access.valid_at(checked_in_at).order(:ends_at, :id).lock.to_a
     in_location = rights.select { |right| right.covers_location?(location) }
     usable = in_location.select(&:usable?)
     chosen = usable.find(&:unlimited?) || usable.first

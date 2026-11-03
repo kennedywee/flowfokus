@@ -95,6 +95,10 @@ roles:
       - check_ins:read
       - check_ins:create
       - check_ins:override
+      - programs:read
+      - programs:manage
+      - bookings:create
+      - bookings:manage
       - settings:manage
       - staff:manage
   - slug: manager
@@ -110,6 +114,9 @@ roles:
       - payments:create
       - check_ins:read
       - check_ins:create
+      - programs:read
+      - bookings:create
+      - bookings:manage
       - staff:manage
   - slug: receptionist
     name: Receptionist
@@ -119,6 +126,9 @@ roles:
       - purchases:read
       - check_ins:read
       - check_ins:create
+      - programs:read
+      - bookings:create
+      - bookings:manage
 
 permissions:
   - slug: members:read
@@ -155,6 +165,14 @@ permissions:
     name: Check in members
   - slug: check_ins:override
     name: Let a member in despite a denial, with a reason
+  - slug: programs:read
+    name: Read programs, the schedule, and rosters
+  - slug: programs:manage
+    name: Create and change programs, times, and tickets
+  - slug: bookings:create
+    name: Book members into programs at the desk
+  - slug: bookings:manage
+    name: Cancel bookings and mark attendance
   - slug: settings:manage
     name: Manage organization settings and locations
   - slug: staff:manage

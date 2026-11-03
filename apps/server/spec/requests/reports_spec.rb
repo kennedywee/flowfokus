@@ -32,7 +32,7 @@ RSpec.describe "Reports" do
     expect(weeks[3]).to include("sale_count" => 1, "sales_minor" => 10_000, "payments_minor" => 4_000, "refunds_minor" => 1_000,
       "check_ins_denied" => 1, "check_ins_granted" => 0)
     expect(data["by_location"].to_h { [ _1["name"], _1["sales_minor"] ] }).to eq("Bangsar" => 10_000, "Mont Kiara" => 10_000)
-    expect(data["by_method"].to_h { [ _1["method"], _1["payments_minor"] ] }).to eq("cash" => 10_000, "bank_transfer" => 4_000)
+    expect(data["by_method"].to_h { [ _1["method"], _1["payments_minor"] ] }).to eq("cash" => 10_000, "bank_transfer" => 4_000, "online" => 0)
   end
 
   it "accepts 1, 2, 4, or 12 weeks" do

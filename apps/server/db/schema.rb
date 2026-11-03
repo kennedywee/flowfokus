@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_03_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -28,6 +28,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.index ["id", "organization_id"], name: "index_benefit_grants_on_id_and_organization_id", unique: true
     t.index ["member_id"], name: "index_benefit_grants_on_member_id"
     t.check_constraint "origin::text = 'purchase'::text", name: "benefit_grants_origin"
+  end
+
+  create_table "bookings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "member_id", null: false
+    t.uuid "occurrence_id", null: false
+    t.uuid "entitlement_id"
+    t.uuid "checkout_id"
+    t.uuid "sale_id"
+    t.uuid "booked_by_user_id"
+    t.datetime "held_until"
+    t.datetime "confirmed_at"
+    t.datetime "cancelled_at"
+    t.text "cancel_reason"
+    t.uuid "cancelled_by_user_id"
+    t.datetime "attended_at"
+    t.uuid "attended_by_user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["attended_by_user_id"], name: "index_bookings_on_attended_by_user_id"
+    t.index ["booked_by_user_id"], name: "index_bookings_on_booked_by_user_id"
+    t.index ["cancelled_by_user_id"], name: "index_bookings_on_cancelled_by_user_id"
+    t.index ["checkout_id"], name: "index_bookings_on_checkout_id", unique: true
+    t.index ["entitlement_id"], name: "index_bookings_on_entitlement_id"
+    t.index ["id", "organization_id"], name: "index_bookings_on_id_and_organization_id", unique: true
+    t.index ["member_id", "created_at"], name: "index_bookings_on_member_id_and_created_at"
+    t.index ["occurrence_id", "member_id"], name: "index_bookings_one_live_per_member", unique: true, where: "(cancelled_at IS NULL)"
+    t.check_constraint "attended_at IS NULL OR confirmed_at IS NOT NULL AND cancelled_at IS NULL", name: "bookings_attended_confirmed"
+    t.check_constraint "cancelled_at IS NULL AND cancel_reason IS NULL OR cancelled_at IS NOT NULL AND cancel_reason IS NOT NULL AND length(btrim(cancel_reason)) > 0", name: "bookings_cancel_shape"
+    t.check_constraint "confirmed_at IS NOT NULL AND entitlement_id IS NOT NULL OR confirmed_at IS NULL AND held_until IS NOT NULL AND checkout_id IS NOT NULL", name: "bookings_confirmed_or_held"
   end
 
   create_table "check_ins", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -56,15 +86,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.check_constraint "result::text = ANY (ARRAY['granted'::character varying::text, 'denied'::character varying::text])", name: "check_ins_result"
   end
 
+  create_table "checkouts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "member_id", null: false
+    t.uuid "price_id", null: false
+    t.uuid "occurrence_id"
+    t.uuid "sale_id"
+    t.bigint "amount_minor", null: false
+    t.string "currency", limit: 3, null: false
+    t.string "provider", null: false
+    t.string "provider_reference", null: false
+    t.string "status", default: "open", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "completed_at"
+    t.string "idempotency_key", null: false
+    t.string "request_fingerprint", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id", "organization_id"], name: "index_checkouts_on_id_and_organization_id", unique: true
+    t.index ["member_id"], name: "index_checkouts_on_member_id"
+    t.index ["organization_id", "idempotency_key"], name: "index_checkouts_on_organization_id_and_idempotency_key", unique: true
+    t.index ["provider", "provider_reference"], name: "index_checkouts_on_provider_and_provider_reference", unique: true
+    t.index ["sale_id"], name: "index_checkouts_on_sale_id", unique: true
+    t.check_constraint "(status::text = 'paid'::text) = (sale_id IS NOT NULL AND completed_at IS NOT NULL)", name: "checkouts_paid_shape"
+    t.check_constraint "amount_minor >= 0", name: "checkouts_amount_non_negative"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'paid'::character varying, 'cancelled'::character varying]::text[])", name: "checkouts_status"
+  end
+
   create_table "entitlement_usages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.uuid "entitlement_id", null: false
-    t.uuid "check_in_id", null: false
+    t.uuid "check_in_id"
     t.datetime "used_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "booking_id"
+    t.datetime "returned_at"
+    t.index ["booking_id"], name: "index_entitlement_usages_on_booking_id", unique: true
     t.index ["check_in_id"], name: "index_entitlement_usages_on_check_in_id", unique: true
     t.index ["entitlement_id"], name: "index_entitlement_usages_on_entitlement_id"
+    t.check_constraint "(check_in_id IS NULL) <> (booking_id IS NULL)", name: "entitlement_usages_one_source"
+    t.check_constraint "returned_at IS NULL OR booking_id IS NOT NULL", name: "entitlement_usages_only_bookings_return"
   end
 
   create_table "entitlements", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -81,11 +143,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "revoked_at"
+    t.uuid "program_ids", default: [], null: false, array: true
+    t.string "program_kind"
+    t.uuid "occurrence_id"
     t.index ["benefit_grant_id"], name: "index_entitlements_on_benefit_grant_id"
     t.index ["id", "organization_id"], name: "index_entitlements_on_id_and_organization_id", unique: true
     t.index ["member_id", "ends_at"], name: "index_entitlements_on_member_id_and_ends_at"
     t.check_constraint "ends_at > starts_at", name: "entitlements_positive_length"
-    t.check_constraint "kind::text = 'gym_access'::text", name: "entitlements_kind"
+    t.check_constraint "kind::text = 'program_access'::text OR program_ids = '{}'::uuid[] AND program_kind IS NULL", name: "entitlements_gym_access_unscoped"
+    t.check_constraint "kind::text = ANY (ARRAY['gym_access'::character varying, 'program_access'::character varying]::text[])", name: "entitlements_kind"
+    t.check_constraint "occurrence_id IS NULL OR kind::text = 'program_access'::text", name: "entitlements_occurrence_program_access"
+    t.check_constraint "program_kind IS NULL OR (program_kind::text = ANY (ARRAY['group_class'::character varying, 'event'::character varying, 'appointment'::character varying]::text[]))", name: "entitlements_program_kind"
     t.check_constraint "usage_limit IS NULL OR usage_limit > 0", name: "entitlements_usage_limit_positive"
     t.check_constraint "used_count >= 0 AND (usage_limit IS NULL OR used_count <= usage_limit)", name: "entitlements_used_within_limit"
   end
@@ -94,8 +162,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.uuid "organization_id", null: false
     t.uuid "sale_line_item_id", null: false
     t.uuid "member_id", null: false
-    t.uuid "membership_id", null: false
-    t.uuid "fulfilled_by_user_id", null: false
+    t.uuid "membership_id"
+    t.uuid "fulfilled_by_user_id"
     t.datetime "fulfilled_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -179,6 +247,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.index ["organization_id", "member_id"], name: "index_memberships_on_organization_id_and_member_id", unique: true
   end
 
+  create_table "occurrences", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "program_id", null: false
+    t.datetime "starts_at", null: false
+    t.datetime "ends_at", null: false
+    t.integer "capacity", null: false
+    t.datetime "cancelled_at"
+    t.text "cancel_reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id", "organization_id"], name: "index_occurrences_on_id_and_organization_id", unique: true
+    t.index ["organization_id", "starts_at"], name: "index_occurrences_on_organization_id_and_starts_at"
+    t.index ["program_id", "starts_at"], name: "index_occurrences_on_program_id_and_starts_at", unique: true
+    t.check_constraint "cancelled_at IS NULL AND cancel_reason IS NULL OR cancelled_at IS NOT NULL AND cancel_reason IS NOT NULL AND length(btrim(cancel_reason)) > 0", name: "occurrences_cancel_shape"
+    t.check_constraint "capacity > 0", name: "occurrences_capacity_positive"
+    t.check_constraint "ends_at > starts_at", name: "occurrences_positive_length"
+  end
+
   create_table "organization_memberships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.uuid "user_id", null: false
@@ -194,7 +280,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.index ["organization_id", "user_id"], name: "index_organization_memberships_on_organization_id_and_user_id"
     t.index ["user_id"], name: "index_organization_memberships_on_user_id"
     t.index ["workos_id"], name: "index_organization_memberships_on_workos_id", unique: true
-    t.check_constraint "status::text = ANY (ARRAY['active'::character varying, 'inactive'::character varying, 'pending'::character varying]::text[])", name: "organization_memberships_status"
+    t.check_constraint "status::text = ANY (ARRAY['active'::character varying::text, 'inactive'::character varying::text, 'pending'::character varying::text])", name: "organization_memberships_status"
   end
 
   create_table "organizations", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -218,7 +304,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   create_table "payments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.uuid "sale_id", null: false
-    t.uuid "recorded_by_user_id", null: false
+    t.uuid "recorded_by_user_id"
     t.bigint "amount_minor", null: false
     t.string "currency", limit: 3, null: false
     t.string "payment_method", null: false
@@ -228,12 +314,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.string "request_fingerprint", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "provider"
     t.index ["id", "organization_id"], name: "index_payments_on_id_and_organization_id", unique: true
     t.index ["organization_id", "idempotency_key"], name: "index_payments_on_organization_id_and_idempotency_key", unique: true
     t.index ["recorded_by_user_id"], name: "index_payments_on_recorded_by_user_id"
     t.index ["sale_id"], name: "index_payments_on_sale_id"
     t.check_constraint "amount_minor > 0", name: "payments_amount_positive"
-    t.check_constraint "payment_method::text = ANY (ARRAY['cash'::character varying::text, 'bank_transfer'::character varying::text])", name: "payments_payment_method"
+    t.check_constraint "payment_method::text = 'online'::text AND provider IS NOT NULL AND recorded_by_user_id IS NULL OR payment_method::text <> 'online'::text AND provider IS NULL AND recorded_by_user_id IS NOT NULL", name: "payments_source_shape"
+    t.check_constraint "payment_method::text = ANY (ARRAY['cash'::character varying, 'bank_transfer'::character varying, 'online'::character varying]::text[])", name: "payments_payment_method"
   end
 
   create_table "prices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -242,7 +330,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.string "label", null: false
     t.bigint "amount_minor", null: false
     t.string "currency", limit: 3, null: false
-    t.integer "duration_days", null: false
+    t.integer "duration_days"
     t.boolean "available", default: true, null: false
     t.datetime "archived_at"
     t.datetime "created_at", null: false
@@ -251,7 +339,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.index ["product_id"], name: "index_prices_on_product_id"
     t.check_constraint "amount_minor >= 0", name: "prices_amount_non_negative"
     t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "prices_currency_format"
-    t.check_constraint "duration_days > 0", name: "prices_duration_positive"
+    t.check_constraint "duration_days IS NULL OR duration_days > 0", name: "prices_duration_positive"
   end
 
   create_table "product_benefits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -263,8 +351,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.integer "usage_limit"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "program_ids", default: [], null: false, array: true
+    t.string "program_kind"
     t.index ["product_id"], name: "index_product_benefits_on_product_id"
-    t.check_constraint "kind::text = 'gym_access'::text", name: "product_benefits_kind"
+    t.check_constraint "kind::text = 'program_access'::text OR program_ids = '{}'::uuid[] AND program_kind IS NULL", name: "product_benefits_gym_access_unscoped"
+    t.check_constraint "kind::text = ANY (ARRAY['gym_access'::character varying, 'program_access'::character varying]::text[])", name: "product_benefits_kind"
+    t.check_constraint "program_kind IS NULL OR (program_kind::text = ANY (ARRAY['group_class'::character varying, 'event'::character varying, 'appointment'::character varying]::text[]))", name: "product_benefits_program_kind"
     t.check_constraint "usage_limit IS NULL OR usage_limit > 0", name: "product_benefits_usage_limit_positive"
   end
 
@@ -277,9 +369,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.integer "position", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.uuid "program_id"
     t.index ["id", "organization_id"], name: "index_products_on_id_and_organization_id", unique: true
     t.index ["organization_id", "position"], name: "index_products_on_organization_id_and_position"
-    t.check_constraint "kind::text = 'membership'::text", name: "products_kind"
+    t.index ["program_id"], name: "index_products_on_program_id"
+    t.check_constraint "(kind::text = 'ticket'::text) = (program_id IS NOT NULL)", name: "products_ticket_program"
+    t.check_constraint "kind::text = ANY (ARRAY['membership'::character varying, 'pass'::character varying, 'ticket'::character varying]::text[])", name: "products_kind"
+  end
+
+  create_table "programs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.uuid "location_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.string "kind", null: false
+    t.integer "capacity", null: false
+    t.integer "duration_minutes", null: false
+    t.string "host_name"
+    t.boolean "published", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["id", "organization_id"], name: "index_programs_on_id_and_organization_id", unique: true
+    t.index ["organization_id", "name"], name: "index_programs_on_organization_id_and_name"
+    t.check_constraint "capacity > 0", name: "programs_capacity_positive"
+    t.check_constraint "duration_minutes > 0 AND duration_minutes <= 1440", name: "programs_duration_range"
+    t.check_constraint "kind::text = ANY (ARRAY['group_class'::character varying, 'event'::character varying, 'appointment'::character varying]::text[])", name: "programs_kind"
   end
 
   create_table "refunds", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -327,8 +441,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   create_table "sales", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "organization_id", null: false
     t.uuid "member_id", null: false
-    t.uuid "location_id", null: false
-    t.uuid "created_by_user_id", null: false
+    t.uuid "location_id"
+    t.uuid "created_by_user_id"
     t.string "currency", limit: 3, null: false
     t.bigint "total_minor", null: false
     t.bigint "paid_minor", default: 0, null: false
@@ -342,13 +456,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.datetime "voided_at"
     t.uuid "voided_by_user_id"
     t.text "void_reason"
+    t.string "channel", default: "desk", null: false
+    t.uuid "occurrence_id"
     t.index ["created_by_user_id"], name: "index_sales_on_created_by_user_id"
     t.index ["id", "organization_id"], name: "index_sales_on_id_and_organization_id", unique: true
     t.index ["member_id"], name: "index_sales_on_member_id"
+    t.index ["occurrence_id"], name: "index_sales_on_occurrence_id"
     t.index ["organization_id", "created_at"], name: "index_sales_on_organization_id_and_created_at"
     t.index ["organization_id", "idempotency_key"], name: "index_sales_on_organization_id_and_idempotency_key", unique: true
     t.index ["renews_line_item_id"], name: "index_sales_on_renews_line_item_id"
     t.index ["voided_by_user_id"], name: "index_sales_on_voided_by_user_id"
+    t.check_constraint "channel::text = 'desk'::text AND created_by_user_id IS NOT NULL AND location_id IS NOT NULL OR channel::text = 'online'::text AND created_by_user_id IS NULL", name: "sales_channel_shape"
     t.check_constraint "currency::text ~ '^[A-Z]{3}$'::text", name: "sales_currency_format"
     t.check_constraint "paid_minor >= 0 AND paid_minor <= total_minor", name: "sales_paid_within_total"
     t.check_constraint "refunded_minor >= 0 AND refunded_minor <= paid_minor", name: "sales_refunded_within_paid"
@@ -388,24 +506,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
     t.index ["workos_id"], name: "index_workos_events_on_workos_id", unique: true
     t.check_constraint "attempts >= 0", name: "workos_events_attempts_non_negative"
     t.check_constraint "jsonb_typeof(payload) = 'object'::text", name: "workos_events_payload_object"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'processed'::character varying, 'ignored'::character varying, 'failed'::character varying]::text[])", name: "workos_events_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'processed'::character varying::text, 'ignored'::character varying::text, 'failed'::character varying::text])", name: "workos_events_status"
   end
 
   add_foreign_key "benefit_grants", "fulfillments", column: ["fulfillment_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "benefit_grants", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "benefit_grants", "membership_periods", column: ["membership_period_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "benefit_grants", "organizations"
+  add_foreign_key "bookings", "checkouts", column: ["checkout_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "bookings", "entitlements", column: ["entitlement_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "bookings", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "bookings", "occurrences", column: ["occurrence_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "bookings", "organizations"
+  add_foreign_key "bookings", "sales", column: ["sale_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "bookings", "users", column: "attended_by_user_id"
+  add_foreign_key "bookings", "users", column: "booked_by_user_id"
+  add_foreign_key "bookings", "users", column: "cancelled_by_user_id"
   add_foreign_key "check_ins", "entitlements", column: ["entitlement_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "check_ins", "locations", column: ["location_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "check_ins", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "check_ins", "organizations"
   add_foreign_key "check_ins", "users", column: "recorded_by_user_id"
+  add_foreign_key "checkouts", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "checkouts", "occurrences", column: ["occurrence_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "checkouts", "organizations"
+  add_foreign_key "checkouts", "prices", column: ["price_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "checkouts", "sales", column: ["sale_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "entitlement_usages", "bookings", column: ["booking_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlement_usages", "check_ins", column: ["check_in_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlement_usages", "entitlements", column: ["entitlement_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlement_usages", "organizations"
   add_foreign_key "entitlements", "benefit_grants", column: ["benefit_grant_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlements", "locations", column: ["location_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlements", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "entitlements", "occurrences", column: ["occurrence_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlements", "organizations"
   add_foreign_key "fulfillments", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "fulfillments", "memberships", column: ["membership_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -425,6 +559,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   add_foreign_key "membership_periods", "organizations"
   add_foreign_key "memberships", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "memberships", "organizations"
+  add_foreign_key "occurrences", "organizations"
+  add_foreign_key "occurrences", "programs", column: ["program_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "organization_memberships", "organizations"
   add_foreign_key "organization_memberships", "users"
   add_foreign_key "payments", "organizations"
@@ -436,6 +572,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   add_foreign_key "product_benefits", "organizations"
   add_foreign_key "product_benefits", "products", column: ["product_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "products", "organizations"
+  add_foreign_key "products", "programs", column: ["program_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "programs", "locations", column: ["location_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "programs", "organizations"
   add_foreign_key "refunds", "organizations"
   add_foreign_key "refunds", "payments", column: ["payment_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "refunds", "sales", column: ["sale_id", "organization_id"], primary_key: ["id", "organization_id"]
@@ -446,6 +585,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
   add_foreign_key "sale_line_items", "sales", column: ["sale_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "locations", column: ["location_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
+  add_foreign_key "sales", "occurrences", column: ["occurrence_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "organizations"
   add_foreign_key "sales", "sale_line_items", column: ["renews_line_item_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "sales", "users", column: "created_by_user_id"
@@ -507,15 +647,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_01_000005) do
       CREATE TRIGGER prices_immutable_terms BEFORE UPDATE ON public.prices FOR EACH ROW EXECUTE FUNCTION prevent_price_term_changes()
   SQL
 
+  create_trigger :refunds_immutable, sql_definition: <<-SQL
+      CREATE TRIGGER refunds_immutable BEFORE UPDATE ON public.refunds FOR EACH ROW EXECUTE FUNCTION prevent_update()
+  SQL
+
   create_trigger :sale_line_items_immutable, sql_definition: <<-SQL
       CREATE TRIGGER sale_line_items_immutable BEFORE UPDATE ON public.sale_line_items FOR EACH ROW EXECUTE FUNCTION prevent_update()
   SQL
 
   create_trigger :workos_events_immutable, sql_definition: <<-SQL
       CREATE TRIGGER workos_events_immutable BEFORE UPDATE ON public.workos_events FOR EACH ROW EXECUTE FUNCTION prevent_workos_event_changes()
-  SQL
-
-  create_trigger :refunds_immutable, sql_definition: <<-SQL
-      CREATE TRIGGER refunds_immutable BEFORE UPDATE ON public.refunds FOR EACH ROW EXECUTE FUNCTION prevent_update()
   SQL
 end

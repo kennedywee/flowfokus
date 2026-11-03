@@ -18,7 +18,7 @@ RSpec.describe "Catalog" do
       expect(response).to have_http_status(:ok)
       expect(data).to eq(
         "slug" => "chainsaw", "name" => "Chainsaw", "timezone" => "Asia/Kuala_Lumpur", "currency" => "MYR",
-        "locations" => [ { "name" => "Bangsar", "address" => "1 Test Street" } ]
+        "online_payments" => false, "locations" => [ { "name" => "Bangsar", "address" => "1 Test Street" } ]
       )
     end
 
@@ -47,7 +47,8 @@ RSpec.describe "Catalog" do
       monthly = data.find { _1["name"] == "Monthly Unlimited" }
       expect(monthly["prices"].map { _1["amount_minor"] }).to eq([ 12_000 ])
       bangsar_offer = data.find { _1["name"] == "Bangsar 8" }
-      expect(bangsar_offer["benefits"]).to eq([ { "kind" => "gym_access", "name" => "Gym access", "usage_limit" => 8, "location_name" => "Bangsar" } ])
+      expect(bangsar_offer["benefits"]).to eq([ { "kind" => "gym_access", "name" => "Gym access", "usage_limit" => 8, "location_name" => "Bangsar",
+      "program_kind" => nil, "program_names" => [] } ])
     end
   end
 

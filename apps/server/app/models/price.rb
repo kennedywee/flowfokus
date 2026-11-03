@@ -12,12 +12,14 @@ class Price < ApplicationRecord
 
   validates :label, presence: true, length: { maximum: 200 }
   validates :amount_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :duration_days, numericality: { only_integer: true, greater_than: 0 }
+  validates :duration_days, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 3_660 }, unless: :for_ticket?
+  validates :duration_days, absence: { message: "is set by the ticket's time" }, if: :for_ticket?
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
   validate :currency_matches_organization, on: :create
   validate :archived_stays_off_sale, on: :update
 
   def sellable? = available && archived_at.nil?
+  def for_ticket? = product&.ticket?
 
   def archive!(at: Time.current) = update!(available: false, archived_at: at)
 

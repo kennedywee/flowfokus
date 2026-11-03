@@ -72,6 +72,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Published programs and their times for the next days.
+         * @description Times start today in the gym's time zone. Cancelled times stay listed with `cancelled: true`.
+         */
+        get: operations["getPublicSchedule"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/staff/organization": {
         parameters: {
             query?: never;
@@ -649,6 +669,223 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff/programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List programs. Needs programs:read. */
+        get: operations["listStaffPrograms"];
+        put?: never;
+        /** Add a program. Needs programs:manage. */
+        post: operations["createStaffProgram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/programs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One program with its times from today, tickets, and the offers that cover it. Needs programs:read. */
+        get: operations["getStaffProgram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change a program. Needs programs:manage.
+         * @description The kind never changes. New capacity and duration apply to times added later.
+         */
+        patch: operations["updateStaffProgram"];
+        trace?: never;
+    };
+    "/staff/programs/{id}/occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add times to a program. Needs programs:manage.
+         * @description The date and time are in the gym's time zone. `weeks` repeats the time weekly. Times that already exist are skipped.
+         *     A bad date, time, or week count returns 422 `schedule_invalid`. Returns the program.
+         */
+        post: operations["scheduleStaffProgram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/programs/{id}/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add a ticket price for a program. Needs programs:manage.
+         * @description The first ticket price creates the program's ticket product. A ticket buys one spot at one time.
+         *     Change or archive ticket prices with `/staff/prices/{id}`. Returns the program.
+         */
+        post: operations["addStaffProgramTicket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The schedule of every program. Needs programs:read. */
+        get: operations["listStaffOccurrences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/occurrences/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The roster for one time. Needs programs:read. */
+        get: operations["getStaffOccurrence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/occurrences/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a time. Needs programs:manage.
+         * @description Cancels every live booking and returns each use. Refund ticket payments separately. A repeat call changes nothing.
+         */
+        post: operations["cancelStaffOccurrence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/occurrences/{id}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How a member could book this time. Needs programs:read.
+         * @description Lists the member's usable rights for the time and the program's ticket prices.
+         */
+        get: operations["getStaffBookingOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Book a member with a right they hold. Needs bookings:create.
+         * @description Uses one use of the right. The same member, time, and right again returns 200 and changes nothing.
+         *     A full time returns 422 `occurrence_full`. A cancelled or started time returns 422 `occurrence_unavailable`.
+         *     A right that does not cover the time returns 422 `booking_not_allowed`. To sell a ticket, record a sale with `occurrence_id`. Returns the roster.
+         */
+        post: operations["createStaffBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/bookings/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a booking. Needs bookings:manage.
+         * @description Returns the use unless `return_use` is false. An attended booking cannot be cancelled. Returns the roster.
+         */
+        post: operations["cancelStaffBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/bookings/{id}/attend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark a member present. Needs bookings:manage.
+         * @description Only a confirmed booking can be marked present. A repeat call changes nothing. Returns the roster.
+         */
+        post: operations["attendStaffBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/member/profile": {
         parameters: {
             query?: never;
@@ -714,6 +951,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/member/occurrences/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One time of a published program, and how the member could book it. */
+        get: operations["getMemberOccurrence"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The member's coming bookings, then the 10 latest earlier ones. */
+        get: operations["listMemberBookings"];
+        put?: never;
+        /**
+         * Book a spot with a pass or membership the member holds.
+         * @description The same time and right again returns 200 and changes nothing. Errors match `POST /staff/bookings`.
+         */
+        post: operations["createMemberBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/bookings/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a pass or membership booking before the time starts.
+         * @description The use comes back. Ticket bookings are changed at the front desk (422 `booking_not_allowed`).
+         */
+        post: operations["cancelMemberBooking"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/checkouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start an online purchase.
+         * @description Holds a spot for a ticket until `expires_at`. Nothing is sold until the provider confirms payment.
+         *     A free price completes at once. Without an online payment provider, returns 503 `payments_unavailable`.
+         *     A ticket needs `occurrence_id` (422 `occurrence_required`). Limited to 30 per 10 minutes per client IP.
+         */
+        post: operations["createMemberCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/checkouts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of the member's checkouts. */
+        get: operations["getMemberCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/checkouts/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave a checkout without paying. Frees the held spot. */
+        post: operations["cancelMemberCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/member/checkouts/{id}/test_payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pay with the local test provider. Development and test only.
+         * @description Moves no money. Returns 404 unless `FLOWFOKUS_TEST_PAYMENTS=true` and the checkout uses the test provider.
+         *     Creates the sale, records an online payment, delivers the purchase, and confirms the held spot.
+         *     An expired or cancelled checkout returns 422 `checkout_closed`.
+         */
+        post: operations["payMemberCheckoutTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/workos": {
         parameters: {
             query?: never;
@@ -761,14 +1134,16 @@ export interface components {
          *     - `idempotency_key_reused` (409)
          *     - `validation_failed`, `price_unavailable`, `renewal_unavailable`, `overpayment`, `sale_not_paid`,
          *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
-         *       `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked` (422)
+         *       `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked`,
+         *       `schedule_invalid`, `occurrence_full`, `occurrence_unavailable`, `occurrence_required`,
+         *       `booking_not_allowed`, `checkout_closed` (422)
          *     - `member_not_linked` (403)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
-         *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable` (503)
+         *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable`, `payments_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "schedule_invalid" | "occurrence_full" | "occurrence_unavailable" | "occurrence_required" | "booking_not_allowed" | "checkout_closed" | "payments_unavailable" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable" | "payments_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -822,6 +1197,8 @@ export interface components {
             };
         };
         PublicOrganization: {
+            /** @description True when members can pay online on the gym site. */
+            online_payments: boolean;
             slug: string;
             name: string;
             /** @description IANA time zone, for example `Asia/Kuala_Lumpur`. */
@@ -841,7 +1218,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "settings:manage" | "staff:manage";
+        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -917,6 +1294,8 @@ export interface components {
             linked_email: string | null;
             /** @description Rights that are active now or start later. Expired rights are left out. */
             entitlements: components["schemas"]["Entitlement"][];
+            /** @description Coming bookings, then the 10 latest earlier ones. */
+            bookings: components["schemas"]["Booking"][];
         };
         Membership: {
             /** Format: uuid */
@@ -972,9 +1351,21 @@ export interface components {
             remaining: number | null;
             /** @description True when now is inside the validity window. */
             active: boolean;
+            /** @description Program access only. Selected programs. Empty means the kind decides. */
+            program_ids: string[];
+            /** @description Program access only. With no selected programs, every program of this kind. Null means every program. */
+            program_kind: components["schemas"]["ProgramKind"] | null;
+            /**
+             * Format: uuid
+             * @description A ticket's right is valid for this one time only.
+             */
+            occurrence_id: string | null;
         };
-        /** @enum {string} */
-        BenefitKind: "gym_access";
+        /**
+         * @description `gym_access` opens the gym floor at check-in. `program_access` books spots in programs.
+         * @enum {string}
+         */
+        BenefitKind: "gym_access" | "program_access";
         Benefit: {
             /** Format: uuid */
             id: string;
@@ -987,8 +1378,13 @@ export interface components {
              * @description Null means every location.
              */
             location_id: string | null;
+            program_ids: string[];
+            program_kind: components["schemas"]["ProgramKind"] | null;
         };
         PublicBenefit: {
+            program_kind: components["schemas"]["ProgramKind"] | null;
+            /** @description Selected published programs. Empty means the kind, or every program. */
+            program_names: string[];
             kind: components["schemas"]["BenefitKind"];
             name: string;
             usage_limit: number | null;
@@ -1001,8 +1397,8 @@ export interface components {
             label: string;
             amount_minor: number;
             currency: string;
-            /** @description Fixed duration of each membership period. */
-            duration_days: number;
+            /** @description Days of access from delivery. Null for a ticket, which lasts until its time ends. */
+            duration_days: number | null;
             /** @description True when the price can be used for a new sale. */
             available: boolean;
             /** Format: date-time */
@@ -1014,9 +1410,10 @@ export interface components {
             label: string;
             amount_minor: number;
             currency: string;
-            duration_days: number;
+            duration_days: number | null;
         };
         PublicProduct: {
+            kind: components["schemas"]["ProductKind"];
             /** Format: uuid */
             id: string;
             name: string;
@@ -1025,6 +1422,12 @@ export interface components {
             prices: components["schemas"]["PublicPrice"][];
         };
         StaffProduct: {
+            kind: components["schemas"]["ProductKind"];
+            /**
+             * Format: uuid
+             * @description The program a ticket was made from. Null for other kinds.
+             */
+            program_id: string | null;
             /** Format: uuid */
             id: string;
             name: string;
@@ -1043,12 +1446,22 @@ export interface components {
              * @description Where the sale happened.
              */
             location_id: string;
+            /**
+             * Format: uuid
+             * @description Required for a ticket, and only for a ticket. Delivery books this time.
+             */
+            occurrence_id?: string;
         };
+        /**
+         * @description `online` payments come from a payment provider through a checkout.
+         * @enum {string}
+         */
+        PaymentMethod: "cash" | "bank_transfer" | "online";
         /** @enum {string} */
-        PaymentMethod: "cash" | "bank_transfer";
+        ManualPaymentMethod: "cash" | "bank_transfer";
         PaymentInput: {
             amount_minor: number;
-            method: components["schemas"]["PaymentMethod"];
+            method: components["schemas"]["ManualPaymentMethod"];
             /** @description Optional receipt or bank reference. */
             reference?: string | null;
         };
@@ -1062,8 +1475,12 @@ export interface components {
         };
         /** @description Terms snapshotted at purchase. Later catalog edits never change them. */
         SaleLineItemTerms: {
-            duration_days: number;
+            kind: components["schemas"]["ProductKind"];
+            /** @description Null for a ticket. */
+            duration_days: number | null;
             benefits: {
+                program_ids: string[];
+                program_kind: components["schemas"]["ProgramKind"] | null;
                 kind: components["schemas"]["BenefitKind"];
                 name: string;
                 usage_limit: number | null;
@@ -1088,6 +1505,8 @@ export interface components {
             terms: components["schemas"]["SaleLineItemTerms"];
         };
         Payment: {
+            /** @description The payment provider for an online payment, for example `test`. */
+            provider: string | null;
             /** Format: uuid */
             id: string;
             amount_minor: number;
@@ -1104,9 +1523,12 @@ export interface components {
             id: string;
             /** Format: uuid */
             sale_line_item_id: string;
-            /** Format: uuid */
-            membership_id: string;
-            membership_period: components["schemas"]["MembershipPeriod"];
+            /**
+             * Format: uuid
+             * @description Null for a pass or a ticket.
+             */
+            membership_id: string | null;
+            membership_period: components["schemas"]["MembershipPeriod"] | null;
             /** Format: date-time */
             fulfilled_at: string;
             /** @description True when staff delivered before full payment. */
@@ -1124,8 +1546,19 @@ export interface components {
             /** Format: uuid */
             id: string;
             member: components["schemas"]["MemberSummary"];
-            /** Format: uuid */
-            location_id: string;
+            /**
+             * Format: uuid
+             * @description Where a desk sale happened. Null for an online sale.
+             */
+            location_id: string | null;
+            channel: components["schemas"]["SaleChannel"];
+            /** @description The time a ticket is for. */
+            occurrence: components["schemas"]["SaleOccurrence"] | null;
+            /**
+             * Format: uuid
+             * @description The booking a delivered ticket made.
+             */
+            booking_id: string | null;
             currency: string;
             total_minor: number;
             paid_minor: number;
@@ -1181,6 +1614,11 @@ export interface components {
             data: components["schemas"]["CheckIn"];
         };
         BenefitInput: {
+            kind?: components["schemas"]["BenefitKind"];
+            /** @description Program access only. Selected programs. */
+            program_ids?: string[];
+            /** @description Program access only. Every program of this kind, when no programs are selected. */
+            program_kind?: components["schemas"]["ProgramKind"] | null;
             name: string;
             /** @description Uses per period. Null or absent means unlimited. */
             usage_limit?: number | null;
@@ -1191,6 +1629,11 @@ export interface components {
             location_id?: string | null;
         };
         ProductInput: {
+            /**
+             * @description Defaults to membership. Tickets are added from a program.
+             * @enum {string}
+             */
+            kind?: "membership" | "pass";
             name: string;
             description?: string | null;
             /** @description Shown on the gym site. Defaults to false. */
@@ -1355,6 +1798,7 @@ export interface components {
             checked_in_at: string;
         };
         MemberSale: {
+            channel: components["schemas"]["SaleChannel"];
             /** Format: uuid */
             id: string;
             product_name: string;
@@ -1382,9 +1826,372 @@ export interface components {
             check_ins: components["schemas"]["MemberCheckIn"][];
             /** @description The 20 latest purchases that are not void, newest first. */
             sales: components["schemas"]["MemberSale"][];
+            /** @description Coming bookings, then the 10 latest earlier ones. */
+            bookings: components["schemas"]["MemberBooking"][];
         };
         MemberAccountResponse: {
             data: components["schemas"]["MemberAccount"];
+        };
+        /**
+         * @description `membership` and `pass` are offers. A `ticket` is made from a program and buys one spot at one time.
+         * @enum {string}
+         */
+        ProductKind: "membership" | "pass" | "ticket";
+        /**
+         * @description `desk` sales are recorded by staff. `online` sales come from a paid checkout and have no sale location.
+         * @enum {string}
+         */
+        SaleChannel: "desk" | "online";
+        SaleOccurrence: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            program_id: string;
+            program_name: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+        };
+        /** @enum {string} */
+        ProgramKind: "group_class" | "event" | "appointment";
+        Program: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            kind: components["schemas"]["ProgramKind"];
+            /** Format: uuid */
+            location_id: string;
+            /** @description Spots for each new time. One for an appointment slot. */
+            capacity: number;
+            duration_minutes: number;
+            /** @description The coach, instructor, or host shown to members. */
+            host_name: string | null;
+            /** @description Shown on the gym site schedule. */
+            published: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ProgramListItem: components["schemas"]["Program"] & {
+            /** @description Times that have not ended and are not cancelled. */
+            upcoming_count: number;
+        };
+        ProgramSummary: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["ProgramKind"];
+            /** Format: uuid */
+            location_id: string;
+            host_name: string | null;
+            published: boolean;
+        };
+        ProgramInput: {
+            name: string;
+            description?: string | null;
+            kind: components["schemas"]["ProgramKind"];
+            /** Format: uuid */
+            location_id: string;
+            capacity: number;
+            duration_minutes: number;
+            host_name?: string | null;
+            published?: boolean;
+        };
+        ProgramUpdate: {
+            name?: string;
+            description?: string | null;
+            /** Format: uuid */
+            location_id?: string;
+            capacity?: number;
+            duration_minutes?: number;
+            host_name?: string | null;
+            published?: boolean;
+        };
+        ProgramTicket: {
+            /** Format: uuid */
+            product_id: string;
+            prices: components["schemas"]["Price"][];
+        };
+        AcceptedOffer: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["ProductKind"];
+        };
+        ProgramDetail: components["schemas"]["Program"] & {
+            location_name: string;
+            /** @description Times from the start of today, earliest first. Includes cancelled times. */
+            occurrences: components["schemas"]["Occurrence"][];
+            /** @description Null until staff add a ticket price. */
+            ticket: components["schemas"]["ProgramTicket"] | null;
+            /** @description Passes and memberships whose program rights cover this program. */
+            accepted_by: components["schemas"]["AcceptedOffer"][];
+        };
+        Occurrence: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            program_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            capacity: number;
+            /** @description Confirmed bookings and holds that have not ended. */
+            spots_taken: number;
+            spots_left: number;
+            /** @description Not cancelled, not started, and not full. */
+            bookable: boolean;
+            /** Format: date-time */
+            cancelled_at: string | null;
+            cancel_reason: string | null;
+        };
+        ScheduleEntry: components["schemas"]["Occurrence"] & {
+            program: components["schemas"]["ProgramSummary"];
+        };
+        ScheduleInput: {
+            /**
+             * Format: date
+             * @description The first day, in the gym's time zone.
+             */
+            date: string;
+            /** @description Start time, HH:MM, in the gym's time zone. */
+            time: string;
+            /**
+             * @description Repeat the same day and time for this many weeks.
+             * @default 1
+             */
+            weeks: number;
+        };
+        TicketInput: {
+            label: string;
+            amount_minor: number;
+        };
+        /**
+         * @description - `held`: an online checkout holds the spot until `held_until`.
+         *     - `confirmed`: the spot is taken and a use is recorded.
+         *     - `attended`: staff marked the member present.
+         *     - `cancelled`: the spot is free again.
+         *     - `expired`: the checkout ended without payment.
+         * @enum {string}
+         */
+        BookingStatus: "held" | "confirmed" | "attended" | "cancelled" | "expired";
+        /**
+         * @description `entitlement`: booked with a pass or membership. `ticket`: bought for this time.
+         * @enum {string}
+         */
+        BookingSource: "entitlement" | "ticket";
+        BookingProgram: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["ProgramKind"];
+        };
+        BookingRight: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        BookingBase: {
+            /** Format: uuid */
+            id: string;
+            status: components["schemas"]["BookingStatus"];
+            /** Format: uuid */
+            occurrence_id: string;
+            program: components["schemas"]["BookingProgram"];
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            /** @description The right this booking used. Null while a checkout holds the spot. */
+            entitlement: components["schemas"]["BookingRight"] | null;
+            source: components["schemas"]["BookingSource"];
+            /**
+             * Format: uuid
+             * @description The ticket sale behind this booking.
+             */
+            sale_id: string | null;
+            /** Format: date-time */
+            held_until: string | null;
+            /** Format: date-time */
+            confirmed_at: string | null;
+            /** Format: date-time */
+            cancelled_at: string | null;
+            cancel_reason: string | null;
+            /** Format: date-time */
+            attended_at: string | null;
+            /** @description True when cancelling gave the use back. */
+            use_returned: boolean;
+        };
+        Booking: components["schemas"]["BookingBase"] & {
+            member: components["schemas"]["MemberSummary"];
+        };
+        MemberBooking: components["schemas"]["BookingBase"] & {
+            location_name: string;
+            /** @description True when the member can cancel it now. */
+            cancellable: boolean;
+        };
+        Roster: components["schemas"]["Occurrence"] & {
+            program: components["schemas"]["Program"] & {
+                location_name: string;
+            };
+            /** @description Every booking, including cancelled ones, oldest first. */
+            bookings: components["schemas"]["Booking"][];
+        };
+        StaffBookingOptions: {
+            occurrence: components["schemas"]["Occurrence"];
+            member: components["schemas"]["MemberSummary"];
+            /** @description The member's rights that can book this time now. */
+            rights: components["schemas"]["Entitlement"][];
+            /** @description Ticket prices on sale for this program. */
+            ticket_prices: components["schemas"]["Price"][];
+            /** @description The member's live booking for this time, if any. */
+            booking: components["schemas"]["MemberBooking"] | null;
+        };
+        StaffBookingInput: {
+            /** Format: uuid */
+            occurrence_id: string;
+            /** Format: uuid */
+            member_id: string;
+            /** Format: uuid */
+            entitlement_id: string;
+        };
+        BookingCancelInput: {
+            reason: string;
+            /**
+             * @description Give the use back to the member's pass or membership.
+             * @default true
+             */
+            return_use: boolean;
+        };
+        MemberBookingInput: {
+            /** Format: uuid */
+            occurrence_id: string;
+            /** Format: uuid */
+            entitlement_id: string;
+        };
+        PublicProgram: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            kind: components["schemas"]["ProgramKind"];
+            location_name: string;
+            duration_minutes: number;
+            host_name: string | null;
+        };
+        PublicScheduleProgram: components["schemas"]["PublicProgram"] & {
+            ticket_prices: components["schemas"]["PublicPrice"][];
+            /** @description Names of passes and memberships on sale that cover this program. */
+            accepted_by: string[];
+        };
+        PublicOccurrence: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            program_id: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            capacity: number;
+            spots_left: number;
+            bookable: boolean;
+            cancelled: boolean;
+        };
+        PublicSchedule: {
+            programs: components["schemas"]["PublicScheduleProgram"][];
+            /** @description Earliest first. */
+            occurrences: components["schemas"]["PublicOccurrence"][];
+        };
+        MemberBookingOptions: {
+            occurrence: components["schemas"]["PublicOccurrence"];
+            program: components["schemas"]["PublicProgram"];
+            /** @description The member's passes and memberships that can book this time now. */
+            rights: components["schemas"]["Entitlement"][];
+            ticket_prices: components["schemas"]["Price"][];
+            /** @description The member's live booking for this time, if any. */
+            booking: components["schemas"]["MemberBooking"] | null;
+        };
+        CheckoutInput: {
+            /** Format: uuid */
+            price_id: string;
+            /**
+             * Format: uuid
+             * @description Required for a ticket, and only for a ticket.
+             */
+            occurrence_id?: string;
+        };
+        /**
+         * @description `expired` means the checkout ended unpaid and its held spot is free.
+         * @enum {string}
+         */
+        CheckoutStatus: "open" | "paid" | "cancelled" | "expired";
+        Checkout: {
+            /** Format: uuid */
+            id: string;
+            status: components["schemas"]["CheckoutStatus"];
+            /** @description `test` for the local test provider. `free` when nothing was due. */
+            provider: string;
+            /** @description Where the provider takes payment. Null for the test provider, whose page the gym site shows. */
+            payment_url: string | null;
+            amount_minor: number;
+            currency: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            completed_at: string | null;
+            product_name: string;
+            product_kind: components["schemas"]["ProductKind"];
+            price_label: string;
+            occurrence: components["schemas"]["CheckoutOccurrence"] | null;
+            /**
+             * Format: uuid
+             * @description Set when paid.
+             */
+            sale_id: string | null;
+            /** Format: uuid */
+            booking_id: string | null;
+        };
+        CheckoutOccurrence: {
+            /** Format: uuid */
+            id: string;
+            program_name: string;
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            ends_at: string;
+        };
+        ProgramListResponse: {
+            data: components["schemas"]["ProgramListItem"][];
+        };
+        ProgramDetailResponse: {
+            data: components["schemas"]["ProgramDetail"];
+        };
+        ScheduleEntryListResponse: {
+            data: components["schemas"]["ScheduleEntry"][];
+        };
+        RosterResponse: {
+            data: components["schemas"]["Roster"];
+        };
+        StaffBookingOptionsResponse: {
+            data: components["schemas"]["StaffBookingOptions"];
+        };
+        MemberBookingOptionsResponse: {
+            data: components["schemas"]["MemberBookingOptions"];
+        };
+        MemberBookingResponse: {
+            data: components["schemas"]["MemberBooking"];
+        };
+        MemberBookingListResponse: {
+            data: components["schemas"]["MemberBooking"][];
+        };
+        CheckoutResponse: {
+            data: components["schemas"]["Checkout"];
+        };
+        PublicScheduleResponse: {
+            data: components["schemas"]["PublicSchedule"];
         };
         ReportWeek: {
             /**
@@ -1598,6 +2405,33 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["TooManyRequests"];
+        };
+    };
+    getPublicSchedule: {
+        parameters: {
+            query?: {
+                /** @description How many days to include, from today. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicScheduleResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
         };
     };
     getStaffOrganization: {
@@ -2681,6 +3515,402 @@ export interface operations {
             503: components["responses"]["ServiceUnavailable"];
         };
     };
+    listStaffPrograms: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramListResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getStaffProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgramUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    scheduleStaffProgram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    addStaffProgramTicket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketInput"];
+            };
+        };
+        responses: {
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listStaffOccurrences: {
+        parameters: {
+            query?: {
+                /** @description First day, in the gym's time zone. Defaults to today. */
+                from?: string;
+                /** @description How many days to include. */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleEntryListResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getStaffOccurrence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    cancelStaffOccurrence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getStaffBookingOptions: {
+        parameters: {
+            query: {
+                /** @description The member. */
+                member_id: string;
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffBookingOptionsResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createStaffBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffBookingInput"];
+            };
+        };
+        responses: {
+            /** @description Already booked. Nothing changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            /** @description Booked. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    cancelStaffBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookingCancelInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    attendStaffBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RosterResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
     getMemberProfile: {
         parameters: {
             query?: never;
@@ -2761,6 +3991,252 @@ export interface operations {
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
             429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getMemberOccurrence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBookingOptionsResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listMemberBookings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBookingListResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createMemberBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberBookingInput"];
+            };
+        };
+        responses: {
+            /** @description Already booked. Nothing changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBookingResponse"];
+                };
+            };
+            /** @description Booked. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBookingResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    cancelMemberBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBookingResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    createMemberCheckout: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutInput"];
+            };
+        };
+        responses: {
+            /** @description Replayed. Nothing changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutResponse"];
+                };
+            };
+            /** @description Created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+            429: components["responses"]["TooManyRequests"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    getMemberCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    cancelMemberCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    payMemberCheckoutTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paid. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

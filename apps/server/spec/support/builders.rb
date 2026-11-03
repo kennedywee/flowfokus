@@ -53,6 +53,30 @@ module Builders
     sale.fulfill!(actor: demo_user, at:)
     sale.reload
   end
+
+  # A program with weekly times. Times start two days ahead at 19:00 gym time.
+  def create_program(organization, location:, kind: "group_class", capacity: 10, published: true,
+    name: "Program #{SecureRandom.hex(3)}", weeks: 1, first_day: Date.current + 2)
+    program = organization.programs.create!(name:, kind:, location:, capacity:, duration_minutes: 60, published:)
+    program.schedule!(date: first_day.iso8601, time: "19:00", weeks:)
+    program
+  end
+
+  # A pass with one program_access benefit. Returns its price.
+  def create_pass(organization, usage_limit: 10, duration_days: 30, program_kind: nil, program_ids: [],
+    published: true, amount_minor: 20_000, name: "Pass #{SecureRandom.hex(3)}")
+    product = organization.products.create!(name:, kind: "pass", published:)
+    product.benefits.create!(organization:, kind: "program_access", name: "Classes", usage_limit:, program_kind:, program_ids:)
+    product.prices.create!(organization:, label: "Standard", amount_minor:, currency: organization.currency, duration_days:)
+  end
+
+  # Sells a price, pays it, and delivers it. Returns the sale.
+  def deliver(organization, member:, price:, location:, occurrence: nil, at: Time.current)
+    sale = Sale.record!(organization:, actor: demo_user, idempotency_key: SecureRandom.uuid, member_id: member.id,
+      price_id: price.id, location_id: location.id, occurrence_id: occurrence&.id, at:).first
+    pay_in_full(sale).fulfill!(actor: demo_user, at:)
+    sale.reload
+  end
 end
 
 RSpec.configure { |config| config.include Builders }

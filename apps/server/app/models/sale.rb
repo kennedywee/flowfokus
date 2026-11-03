@@ -1,4 +1,6 @@
 # Groups one line item and its payments. Sprint 1 limit: one line, quantity one.
+# Desk sales record the staff member and the sale location. Online sales come
+# from a paid checkout and have neither. A ticket sale names its occurrence.
 class Sale < ApplicationRecord
   include TenantOwned
   include Idempotent
@@ -13,33 +15,45 @@ class Sale < ApplicationRecord
 
   class NotVoidable < StandardError; end
 
+  class OccurrenceRequired < StandardError; end
+
   class RenewalUnavailable < StandardError
     def initialize(msg = "This member has no delivered membership to renew. Sell a new membership instead.") = super
   end
 
   belongs_to :member
-  belongs_to :location
-  belongs_to :created_by_user, class_name: "User"
+  CHANNELS = %w[desk online].freeze
+
+  belongs_to :location, optional: true
+  belongs_to :occurrence, optional: true
+  belongs_to :created_by_user, class_name: "User", optional: true
   belongs_to :renews_line_item, class_name: "SaleLineItem", optional: true
   belongs_to :voided_by_user, class_name: "User", optional: true
   has_one :line_item, class_name: "SaleLineItem", dependent: :restrict_with_exception
   has_one :fulfillment, through: :line_item
+  has_one :checkout, dependent: :restrict_with_exception
+  has_one :booking, -> { order(created_at: :desc) }, dependent: :restrict_with_exception
   has_many :payments, -> { order(:received_at, :created_at) }, dependent: :restrict_with_exception
   has_many :refunds, -> { order(:refunded_at, :created_at) }, dependent: :restrict_with_exception
-  same_organization_as :member, :location, :renews_line_item
+  same_organization_as :member, :location, :renews_line_item, :occurrence
+
+  validates :channel, inclusion: { in: CHANNELS }
+  validates :created_by_user, presence: true, if: -> { channel == "desk" }
 
   validates :currency, format: { with: /\A[A-Z]{3}\z/ }
   validates :total_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :paid_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: :total_minor }
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
-  scope :with_details, -> { includes(:member, :refunds, payments: :refunds, line_item: { fulfillment: :membership_period }) }
+  scope :with_details, -> {
+    includes(:member, :refunds, { occurrence: :program }, payments: :refunds, line_item: { fulfillment: :membership_period })
+  }
   scope :open, -> { where(voided_at: nil) }
 
   # Creates the sale and its snapshotted line in one transaction.
   # Returns [sale, created]. A retry with the same key returns the first sale.
-  def self.record!(organization:, actor:, idempotency_key:, member_id:, price_id:, location_id:, at: Time.current)
-    fingerprint = Idempotent.fingerprint(member_id:, price_id:, location_id:)
+  def self.record!(organization:, actor:, idempotency_key:, member_id:, price_id:, location_id:, occurrence_id: nil, at: Time.current)
+    fingerprint = Idempotent.fingerprint(member_id:, price_id:, location_id:, **(occurrence_id ? { occurrence_id: } : {}))
 
     with_idempotency(organization.sales, key: idempotency_key, fingerprint:) do
       member = organization.members.find_by(id: member_id)
@@ -56,6 +70,7 @@ class Sale < ApplicationRecord
       raise ActiveRecord::RecordInvalid, sale if sale.errors.any?
       raise PriceUnavailable unless price.sellable?
 
+      sale.occurrence = ticket_occurrence!(organization, price, occurrence_id, at:)
       sale.currency = price.currency
       sale.total_minor = price.amount_minor
       sale.build_line_item(SaleLineItem.snapshot(price))
@@ -63,6 +78,41 @@ class Sale < ApplicationRecord
       transaction(requires_new: true) { sale.save! }
       sale
     end
+  end
+
+  # The sale behind a paid online checkout. The checkout already checked the
+  # price and the occurrence when it opened. Call inside the checkout's transaction.
+  def self.record_online!(checkout:, at:)
+    price = checkout.price
+    sale = checkout.organization.sales.new(
+      channel: "online", member: checkout.member, occurrence: checkout.occurrence, purchased_at: at,
+      idempotency_key: "checkout-#{checkout.id}", request_fingerprint: Idempotent.fingerprint(checkout_id: checkout.id),
+      paid_minor: 0, currency: price.currency, total_minor: price.amount_minor
+    )
+    sale.build_line_item(SaleLineItem.snapshot(price))
+    sale.save!
+    sale
+  end
+
+  # A ticket needs a bookable occurrence of a program its benefit covers.
+  # Other products take no occurrence.
+  def self.ticket_occurrence!(organization, price, occurrence_id, at:)
+    unless price.product.ticket?
+      raise OccurrenceRequired, "Only a ticket is sold for a time." if occurrence_id.present?
+
+      return nil
+    end
+    raise OccurrenceRequired, "Choose the time this ticket is for." if occurrence_id.blank?
+
+    occurrence = organization.occurrences.includes(:program).find_by(id: occurrence_id)
+    raise OccurrenceRequired, "That time was not found." unless occurrence
+    unless price.product.benefits.any? { _1.program_scope.covers?(occurrence.program) }
+      raise OccurrenceRequired, "This ticket is not for #{occurrence.program.name}."
+    end
+    raise Occurrence::Unavailable, "That time was cancelled." if occurrence.cancelled?
+    raise Occurrence::Unavailable, "That time has already ended." if occurrence.ended?(at)
+
+    occurrence
   end
 
   # Sells another period at the member's agreed terms: the line item behind
@@ -95,6 +145,7 @@ class Sale < ApplicationRecord
   end
 
   def renewal? = renews_line_item_id.present?
+  def online? = channel == "online"
   def voided? = voided_at.present?
   def kept_minor = paid_minor - refunded_minor
 
@@ -127,13 +178,13 @@ class Sale < ApplicationRecord
   end
 
   def record_payment!(**) = Payment.record!(sale: self, **)
-  def fulfill!(actor:, at: Time.current, early_reason: nil) = Fulfillment.deliver!(line_item, actor:, at:, early_reason:)
+  def fulfill!(actor: nil, at: Time.current, early_reason: nil) = Fulfillment.deliver!(line_item, actor:, at:, early_reason:)
   def revoke!(**) = (fulfillment || raise(Fulfillment::NotDelivered)).revoke!(**)
 
   # What a member may see about their own purchase.
   def as_member_api
     {
-      id:, product_name: line_item.product_name, price_label: line_item.price_label, currency:,
+      id:, product_name: line_item.product_name, price_label: line_item.price_label, currency:, channel:,
       total_minor:, paid_minor:, balance_minor:, refunded_minor:, fulfilled: fulfilled?, purchased_at: api_time(purchased_at)
     }
   end
@@ -143,6 +194,12 @@ class Sale < ApplicationRecord
       id:,
       member: member.as_summary_api,
       location_id:,
+      channel:,
+      occurrence: occurrence && {
+        id: occurrence.id, program_id: occurrence.program_id, program_name: occurrence.program.name,
+        starts_at: api_time(occurrence.starts_at), ends_at: api_time(occurrence.ends_at)
+      },
+      booking_id: booking&.id,
       currency:,
       total_minor:,
       paid_minor:,

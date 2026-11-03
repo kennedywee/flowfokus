@@ -8,6 +8,8 @@ class Member < ApplicationRecord
   has_many :entitlements, dependent: :restrict_with_exception
   has_many :check_ins, dependent: :restrict_with_exception
   has_many :link_codes, class_name: "MemberLinkCode", dependent: :restrict_with_exception
+  has_many :bookings, dependent: :restrict_with_exception
+  has_many :checkouts, dependent: :restrict_with_exception
 
   normalizes :name, with: ->(name) { name.squish }
   normalizes :email, with: ->(email) { email.strip.downcase }
@@ -42,6 +44,21 @@ class Member < ApplicationRecord
     }
   end
 
+  # Rights this member could use to book a spot in the occurrence now.
+  def rights_for(occurrence)
+    entitlements.program_access.live.where("ends_at > ?", occurrence.starts_at).order(:ends_at, :id)
+      .select { _1.covers_occurrence?(occurrence) && _1.usable? }
+  end
+
+  # Bookings for times that have not ended, then the most recent past ones.
+  def recent_bookings(at: Time.current, past: 10)
+    scope = bookings.includes(:entitlement, :usage, occurrence: { program: :location })
+    upcoming = scope.live.where.not(confirmed_at: nil).joins(:occurrence).where("occurrences.ends_at > ?", at).order("occurrences.starts_at")
+    earlier = scope.where.not(confirmed_at: nil).joins(:occurrence)
+      .where("occurrences.ends_at <= ? OR bookings.cancelled_at IS NOT NULL", at).order("occurrences.starts_at DESC").limit(past)
+    (upcoming.to_a + earlier.to_a).uniq
+  end
+
   def as_summary_api = { id:, name:, email: }
   def as_api = { id:, name:, email:, created_at: api_time(created_at) }
 
@@ -58,7 +75,8 @@ class Member < ApplicationRecord
   def as_account_api(at: Time.current)
     as_detail_api(at:).except(:renewal, :linked_email).merge(
       check_ins: check_ins.newest_first.limit(20).map { |check_in| check_in.as_member_api },
-      sales: sales.open.newest_first.includes(:line_item).limit(20).map(&:as_member_api)
+      sales: sales.open.newest_first.includes(:line_item).limit(20).map(&:as_member_api),
+      bookings: recent_bookings(at:).map { _1.as_member_api(at:) }
     )
   end
 
@@ -68,7 +86,8 @@ class Member < ApplicationRecord
       membership: membership&.as_api,
       current_period: current_period(at:)&.as_api,
       renewal: renewal_terms(at:),
-      entitlements: entitlements.live.where("ends_at > ?", at).order(:starts_at, :created_at).map { |right| right.as_api(at:) }
+      entitlements: entitlements.live.where("ends_at > ?", at).order(:starts_at, :created_at).map { |right| right.as_api(at:) },
+      bookings: recent_bookings(at:).map { _1.as_api(at:) }
     )
   end
 end

@@ -38,5 +38,11 @@ module Staff
       end
 
       def created_or_replayed(created) = created ? :created : :ok
+
+      def render_roster(occurrence, status: :ok) = render_data(occurrence.as_roster_api, status:)
+
+      def booking_options(occurrence, member)
+        occurrence.options_for(member).merge(occurrence: occurrence.as_api, member: member.as_summary_api)
+      end
   end
 end

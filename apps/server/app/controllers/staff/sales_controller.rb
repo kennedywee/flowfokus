@@ -16,7 +16,8 @@ module Staff
       require_permission! "purchases:create"
       sale, created = Sale.record!(
         organization: current_organization, actor: Current.user, idempotency_key: idempotency_key!,
-        member_id: params[:member_id], price_id: params[:price_id], location_id: params[:location_id]
+        member_id: params[:member_id], price_id: params[:price_id], location_id: params[:location_id],
+        occurrence_id: params[:occurrence_id].presence
       )
       render_data find_sale(sale.id).as_api, status: created_or_replayed(created)
     end

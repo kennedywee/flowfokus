@@ -10,18 +10,21 @@ class BenefitGrant < ApplicationRecord
 
   validates :origin, inclusion: { in: %w[purchase] }
 
-  # Creates the grant and one entitlement per purchased benefit, valid for the period.
-  def self.issue!(fulfillment:, period:, at:)
+  # Creates the grant and one entitlement per purchased benefit, valid from
+  # `starts_at` until `ends_at`. A ticket's program right is scoped to its occurrence.
+  def self.issue!(fulfillment:, at:, starts_at:, ends_at:, period: nil, occurrence: nil)
     grant = create!(
       organization: fulfillment.organization, member: fulfillment.member, fulfillment:,
       membership_period: period, origin: "purchase", granted_at: at
     )
     fulfillment.sale_line_item.benefit_terms.each do |benefit|
+      program_access = benefit.fetch("kind") == "program_access"
       grant.entitlements.create!(
         organization: grant.organization, member: grant.member,
         kind: benefit.fetch("kind"), name: benefit.fetch("name"),
         usage_limit: benefit["usage_limit"], location_id: benefit["location_id"],
-        starts_at: period.starts_at, ends_at: period.ends_at
+        program_ids: Array(benefit["program_ids"]), program_kind: benefit["program_kind"],
+        occurrence: (occurrence if program_access), starts_at:, ends_at:
       )
     end
     grant

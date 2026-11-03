@@ -20,6 +20,10 @@ class Organization < ApplicationRecord
   has_many :entitlements, dependent: :restrict_with_exception
   has_many :check_ins, dependent: :restrict_with_exception
   has_many :member_link_codes, dependent: :restrict_with_exception
+  has_many :programs, dependent: :restrict_with_exception
+  has_many :occurrences, dependent: :restrict_with_exception
+  has_many :bookings, dependent: :restrict_with_exception
+  has_many :checkouts, dependent: :restrict_with_exception
 
   scope :published, -> { where(published: true) }
   scope :linked_to_workos, -> { live.where.not(workos_id: nil) }
@@ -175,7 +179,7 @@ class Organization < ApplicationRecord
 
   def as_public_api
     {
-      slug:, name:, timezone:, currency:,
+      slug:, name:, timezone:, currency:, online_payments: Flowfokus::Payments.enabled?,
       locations: locations.map { |location| { name: location.name, address: location.address } }
     }
   end

@@ -1,20 +1,24 @@
-# Money staff received toward a sale. Cash or bank transfer only; Flowfokus
-# does not move money. Payments never change after they are recorded.
+# Money received toward a sale. Staff record cash and bank transfers; Flowfokus
+# does not move that money. Online payments come from a payment provider when
+# a checkout is paid. Payments never change after they are recorded.
 class Payment < ApplicationRecord
   include TenantOwned
   include Idempotent
 
-  METHODS = %w[cash bank_transfer].freeze
+  STAFF_METHODS = %w[cash bank_transfer].freeze
+  METHODS = (STAFF_METHODS + %w[online]).freeze
 
   class Overpayment < StandardError; end
 
   belongs_to :sale
-  belongs_to :recorded_by_user, class_name: "User"
+  belongs_to :recorded_by_user, class_name: "User", optional: true
   has_many :refunds, dependent: :restrict_with_exception
   same_organization_as :sale
 
   validates :amount_minor, numericality: { only_integer: true, greater_than: 0 }
-  validates :payment_method, inclusion: { in: METHODS, message: "must be cash or bank_transfer" }
+  validates :payment_method, inclusion: { in: STAFF_METHODS, message: "must be cash or bank_transfer" }, if: :recorded_by_user
+  validates :payment_method, inclusion: { in: %w[online] }, unless: :recorded_by_user
+  validates :provider, presence: true, unless: :recorded_by_user
   validates :reference, length: { maximum: 200 }
 
   before_update { raise ActiveRecord::ReadOnlyRecord, "Payments are immutable" }
@@ -48,10 +52,24 @@ class Payment < ApplicationRecord
     end
   end
 
+  # The provider's confirmed payment for a checkout. Call inside the checkout's transaction.
+  def self.record_online!(sale:, amount_minor:, provider:, reference:, at:)
+    sale.lock!
+    raise Overpayment, "Payment of #{amount_minor} exceeds the balance of #{sale.balance_minor}." if amount_minor > sale.balance_minor
+
+    payment = sale.payments.create!(
+      organization: sale.organization, amount_minor:, payment_method: "online", provider:, reference:,
+      currency: sale.currency, received_at: at,
+      idempotency_key: "#{provider}-#{reference}", request_fingerprint: Idempotent.fingerprint(provider:, reference:)
+    )
+    sale.update!(paid_minor: sale.paid_minor + amount_minor)
+    payment
+  end
+
   def refunded_minor = refunds.sum(&:amount_minor)
   def refundable_minor = amount_minor - refunded_minor
 
   def as_api
-    { id:, amount_minor:, currency:, method: payment_method, reference:, received_at: api_time(received_at), refunded_minor: }
+    { id:, amount_minor:, currency:, method: payment_method, provider:, reference:, received_at: api_time(received_at), refunded_minor: }
   end
 end

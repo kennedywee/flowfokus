@@ -60,7 +60,7 @@ ActiveRecord::Base.transaction do
   end
 
   # Prices are immutable. Find by product and label; create once.
-  seed_price = lambda do |product, label:, amount_minor:, duration_days:, archived: false|
+  seed_price = lambda do |product, label:, amount_minor:, duration_days: nil, archived: false|
     price = product.prices.find_by(label:) ||
       product.prices.create!(organization: product.organization, label:, amount_minor:,
         currency: product.organization.currency, duration_days:)
@@ -68,14 +68,34 @@ ActiveRecord::Base.transaction do
     price
   end
 
-  seed_product = lambda do |organization, name:, description:, published: true, position: 0, benefits:|
+  seed_product = lambda do |organization, name:, description:, published: true, position: 0, kind: "membership", benefits:|
     product = organization.products.find_or_initialize_by(name:)
-    product.update!(description:, published:, position:, kind: "membership")
+    product.kind = kind if product.new_record?
+    product.update!(description:, published:, position:)
     benefits.each do |benefit|
       product.benefits.find_or_initialize_by(name: benefit[:name]) { |record| record.organization = organization }
-        .update!(kind: "gym_access", usage_limit: benefit[:usage_limit], location: benefit[:location])
+        .update!(kind: benefit.fetch(:kind, "gym_access"), usage_limit: benefit[:usage_limit], location: benefit[:location],
+          program_kind: benefit[:program_kind], program_ids: benefit.fetch(:program_ids, []))
     end
     product
+  end
+
+  # Programs and their coming times. Times are relative to today, so a later
+  # run adds the days that are now in range and skips times that exist.
+  seed_program = lambda do |organization, name:, kind:, location:, capacity:, duration_minutes:, host_name: nil, description:|
+    organization.programs.find_or_initialize_by(name:).tap do |program|
+      program.kind = kind if program.new_record?
+      program.update!(location:, capacity:, duration_minutes:, host_name:, description:, published: true)
+    end
+  end
+
+  # The next date on or after today for a weekday (0 = Sunday), in the gym's zone.
+  next_weekday = ->(organization, wday) { organization.time_zone.today.then { _1 + ((wday - _1.wday) % 7) } }
+
+  seed_ticket = lambda do |program, label:, amount_minor:|
+    next if program.ticket_product&.prices&.exists?(label:)
+
+    program.add_ticket!(label:, amount_minor:)
   end
 
   # Chainsaw: the demo organization. The demo token maps to its owner.
@@ -88,8 +108,9 @@ ActiveRecord::Base.transaction do
   seed_location.(chainsaw, "Mont Kiara", "3 Jalan Kiara, Mont Kiara, Kuala Lumpur")
 
   unlimited = seed_product.(chainsaw, name: "Monthly Unlimited", position: 1,
-    description: "Unlimited gym access at every Chainsaw location for 30 days.",
-    benefits: [ { name: "Gym access", usage_limit: nil, location: nil } ])
+    description: "Unlimited gym access and group classes at every Chainsaw location for 30 days.",
+    benefits: [ { name: "Gym access", usage_limit: nil, location: nil },
+                { kind: "program_access", name: "Group classes", usage_limit: nil, program_kind: "group_class" } ])
   seed_price.(unlimited, label: "Monthly (2025 rate)", amount_minor: 10_000, duration_days: 30, archived: true)
   seed_price.(unlimited, label: "Monthly", amount_minor: 12_000, duration_days: 30)
 
@@ -107,6 +128,37 @@ ActiveRecord::Base.transaction do
     description: "Complimentary trial issued by staff. Not shown on the gym site.",
     benefits: [ { name: "Trial visits", usage_limit: 3, location: nil } ])
   seed_price.(trial, label: "Trial", amount_minor: 0, duration_days: 7)
+
+  # Programs at Bangsar: two weekly classes, a one-day event, and appointment slots.
+  yoga = seed_program.(chainsaw, name: "Yoga Flow", kind: "group_class", location: bangsar, capacity: 12,
+    duration_minutes: 60, host_name: "Aina", description: "A steady vinyasa class for every level. Mats provided.")
+  hiit = seed_program.(chainsaw, name: "HIIT Express", kind: "group_class", location: bangsar, capacity: 16,
+    duration_minutes: 45, host_name: "Ben", description: "Short, hard intervals. Bring water and a towel.")
+  seminar = seed_program.(chainsaw, name: "Deadlift Seminar", kind: "event", location: bangsar, capacity: 30,
+    duration_minutes: 180, host_name: "Coach Ravi", description: "Technique, bracing, and programming for the deadlift.")
+  coaching = seed_program.(chainsaw, name: "PT with Aina", kind: "appointment", location: bangsar, capacity: 1,
+    duration_minutes: 60, host_name: "Aina", description: "One-to-one personal training.")
+
+  [ [ yoga, 2, "19:00" ], [ yoga, 4, "19:00" ], [ hiit, 1, "07:00" ], [ hiit, 3, "07:00" ] ].each do |program, wday, time|
+    program.schedule!(date: next_weekday.(chainsaw, wday).iso8601, time:, weeks: 4)
+  end
+  seminar.schedule!(date: next_weekday.(chainsaw, 6).+(7).iso8601, time: "10:00") if seminar.occurrences.upcoming.none?
+  %w[09:00 10:00 11:00].each { coaching.schedule!(date: next_weekday.(chainsaw, 5).iso8601, time: _1, weeks: 2) }
+
+  seed_ticket.(yoga, label: "Drop-in", amount_minor: 2_500)
+  seed_ticket.(hiit, label: "Drop-in", amount_minor: 2_000)
+  seed_ticket.(seminar, label: "Early bird", amount_minor: 8_000)
+  seed_ticket.(seminar, label: "Standard", amount_minor: 12_000)
+  seed_ticket.(coaching, label: "Single session", amount_minor: 15_000)
+
+  class_pass = seed_product.(chainsaw, name: "10-Class Pass", kind: "pass", position: 4,
+    description: "Ten group classes at Chainsaw within 60 days.",
+    benefits: [ { kind: "program_access", name: "10 group classes", usage_limit: 10, program_kind: "group_class" } ])
+  seed_price.(class_pass, label: "10 classes", amount_minor: 20_000, duration_days: 60)
+  pt_pack = seed_product.(chainsaw, name: "PT 5-Pack", kind: "pass", position: 5,
+    description: "Five personal training sessions with Aina within 90 days.",
+    benefits: [ { kind: "program_access", name: "5 PT sessions", usage_limit: 5, program_ids: [ coaching.id ] } ])
+  seed_price.(pt_pack, label: "5 sessions", amount_minor: 65_000, duration_days: 90)
 
   seed_member.(chainsaw, "Aisyah Rahman", "aisyah@example.com")
   seed_member.(chainsaw, "Ben Tan", "ben@example.com")
@@ -138,4 +190,4 @@ ActiveRecord::Base.transaction do
 end
 
 puts "Seeded: #{Organization.count} organizations, #{Location.count} locations, #{Member.count} members, " \
-     "#{Product.count} products, #{Price.count} prices."
+     "#{Product.count} products, #{Price.count} prices, #{Program.count} programs, #{Occurrence.count} times."
