@@ -1,0 +1,40 @@
+/* Raw OKLCH swatches. Names encode lightness, chroma, hue, and alpha.
+ * Components use semantic roles from tokens.css. */
+:root {
+  --swatch-948-005-240: oklch(0.948 0.005 240);
+  --swatch-918-007-240: oklch(0.918 0.007 240);
+  --swatch-995-002-240: oklch(0.995 0.002 240);
+  --swatch-972-004-240: oklch(0.972 0.004 240);
+  --swatch-85-008-240: oklch(0.85 0.008 240);
+  --swatch-74-01-240: oklch(0.74 0.01 240);
+  --swatch-23-014-250: oklch(0.23 0.014 250);
+  --swatch-4-014-250: oklch(0.4 0.014 250);
+  --swatch-5-012-250: oklch(0.5 0.012 250);
+  --swatch-44-095-245: oklch(0.44 0.095 245);
+  --swatch-37-095-245: oklch(0.37 0.095 245);
+  --swatch-99-004-245: oklch(0.99 0.004 245);
+  --swatch-56-16-245: oklch(0.56 0.16 245);
+  --swatch-6-15-150: oklch(0.6 0.15 150);
+  --swatch-4-1-150: oklch(0.4 0.1 150);
+  --swatch-955-035-150: oklch(0.955 0.035 150);
+  --swatch-58-2-27: oklch(0.58 0.2 27);
+  --swatch-45-16-27: oklch(0.45 0.16 27);
+  --swatch-955-03-27: oklch(0.955 0.03 27);
+  --swatch-76-15-75: oklch(0.76 0.15 75);
+  --swatch-45-09-65: oklch(0.45 0.09 65);
+  --swatch-965-045-85: oklch(0.965 0.045 85);
+  --swatch-82-006-240: oklch(0.82 0.006 240);
+  --swatch-86-06-245: oklch(0.86 0.06 245);
+  --swatch-1-0-0: oklch(1 0 0);
+  --swatch-0-0-0-18: oklch(0 0 0 / 0.18);
+  --swatch-1-0-0-55: oklch(1 0 0 / 0.55);
+  --swatch-8-012-245: oklch(0.8 0.012 245);
+  --swatch-42-012-250: oklch(0.42 0.012 250);
+  --swatch-25-014-250: oklch(0.25 0.014 250);
+  --swatch-34-014-250: oklch(0.34 0.014 250);
+  --swatch-97-004-240: oklch(0.97 0.004 240);
+  --swatch-8-01-240: oklch(0.8 0.01 240);
+  --swatch-45-09-245: oklch(0.45 0.09 245);
+  --swatch-29-014-250: oklch(0.29 0.014 250);
+  --swatch-92-005-240: oklch(0.92 0.005 240);
+}

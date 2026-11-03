@@ -170,10 +170,10 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color 150ms var(--ease-out),
-    border-color 150ms var(--ease-out),
-    color 150ms var(--ease-out),
-    transform 120ms var(--ease-out);
+    background-color var(--duration-hover) var(--ease-out),
+    border-color var(--duration-hover) var(--ease-out),
+    color var(--duration-hover) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 .button:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--color-ink-hover);
@@ -330,7 +330,7 @@
   font-size: var(--text-base);
   line-height: var(--leading-tight);
   caret-color: var(--color-accent);
-  transition: border-color 150ms var(--ease-out);
+  transition: border-color var(--duration-hover) var(--ease-out);
 }
 textarea.input {
   min-height: 96px;
@@ -428,8 +428,8 @@ textarea.input {
   outline: none;
   transform-origin: var(--transform-origin);
   transition:
-    opacity 120ms var(--ease-out),
-    transform 120ms var(--ease-out);
+    opacity var(--duration-press) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 .select__popup[data-starting-style],
 .select__popup[data-ending-style] {
@@ -523,7 +523,7 @@ textarea.input {
   border: 1px solid var(--color-field-line);
   border-radius: var(--radius-md);
   background: var(--color-control);
-  transition: border-color 150ms var(--ease-out);
+  transition: border-color var(--duration-hover) var(--ease-out);
 }
 .input-group:hover {
   border-color: var(--color-ink-3);
@@ -616,7 +616,7 @@ input[type="radio"]::before {
   border-radius: 50%;
   background: var(--color-on-ink);
   transform: scale(0);
-  transition: transform 120ms var(--ease-out);
+  transition: transform var(--duration-press) var(--ease-out);
 }
 input[type="radio"]:checked {
   border-color: var(--color-accent);
@@ -633,7 +633,7 @@ input[type="checkbox"]::before {
   border: solid var(--color-on-ink);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg) scale(0);
-  transition: transform 120ms var(--ease-out);
+  transition: transform var(--duration-press) var(--ease-out);
 }
 input[type="checkbox"]:checked {
   border-color: var(--color-accent);
@@ -716,7 +716,7 @@ input[type="radio"]:disabled {
   border-radius: var(--radius-lg);
   background: var(--color-control);
   cursor: pointer;
-  transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+  transition: border-color var(--duration-hover) var(--ease-out), background-color var(--duration-hover) var(--ease-out);
 }
 .choice:hover {
   border-color: var(--color-ink-4);
@@ -788,7 +788,7 @@ input[type="radio"]:disabled {
   border: 1px solid var(--color-line-strong);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+  transition: border-color var(--duration-hover) var(--ease-out), background-color var(--duration-hover) var(--ease-out);
 }
 .radio-card:hover {
   border-color: var(--color-ink-4);
@@ -817,7 +817,7 @@ input[type="radio"]:disabled {
   border: 1.5px solid var(--color-field-line);
   border-radius: 50%;
   color: var(--color-on-ink);
-  transition: background-color 150ms var(--ease-out), border-color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), border-color var(--duration-hover) var(--ease-out);
 }
 .radio-card__mark svg {
   width: 12px;
@@ -905,8 +905,8 @@ input[type="radio"]:disabled {
   white-space: nowrap;
   font-size: var(--text-sm);
   transition:
-    color 120ms var(--ease-out),
-    background-color 120ms var(--ease-out);
+    color var(--duration-press) var(--ease-out),
+    background-color var(--duration-press) var(--ease-out);
 }
 .toggle-group__item:hover {
   color: var(--color-ink);
@@ -963,8 +963,8 @@ a.toggle-group__item {
   line-height: 16px;
   white-space: nowrap;
   transition:
-    opacity 120ms var(--ease-out),
-    transform 120ms var(--ease-out);
+    opacity var(--duration-press) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 .tooltip[data-starting-style],
 .tooltip[data-ending-style] {
@@ -1225,7 +1225,7 @@ a.toggle-group__item {
   vertical-align: middle;
 }
 .table tbody tr {
-  transition: background-color 120ms var(--ease-out);
+  transition: background-color var(--duration-press) var(--ease-out);
 }
 .table tbody tr:hover {
   background: var(--color-well);
@@ -1978,8 +1978,8 @@ a.counter:hover .counter__label {
   outline: none;
   transform-origin: var(--transform-origin);
   transition:
-    opacity 120ms var(--ease-out),
-    transform 120ms var(--ease-out);
+    opacity var(--duration-press) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 .popover[data-starting-style],
 .popover[data-ending-style] {

@@ -52,3 +52,11 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 ## Scope
 
 - Standalone passes, classes, events, reservations, waitlists, recurring billing, and a native mobile app are deferred. Do not build placeholders for them.
+
+## UI design system
+
+- Before UI changes, read `docs/design-system.md` and the target app's `DESIGN.md`. They record the existing visual decisions.
+- Use semantic tokens and existing components. This keeps color meaning and interaction behavior consistent.
+- Keep status labels tied to Rails responses. Payment, fulfillment, and access are separate facts.
+- For screen reviews, use `.agents/skills/flowfokus-review-screen/SKILL.md`. It checks the app's real states and conventions.
+- Run `bun run design:check` after styling changes. It catches color values added outside the token layers.

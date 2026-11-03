@@ -1,0 +1,72 @@
+/* Gym site semantic roles. Read apps/site/DESIGN.md before edits.
+ * Preserve this light aluminum identity; the staff portal owns its own theme. */
+:root {
+  color-scheme: light;
+
+  --ground: var(--swatch-948-005-240);
+  --rail: var(--swatch-918-007-240);
+  --plate: var(--swatch-995-002-240);
+  --plate-sunk: var(--swatch-972-004-240);
+  --edge: var(--swatch-85-008-240);
+  --edge-strong: var(--swatch-74-01-240);
+
+  --ink: var(--swatch-23-014-250);
+  --ink-2: var(--swatch-4-014-250);
+  --ink-3: var(--swatch-5-012-250);
+
+  --action: var(--swatch-44-095-245);
+  --action-hover: var(--swatch-37-095-245);
+  --action-ink: var(--swatch-99-004-245);
+  --focus: var(--swatch-56-16-245);
+
+  --granted: var(--swatch-6-15-150);
+  --granted-ink: var(--swatch-4-1-150);
+  --granted-wash: var(--swatch-955-035-150);
+  --denied: var(--swatch-58-2-27);
+  --denied-ink: var(--swatch-45-16-27);
+  --denied-wash: var(--swatch-955-03-27);
+  --due: var(--swatch-76-15-75);
+  --due-ink: var(--swatch-45-09-65);
+  --due-wash: var(--swatch-965-045-85);
+  --lamp-off: var(--swatch-82-006-240);
+
+  --font-legend: "Barlow Semi Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-data: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.0625rem;
+  --step-2: 1.25rem;
+  --step-3: 1.5rem;
+  --step-4: 1.875rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius: 10px;
+  --radius-control: 7px;
+  --rail-width: 15rem;
+  --duration-press: 120ms;
+  --duration-hover: 150ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --selection: var(--swatch-86-06-245);
+  --highlight: var(--swatch-1-0-0);
+  --lamp-shadow: var(--swatch-0-0-0-18);
+  --lamp-highlight: var(--swatch-1-0-0-55);
+  --action-disabled: var(--swatch-8-012-245);
+  --action-disabled-ink: var(--swatch-42-012-250);
+  --board-selection: var(--swatch-45-09-245);
+  --board-price: var(--swatch-29-014-250);
+  --payment-edge: var(--swatch-92-005-240);
+  --board: var(--swatch-25-014-250);
+  --board-edge: var(--swatch-34-014-250);
+  --board-ink: var(--swatch-97-004-240);
+  --board-ink-2: var(--swatch-8-01-240);
+}

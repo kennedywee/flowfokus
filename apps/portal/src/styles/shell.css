@@ -119,7 +119,7 @@
   background: transparent;
   color: var(--color-ink-3);
   cursor: pointer;
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
 }
 .sidebar__collapse:hover {
   background: var(--color-control);
@@ -182,7 +182,7 @@
   font-size: var(--text-base);
   line-height: var(--leading-tight);
   text-decoration: none;
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
 }
 .nav-item__label {
   flex: 1;
@@ -205,7 +205,7 @@
   height: 18px;
   stroke-width: 1.75;
   color: var(--color-ink-3);
-  transition: color 150ms var(--ease-out), transform 120ms var(--ease-out);
+  transition: color var(--duration-hover) var(--ease-out), transform var(--duration-press) var(--ease-out);
 }
 .nav-item:active svg {
   transform: scale(0.92);
@@ -263,7 +263,7 @@
   background: transparent;
   color: var(--color-ink-3);
   cursor: pointer;
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
 }
 .whatsnew__dismiss:hover {
   background: var(--color-hover);
@@ -359,7 +359,7 @@
   font-size: var(--text-sm);
   line-height: 16px;
   text-decoration: none;
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
 }
 .topbar__search:hover {
   background: var(--color-control);
@@ -504,7 +504,7 @@
   font-size: var(--text-sm);
   line-height: 16px;
   cursor: pointer;
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
 }
 .switcher__button:hover,
 .switcher__button[aria-expanded="true"] {
@@ -678,7 +678,7 @@
   font-weight: var(--font-weight-semibold);
   line-height: 14px;
   cursor: pointer;
-  transition: border-color 150ms var(--ease-out);
+  transition: border-color var(--duration-hover) var(--ease-out);
 }
 .account__button:hover {
   border-color: var(--color-ink-3);
@@ -705,8 +705,8 @@
   outline: none;
   transform-origin: var(--transform-origin);
   transition:
-    opacity 120ms var(--ease-out),
-    transform 120ms var(--ease-out);
+    opacity var(--duration-press) var(--ease-out),
+    transform var(--duration-press) var(--ease-out);
 }
 .menu[data-starting-style],
 .menu[data-ending-style] {
@@ -928,7 +928,7 @@
   padding: var(--space-3) var(--space-4);
   color: var(--color-ink);
   text-decoration: none;
-  transition: background-color 150ms var(--ease-out);
+  transition: background-color var(--duration-hover) var(--ease-out);
 }
 .entry__choice:hover {
   background: var(--color-hover);
@@ -1049,7 +1049,7 @@
     border: 1px solid var(--color-line);
     border-radius: var(--radius-md);
     color: var(--color-ink-2);
-    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+    transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
   }
   .shell .whatsnew-rail:hover {
     background: var(--color-hover);
@@ -1159,7 +1159,7 @@
     border: 1px solid var(--color-line);
     border-radius: var(--radius-md);
     color: var(--color-ink-2);
-    transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+    transition: background-color var(--duration-hover) var(--ease-out), color var(--duration-hover) var(--ease-out);
   }
   .shell[data-collapsed="true"] .whatsnew-rail:hover {
     background: var(--color-hover);
@@ -1239,7 +1239,7 @@
   }
   .sidebar .wordmark__text {
     opacity: 1;
-    transition: opacity 120ms var(--ease-out) 80ms;
+    transition: opacity var(--duration-press) var(--ease-out) 80ms;
   }
   /* The logo link returns from display: none, so the fade needs a start value. */
   @starting-style {

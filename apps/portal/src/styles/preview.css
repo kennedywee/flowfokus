@@ -117,7 +117,7 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background-color 120ms var(--ease-out);
+  transition: background-color var(--duration-press) var(--ease-out);
 }
 .preview-page .preview-message:hover {
   background: var(--color-well);
@@ -346,8 +346,8 @@
   cursor: pointer;
   text-align: left;
   transition:
-    background-color 120ms var(--ease-out),
-    color 120ms var(--ease-out);
+    background-color var(--duration-press) var(--ease-out),
+    color var(--duration-press) var(--ease-out);
 }
 .preview-page .preview-prompts button:hover {
   background: var(--color-control);
