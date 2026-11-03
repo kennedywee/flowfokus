@@ -6,7 +6,7 @@ import type { Schemas } from "@flowfokus/api";
 
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const PAYMENT_METHODS: ReadonlyArray<Schemas["PaymentMethod"]> = ["cash", "bank_transfer"];
+const PAYMENT_METHODS: ReadonlyArray<Schemas["ManualPaymentMethod"]> = ["cash", "bank_transfer"];
 
 export class InputError extends Error {
   override name = "InputError";
@@ -141,6 +141,7 @@ export function createSaleInput(value: unknown): CreateSaleInput {
     member_id: uuidField(input, "member_id"),
     price_id: uuidField(input, "price_id"),
     location_id: uuidField(input, "location_id"),
+    ...(input.occurrence_id === undefined ? {} : { occurrence_id: uuidField(input, "occurrence_id") }),
   };
 }
 
@@ -153,7 +154,7 @@ export function recordPaymentInput(value: unknown): RecordPaymentInput {
     throw new InputError("Invalid amount_minor");
   }
   const method = input.method;
-  if (!PAYMENT_METHODS.includes(method as Schemas["PaymentMethod"])) {
+  if (!PAYMENT_METHODS.includes(method as Schemas["ManualPaymentMethod"])) {
     throw new InputError("Invalid method");
   }
   const reference =
@@ -165,7 +166,7 @@ export function recordPaymentInput(value: unknown): RecordPaymentInput {
     idempotencyKey: idempotencyKeyField(input),
     saleId: uuidField(input, "saleId"),
     amount_minor: amount,
-    method: method as Schemas["PaymentMethod"],
+    method: method as Schemas["ManualPaymentMethod"],
     reference,
   };
 }
@@ -213,6 +214,13 @@ function wholeNumber(input: Record<string, unknown>, name: string, min: number, 
   return value;
 }
 
+const BENEFIT_KINDS: ReadonlyArray<Schemas["BenefitKind"]> = ["gym_access", "program_access"];
+export const PROGRAM_KINDS: ReadonlyArray<Schemas["ProgramKind"]> = ["group_class", "event", "appointment"];
+
+function isProgramKind(value: unknown): value is Schemas["ProgramKind"] {
+  return typeof value === "string" && (PROGRAM_KINDS as ReadonlyArray<string>).includes(value);
+}
+
 function benefitsField(input: Record<string, unknown>): Schemas["BenefitInput"][] {
   const list = input.benefits;
   if (!Array.isArray(list) || list.length > 10) throw new InputError("Invalid benefits");
@@ -224,10 +232,19 @@ function benefitsField(input: Record<string, unknown>): Schemas["BenefitInput"][
     }
     const location = benefit.location_id;
     if (location !== null && location !== undefined && !isUuid(location)) throw new InputError("Invalid location_id");
+    const kind = benefit.kind === undefined ? "gym_access" : benefit.kind;
+    if (!BENEFIT_KINDS.includes(kind as Schemas["BenefitKind"])) throw new InputError("Invalid kind");
+    const programs = benefit.program_ids === undefined ? [] : benefit.program_ids;
+    if (!Array.isArray(programs) || programs.length > 50 || !programs.every(isUuid)) throw new InputError("Invalid program_ids");
+    const programKind = benefit.program_kind ?? null;
+    if (programKind !== null && !isProgramKind(programKind)) throw new InputError("Invalid program_kind");
     return {
+      kind: kind as Schemas["BenefitKind"],
       name: textField(benefit, "name", 200),
       usage_limit: typeof limit === "number" ? limit : null,
       location_id: typeof location === "string" ? location.toLowerCase() : null,
+      program_ids: (programs as string[]).map((id) => id.toLowerCase()),
+      program_kind: programKind,
     };
   });
 }
@@ -243,8 +260,11 @@ export type CreateProductInput = SlugInput & Schemas["ProductInput"];
 export function createProductInput(value: unknown): CreateProductInput {
   const input = record(value);
   const published = optionalBoolean(input, "published");
+  const kind = input.kind ?? "membership";
+  if (kind !== "membership" && kind !== "pass") throw new InputError("Invalid kind");
   return {
     slug: slugField(input),
+    kind,
     name: textField(input, "name", 200),
     description: input.description === undefined ? null : descriptionField(input),
     ...(published === undefined ? {} : { published }),
@@ -389,4 +409,133 @@ export interface MemberRoleInput extends IdInput {
 export function memberRoleInput(value: unknown): MemberRoleInput {
   const input = record(value);
   return { slug: slugField(input), id: uuidField(input, "id"), role: roleField(input) };
+}
+
+// Programs, the schedule, and bookings.
+
+function optionalText(input: Record<string, unknown>, name: string, max: number): string | null {
+  const value = input[name];
+  if (value === null || value === undefined || value === "") return null;
+  return textField(input, name, max);
+}
+
+export type CreateProgramInput = SlugInput & Schemas["ProgramInput"];
+
+export function createProgramInput(value: unknown): CreateProgramInput {
+  const input = record(value);
+  if (!isProgramKind(input.kind)) throw new InputError("Invalid kind");
+  const published = optionalBoolean(input, "published");
+  return {
+    slug: slugField(input),
+    name: textField(input, "name", 200),
+    description: optionalText(input, "description", 2000),
+    kind: input.kind,
+    location_id: uuidField(input, "location_id"),
+    capacity: wholeNumber(input, "capacity", 1, 10000),
+    duration_minutes: wholeNumber(input, "duration_minutes", 1, 1440),
+    host_name: optionalText(input, "host_name", 200),
+    ...(published === undefined ? {} : { published }),
+  };
+}
+
+export type UpdateProgramInput = IdInput & Schemas["ProgramUpdate"];
+
+export function updateProgramInput(value: unknown): UpdateProgramInput {
+  const input = record(value);
+  const published = optionalBoolean(input, "published");
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    ...(input.name === undefined ? {} : { name: textField(input, "name", 200) }),
+    ...(input.description === undefined ? {} : { description: optionalText(input, "description", 2000) }),
+    ...(input.location_id === undefined ? {} : { location_id: uuidField(input, "location_id") }),
+    ...(input.capacity === undefined ? {} : { capacity: wholeNumber(input, "capacity", 1, 10000) }),
+    ...(input.duration_minutes === undefined ? {} : { duration_minutes: wholeNumber(input, "duration_minutes", 1, 1440) }),
+    ...(input.host_name === undefined ? {} : { host_name: optionalText(input, "host_name", 200) }),
+    ...(published === undefined ? {} : { published }),
+  };
+}
+
+export type ScheduleProgramInput = IdInput & Schemas["ScheduleInput"];
+
+export function scheduleProgramInput(value: unknown): ScheduleProgramInput {
+  const input = record(value);
+  const date = textField(input, "date", 10);
+  const time = textField(input, "time", 5);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new InputError("Invalid date");
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw new InputError("Invalid time");
+  return { slug: slugField(input), id: uuidField(input, "id"), date, time, weeks: wholeNumber(input, "weeks", 1, 26) };
+}
+
+export type AddTicketInput = IdInput & Schemas["TicketInput"];
+
+export function addTicketInput(value: unknown): AddTicketInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    label: textField(input, "label", 200),
+    amount_minor: wholeNumber(input, "amount_minor", 0, Number.MAX_SAFE_INTEGER),
+  };
+}
+
+export interface ScheduleRangeInput extends SlugInput {
+  from?: string;
+  days?: number;
+}
+
+export function scheduleRangeInput(value: unknown): ScheduleRangeInput {
+  const input = record(value);
+  const slug = slugField(input);
+  const from = input.from === undefined ? undefined : textField(input, "from", 10);
+  if (from !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(from)) throw new InputError("Invalid from");
+  const days = input.days === undefined ? undefined : wholeNumber(input, "days", 1, 62);
+  return { slug, ...(from ? { from } : {}), ...(days ? { days } : {}) };
+}
+
+export interface BookingOptionsInput extends IdInput {
+  memberId: string;
+}
+
+export function bookingOptionsInput(value: unknown): BookingOptionsInput {
+  const input = record(value);
+  return { slug: slugField(input), id: uuidField(input, "id"), memberId: uuidField(input, "memberId") };
+}
+
+export type CreateBookingInput = SlugInput & Schemas["StaffBookingInput"];
+
+export function createBookingInput(value: unknown): CreateBookingInput {
+  const input = record(value);
+  return {
+    slug: slugField(input),
+    occurrence_id: uuidField(input, "occurrence_id"),
+    member_id: uuidField(input, "member_id"),
+    entitlement_id: uuidField(input, "entitlement_id"),
+  };
+}
+
+export interface CancelBookingInput extends IdInput {
+  reason: string;
+  /** Give the use back. Rails defaults to true. */
+  return_use?: boolean;
+}
+
+export function cancelBookingInput(value: unknown): CancelBookingInput {
+  const input = record(value);
+  const returnUse = optionalBoolean(input, "return_use");
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    reason: textField(input, "reason", 500),
+    ...(returnUse === undefined ? {} : { return_use: returnUse }),
+  };
+}
+
+export interface CancelOccurrenceInput extends IdInput {
+  reason: string;
+}
+
+export function cancelOccurrenceInput(value: unknown): CancelOccurrenceInput {
+  const input = record(value);
+  return { slug: slugField(input), id: uuidField(input, "id"), reason: textField(input, "reason", 500) };
 }

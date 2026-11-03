@@ -16,7 +16,17 @@ import {
   Status,
   type LampState,
 } from "../../../components/ui";
-import { DENIAL, failureMessage, formatDate, formatDuration, formatMoney, formatUsage, formatWhen } from "../../../lib/format";
+import {
+  BOOKING_STATUS_LABEL,
+  DENIAL,
+  failureMessage,
+  formatBenefitUsage,
+  formatDate,
+  formatDateTime,
+  formatDuration,
+  formatMoney,
+  formatWhen,
+} from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
 import { createLinkCode, getMemberRecord, renewMembership, unlinkMember } from "../../../lib/staff.functions";
@@ -64,7 +74,7 @@ function MemberPage() {
           className={buttonVariants()}
         >
           <ShoppingBag aria-hidden="true" />
-          Sell a membership
+          Sell a membership or pass
         </Link>
       </PageHead>
 
@@ -100,6 +110,8 @@ function MemberPage() {
           </div>
         )}
       </Plate>
+
+      <Bookings bookings={member.bookings} />
 
       <Periods member={member} />
 
@@ -298,6 +310,62 @@ function AccountLink({ member }: { member: Schemas["MemberDetail"] }) {
   );
 }
 
+/** Coming bookings first, then recent past and cancelled ones. */
+function Bookings({ bookings }: { bookings: Schemas["Booking"][] }) {
+  const organization = useOrganization();
+  return (
+    <Plate title="Bookings" description="Classes, events, and appointments. Open a time to change a booking." flush>
+      {bookings.length ? (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead scope="col">Program</TableHead>
+              <TableHead scope="col" className="col-wide">
+                Booked with
+              </TableHead>
+              <TableHead scope="col">Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {bookings.map((booking) => (
+              <TableRow key={booking.id}>
+                <TableCell>
+                  <Link
+                    to="/$org/schedule/$occurrenceId"
+                    params={{ org: organization.slug, occurrenceId: booking.occurrence_id }}
+                    className="cell-title"
+                  >
+                    {booking.program.name}
+                  </Link>
+                  <span className="cell-sub">{formatDateTime(booking.starts_at, organization.timezone)}</span>
+                </TableCell>
+                <TableCell className="col-wide">{booking.source === "ticket" ? "Ticket" : (booking.entitlement?.name ?? "—")}</TableCell>
+                <TableCell>
+                  <Status state={booking.status === "cancelled" || booking.status === "expired" ? "off" : booking.status === "attended" ? "delivered" : "active"}>
+                    {BOOKING_STATUS_LABEL[booking.status]}
+                  </Status>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div className="member-state">
+          <Empty title="No bookings yet">
+            <p>
+              Book this member from a time on the{" "}
+              <Link to="/$org/schedule" params={{ org: organization.slug }}>
+                schedule
+              </Link>
+              .
+            </p>
+          </Empty>
+        </div>
+      )}
+    </Plate>
+  );
+}
+
 function Access({ member }: { member: Schemas["MemberDetail"] }) {
   const organization = useOrganization();
   const locationName = useLocationName();
@@ -323,7 +391,7 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
                 <Status state={right.active ? "active" : "waiting"}>{right.active ? "Valid now" : "Starts later"}</Status>
               </div>
               <span className="cell-sub">
-                {locationName(right.location_id)} · {formatUsage(right.usage_limit)} ·{" "}
+                {locationName(right.location_id)} · {formatBenefitUsage(right)} ·{" "}
                 {formatDate(right.starts_at, organization.timezone)} to {formatDate(right.ends_at, organization.timezone)}
               </span>
               {right.usage_limit !== null && right.remaining !== null ? (
@@ -334,12 +402,13 @@ function Access({ member }: { member: Schemas["MemberDetail"] }) {
                     aria-valuemin={0}
                     aria-valuemax={right.usage_limit}
                     aria-valuenow={right.remaining}
-                    aria-label={`${right.name}: visits left`}
+                    aria-label={`${right.name}: ${right.kind === "gym_access" ? "visits" : "bookings"} left`}
                   >
                     <div className="meter__fill" style={{ transform: `scaleX(${right.usage_limit ? right.remaining / right.usage_limit : 0})` }} />
                   </div>
                   <span className="cell-sub">
-                    {right.remaining} of {right.usage_limit} visits left · {right.used_count} used
+                    {right.remaining} of {right.usage_limit} {right.kind === "gym_access" ? "visits" : "bookings"} left · {right.used_count}{" "}
+                    used
                   </span>
                 </div>
               ) : null}

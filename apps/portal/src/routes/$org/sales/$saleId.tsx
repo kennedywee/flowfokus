@@ -23,11 +23,13 @@ import {
 } from "../../../components/ui";
 import {
   PAYMENT_METHOD_LABEL,
+  PRODUCT_KIND_LABEL,
   failureMessage,
+  formatBenefitUsage,
   formatDate,
+  formatDateTime,
   formatDuration,
   formatMoney,
-  formatUsage,
   minorToInput,
   parseAmountToMinor,
   saleState,
@@ -78,11 +80,13 @@ function SalePage() {
         title={`${line.product_name}, ${line.price_label}`}
         description={
           <>
-            {data.renewal ? "Renewal at the agreed price. " : null}Sold to{" "}
+            {data.renewal ? "Renewal at the agreed price. " : null}
+            {data.channel === "online" ? "Bought online by " : "Sold to "}
             <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: data.member.id }}>
               {data.member.name}
-            </Link>{" "}
-            at {locationName(data.location_id)}, <Time iso={data.purchased_at} timeZone={organization.timezone} />
+            </Link>
+            {data.location_id ? ` at ${locationName(data.location_id)}` : ""},{" "}
+            <Time iso={data.purchased_at} timeZone={organization.timezone} />
           </>
         }
       >
@@ -155,8 +159,12 @@ function SalePage() {
                 <dd className="money">{formatMoney(line.unit_amount_minor, line.currency)}</dd>
               </div>
               <div>
-                <dt>Term</dt>
-                <dd>{formatDuration(line.terms.duration_days)}</dd>
+                <dt>{data.occurrence ? "Time" : "Term"}</dt>
+                <dd>
+                  {data.occurrence
+                    ? `${data.occurrence.program_name}, ${formatDateTime(data.occurrence.starts_at, organization.timezone)}`
+                    : formatDuration(line.terms.duration_days)}
+                </dd>
               </div>
             </dl>
             <ul className="rights">
@@ -164,7 +172,7 @@ function SalePage() {
                 <li key={index} className="right">
                   <span className="cell-title">{benefit.name}</span>
                   <span className="cell-sub">
-                    {formatUsage(benefit.usage_limit)} · {locationName(benefit.location_id)}
+                    {formatBenefitUsage(benefit)} · {locationName(benefit.location_id)}
                   </span>
                 </li>
               ))}
@@ -223,7 +231,7 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
   const action = useAction(sendPayment);
 
   const [amount, setAmount] = useState(() => minorToInput(sale.balance_minor, sale.currency));
-  const [method, setMethod] = useState<Schemas["PaymentMethod"]>("cash");
+  const [method, setMethod] = useState<Schemas["ManualPaymentMethod"]>("cash");
   const [reference, setReference] = useState("");
   const [localError, setLocalError] = useState<string | undefined>();
 
@@ -287,7 +295,7 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
         ]}
         value={method}
         onChange={(value) => {
-          setMethod(value as Schemas["PaymentMethod"]);
+          setMethod(value as Schemas["ManualPaymentMethod"]);
           edited();
         }}
       />
@@ -340,6 +348,8 @@ function PaymentForm({ sale, onRecorded }: { sale: Schemas["Sale"]; onRecorded: 
 
 function Delivery({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
+  const kindLabel = PRODUCT_KIND_LABEL[sale.line_item.terms.kind];
+  const kindWord = kindLabel.toLowerCase();
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendFulfill);
@@ -361,30 +371,38 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
     });
     setConfirming(false);
     if (result.ok) {
-      const period = result.data.fulfillment?.membership_period;
-      toast.show({
-        tone: "success",
-        title: "Membership delivered",
-        body: period
-          ? `${sale.member.name} has access from ${formatDate(period.starts_at, organization.timezone)} until ${formatDate(period.ends_at, organization.timezone)}.`
-          : `${sale.member.name} now has access.`,
-      });
+      toast.show({ tone: "success", title: `${kindLabel} delivered`, body: deliveredText(result.data) });
       void router.invalidate();
     }
   }
 
+  function deliveredText(done: Schemas["Sale"]): string {
+    const period = done.fulfillment?.membership_period;
+    if (period) {
+      return `${done.member.name} has access from ${formatDate(period.starts_at, organization.timezone)} until ${formatDate(period.ends_at, organization.timezone)}.`;
+    }
+    if (done.occurrence) {
+      return `${done.member.name} is booked for ${done.occurrence.program_name} on ${formatDateTime(done.occurrence.starts_at, organization.timezone)}.`;
+    }
+    return `${done.member.name} can book with this pass for ${formatDuration(done.line_item.terms.duration_days)} from the purchase.`;
+  }
+
   if (sale.fulfillment) {
-    const period = sale.fulfillment.membership_period;
     const { early: deliveredEarly, early_reason: deliveredReason, unpaid_minor: unpaidAtDelivery } = sale.fulfillment;
     return (
       <Plate title="Delivery">
-        <Notice tone="success" title="Membership delivered" live={action.data !== null}>
+        <Notice tone="success" title={`${kindLabel} delivered`} live={action.data !== null}>
           <p>
-            Access from {formatDate(period.starts_at, organization.timezone)} until{" "}
-            {formatDate(period.ends_at, organization.timezone)}.{" "}
-            <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: sale.member.id }}>
-              See {sale.member.name}'s access
-            </Link>
+            {deliveredText(sale)}{" "}
+            {sale.occurrence ? (
+              <Link to="/$org/schedule/$occurrenceId" params={{ org: organization.slug, occurrenceId: sale.occurrence.id }}>
+                Open the roster
+              </Link>
+            ) : (
+              <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: sale.member.id }}>
+                See {sale.member.name}'s access
+              </Link>
+            )}
           </p>
         </Notice>
         {sale.fulfillment.revoked_at ? (
@@ -417,7 +435,9 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
       <div className="form">
         <p>
           {paid
-            ? "The sale is fully paid. Deliver it to create the membership period and its access rights."
+            ? sale.occurrence
+              ? "The sale is fully paid. Deliver it to book the member's spot."
+              : `The sale is fully paid. Deliver it to create the ${kindWord}'s access rights.`
             : "Delivery opens when the sale is fully paid."}
         </p>
         <div className="sale-page__deliver">
@@ -431,7 +451,7 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
             }}
           >
             <PackageCheck aria-hidden="true" strokeWidth={1.75} />
-            Deliver membership
+            Deliver {kindWord}
           </Button>
           {canDeliverEarly ? (
             <Button
@@ -453,7 +473,7 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
           )}
         </div>
         {action.error && !confirming ? (
-          <Notice tone="error" title="The membership was not delivered" live>
+          <Notice tone="error" title={`The ${kindWord} was not delivered`} live>
             <p>{failureMessage(action.error)}</p>
             <p>The payment is kept. Try to deliver again.</p>
           </Notice>
@@ -461,16 +481,17 @@ function Delivery({ sale }: { sale: Schemas["Sale"] }) {
       </div>
       <ConfirmDialog
         open={confirming}
-        title={early ? "Deliver before full payment?" : "Deliver this membership?"}
-        confirmLabel={early ? "Deliver early" : "Deliver membership"}
+        title={early ? "Deliver before full payment?" : `Deliver this ${kindWord}?`}
+        confirmLabel={early ? "Deliver early" : `Deliver ${kindWord}`}
         pendingLabel="Delivering…"
         pending={action.pending}
         onConfirm={() => void deliver()}
         onCancel={() => setConfirming(false)}
       >
         <p>
-          {sale.member.name} gets {sale.line_item.product_name}, {sale.line_item.price_label}, for{" "}
-          {formatDuration(sale.line_item.terms.duration_days)}. This creates the membership period and its access rights.
+          {sale.occurrence
+            ? `${sale.member.name} gets a spot in ${sale.occurrence.program_name} on ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}. This books the spot if one is free.`
+            : `${sale.member.name} gets ${sale.line_item.product_name}, ${sale.line_item.price_label}, for ${formatDuration(sale.line_item.terms.duration_days)}. This creates the ${kindWord}'s access rights.`}
         </p>
         {early ? (
           <>

@@ -83,11 +83,30 @@ describe("catalog inputs", () => {
     });
     expect(input).toEqual({
       slug: "chainsaw",
+      kind: "membership",
       name: "Monthly",
       description: null,
       published: true,
-      benefits: [{ name: "Gym", usage_limit: 8, location_id: id }],
+      benefits: [{ kind: "gym_access", name: "Gym", usage_limit: 8, location_id: id, program_ids: [], program_kind: null }],
     });
+  });
+
+  test("program benefits keep their scope, and passes are allowed", () => {
+    const input = createProductInput({
+      slug: "chainsaw",
+      kind: "pass",
+      name: "10 classes",
+      benefits: [{ kind: "program_access", name: "Classes", usage_limit: 10, program_ids: [id.toUpperCase()], program_kind: null }],
+    });
+    expect(input.kind).toBe("pass");
+    expect(input.benefits[0]).toMatchObject({ kind: "program_access", program_ids: [id] });
+    expect(() => createProductInput({ slug: "chainsaw", kind: "ticket", name: "X", benefits: [] })).toThrow();
+    expect(() =>
+      createProductInput({ slug: "chainsaw", name: "X", benefits: [{ name: "C", kind: "program_access", program_kind: "spin" }] }),
+    ).toThrow();
+    expect(() =>
+      createProductInput({ slug: "chainsaw", name: "X", benefits: [{ name: "C", kind: "program_access", program_ids: ["../x"] }] }),
+    ).toThrow();
   });
 
   test("product update sends only changed fields", () => {

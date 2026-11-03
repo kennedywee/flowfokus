@@ -4,10 +4,12 @@ import type { Schemas } from "@flowfokus/api";
 import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "./Toast";
 import { Field, FailureNotice, Notice, SubmitButton, describedBy } from "./ui";
-import { currencyDigits, formatDuration, formatMoney, parseAmountToMinor } from "../lib/format";
+import { PROGRAM_KIND_PLURAL, currencyDigits, formatDuration, formatMoney, parseAmountToMinor } from "../lib/format";
 import { useAction } from "../lib/hooks";
 import { useOrganization } from "../lib/organization";
 import { createPrice, createProduct, updateProduct } from "../lib/staff.functions";
+import { PROGRAM_KINDS } from "../lib/validate";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogTitle, useRestoreFocus } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,11 +21,17 @@ const sendNewProduct = (input: Parameters<typeof createProduct>[0]["data"]) => c
 const sendProductChange = (input: Parameters<typeof updateProduct>[0]["data"]) => updateProduct({ data: input });
 const sendPrice = (input: Parameters<typeof createPrice>[0]["data"]) => createPrice({ data: input });
 
+/** Which programs a program benefit covers: every program, one kind, or a picked list. */
+type Scope = "all" | Schemas["ProgramKind"] | "selected";
+
 interface BenefitDraft {
   key: number;
+  kind: Schemas["BenefitKind"];
   name: string;
   usage: string;
   locationId: string;
+  scope: Scope;
+  programIds: string[];
 }
 
 let nextKey = 1;
@@ -31,10 +39,17 @@ let nextKey = 1;
 function draftOf(benefit?: Schemas["Benefit"]): BenefitDraft {
   return {
     key: nextKey++,
+    kind: benefit?.kind ?? "gym_access",
     name: benefit?.name ?? "Gym access",
     usage: benefit?.usage_limit ? String(benefit.usage_limit) : "",
     locationId: benefit?.location_id ?? "",
+    scope: benefit?.program_ids.length ? "selected" : (benefit?.program_kind ?? "all"),
+    programIds: benefit?.program_ids ?? [],
   };
+}
+
+function classesDraft(): BenefitDraft {
+  return { ...draftOf(), kind: "program_access", name: "Group classes", usage: "10", scope: "group_class" };
 }
 
 /** Messages from Rails `validation_failed`, one line per field. */
@@ -47,7 +62,16 @@ function serverMessages(details?: Record<string, string[]>): string[] {
  * Creates a membership product, or edits one. Benefits are templates: a change
  * applies to new sales only. Past sales keep their terms.
  */
-export function ProductDialog({ product, onClose }: { product?: Schemas["StaffProduct"]; onClose: () => void }) {
+export function ProductDialog({
+  product,
+  programs,
+  onClose,
+}: {
+  product?: Schemas["StaffProduct"];
+  /** Programs a program benefit can name. */
+  programs: Schemas["ProgramListItem"][];
+  onClose: () => void;
+}) {
   useRestoreFocus();
   const organization = useOrganization();
   const router = useRouter();
@@ -58,9 +82,16 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [published, setPublished] = useState(product?.published ?? false);
+  const [kind, setKind] = useState<"membership" | "pass">(product?.kind === "pass" ? "pass" : "membership");
   const [benefits, setBenefits] = useState<BenefitDraft[]>(() =>
     product?.benefits.length ? product.benefits.map(draftOf) : [draftOf()],
   );
+
+  /** A new pass starts with a class benefit; a new membership with gym access. */
+  function chooseKind(next: "membership" | "pass") {
+    setKind(next);
+    if (!product) setBenefits([next === "pass" ? classesDraft() : draftOf()]);
+  }
   const [problems, setProblems] = useState<string[]>([]);
 
   function changeBenefit(key: number, change: Partial<BenefitDraft>) {
@@ -75,7 +106,10 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
     benefits.forEach((benefit, index) => {
       if (!benefit.name.trim()) found.push(`Enter a name for benefit ${index + 1}.`);
       if (benefit.usage.trim() && !/^[1-9]\d{0,5}$/.test(benefit.usage.trim())) {
-        found.push(`Visits for benefit ${index + 1} must be a whole number above zero, or empty for unlimited.`);
+        found.push(`Uses for benefit ${index + 1} must be a whole number above zero, or empty for unlimited.`);
+      }
+      if (benefit.kind === "program_access" && benefit.scope === "selected" && !benefit.programIds.length) {
+        found.push(`Pick at least one program for benefit ${index + 1}.`);
       }
     });
     setProblems(found);
@@ -86,13 +120,19 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
       name: name.trim(),
       description: description.trim() || null,
       published,
-      benefits: benefits.map((benefit) => ({
-        name: benefit.name.trim(),
-        usage_limit: benefit.usage.trim() ? Number(benefit.usage.trim()) : null,
-        location_id: benefit.locationId || null,
-      })),
+      benefits: benefits.map((benefit) => {
+        const program = benefit.kind === "program_access";
+        return {
+          kind: benefit.kind,
+          name: benefit.name.trim(),
+          usage_limit: benefit.usage.trim() ? Number(benefit.usage.trim()) : null,
+          location_id: benefit.locationId || null,
+          program_ids: program && benefit.scope === "selected" ? benefit.programIds : [],
+          program_kind: program && benefit.scope !== "all" && benefit.scope !== "selected" ? benefit.scope : null,
+        };
+      }),
     };
-    const result = product ? await editing.run({ ...fields, id: product.id }) : await creating.run(fields);
+    const result = product ? await editing.run({ ...fields, id: product.id }) : await creating.run({ ...fields, kind });
     if (result.ok) {
       toast.show({
         tone: "success",
@@ -116,7 +156,7 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
       <DialogContent className="offer-dialog">
         <form onSubmit={onSubmit} noValidate>
           <DialogBody>
-            <DialogTitle>{product ? `Edit ${product.name}` : "Add offer"}</DialogTitle>
+            <DialogTitle>{product ? `Edit ${product.name}` : kind === "pass" ? "Add pass" : "Add membership"}</DialogTitle>
             {problems.length || server.length ? (
               <Notice tone="error" title={product ? "The offer was not saved" : "The offer was not added"} live>
                 <ul className="offer-dialog__problems">
@@ -129,6 +169,27 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
               <FailureNotice error={action.error} title="The offer was not saved" />
             ) : null}
             <div className="form">
+              {product ? null : (
+                <Field
+                  id="offer-kind"
+                  label="Kind"
+                  hint={
+                    kind === "pass"
+                      ? "A pass is bought once and used across programs, for example 10 classes in 60 days."
+                      : "A membership runs for a term and can be renewed. It can include classes too."
+                  }
+                >
+                  <NativeSelect
+                    id="offer-kind"
+                    value={kind}
+                    aria-describedby={describedBy("offer-kind", "hint")}
+                    onChange={(event) => chooseKind(event.target.value as "membership" | "pass")}
+                  >
+                    <NativeSelectOption value="membership">Membership</NativeSelectOption>
+                    <NativeSelectOption value="pass">Pass</NativeSelectOption>
+                  </NativeSelect>
+                </Field>
+              )}
               <Field id="offer-name" label="Name">
                 <Input id="offer-name" value={name} maxLength={200} onChange={(event) => setName(event.target.value)} autoFocus />
               </Field>
@@ -148,7 +209,10 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
               </div>
               <fieldset className="offer-dialog__benefits">
                 <legend>Benefits</legend>
-                <p className="field__hint">Each sale copies these benefits. Leave visits empty for unlimited access.</p>
+                <p className="field__hint">
+                  Each sale copies these benefits. Gym access opens the gym at check-in. Program bookings book classes, events,
+                  or appointments. Leave uses empty for unlimited.
+                </p>
                 {benefits.map((benefit, index) => (
                   <div key={benefit.key} className="offer-dialog__benefit">
                     <Field id={`benefit-name-${benefit.key}`} label={`Benefit ${index + 1}`}>
@@ -159,7 +223,17 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
                         onChange={(event) => changeBenefit(benefit.key, { name: event.target.value })}
                       />
                     </Field>
-                    <Field id={`benefit-usage-${benefit.key}`} label="Visits per period">
+                    <Field id={`benefit-kind-${benefit.key}`} label="Gives">
+                      <NativeSelect
+                        id={`benefit-kind-${benefit.key}`}
+                        value={benefit.kind}
+                        onChange={(event) => changeBenefit(benefit.key, { kind: event.target.value as Schemas["BenefitKind"] })}
+                      >
+                        <NativeSelectOption value="gym_access">Gym access</NativeSelectOption>
+                        <NativeSelectOption value="program_access">Program bookings</NativeSelectOption>
+                      </NativeSelect>
+                    </Field>
+                    <Field id={`benefit-usage-${benefit.key}`} label={benefit.kind === "gym_access" ? "Visits per period" : "Bookings"}>
                       <Input
                         id={`benefit-usage-${benefit.key}`}
                         inputMode="numeric"
@@ -182,6 +256,9 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
                         ))}
                       </NativeSelect>
                     </Field>
+                    {benefit.kind === "program_access" ? (
+                      <ProgramScopeField benefit={benefit} programs={programs} onChange={(change) => changeBenefit(benefit.key, change)} />
+                    ) : null}
                     <Button
                       type="button"
                       variant="ghost"
@@ -209,12 +286,63 @@ export function ProductDialog({ product, onClose }: { product?: Schemas["StaffPr
               Cancel
             </Button>
             <SubmitButton pending={action.pending} pendingLabel="Saving…">
-              {product ? "Save offer" : "Add offer"}
+              {product ? "Save offer" : kind === "pass" ? "Add pass" : "Add membership"}
             </SubmitButton>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Which programs a program benefit books: every program, one kind, or a picked list. */
+function ProgramScopeField({
+  benefit,
+  programs,
+  onChange,
+}: {
+  benefit: BenefitDraft;
+  programs: Schemas["ProgramListItem"][];
+  onChange: (change: Partial<BenefitDraft>) => void;
+}) {
+  const id = `benefit-scope-${benefit.key}`;
+  return (
+    <div className="offer-dialog__scope">
+      <Field id={id} label="Programs">
+        <NativeSelect id={id} value={benefit.scope} onChange={(event) => onChange({ scope: event.target.value as Scope })}>
+          <NativeSelectOption value="all">Every program</NativeSelectOption>
+          {PROGRAM_KINDS.map((value) => (
+            <NativeSelectOption key={value} value={value}>
+              All {PROGRAM_KIND_PLURAL[value]}
+            </NativeSelectOption>
+          ))}
+          <NativeSelectOption value="selected" disabled={!programs.length}>
+            Selected programs
+          </NativeSelectOption>
+        </NativeSelect>
+      </Field>
+      {benefit.scope === "selected" ? (
+        <fieldset className="offer-dialog__programs">
+          <legend className="visually-hidden">Programs this benefit books</legend>
+          {programs.map((program) => {
+            const checked = benefit.programIds.includes(program.id);
+            return (
+              <label key={program.id} className="offer-dialog__program">
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={(value) =>
+                    onChange({
+                      programIds: value === true ? [...benefit.programIds, program.id] : benefit.programIds.filter((item) => item !== program.id),
+                    })
+                  }
+                />
+                {program.name}
+              </label>
+            );
+          })}
+        </fieldset>
+      ) : null}
+    </div>
   );
 }
 

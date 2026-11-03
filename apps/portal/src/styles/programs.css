@@ -1,0 +1,94 @@
+/* Screen styles: programs, the schedule, and rosters. Scoped per page. */
+
+.program-page__description {
+  max-width: 65ch;
+  margin: calc(var(--space-2) * -1) 0 var(--space-5);
+  color: var(--color-ink-2);
+}
+.program-page__layout {
+  display: grid;
+  gap: var(--space-5);
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .program-page__layout {
+    grid-template-columns: minmax(0, 3fr) minmax(18rem, 2fr);
+  }
+}
+.program-page .ticket-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.schedule-page__range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+.schedule-page .table {
+  table-layout: fixed;
+}
+.schedule-page__col-time {
+  width: 7rem;
+}
+.schedule-page__col-spots {
+  width: 11rem;
+}
+.schedule-page__time {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.schedule-page tr[data-cancelled] .cell-title {
+  color: var(--color-ink-3);
+  text-decoration: line-through;
+}
+@media (max-width: 639.98px) {
+  .schedule-page__col-time {
+    width: 5rem;
+  }
+  .schedule-page__col-spots {
+    width: 8rem;
+  }
+}
+
+.roster-page__readouts {
+  margin-bottom: var(--space-5);
+}
+.roster-page__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  width: 100%;
+}
+.roster-page__past {
+  border-top: 1px solid var(--color-line);
+}
+.roster-page__past > summary {
+  cursor: pointer;
+  padding: var(--space-3) var(--space-6);
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.roster-page__options {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.roster-page__options li {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+}
+.roster-page__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}

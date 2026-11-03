@@ -1,33 +1,35 @@
 import { useState } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { EllipsisVertical, EyeOff, Globe, Pencil, Plus } from "lucide-react";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { EyeOff, Globe, Pencil, Plus } from "lucide-react";
 import { PriceDialog, ProductDialog } from "../../components/OfferDialogs";
-import { useToast } from "../../components/Toast";
+import { PriceActions } from "../../components/PriceActions";
 import { Empty, FailureNotice, PageHead, Pill, Plate, SkeletonRows, Status } from "../../components/ui";
-import { failureMessage, formatDuration, formatMoney, formatUsage } from "../../lib/format";
-import { useAction } from "../../lib/hooks";
-import { useCan, useLocationName, useOrganization } from "../../lib/organization";
-import { archivePrice, listProducts, updatePrice } from "../../lib/staff.functions";
+import { PRODUCT_KIND_LABEL, formatBenefitUsage, formatDuration, formatMoney, formatProgramScope } from "../../lib/format";
+import { useCan, useLocationName } from "../../lib/organization";
+import { listPrograms, listProducts } from "../../lib/staff.functions";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const sendPriceChange = (input: Parameters<typeof updatePrice>[0]["data"]) => updatePrice({ data: input });
-const sendArchive = (input: Parameters<typeof archivePrice>[0]["data"]) => archivePrice({ data: input });
 
 type Editing = { kind: "new" } | { kind: "edit"; product: Schemas["StaffProduct"] } | { kind: "price"; product: Schemas["StaffProduct"] } | null;
 
 export const Route = createFileRoute("/$org/products")({
-  loader: ({ params }) => listProducts({ data: { slug: params.org } }),
+  loader: async ({ params }) => {
+    const [products, programs] = await Promise.all([
+      listProducts({ data: { slug: params.org } }),
+      listPrograms({ data: { slug: params.org } }),
+    ]);
+    // Without programs:read, program benefits still save; they just name no programs here.
+    return { products, programs: programs.ok ? programs.data : [] };
+  },
   pendingComponent: () => <SkeletonRows rows={6} />,
   component: Products,
 });
 
 function Products() {
-  const products = Route.useLoaderData();
+  const { products, programs } = Route.useLoaderData();
   const locationName = useLocationName();
+  const programName = (id: string) => programs.find((program) => program.id === id)?.name ?? "A removed program";
   const can = useCan();
   const canEdit = can("products:update");
   const [editing, setEditing] = useState<Editing>(null);
@@ -36,7 +38,7 @@ function Products() {
     <div className="page offers-page">
       <PageHead
         title="Plans & offers"
-        description="Membership products and their prices. To change a price, add a new one."
+        description="Memberships and passes, and their prices. Ticket prices live on each program. To change a price, add a new one."
       >
         {can("products:create") ? (
           <Button type="button" onClick={() => setEditing({ kind: "new" })}>
@@ -64,6 +66,7 @@ function Products() {
             flush
             action={
               <span className="offer__actions">
+                <Pill tone="info">{PRODUCT_KIND_LABEL[product.kind]}</Pill>
                 {product.published ? (
                   <Pill tone="good" icon={Globe}>
                     Published
@@ -95,7 +98,9 @@ function Products() {
                   <ul className="chips offer__benefits" aria-label="What this offer includes">
                     {product.benefits.map((benefit) => (
                       <li key={benefit.id} className="tag">
-                        {benefit.name} · {formatUsage(benefit.usage_limit)} · {locationName(benefit.location_id)}
+                        {benefit.name} · {formatBenefitUsage(benefit)}
+                        {benefit.kind === "program_access" ? ` · ${formatProgramScope(benefit, programName)}` : ""} ·{" "}
+                        {locationName(benefit.location_id)}
                       </li>
                     ))}
                   </ul>
@@ -161,77 +166,9 @@ function Products() {
           </Plate>
         ))
       )}
-      {editing?.kind === "new" ? <ProductDialog onClose={() => setEditing(null)} /> : null}
-      {editing?.kind === "edit" ? <ProductDialog product={editing.product} onClose={() => setEditing(null)} /> : null}
+      {editing?.kind === "new" ? <ProductDialog programs={programs} onClose={() => setEditing(null)} /> : null}
+      {editing?.kind === "edit" ? <ProductDialog product={editing.product} programs={programs} onClose={() => setEditing(null)} /> : null}
       {editing?.kind === "price" ? <PriceDialog product={editing.product} onClose={() => setEditing(null)} /> : null}
     </div>
-  );
-}
-
-/** Take a price off sale, put it back, or archive it for good. */
-function PriceActions({ price }: { price: Schemas["Price"] }) {
-  const organization = useOrganization();
-  const router = useRouter();
-  const toast = useToast();
-  const change = useAction(sendPriceChange);
-  const archive = useAction(sendArchive);
-  const [confirming, setConfirming] = useState(false);
-
-  async function toggle() {
-    const result = await change.run({ slug: organization.slug, id: price.id, available: !price.available });
-    if (result.ok) {
-      toast.show({ tone: "success", title: price.available ? "Price taken off sale" : "Price on sale again", body: price.label });
-      void router.invalidate();
-    } else {
-      toast.show({ tone: "error", title: "The price did not change", body: failureMessage(result.error) });
-    }
-  }
-
-  async function archiveNow() {
-    const result = await archive.run({ slug: organization.slug, id: price.id });
-    setConfirming(false);
-    if (result.ok) {
-      toast.show({ tone: "success", title: "Price archived", body: `${price.label} can no longer be sold. Past sales keep it.` });
-      void router.invalidate();
-    } else {
-      toast.show({ tone: "error", title: "The price was not archived", body: failureMessage(result.error) });
-    }
-  }
-
-  return (
-    <span className="offer__price-buttons">
-      <Button type="button" variant="ghost" size="sm" className="offer__price-button" disabled={change.pending} onClick={() => void toggle()}>
-        {price.available ? "Take off sale" : "Put on sale"}
-        <span className="visually-hidden"> {price.label}</span>
-      </Button>
-      <Button type="button" variant="ghost" size="sm" className="offer__price-button" onClick={() => setConfirming(true)}>
-        Archive<span className="visually-hidden"> {price.label}</span>
-      </Button>
-      {/* Narrow screens: the same two actions, in a menu. */}
-      <DropdownMenu>
-        <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon-sm" className="offer__price-menu" />}>
-          <EllipsisVertical aria-hidden="true" />
-          <span className="visually-hidden">Change {price.label}</span>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem disabled={change.pending} onClick={() => void toggle()}>
-            {price.available ? "Take off sale" : "Put on sale"}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setConfirming(true)}>Archive</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ConfirmDialog
-        open={confirming}
-        tone="critical"
-        title={`Archive ${price.label}?`}
-        confirmLabel="Archive price"
-        pendingLabel="Archiving…"
-        pending={archive.pending}
-        onConfirm={() => void archiveNow()}
-        onCancel={() => setConfirming(false)}
-      >
-        <p>It can never go back on sale. Past sales keep this price and term.</p>
-      </ConfirmDialog>
-    </span>
   );
 }

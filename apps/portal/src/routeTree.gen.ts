@@ -25,9 +25,13 @@ import { Route as OrgSettingsRouteImport } from './routes/$org/settings'
 import { Route as OrgSoonRouteImport } from './routes/$org/soon'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
+import { Route as OrgProgramsIndexRouteImport } from './routes/$org/programs/index'
+import { Route as OrgProgramsProgramIdRouteImport } from './routes/$org/programs/$programId'
 import { Route as OrgSalesIndexRouteImport } from './routes/$org/sales/index'
 import { Route as OrgSalesSaleIdRouteImport } from './routes/$org/sales/$saleId'
 import { Route as OrgSalesNewRouteImport } from './routes/$org/sales/new'
+import { Route as OrgScheduleIndexRouteImport } from './routes/$org/schedule/index'
+import { Route as OrgScheduleOccurrenceIdRouteImport } from './routes/$org/schedule/$occurrenceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -109,6 +113,16 @@ const OrgMembersMemberIdRoute = OrgMembersMemberIdRouteImport.update({
   path: '/members/$memberId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgProgramsIndexRoute = OrgProgramsIndexRouteImport.update({
+  id: '/programs/',
+  path: '/programs/',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgProgramsProgramIdRoute = OrgProgramsProgramIdRouteImport.update({
+  id: '/programs/$programId',
+  path: '/programs/$programId',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 const OrgSalesIndexRoute = OrgSalesIndexRouteImport.update({
   id: '/sales/',
   path: '/sales/',
@@ -122,6 +136,16 @@ const OrgSalesSaleIdRoute = OrgSalesSaleIdRouteImport.update({
 const OrgSalesNewRoute = OrgSalesNewRouteImport.update({
   id: '/sales/new',
   path: '/sales/new',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgScheduleIndexRoute = OrgScheduleIndexRouteImport.update({
+  id: '/schedule/',
+  path: '/schedule/',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgScheduleOccurrenceIdRoute = OrgScheduleOccurrenceIdRouteImport.update({
+  id: '/schedule/$occurrenceId',
+  path: '/schedule/$occurrenceId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 
@@ -141,10 +165,14 @@ export interface FileRoutesByFullPath {
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
+  '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members/': typeof OrgMembersIndexRoute
+  '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
+  '/$org/schedule/': typeof OrgScheduleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,10 +189,14 @@ export interface FileRoutesByTo {
   '/$org/soon': typeof OrgSoonRoute
   '/$org': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
+  '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members': typeof OrgMembersIndexRoute
+  '/$org/programs': typeof OrgProgramsIndexRoute
   '/$org/sales': typeof OrgSalesIndexRoute
+  '/$org/schedule': typeof OrgScheduleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,10 +215,14 @@ export interface FileRoutesById {
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
+  '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members/': typeof OrgMembersIndexRoute
+  '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
+  '/$org/schedule/': typeof OrgScheduleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -206,10 +242,14 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
+    | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
+    | '/$org/schedule/$occurrenceId'
     | '/$org/members/'
+    | '/$org/programs/'
     | '/$org/sales/'
+    | '/$org/schedule/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -226,10 +266,14 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org'
     | '/$org/members/$memberId'
+    | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
+    | '/$org/schedule/$occurrenceId'
     | '/$org/members'
+    | '/$org/programs'
     | '/$org/sales'
+    | '/$org/schedule'
   id:
     | '__root__'
     | '/'
@@ -247,10 +291,14 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
+    | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
+    | '/$org/schedule/$occurrenceId'
     | '/$org/members/'
+    | '/$org/programs/'
     | '/$org/sales/'
+    | '/$org/schedule/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -375,6 +423,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgMembersMemberIdRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/programs/': {
+      id: '/$org/programs/'
+      path: '/programs'
+      fullPath: '/$org/programs/'
+      preLoaderRoute: typeof OrgProgramsIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/programs/$programId': {
+      id: '/$org/programs/$programId'
+      path: '/programs/$programId'
+      fullPath: '/$org/programs/$programId'
+      preLoaderRoute: typeof OrgProgramsProgramIdRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/sales/': {
       id: '/$org/sales/'
       path: '/sales'
@@ -396,6 +458,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgSalesNewRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/schedule/': {
+      id: '/$org/schedule/'
+      path: '/schedule'
+      fullPath: '/$org/schedule/'
+      preLoaderRoute: typeof OrgScheduleIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/schedule/$occurrenceId': {
+      id: '/$org/schedule/$occurrenceId'
+      path: '/schedule/$occurrenceId'
+      fullPath: '/$org/schedule/$occurrenceId'
+      preLoaderRoute: typeof OrgScheduleOccurrenceIdRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
   }
 }
 
@@ -410,10 +486,14 @@ interface OrgRouteRouteChildren {
   OrgSoonRoute: typeof OrgSoonRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
+  OrgProgramsProgramIdRoute: typeof OrgProgramsProgramIdRoute
   OrgSalesSaleIdRoute: typeof OrgSalesSaleIdRoute
   OrgSalesNewRoute: typeof OrgSalesNewRoute
+  OrgScheduleOccurrenceIdRoute: typeof OrgScheduleOccurrenceIdRoute
   OrgMembersIndexRoute: typeof OrgMembersIndexRoute
+  OrgProgramsIndexRoute: typeof OrgProgramsIndexRoute
   OrgSalesIndexRoute: typeof OrgSalesIndexRoute
+  OrgScheduleIndexRoute: typeof OrgScheduleIndexRoute
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
@@ -427,10 +507,14 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgSoonRoute: OrgSoonRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
+  OrgProgramsProgramIdRoute: OrgProgramsProgramIdRoute,
   OrgSalesSaleIdRoute: OrgSalesSaleIdRoute,
   OrgSalesNewRoute: OrgSalesNewRoute,
+  OrgScheduleOccurrenceIdRoute: OrgScheduleOccurrenceIdRoute,
   OrgMembersIndexRoute: OrgMembersIndexRoute,
+  OrgProgramsIndexRoute: OrgProgramsIndexRoute,
   OrgSalesIndexRoute: OrgSalesIndexRoute,
+  OrgScheduleIndexRoute: OrgScheduleIndexRoute,
 }
 
 const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(

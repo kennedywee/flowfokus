@@ -23,7 +23,9 @@ export function formatWhen(iso: string, timeZone: string, now: Date = new Date()
   return day.format(new Date(iso)) === day.format(now) ? formatTime(iso, timeZone) : formatDateTime(iso, timeZone);
 }
 
-export function formatDuration(days: number): string {
+/** A price's term. Tickets have none: they last until their time ends. */
+export function formatDuration(days: number | null): string {
+  if (days === null) return "One booked time";
   if (days === 7) return "7 days (1 week)";
   return days === 1 ? "1 day" : `${days} days`;
 }
@@ -33,9 +35,55 @@ export function formatUsage(limit: number | null): string {
   return limit === 1 ? "1 visit per period" : `${limit} visits per period`;
 }
 
+export const PROGRAM_KIND_LABEL: Record<Schemas["ProgramKind"], string> = {
+  group_class: "Group class",
+  event: "Event",
+  appointment: "Appointment",
+};
+
+/** Plural program kinds, for "All group classes". */
+export const PROGRAM_KIND_PLURAL: Record<Schemas["ProgramKind"], string> = {
+  group_class: "group classes",
+  event: "events",
+  appointment: "appointments",
+};
+
+export const PRODUCT_KIND_LABEL: Record<Schemas["ProductKind"], string> = {
+  membership: "Membership",
+  pass: "Pass",
+  ticket: "Ticket",
+};
+
+/** What a benefit includes: visits for gym access, uses for programs. */
+export function formatBenefitUsage(benefit: { kind: Schemas["BenefitKind"]; usage_limit: number | null }): string {
+  if (benefit.kind === "gym_access") return formatUsage(benefit.usage_limit);
+  if (benefit.usage_limit === null) return "Unlimited bookings";
+  return benefit.usage_limit === 1 ? "1 booking" : `${benefit.usage_limit} bookings`;
+}
+
+/** Which programs a program_access benefit covers, in words. */
+export function formatProgramScope(
+  scope: { kind: Schemas["BenefitKind"]; program_ids: string[]; program_kind: Schemas["ProgramKind"] | null },
+  programName: (id: string) => string,
+): string | null {
+  if (scope.kind !== "program_access") return null;
+  if (scope.program_ids.length) return scope.program_ids.map(programName).join(", ");
+  if (scope.program_kind) return `All ${PROGRAM_KIND_PLURAL[scope.program_kind]}`;
+  return "Every program";
+}
+
 export const PAYMENT_METHOD_LABEL: Record<Schemas["PaymentMethod"], string> = {
   cash: "Cash",
   bank_transfer: "Bank transfer",
+  online: "Online",
+};
+
+export const BOOKING_STATUS_LABEL: Record<Schemas["BookingStatus"], string> = {
+  held: "Held for payment",
+  confirmed: "Booked",
+  attended: "Attended",
+  cancelled: "Cancelled",
+  expired: "Hold expired",
 };
 
 export const PAYMENT_STATUS_LABEL: Record<Schemas["PaymentStatus"], string> = {

@@ -13,6 +13,24 @@ import { callStaff, currentOrganizationId, currentStaffAccess, signedInUser, sta
 import type { Result } from "./result";
 import { toOrganizationChoices, type StaffOrganizationChoice } from "./start";
 import {
+  addTicketInput,
+  bookingOptionsInput,
+  cancelBookingInput,
+  cancelOccurrenceInput,
+  createBookingInput,
+  createProgramInput,
+  scheduleProgramInput,
+  scheduleRangeInput,
+  updateProgramInput,
+  type AddTicketInput,
+  type BookingOptionsInput,
+  type CancelBookingInput,
+  type CancelOccurrenceInput,
+  type CreateBookingInput,
+  type CreateProgramInput,
+  type ScheduleProgramInput,
+  type ScheduleRangeInput,
+  type UpdateProgramInput,
   invitationIdInput,
   inviteInput,
   memberRoleInput,
@@ -219,7 +237,12 @@ export const createSale = createServerFn({ method: "POST" })
       callStaff(data.slug, (api) =>
         api.POST("/staff/sales", {
           params: { header: { "Idempotency-Key": data.idempotencyKey } },
-          body: { member_id: data.member_id, price_id: data.price_id, location_id: data.location_id },
+          body: {
+            member_id: data.member_id,
+            price_id: data.price_id,
+            location_id: data.location_id,
+            ...(data.occurrence_id ? { occurrence_id: data.occurrence_id } : {}),
+          },
         }),
       ),
   );
@@ -380,4 +403,104 @@ export const getReport = createServerFn({ method: "GET" })
   .handler(
     async ({ data }): Promise<Result<Schemas["Report"]>> =>
       callStaff(data.slug, (api) => api.GET("/staff/report", { params: { query: { weeks: data.weeks } } })),
+  );
+
+export const listPrograms = createServerFn({ method: "GET" })
+  .validator((input: SlugInput) => slugInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["ProgramListItem"][]>> => callStaff(data.slug, (api) => api.GET("/staff/programs")),
+  );
+
+export const getProgram = createServerFn({ method: "GET" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> =>
+      callStaff(data.slug, (api) => api.GET("/staff/programs/{id}", { params: { path: { id: data.id } } })),
+  );
+
+export const createProgram = createServerFn({ method: "POST" })
+  .validator((input: CreateProgramInput) => createProgramInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
+    const { slug, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/programs", { body }));
+  });
+
+export const updateProgram = createServerFn({ method: "POST" })
+  .validator((input: UpdateProgramInput) => updateProgramInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.PATCH("/staff/programs/{id}", { params: { path: { id } }, body }));
+  });
+
+export const scheduleProgram = createServerFn({ method: "POST" })
+  .validator((input: ScheduleProgramInput) => scheduleProgramInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/programs/{id}/occurrences", { params: { path: { id } }, body }));
+  });
+
+export const addTicket = createServerFn({ method: "POST" })
+  .validator((input: AddTicketInput) => addTicketInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["ProgramDetail"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/programs/{id}/tickets", { params: { path: { id } }, body }));
+  });
+
+export const listSchedule = createServerFn({ method: "GET" })
+  .validator((input: ScheduleRangeInput) => scheduleRangeInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["ScheduleEntry"][]>> =>
+      callStaff(data.slug, (api) =>
+        api.GET("/staff/occurrences", {
+          params: { query: { ...(data.from ? { from: data.from } : {}), ...(data.days ? { days: data.days } : {}) } },
+        }),
+      ),
+  );
+
+export const getRoster = createServerFn({ method: "GET" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Roster"]>> =>
+      callStaff(data.slug, (api) => api.GET("/staff/occurrences/{id}", { params: { path: { id: data.id } } })),
+  );
+
+export const cancelOccurrence = createServerFn({ method: "POST" })
+  .validator((input: CancelOccurrenceInput) => cancelOccurrenceInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Roster"]>> =>
+      callStaff(data.slug, (api) =>
+        api.POST("/staff/occurrences/{id}/cancel", { params: { path: { id: data.id } }, body: { reason: data.reason } }),
+      ),
+  );
+
+export const getBookingOptions = createServerFn({ method: "GET" })
+  .validator((input: BookingOptionsInput) => bookingOptionsInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["StaffBookingOptions"]>> =>
+      callStaff(data.slug, (api) =>
+        api.GET("/staff/occurrences/{id}/options", { params: { path: { id: data.id }, query: { member_id: data.memberId } } }),
+      ),
+  );
+
+export const createBooking = createServerFn({ method: "POST" })
+  .validator((input: CreateBookingInput) => createBookingInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["Roster"]>> => {
+    const { slug, ...body } = data;
+    return callStaff(slug, (api) => api.POST("/staff/bookings", { body }));
+  });
+
+export const cancelBooking = createServerFn({ method: "POST" })
+  .validator((input: CancelBookingInput) => cancelBookingInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["Roster"]>> => {
+    const { slug, id, reason, return_use } = data;
+    return callStaff(slug, (api) =>
+      api.POST("/staff/bookings/{id}/cancel", { params: { path: { id } }, body: { reason, return_use: return_use ?? true } }),
+    );
+  });
+
+export const attendBooking = createServerFn({ method: "POST" })
+  .validator((input: IdInput) => idInput(input))
+  .handler(
+    async ({ data }): Promise<Result<Schemas["Roster"]>> =>
+      callStaff(data.slug, (api) => api.POST("/staff/bookings/{id}/attend", { params: { path: { id: data.id } } })),
   );

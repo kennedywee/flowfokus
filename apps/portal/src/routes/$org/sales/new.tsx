@@ -16,7 +16,7 @@ import {
   SubmitButton,
   describedBy,
 } from "../../../components/ui";
-import { failureMessage, formatDuration, formatMoney, formatUsage } from "../../../lib/format";
+import { failureMessage, formatBenefitUsage, formatDuration, formatMoney } from "../../../lib/format";
 import { useAction, useIdempotencyKey } from "../../../lib/hooks";
 import { useDeskLocation, useLocationName, useOrganization } from "../../../lib/organization";
 import { createSale, listMembers, listProducts } from "../../../lib/staff.functions";
@@ -71,7 +71,7 @@ function NewSale() {
     <div className="page new-sale-page">
       <PageHead
         title="New sale"
-        description="One membership for one member. Record payment on the next screen. Partial payment is fine."
+        description="One membership or pass for one member. Sell tickets from a time on the schedule. Record payment on the next screen."
       />
       {members.data.length === 0 ? (
         <Empty title="Add a member first">
@@ -121,7 +121,7 @@ function SaleForm({ members, offers }: { members: Schemas["Member"][]; offers: O
   const offer = offers.find((item) => item.product.id === productId);
   const price = offer?.prices.find((item) => item.id === priceId);
   const benefitsText = (product: Schemas["StaffProduct"]) =>
-    product.benefits.map((benefit) => `${formatUsage(benefit.usage_limit)}, ${locationName(benefit.location_id)}`).join("; ");
+    product.benefits.map((benefit) => `${formatBenefitUsage(benefit)}, ${locationName(benefit.location_id)}`).join("; ");
 
   /** Changed values are a new request, so they need a new key. */
   function edited() {

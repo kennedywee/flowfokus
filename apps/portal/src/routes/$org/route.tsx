@@ -3,6 +3,7 @@ import { Link, Outlet, createFileRoute, notFound, redirect, rootRouteId, useLoad
 import {
   ArrowRight,
   Bot,
+  CalendarDays,
   ChartColumn,
   ChevronRight,
   CircleHelp,
@@ -23,6 +24,7 @@ import {
   Sparkle,
   Sun,
   Tag,
+  Ticket,
   Users,
   X,
   type LucideIcon,
@@ -102,7 +104,7 @@ export const Route = createFileRoute("/$org")({
   component: OrganizationLayout,
 });
 
-type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products"
+type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products" | "/$org/schedule" | "/$org/programs"
   | "/$org/inbox" | "/$org/agents" | "/$org/check-in" | "/$org/reports" | "/$org/settings"
   | "/$org/changelog";
 
@@ -116,6 +118,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
       { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
       { to: "/$org/check-in", label: "Check-in", icon: LogIn, exact: false, path: "/check-in" },
+      { to: "/$org/schedule", label: "Schedule", icon: CalendarDays, exact: false, path: "/schedule" },
       { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
       { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
     ],
@@ -123,6 +126,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Manage",
     items: [
+      { to: "/$org/programs", label: "Programs", icon: Ticket, exact: false, path: "/programs" },
       { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
       { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
     ],
