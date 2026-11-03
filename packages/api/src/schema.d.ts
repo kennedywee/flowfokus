@@ -679,7 +679,10 @@ export interface paths {
         /** List programs. Needs programs:read. */
         get: operations["listStaffPrograms"];
         put?: never;
-        /** Add a program. Needs programs:manage. */
+        /**
+         * Add a program. Needs programs:manage.
+         * @description A retry with the same Idempotency-Key and body returns the first program with 200.
+         */
         post: operations["createStaffProgram"];
         delete?: never;
         options?: never;
@@ -742,6 +745,7 @@ export interface paths {
          * Add a ticket price for a program. Needs programs:manage.
          * @description The first ticket price creates the program's ticket product. A ticket buys one spot at one time.
          *     Change or archive ticket prices with `/staff/prices/{id}`. Returns the program.
+         *     A retry with the same Idempotency-Key and body adds nothing and returns 200.
          */
         post: operations["addStaffProgramTicket"];
         delete?: never;
@@ -1136,14 +1140,14 @@ export interface components {
          *       `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
          *       `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked`,
          *       `schedule_invalid`, `occurrence_full`, `occurrence_unavailable`, `occurrence_required`,
-         *       `booking_not_allowed`, `checkout_closed` (422)
+         *       `booking_not_allowed`, `checkout_closed`, `attendees_invalid` (422)
          *     - `member_not_linked` (403)
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable`, `payments_unavailable` (503)
          * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "schedule_invalid" | "occurrence_full" | "occurrence_unavailable" | "occurrence_required" | "booking_not_allowed" | "checkout_closed" | "payments_unavailable" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable" | "payments_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "schedule_invalid" | "occurrence_full" | "occurrence_unavailable" | "occurrence_required" | "booking_not_allowed" | "checkout_closed" | "attendees_invalid" | "payments_unavailable" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable" | "payments_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */
@@ -1451,6 +1455,35 @@ export interface components {
              * @description Required for a ticket, and only for a ticket. Delivery books this time.
              */
             occurrence_id?: string;
+            /**
+             * @description Spots to buy. Above 1 for a ticket only.
+             * @default 1
+             */
+            quantity: number;
+            /**
+             * @description Who comes to each spot, one entry per spot. Omit for one spot taken by the buyer.
+             *     The buyer holds the right that pays for every spot.
+             */
+            attendees?: components["schemas"]["AttendeeInput"][];
+        };
+        /** @description A member of this gym, or a guest by name. */
+        AttendeeInput: {
+            /** Format: uuid */
+            member_id?: string;
+            guest_name?: string;
+            guest_email?: string | null;
+        };
+        /** @description The signed-in member (`self`), or a guest by name. Members cannot name other members. */
+        MemberAttendeeInput: {
+            self?: boolean;
+            guest_name?: string;
+            guest_email?: string | null;
+        };
+        SaleAttendee: {
+            /** Format: uuid */
+            member_id: string | null;
+            name: string;
+            guest: boolean;
         };
         /**
          * @description `online` payments come from a payment provider through a checkout.
@@ -1497,8 +1530,8 @@ export interface components {
             product_id: string;
             product_name: string;
             price_label: string;
-            /** @enum {integer} */
-            quantity: 1;
+            /** @description Spots on a ticket line. Always 1 for a membership or a pass. */
+            quantity: number;
             unit_amount_minor: number;
             total_minor: number;
             currency: string;
@@ -1556,9 +1589,13 @@ export interface components {
             occurrence: components["schemas"]["SaleOccurrence"] | null;
             /**
              * Format: uuid
-             * @description The booking a delivered ticket made.
+             * @description The first booking a delivered ticket made.
              */
             booking_id: string | null;
+            /** @description Every booking a delivered ticket made, one per spot. */
+            booking_ids: string[];
+            /** @description Who comes to each spot of a ticket. Empty for other kinds. */
+            attendees: components["schemas"]["SaleAttendee"][];
             currency: string;
             total_minor: number;
             paid_minor: number;
@@ -1994,6 +2031,15 @@ export interface components {
             name: string;
         };
         BookingBase: {
+            /** @description The member or guest who takes the spot. */
+            attendee_name: string;
+            /** @description Set when the attendee is a guest, not a member. */
+            guest_name: string | null;
+            /**
+             * Format: uuid
+             * @description The online checkout that holds or bought this spot.
+             */
+            checkout_id: string | null;
             /** Format: uuid */
             id: string;
             status: components["schemas"]["BookingStatus"];
@@ -2025,9 +2071,14 @@ export interface components {
             use_returned: boolean;
         };
         Booking: components["schemas"]["BookingBase"] & {
-            member: components["schemas"]["MemberSummary"];
+            /** @description The attendee, when a member. Null for a guest. */
+            member: components["schemas"]["MemberSummary"] | null;
+            holder: components["schemas"]["MemberSummary"];
+            guest_email: string | null;
         };
         MemberBooking: components["schemas"]["BookingBase"] & {
+            /** @description True when the member booked this spot for another person, or another person booked it for them. */
+            for_someone_else: boolean;
             location_name: string;
             /** @description True when the member can cancel it now. */
             cancellable: boolean;
@@ -2122,6 +2173,17 @@ export interface components {
              * @description Required for a ticket, and only for a ticket.
              */
             occurrence_id?: string;
+            /**
+             * @description Spots to buy. Above 1 for a ticket only.
+             * @default 1
+             */
+            quantity: number;
+            /** @description Who comes to each spot. Omit for one spot for the member. */
+            attendees?: components["schemas"]["MemberAttendeeInput"][];
+        };
+        CheckoutAttendee: {
+            name: string;
+            guest: boolean;
         };
         /**
          * @description `expired` means the checkout ended unpaid and its held spot is free.
@@ -2129,6 +2191,8 @@ export interface components {
          */
         CheckoutStatus: "open" | "paid" | "cancelled" | "expired";
         Checkout: {
+            quantity: number;
+            attendees: components["schemas"]["CheckoutAttendee"][];
             /** Format: uuid */
             id: string;
             status: components["schemas"]["CheckoutStatus"];
@@ -2136,6 +2200,7 @@ export interface components {
             provider: string;
             /** @description Where the provider takes payment. Null for the test provider, whose page the gym site shows. */
             payment_url: string | null;
+            /** @description The total for every spot. */
             amount_minor: number;
             currency: string;
             /** Format: date-time */
@@ -3543,7 +3608,10 @@ export interface operations {
     createStaffProgram: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -3553,6 +3621,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Replayed. Nothing changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
             /** @description Created. */
             201: {
                 headers: {
@@ -3566,6 +3643,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
@@ -3664,7 +3742,10 @@ export interface operations {
     addStaffProgramTicket: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 id: components["parameters"]["IdPath"];
             };
@@ -3676,6 +3757,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Replayed. Nothing changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProgramDetailResponse"];
+                };
+            };
             /** @description Created. */
             201: {
                 headers: {
@@ -3689,6 +3779,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };

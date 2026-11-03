@@ -9,6 +9,8 @@ class Member < ApplicationRecord
   has_many :check_ins, dependent: :restrict_with_exception
   has_many :link_codes, class_name: "MemberLinkCode", dependent: :restrict_with_exception
   has_many :bookings, dependent: :restrict_with_exception
+  # Bookings this member's rights paid for, including spots for other people.
+  has_many :held_bookings, class_name: "Booking", foreign_key: :holder_member_id, inverse_of: :holder_member, dependent: :restrict_with_exception
   has_many :checkouts, dependent: :restrict_with_exception
 
   normalizes :name, with: ->(name) { name.squish }
@@ -51,8 +53,10 @@ class Member < ApplicationRecord
   end
 
   # Bookings for times that have not ended, then the most recent past ones.
+  # Includes spots this member booked for other people, and spots others booked for them.
   def recent_bookings(at: Time.current, past: 10)
-    scope = bookings.includes(:entitlement, :usage, occurrence: { program: :location })
+    scope = Booking.where(organization_id:).where("bookings.member_id = :id OR bookings.holder_member_id = :id", id:)
+      .includes(:entitlement, :usage, :member, :holder_member, occurrence: { program: :location })
     upcoming = scope.live.where.not(confirmed_at: nil).joins(:occurrence).where("occurrences.ends_at > ?", at).order("occurrences.starts_at")
     earlier = scope.where.not(confirmed_at: nil).joins(:occurrence)
       .where("occurrences.ends_at <= ? OR bookings.cancelled_at IS NOT NULL", at).order("occurrences.starts_at DESC").limit(past)

@@ -5,8 +5,9 @@ module Staff
     def create
       require_permission! "programs:manage"
       program = current_organization.programs.find(params[:program_id])
-      program.add_ticket!(label: params.require(:label), amount_minor: params.require(:amount_minor))
-      render_data program.reload.as_detail_api, status: :created
+      _price, created = program.add_ticket!(label: params.require(:label), amount_minor: params.require(:amount_minor),
+        idempotency_key: idempotency_key!)
+      render_data program.reload.as_detail_api, status: created_or_replayed(created)
     end
   end
 end

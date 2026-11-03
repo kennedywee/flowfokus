@@ -8,13 +8,14 @@ class SaleLineItem < ApplicationRecord
   has_one :fulfillment, dependent: :restrict_with_exception
   same_organization_as :sale, :price, :product
 
-  validates :quantity, inclusion: { in: [ 1 ], message: "must be 1" }
+  validates :quantity, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: AttendeeList::MAX }
+  validate { errors.add(:quantity, "must be 1 for a membership or a pass") if quantity.to_i > 1 && !ticket? }
   validates :product_name, :price_label, presence: true
   validate :terms_shape
 
   before_update { raise ActiveRecord::ReadOnlyRecord, "Sale line items are immutable" }
 
-  def self.snapshot(price)
+  def self.snapshot(price, quantity: 1)
     product = price.product
     {
       organization: price.organization,
@@ -22,9 +23,9 @@ class SaleLineItem < ApplicationRecord
       product:,
       product_name: product.name,
       price_label: price.label,
-      quantity: 1,
+      quantity:,
       unit_amount_minor: price.amount_minor,
-      total_minor: price.amount_minor,
+      total_minor: price.amount_minor * quantity,
       currency: price.currency,
       terms: {
         "kind" => product.kind, "duration_days" => price.duration_days,
@@ -41,7 +42,7 @@ class SaleLineItem < ApplicationRecord
 
   # Sales made before passes and tickets existed are memberships.
   def kind = terms.fetch("kind", "membership")
-  def ticket? = kind == "ticket"
+  def ticket? = terms.is_a?(Hash) && kind == "ticket"
   def membership? = kind == "membership"
   def duration = terms.fetch("duration_days").days
   def benefit_terms = terms.fetch("benefits")

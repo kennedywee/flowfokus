@@ -7,7 +7,7 @@ RSpec.describe "Member bookings and online checkout", workos: true, demo: false 
   let(:person) { staff_user("user_member_booker", email: "booker@example.test") }
   let(:member) { create_member(chainsaw, name: "Mei").tap { _1.update!(user: person) } }
   let(:token) { workos_token(workos_claims(user: person, organization: nil)) }
-  let(:ticket) { program.add_ticket!(label: "Drop-in", amount_minor: 2_500).prices.first }
+  let(:ticket) { program.add_ticket!(label: "Drop-in", amount_minor: 2_500).first }
 
   before { chainsaw && ironworks && demo_user && member }
 
@@ -146,7 +146,7 @@ RSpec.describe "Member bookings and online checkout", workos: true, demo: false 
     end
 
     it "completes a free ticket at once" do
-      free = program.add_ticket!(label: "Trial", amount_minor: 0).prices.find_by(label: "Trial")
+      free = program.add_ticket!(label: "Trial", amount_minor: 0).first
       checkout({ price_id: free.id, occurrence_id: occurrence.id })
 
       expect(data).to include("status" => "paid", "provider" => "free")

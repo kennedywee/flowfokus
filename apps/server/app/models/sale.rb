@@ -32,7 +32,7 @@ class Sale < ApplicationRecord
   has_one :line_item, class_name: "SaleLineItem", dependent: :restrict_with_exception
   has_one :fulfillment, through: :line_item
   has_one :checkout, dependent: :restrict_with_exception
-  has_one :booking, -> { order(created_at: :desc) }, dependent: :restrict_with_exception
+  has_many :bookings, -> { order(:created_at, :id) }, dependent: :restrict_with_exception
   has_many :payments, -> { order(:received_at, :created_at) }, dependent: :restrict_with_exception
   has_many :refunds, -> { order(:refunded_at, :created_at) }, dependent: :restrict_with_exception
   same_organization_as :member, :location, :renews_line_item, :occurrence
@@ -52,8 +52,13 @@ class Sale < ApplicationRecord
 
   # Creates the sale and its snapshotted line in one transaction.
   # Returns [sale, created]. A retry with the same key returns the first sale.
-  def self.record!(organization:, actor:, idempotency_key:, member_id:, price_id:, location_id:, occurrence_id: nil, at: Time.current)
-    fingerprint = Idempotent.fingerprint(member_id:, price_id:, location_id:, **(occurrence_id ? { occurrence_id: } : {}))
+  # A ticket can buy several spots for one time. `attendees` names who comes
+  # to each spot: members of this gym or guests. See AttendeeList.
+  def self.record!(organization:, actor:, idempotency_key:, member_id:, price_id:, location_id:, occurrence_id: nil,
+    quantity: 1, attendees: nil, at: Time.current)
+    group = { quantity: quantity.to_s, attendees: Array(attendees).map { _1.respond_to?(:to_unsafe_h) ? _1.to_unsafe_h : _1.to_h }.to_json }
+    fingerprint = Idempotent.fingerprint(member_id:, price_id:, location_id:, **(occurrence_id ? { occurrence_id: } : {}),
+      **(quantity.to_i > 1 || attendees.present? ? group : {}))
 
     with_idempotency(organization.sales, key: idempotency_key, fingerprint:) do
       member = organization.members.find_by(id: member_id)
@@ -71,13 +76,20 @@ class Sale < ApplicationRecord
       raise PriceUnavailable unless price.sellable?
 
       sale.occurrence = ticket_occurrence!(organization, price, occurrence_id, at:)
+      quantity = sale.occurrence ? attendee_count(quantity) : 1
+      raise AttendeeList::Invalid, "Only a ticket can buy several spots." if !sale.occurrence && (quantity.to_i > 1 || attendees.present?)
+      sale.attendees = sale.occurrence ? AttendeeList.build(buyer: member, quantity:, entries: attendees, other_members: true) : []
       sale.currency = price.currency
-      sale.total_minor = price.amount_minor
-      sale.build_line_item(SaleLineItem.snapshot(price))
+      sale.total_minor = price.amount_minor * quantity
+      sale.build_line_item(SaleLineItem.snapshot(price, quantity:))
 
       transaction(requires_new: true) { sale.save! }
       sale
     end
+  end
+
+  def self.attendee_count(quantity)
+    Integer(quantity || 1, exception: false) || raise(AttendeeList::Invalid, "Choose from 1 to #{AttendeeList::MAX} spots.")
   end
 
   # The sale behind a paid online checkout. The checkout already checked the
@@ -87,9 +99,10 @@ class Sale < ApplicationRecord
     sale = checkout.organization.sales.new(
       channel: "online", member: checkout.member, occurrence: checkout.occurrence, purchased_at: at,
       idempotency_key: "checkout-#{checkout.id}", request_fingerprint: Idempotent.fingerprint(checkout_id: checkout.id),
-      paid_minor: 0, currency: price.currency, total_minor: price.amount_minor
+      paid_minor: 0, currency: price.currency, total_minor: price.amount_minor * checkout.quantity,
+      attendees: checkout.attendees
     )
-    sale.build_line_item(SaleLineItem.snapshot(price))
+    sale.build_line_item(SaleLineItem.snapshot(price, quantity: checkout.quantity))
     sale.save!
     sale
   end
@@ -199,7 +212,9 @@ class Sale < ApplicationRecord
         id: occurrence.id, program_id: occurrence.program_id, program_name: occurrence.program.name,
         starts_at: api_time(occurrence.starts_at), ends_at: api_time(occurrence.ends_at)
       },
-      booking_id: booking&.id,
+      booking_id: bookings.first&.id,
+      booking_ids: bookings.map(&:id),
+      attendees: AttendeeList.as_api(organization, attendees),
       currency:,
       total_minor:,
       paid_minor:,

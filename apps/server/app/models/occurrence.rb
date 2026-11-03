@@ -37,13 +37,15 @@ class Occurrence < ApplicationRecord
   def bookable?(at = Time.current, taken: spots_taken(at)) = !cancelled? && !started?(at) && spots_left(at, taken:).positive?
 
   # Call with the occurrence locked. Raises unless a new booking may take a spot.
-  def ensure_bookable!(at: Time.current, except: nil)
+  def ensure_bookable!(at: Time.current, except: nil, spots: 1)
     raise Unavailable, "This time was cancelled." if cancelled?
     raise Unavailable, "This time has already started." if started?(at)
 
     taken = bookings.filling(at)
     taken = taken.where.not(id: except.id) if except
-    raise Full if taken.count >= capacity
+    left = capacity - taken.count
+    raise Full if left <= 0
+    raise Full, "Only #{left} #{left == 1 ? 'spot is' : 'spots are'} left at this time." if spots > left
   end
 
   # Cancels this time and every live booking in it. Each booking returns its use.
@@ -66,7 +68,7 @@ class Occurrence < ApplicationRecord
   # live booking they already have here.
   def options_for(member, at: Time.current)
     Booking.release_expired_holds!(member:, occurrence: self, at:) if bookings.live.where(member:).where(confirmed_at: nil).exists?
-    current = bookings.live.includes(:entitlement, :usage).find_by(member:)
+    current = bookings.live.includes(:entitlement, :usage, :holder_member, :member).find_by(member:)
     {
       rights: member.rights_for(self).map { _1.as_api(at:) },
       ticket_prices: program.ticket_prices.map(&:as_api),
@@ -78,7 +80,7 @@ class Occurrence < ApplicationRecord
   def as_roster_api(at: Time.current)
     as_api(at:).merge(
       program: program.as_api.merge(location_name: program.location.name),
-      bookings: bookings.includes(:member, :entitlement, :usage).order(:created_at, :id).map { _1.as_api(at:) }
+      bookings: bookings.includes(:member, :holder_member, :entitlement, :usage).order(:created_at, :id).map { _1.as_api(at:) }
     )
   end
 

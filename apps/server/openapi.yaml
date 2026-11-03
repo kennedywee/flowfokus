@@ -1455,9 +1455,13 @@ paths:
       tags: [staff]
       operationId: createStaffProgram
       summary: Add a program. Needs programs:manage.
+      description: |
+        A retry with the same Idempotency-Key and body returns the first program with 200.
       security:
         - bearerAuth: []
           organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -1465,6 +1469,12 @@ paths:
             schema:
               $ref: "#/components/schemas/ProgramInput"
       responses:
+        "200":
+          description: Replayed. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
         "201":
           description: Created.
           content:
@@ -1479,6 +1489,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/Unprocessable"
         "503":
@@ -1595,11 +1607,13 @@ paths:
       description: |
         The first ticket price creates the program's ticket product. A ticket buys one spot at one time.
         Change or archive ticket prices with `/staff/prices/{id}`. Returns the program.
+        A retry with the same Idempotency-Key and body adds nothing and returns 200.
       security:
         - bearerAuth: []
           organizationHeader: []
       parameters:
         - $ref: "#/components/parameters/IdPath"
+        - $ref: "#/components/parameters/IdempotencyKey"
       requestBody:
         required: true
         content:
@@ -1607,6 +1621,12 @@ paths:
             schema:
               $ref: "#/components/schemas/TicketInput"
       responses:
+        "200":
+          description: Replayed. Nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetailResponse"
         "201":
           description: Created.
           content:
@@ -1621,6 +1641,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/Unprocessable"
         "503":
@@ -2442,7 +2464,7 @@ components:
           `sale_voided`, `sale_not_voidable`, `sale_not_delivered`, `refund_exceeds_payment`,
           `staff_change_refused`, `workos_rejected`, `link_code_invalid`, `member_already_linked`,
           `schedule_invalid`, `occurrence_full`, `occurrence_unavailable`, `occurrence_required`,
-          `booking_not_allowed`, `checkout_closed` (422)
+          `booking_not_allowed`, `checkout_closed`, `attendees_invalid` (422)
         - `member_not_linked` (403)
         - `rate_limited` (429)
         - `internal_error` (500)
@@ -2477,6 +2499,7 @@ components:
         - occurrence_required
         - booking_not_allowed
         - checkout_closed
+        - attendees_invalid
         - payments_unavailable
         - rate_limited
         - internal_error
@@ -3125,6 +3148,67 @@ components:
           type: string
           format: uuid
           description: Required for a ticket, and only for a ticket. Delivery books this time.
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 1
+          description: Spots to buy. Above 1 for a ticket only.
+        attendees:
+          type: array
+          maxItems: 10
+          description: |
+            Who comes to each spot, one entry per spot. Omit for one spot taken by the buyer.
+            The buyer holds the right that pays for every spot.
+          items:
+            $ref: "#/components/schemas/AttendeeInput"
+
+    AttendeeInput:
+      type: object
+      additionalProperties: false
+      description: A member of this gym, or a guest by name.
+      properties:
+        member_id:
+          type: string
+          format: uuid
+        guest_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        guest_email:
+          type: string
+          nullable: true
+          maxLength: 320
+
+    MemberAttendeeInput:
+      type: object
+      additionalProperties: false
+      description: The signed-in member (`self`), or a guest by name. Members cannot name other members.
+      properties:
+        self:
+          type: boolean
+        guest_name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        guest_email:
+          type: string
+          nullable: true
+          maxLength: 320
+
+    SaleAttendee:
+      type: object
+      additionalProperties: false
+      required: [member_id, name, guest]
+      properties:
+        member_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        guest:
+          type: boolean
 
     PaymentMethod:
       type: string
@@ -3237,7 +3321,9 @@ components:
           type: string
         quantity:
           type: integer
-          enum: [1]
+          minimum: 1
+          maximum: 10
+          description: Spots on a ticket line. Always 1 for a membership or a pass.
         unit_amount_minor:
           type: integer
         total_minor:
@@ -3329,6 +3415,8 @@ components:
         - channel
         - occurrence
         - booking_id
+        - booking_ids
+        - attendees
         - currency
         - total_minor
         - paid_minor
@@ -3366,7 +3454,18 @@ components:
           type: string
           format: uuid
           nullable: true
-          description: The booking a delivered ticket made.
+          description: The first booking a delivered ticket made.
+        booking_ids:
+          type: array
+          description: Every booking a delivered ticket made, one per spot.
+          items:
+            type: string
+            format: uuid
+        attendees:
+          type: array
+          description: Who comes to each spot of a ticket. Empty for other kinds.
+          items:
+            $ref: "#/components/schemas/SaleAttendee"
         currency:
           type: string
         total_minor:
@@ -4331,7 +4430,22 @@ components:
         - cancel_reason
         - attended_at
         - use_returned
+        - attendee_name
+        - guest_name
+        - checkout_id
       properties:
+        attendee_name:
+          type: string
+          description: The member or guest who takes the spot.
+        guest_name:
+          type: string
+          nullable: true
+          description: Set when the attendee is a guest, not a member.
+        checkout_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: The online checkout that holds or bought this spot.
         id:
           type: string
           format: uuid
@@ -4387,17 +4501,28 @@ components:
       allOf:
         - $ref: "#/components/schemas/BookingBase"
         - type: object
-          required: [member]
+          required: [member, holder, guest_email]
           properties:
             member:
+              allOf:
+                - $ref: "#/components/schemas/MemberSummary"
+              nullable: true
+              description: The attendee, when a member. Null for a guest.
+            holder:
               $ref: "#/components/schemas/MemberSummary"
+            guest_email:
+              type: string
+              nullable: true
 
     MemberBooking:
       allOf:
         - $ref: "#/components/schemas/BookingBase"
         - type: object
-          required: [location_name, cancellable]
+          required: [location_name, cancellable, for_someone_else]
           properties:
+            for_someone_else:
+              type: boolean
+              description: True when the member booked this spot for another person, or another person booked it for them.
             location_name:
               type: string
             cancellable:
@@ -4606,6 +4731,28 @@ components:
           type: string
           format: uuid
           description: Required for a ticket, and only for a ticket.
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 1
+          description: Spots to buy. Above 1 for a ticket only.
+        attendees:
+          type: array
+          maxItems: 10
+          description: Who comes to each spot. Omit for one spot for the member.
+          items:
+            $ref: "#/components/schemas/MemberAttendeeInput"
+
+    CheckoutAttendee:
+      type: object
+      additionalProperties: false
+      required: [name, guest]
+      properties:
+        name:
+          type: string
+        guest:
+          type: boolean
 
     CheckoutStatus:
       type: string
@@ -4630,7 +4777,15 @@ components:
         - occurrence
         - sale_id
         - booking_id
+        - quantity
+        - attendees
       properties:
+        quantity:
+          type: integer
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/CheckoutAttendee"
         id:
           type: string
           format: uuid
@@ -4645,6 +4800,7 @@ components:
           description: Where the provider takes payment. Null for the test provider, whose page the gym site shows.
         amount_minor:
           type: integer
+          description: The total for every spot.
         currency:
           type: string
         expires_at:

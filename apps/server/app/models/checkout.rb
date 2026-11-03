@@ -17,17 +17,23 @@ class Checkout < ApplicationRecord
   belongs_to :price
   belongs_to :occurrence, optional: true
   belongs_to :sale, optional: true
-  has_one :booking, dependent: :restrict_with_exception
+  has_many :bookings, -> { order(:created_at, :id) }, dependent: :restrict_with_exception
   same_organization_as :member, :price, :occurrence, :sale
 
   validates :status, inclusion: { in: STATUSES }
   validates :amount_minor, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :quantity, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: AttendeeList::MAX }
 
   # Opens a checkout for the member. Returns [checkout, created]. A retry with
   # the same key returns the first checkout. A free purchase completes at once.
-  def self.open!(member:, idempotency_key:, price_id:, occurrence_id: nil, at: Time.current)
+  #
+  # A ticket can buy several spots. The member names who comes to each: themself
+  # or guests. Every spot is held, or the checkout is refused.
+  def self.open!(member:, idempotency_key:, price_id:, occurrence_id: nil, quantity: 1, attendees: nil, at: Time.current)
     organization = member.organization
-    fingerprint = Idempotent.fingerprint(member_id: member.id, price_id:, **(occurrence_id ? { occurrence_id: } : {}))
+    entries = Array(attendees).map { _1.respond_to?(:to_unsafe_h) ? _1.to_unsafe_h : _1.to_h }
+    fingerprint = Idempotent.fingerprint(member_id: member.id, price_id:, **(occurrence_id ? { occurrence_id: } : {}),
+      **(quantity.to_i > 1 || entries.any? ? { quantity: quantity.to_s, attendees: entries.to_json } : {}))
 
     with_idempotency(organization.checkouts, key: idempotency_key, fingerprint:) do
       price = organization.prices.includes(product: :benefits).find_by(id: price_id)
@@ -37,11 +43,16 @@ class Checkout < ApplicationRecord
       occurrence = Sale.ticket_occurrence!(organization, price, occurrence_id, at:)
       raise ActiveRecord::RecordNotFound if occurrence && !occurrence.program.published?
 
+      quantity = occurrence ? Sale.attendee_count(quantity) : 1
+      raise AttendeeList::Invalid, "Only a ticket can buy several spots." if !occurrence && (quantity.to_i > 1 || entries.any?)
+      list = occurrence ? AttendeeList.build(buyer: member, quantity:, entries:) : []
+
       free = price.amount_minor.zero?
       provider = free ? nil : Flowfokus::Payments.provider!
       transaction(requires_new: true) do
         checkout = organization.checkouts.create!(
-          member:, price:, occurrence:, amount_minor: price.amount_minor, currency: price.currency,
+          member:, price:, occurrence:, quantity:, attendees: list,
+          amount_minor: price.amount_minor * quantity, currency: price.currency,
           provider: provider&.name || "free", provider_reference: provider&.new_reference || "free_#{SecureRandom.hex(12)}",
           expires_at: at + HOLD, idempotency_key:, request_fingerprint: fingerprint
         )
@@ -65,8 +76,8 @@ class Checkout < ApplicationRecord
       next [ self, false ] if paid?
       raise Closed, "This checkout was cancelled." if status == "cancelled"
       raise Closed, "This checkout expired. Start again." if expired?(at)
-      if occurrence && !(booking && booking.held? && !booking.cancelled?)
-        raise Occurrence::Unavailable, "The spot for this time is no longer held. Start again."
+      if occurrence && bookings.count { _1.held? && !_1.cancelled? } != quantity
+        raise Occurrence::Unavailable, "The spots for this time are no longer held. Start again."
       end
 
       sale = Sale.record_online!(checkout: self, at:)
@@ -88,7 +99,7 @@ class Checkout < ApplicationRecord
       raise Closed, "This checkout is already paid." if paid?
 
       update!(status: "cancelled")
-      booking&.cancel!(actor: nil, reason: "The checkout was cancelled.", at:, return_use: false, force: true)
+      bookings.each { _1.cancel!(actor: nil, reason: "The checkout was cancelled.", at:, return_use: false, force: true) }
       [ self, true ]
     end
   end
@@ -103,7 +114,8 @@ class Checkout < ApplicationRecord
         id: occurrence.id, program_name: occurrence.program.name,
         starts_at: api_time(occurrence.starts_at), ends_at: api_time(occurrence.ends_at)
       },
-      sale_id:, booking_id: booking&.id
+      quantity:, attendees: AttendeeList.as_api(organization, attendees).map { _1.except(:member_id) },
+      sale_id:, booking_id: bookings.first&.id
     }
   end
 

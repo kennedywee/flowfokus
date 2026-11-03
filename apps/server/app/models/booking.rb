@@ -1,15 +1,20 @@
-# One member's spot in one occurrence.
+# One spot in one occurrence.
+#
+# The holder is the member whose right pays for the spot. The attendee takes
+# it: a member (`member`), or a guest known by name. They are the same person
+# unless one ticket purchase booked several spots.
 #
 # A confirmed booking uses one entitlement: the use is recorded when the spot
 # is taken. Cancelling can return the use. A held booking waits for an online
 # checkout and stops counting when its hold ends. One live booking per member
-# and occurrence; the database enforces it.
+# attendee and occurrence; the database enforces it.
 class Booking < ApplicationRecord
   include TenantOwned
 
   class NotAllowed < StandardError; end
 
-  belongs_to :member
+  belongs_to :member, optional: true
+  belongs_to :holder_member, class_name: "Member"
   belongs_to :occurrence
   belongs_to :entitlement, optional: true
   belongs_to :checkout, optional: true
@@ -18,9 +23,11 @@ class Booking < ApplicationRecord
   belongs_to :cancelled_by_user, class_name: "User", optional: true
   belongs_to :attended_by_user, class_name: "User", optional: true
   has_one :usage, class_name: "EntitlementUsage", dependent: :restrict_with_exception
-  same_organization_as :member, :occurrence, :entitlement, :checkout, :sale
+  same_organization_as :member, :holder_member, :occurrence, :entitlement, :checkout, :sale
 
   validates :cancel_reason, length: { maximum: 500 }
+  validates :guest_name, length: { maximum: 200 }
+  validate { errors.add(:base, "needs a member or a guest name") unless member.present? ^ guest_name.present? }
 
   scope :live, -> { where(cancelled_at: nil) }
   # Bookings that take a spot at `at`.
@@ -47,22 +54,33 @@ class Booking < ApplicationRecord
       ensure_entitlement_covers!(entitlement, occurrence)
       occurrence.ensure_bookable!(at:)
 
-      booking = create!(organization:, member:, occurrence:, entitlement:, booked_by_user: actor, confirmed_at: at)
+      booking = create!(organization:, member:, holder_member: member, occurrence:, entitlement:, booked_by_user: actor, confirmed_at: at)
       booking.use_entitlement!(at:)
       [ booking, true ]
     end
   end
 
-  # Holds a spot while an online checkout waits for payment.
+  # Holds one spot per attendee while an online checkout waits for payment.
+  # Every spot is held, or none: a group is never split.
   def self.hold!(checkout:, at: Time.current)
     occurrence = checkout.occurrence
     occurrence.lock!
-    if release_expired_holds!(member: checkout.member, occurrence:, at:)
-      raise NotAllowed, "You already have a spot at this time."
+    attendees = AttendeeList.booking_attributes(checkout.organization, checkout.attendees)
+    ensure_attendees_free!(occurrence, attendees, holder: checkout.member, at:)
+    occurrence.ensure_bookable!(at:, spots: attendees.size)
+    attendees.map do |attendee|
+      create!(organization: checkout.organization, holder_member: checkout.member, occurrence:, checkout:,
+        held_until: checkout.expires_at, **attendee)
     end
+  end
 
-    occurrence.ensure_bookable!(at:)
-    create!(organization: checkout.organization, member: checkout.member, occurrence:, checkout:, held_until: checkout.expires_at)
+  # Members can hold only one live spot per time.
+  def self.ensure_attendees_free!(occurrence, attendees, holder:, at:)
+    attendees.filter_map { _1[:member] }.each do |member|
+      next unless release_expired_holds!(member:, occurrence:, at:)
+
+      raise NotAllowed, member == holder ? "You already have a spot at this time." : "#{member.name} already has a spot at this time."
+    end
   end
 
   # Ends holds that have run out, so the member can book again. Returns the
@@ -86,6 +104,9 @@ class Booking < ApplicationRecord
   def attended? = attended_at.present?
   def held? = confirmed_at.nil? && held_until.present?
   def from_ticket? = sale_id.present?
+  def guest? = member_id.nil?
+  def attendee_name = member&.name || guest_name
+  def for_someone_else? = member_id != holder_member_id
 
   def status(at = Time.current)
     if cancelled? then "cancelled"
@@ -147,7 +168,8 @@ class Booking < ApplicationRecord
 
   def as_api(at: Time.current)
     {
-      id:, status: status(at), member: member.as_summary_api, occurrence_id:,
+      id:, status: status(at), member: member&.as_summary_api, guest_name:, guest_email:,
+      attendee_name:, holder: holder_member.as_summary_api, checkout_id:, occurrence_id:,
       program: { id: occurrence.program_id, name: occurrence.program.name, kind: occurrence.program.kind },
       starts_at: api_time(occurrence.starts_at), ends_at: api_time(occurrence.ends_at),
       entitlement: entitlement && { id: entitlement.id, name: entitlement.name },
@@ -158,9 +180,10 @@ class Booking < ApplicationRecord
     }
   end
 
+  # The holder's or attendee's own view. Guest emails and other members' details stay out.
   def as_member_api(at: Time.current)
-    as_api(at:).except(:member).merge(
-      location_name: occurrence.program.location.name,
+    as_api(at:).except(:member, :holder, :guest_email).merge(
+      location_name: occurrence.program.location.name, for_someone_else: for_someone_else?,
       cancellable: confirmed? && !cancelled? && !attended? && !from_ticket? && !occurrence.started?(at)
     )
   end

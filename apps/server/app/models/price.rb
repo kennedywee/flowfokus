@@ -3,6 +3,7 @@
 # changes to these columns.
 class Price < ApplicationRecord
   include TenantOwned
+  include Idempotent
 
   belongs_to :product
   has_many :sale_line_items, dependent: :restrict_with_exception

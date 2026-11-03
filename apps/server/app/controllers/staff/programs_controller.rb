@@ -14,8 +14,8 @@ module Staff
 
     def create
       require_permission! "programs:manage"
-      program = current_organization.programs.create!(program_params)
-      render_data program.as_detail_api, status: :created
+      program, created = Program.add!(organization: current_organization, idempotency_key: idempotency_key!, attributes: program_params)
+      render_data program.as_detail_api, status: created_or_replayed(created)
     end
 
     def update

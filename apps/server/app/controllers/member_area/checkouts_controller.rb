@@ -7,7 +7,8 @@ module MemberArea
     def create
       checkout, created = Checkout.open!(
         member: Current.member, idempotency_key: idempotency_key!,
-        price_id: params.require(:price_id), occurrence_id: params[:occurrence_id].presence
+        price_id: params.require(:price_id), occurrence_id: params[:occurrence_id].presence,
+        quantity: params.fetch(:quantity, 1), attendees: params.permit(attendees: %i[self guest_name guest_email]).fetch(:attendees, nil)
       )
       render_data find_checkout(checkout.id).as_member_api, status: created ? :created : :ok
     end
@@ -36,7 +37,7 @@ module MemberArea
 
     private
       def find_checkout(id = params[:id])
-        Current.member.checkouts.includes({ price: :product }, { occurrence: :program }, :booking).find(id)
+        Current.member.checkouts.includes({ price: :product }, { occurrence: :program }, :bookings).find(id)
       end
 
       def idempotency_key!

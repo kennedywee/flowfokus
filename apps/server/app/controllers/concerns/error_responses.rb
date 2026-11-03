@@ -89,6 +89,9 @@ module ErrorResponses
     rescue_from Sale::OccurrenceRequired do |error|
       render_error :unprocessable_content, "occurrence_required", error.message
     end
+    rescue_from AttendeeList::Invalid do |error|
+      render_error :unprocessable_content, "attendees_invalid", error.message
+    end
     rescue_from Checkout::Closed do |error|
       render_error :unprocessable_content, "checkout_closed", error.message
     end

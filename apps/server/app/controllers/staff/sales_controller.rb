@@ -17,7 +17,7 @@ module Staff
       sale, created = Sale.record!(
         organization: current_organization, actor: Current.user, idempotency_key: idempotency_key!,
         member_id: params[:member_id], price_id: params[:price_id], location_id: params[:location_id],
-        occurrence_id: params[:occurrence_id].presence
+        occurrence_id: params[:occurrence_id].presence, quantity: params.fetch(:quantity, 1), attendees: attendee_params
       )
       render_data find_sale(sale.id).as_api, status: created_or_replayed(created)
     end
@@ -39,6 +39,8 @@ module Staff
     end
 
     private
+      def attendee_params = params.permit(attendees: %i[member_id guest_name guest_email]).fetch(:attendees, nil)
+
       def find_sale(id = params[:id]) = current_organization.sales.with_details.find(id)
   end
 end

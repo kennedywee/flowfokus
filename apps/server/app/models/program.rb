@@ -3,6 +3,7 @@
 # products of kind "ticket" that keep the program.
 class Program < ApplicationRecord
   include TenantOwned
+  include Idempotent
 
   KINDS = %w[group_class event appointment].freeze
   MAX_WEEKS = 26
@@ -31,8 +32,24 @@ class Program < ApplicationRecord
   # The one ticket product for this program, made the first time staff add a ticket price.
   def ticket_product = ticket_products.first
 
-  # Adds a ticket price. Creates the ticket product on first use.
-  def add_ticket!(label:, amount_minor:)
+  # Adds a program. A retry with the same key returns the first program.
+  # Returns [program, created].
+  def self.add!(organization:, idempotency_key:, attributes:)
+    attributes = attributes.to_h.symbolize_keys
+    fingerprint = Idempotent.fingerprint(**attributes)
+    with_idempotency(organization.programs, key: idempotency_key, fingerprint:) do
+      organization.programs.create!(**attributes, idempotency_key:, request_fingerprint: fingerprint)
+    end
+  end
+
+  # Adds a ticket price. Creates the ticket product on first use. A retry with
+  # the same key returns the first price. Returns [price, created].
+  def add_ticket!(label:, amount_minor:, idempotency_key: nil)
+    fingerprint = Idempotent.fingerprint(program_id: id, label:, amount_minor:)
+    if idempotency_key && (existing = Price.replay(organization.prices, key: idempotency_key, fingerprint:))
+      return [ existing, false ]
+    end
+
     transaction do
       lock!
       product = ticket_product || organization.products.create!(
@@ -42,9 +59,14 @@ class Program < ApplicationRecord
         created.benefits.create!(organization:, kind: "program_access", name: "Entry to #{name}",
           usage_limit: 1, location_id:, program_ids: [ id ])
       end
-      product.prices.create!(organization:, label:, amount_minor:, currency: organization.currency, duration_days: nil)
-      product
+      price = product.prices.create!(organization:, label:, amount_minor:, currency: organization.currency, duration_days: nil,
+        idempotency_key:, request_fingerprint: (fingerprint if idempotency_key))
+      [ price, true ]
     end
+  rescue ActiveRecord::RecordNotUnique => error
+    raise unless idempotency_key && error.message.include?("idempotency_key")
+
+    [ Price.replay(organization.prices, key: idempotency_key, fingerprint:) || raise, false ]
   end
 
   # Adds occurrences at a local date and time, repeating weekly. Skips times

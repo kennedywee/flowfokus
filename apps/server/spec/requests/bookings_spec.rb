@@ -134,7 +134,7 @@ RSpec.describe "Bookings at the desk" do
   end
 
   describe "tickets at the desk" do
-    let(:ticket) { program.add_ticket!(label: "Drop-in", amount_minor: 2_500).prices.first }
+    let(:ticket) { program.add_ticket!(label: "Drop-in", amount_minor: 2_500).first }
     let(:sale_body) { { member_id: member.id, price_id: ticket.id, location_id: bangsar.id, occurrence_id: occurrence.id } }
 
     it "sells a ticket for a time and books it on delivery" do
@@ -186,7 +186,7 @@ RSpec.describe "Bookings at the desk" do
       api :post, "/staff/sales/#{sale.id}/revoke", body: { reason: "Refunded" }
       expect(response).to have_http_status(:ok)
       expect(occurrence.reload.spots_taken).to eq(0)
-      expect(sale.booking.reload.cancel_reason).to eq("Access revoked: Refunded")
+      expect(sale.bookings.sole.reload.cancel_reason).to eq("Access revoked: Refunded")
     end
   end
 

@@ -12,7 +12,8 @@ module MemberArea
     end
 
     def cancel
-      booking = Current.member.bookings.find(params[:id])
+      # The holder cancels: their right paid for the spot.
+      booking = Current.member.held_bookings.find(params[:id])
       booking.cancel!(actor: nil, reason: "Cancelled by the member.", by_member: true)
       render_data booking.reload.as_member_api
     end

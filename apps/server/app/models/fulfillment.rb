@@ -76,35 +76,40 @@ class Fulfillment < ApplicationRecord
     fulfillment
   end
 
-  # Takes the spot first, so a full, cancelled, or ended time delivers
-  # nothing. Desk staff may still sell a spot after the start. An online
-  # checkout's held booking already holds its spot.
+  # Takes the spots first, so a full, cancelled, or ended time delivers
+  # nothing. Desk staff may still sell spots after the start. An online
+  # checkout's held bookings already hold their spots.
+  #
+  # One right covers every spot of the line: its uses equal the quantity, and
+  # the buyer holds it. Each attendee gets a booking that uses one.
   def self.deliver_ticket!(sale, attributes, at:)
     occurrence = sale.occurrence
     occurrence.lock!
     raise Occurrence::Unavailable, "This time was cancelled." if occurrence.cancelled?
     raise Occurrence::Unavailable, "This time has already ended." if occurrence.ended?(at)
 
-    held = sale.checkout&.booking
-    held = nil unless held&.held? && !held.cancelled?
-    unless held
-      if Booking.release_expired_holds!(member: sale.member, occurrence:, at:)
-        raise Booking::NotAllowed, "#{sale.member.name} already has a spot at this time."
-      end
-      raise Occurrence::Full if occurrence.bookings.filling(at).count >= occurrence.capacity
+    held = (sale.checkout&.bookings || []).select { _1.held? && !_1.cancelled? }
+    attendees = AttendeeList.booking_attributes(sale.organization, sale.attendees.presence || [ { "member_id" => sale.member_id } ])
+    if held.empty?
+      Booking.ensure_attendees_free!(occurrence, attendees, holder: sale.member, at:)
+      left = occurrence.capacity - occurrence.bookings.filling(at).count
+      raise Occurrence::Full if left <= 0
+      raise Occurrence::Full, "Only #{left} #{left == 1 ? 'spot is' : 'spots are'} left at this time." if attendees.size > left
     end
 
     fulfillment = create!(**attributes)
     grant = BenefitGrant.issue!(fulfillment:, at:, starts_at: [ sale.purchased_at, occurrence.starts_at ].min,
       ends_at: occurrence.ends_at, occurrence:)
     entitlement = grant.entitlements.find(&:program_access?)
-    if held
-      held.confirm!(entitlement:, sale:, at:)
+    if held.any?
+      held.each { _1.confirm!(entitlement:, sale:, at:) }
     else
-      Booking.create!(
-        organization: sale.organization, member: sale.member, occurrence:, entitlement:, sale:,
-        booked_by_user: attributes[:fulfilled_by_user], confirmed_at: at
-      ).use_entitlement!(at:)
+      attendees.each do |attendee|
+        Booking.create!(
+          organization: sale.organization, holder_member: sale.member, occurrence:, entitlement:, sale:,
+          booked_by_user: attributes[:fulfilled_by_user], confirmed_at: at, **attendee
+        ).use_entitlement!(at:)
+      end
     end
     fulfillment
   end

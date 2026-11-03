@@ -10,7 +10,7 @@ RSpec.describe "Programs and the schedule" do
   before { demo_user }
 
   it "creates a program, adds weekly times in the gym's time zone, and skips repeats" do
-    api :post, "/staff/programs", body: program_body
+    api :post, "/staff/programs", key: SecureRandom.uuid, body: program_body
     expect(response).to have_http_status(:created)
     expect(data).to include("name" => "Yoga Flow", "kind" => "group_class", "capacity" => 12, "host_name" => "Aina",
       "location_name" => "Bangsar", "occurrences" => [], "ticket" => nil, "accepted_by" => [])
@@ -30,6 +30,28 @@ RSpec.describe "Programs and the schedule" do
 
     api :get, "/staff/programs"
     expect(data.sole).to include("name" => "Yoga Flow", "upcoming_count" => 4)
+  end
+
+  it "replays program and ticket price writes with the same key" do
+    key = SecureRandom.uuid
+    api :post, "/staff/programs", key:, body: program_body
+    id = data["id"]
+    api :post, "/staff/programs", key:, body: program_body
+    expect(response).to have_http_status(:ok)
+    expect(data["id"]).to eq(id)
+    expect(Program.count).to eq(1)
+
+    api :post, "/staff/programs", key:, body: program_body.merge(name: "Other")
+    expect(response).to have_http_status(:conflict)
+    expect(error_code).to eq("idempotency_key_reused")
+
+    api :post, "/staff/programs", body: program_body
+    expect(error_code).to eq("idempotency_key_required")
+
+    ticket_key = SecureRandom.uuid
+    2.times { api :post, "/staff/programs/#{id}/tickets", key: ticket_key, body: { label: "Drop-in", amount_minor: 2_500 } }
+    expect(response).to have_http_status(:ok)
+    expect(data.dig("ticket", "prices").size).to eq(1)
   end
 
   it "rejects a bad schedule" do
@@ -61,9 +83,9 @@ RSpec.describe "Programs and the schedule" do
   it "adds ticket prices as one ticket product, kept off the offers list" do
     program = create_program(chainsaw, location: bangsar)
 
-    api :post, "/staff/programs/#{program.id}/tickets", body: { label: "Drop-in", amount_minor: 2_500 }
+    api :post, "/staff/programs/#{program.id}/tickets", key: SecureRandom.uuid, body: { label: "Drop-in", amount_minor: 2_500 }
     expect(response).to have_http_status(:created)
-    api :post, "/staff/programs/#{program.id}/tickets", body: { label: "Student", amount_minor: 1_500 }
+    api :post, "/staff/programs/#{program.id}/tickets", key: SecureRandom.uuid, body: { label: "Student", amount_minor: 1_500 }
     ticket = data["ticket"]
     expect(ticket["prices"].map { _1.slice("label", "amount_minor", "duration_days") }).to contain_exactly(
       { "label" => "Drop-in", "amount_minor" => 2_500, "duration_days" => nil },
@@ -106,7 +128,7 @@ RSpec.describe "Programs and the schedule" do
     api :get, "/staff/programs/#{foreign.id}"
     expect(response).to have_http_status(:not_found)
 
-    api :post, "/staff/programs", body: program_body.merge(location_id: ironworks.locations.first.id)
+    api :post, "/staff/programs", key: SecureRandom.uuid, body: program_body.merge(location_id: ironworks.locations.first.id)
     expect(response).to have_http_status(:unprocessable_content)
   end
 
@@ -120,11 +142,11 @@ RSpec.describe "Programs and the schedule" do
       api :get, "/staff/programs/#{program.id}", token: token
       expect(response).to have_http_status(:ok)
 
-      api :post, "/staff/programs", token:, body: program_body
+      api :post, "/staff/programs", token:, key: SecureRandom.uuid, body: program_body
       expect(response).to have_http_status(:forbidden)
       api :post, "/staff/programs/#{program.id}/occurrences", token:, body: { date: Date.current.iso8601, time: "07:00" }
       expect(response).to have_http_status(:forbidden)
-      api :post, "/staff/programs/#{program.id}/tickets", token:, body: { label: "Drop-in", amount_minor: 100 }
+      api :post, "/staff/programs/#{program.id}/tickets", token:, key: SecureRandom.uuid, body: { label: "Drop-in", amount_minor: 100 }
       expect(response).to have_http_status(:forbidden)
       api :post, "/staff/occurrences/#{program.occurrences.first.id}/cancel", token:, body: { reason: "No" }
       expect(response).to have_http_status(:forbidden)
