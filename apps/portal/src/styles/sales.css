@@ -2,7 +2,7 @@
  * Screen styles: sales. Add rules here, not in components.css.
  * Every rule is scoped to a page class so it cannot leak:
  *   .sales-list ..... list
- *   .new-sale-page .. new sale (fields and a summary)
+ *   .new-sale ....... new sale
  *   .sale-details ... sale detail
  */
 
@@ -324,39 +324,418 @@ a.sales-row:focus-visible {
   }
 }
 
-/* ---------- New sale ---------- */
+/* ---------- New sale (redesign) ---------- */
+/*
+ * Paper "New sale": a tile and the title with Create sale (⌘↵), then Products
+ * and Payment on one white surface, with Member and Location on the right
+ * (300px) from 1100px. Narrow screens put Member and Location first, because
+ * the member is the first choice. Lines reuse the sale page's `.sale-line`
+ * and `.sale-total`; bands reuse `.mx-section__head`.
+ */
 
-.new-sale-page__layout {
-  display: grid;
+.new-sale {
+  max-width: 1280px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "side" "main";
   gap: var(--space-6);
-  align-items: start;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
 }
-@media (min-width: 1180px) {
-  .new-sale-page__layout {
-    grid-template-columns: minmax(0, 1fr) 22rem;
+.new-sale__head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.new-sale__head h1 {
+  flex: 1;
+  min-width: 0;
+}
+.new-sale__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-well);
+  color: var(--color-ink-2);
+}
+.new-sale__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.new-sale__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.new-sale__main {
+  grid-area: main;
+  display: grid;
+  align-content: start;
+  gap: var(--space-6);
+  min-width: 0;
+}
+.new-sale__side {
+  grid-area: side;
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+@media (min-width: 1100px) {
+  .new-sale {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "head side" "main side";
+    column-gap: var(--space-6);
   }
-  .new-sale-page__summary {
+  .new-sale__side {
     position: sticky;
-    top: calc(var(--topbar-height) + var(--space-6));
+    top: calc(var(--topbar-height) + var(--space-5));
   }
 }
-.new-sale-page__fields {
-  display: grid;
-  gap: var(--space-6);
+
+/* The empty product slot: a dashed box with the add button, as in Paper. */
+.new-sale__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 88px;
+  margin-top: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-line);
+  border-radius: 10px;
+  color: var(--color-ink-2);
+  text-align: center;
 }
-.new-sale-page__fields > section {
-  padding-bottom: var(--space-6);
+.new-sale__empty[data-invalid] {
+  border-color: var(--color-critical);
+}
+.new-sale__add.button--compact {
+  background: var(--color-hover);
+}
+.new-sale__add svg {
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-2);
+}
+.new-sale__error {
+  margin-top: var(--space-1);
+}
+.new-sale__link {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.new-sale__hint {
+  max-width: none;
+  margin-top: var(--space-2);
+  padding: 14px var(--space-3);
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+  color: var(--color-ink-2);
+}
+.new-sale__hint--plain {
+  margin: 0;
+  padding: 0 var(--space-2);
+  background: none;
+  font-size: var(--text-xs);
+}
+.sale-band__button svg {
+  width: 12px;
+  height: 12px;
+  color: var(--color-ink-2);
+}
+
+/* A 24px icon button: remove a line, or change the member. */
+.new-sale__icon-button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: -30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-ink-2);
+  cursor: pointer;
+}
+.new-sale__icon-button:hover {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.new-sale__icon-button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.new-sale__icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.new-sale__icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+.new-sale__side .new-sale__icon-button {
+  margin-right: 0;
+}
+@media (pointer: coarse) {
+  .new-sale__icon-button {
+    width: 40px;
+    height: 40px;
+    margin-right: -38px;
+  }
+}
+
+/* The side: Member and Location groups split by hairlines. */
+.new-sale__group {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
   border-bottom: 1px solid var(--color-line);
 }
-.new-sale-page__summary {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-5);
-  background: var(--color-well);
-  border-radius: var(--radius-lg);
+.new-sale__group:first-child {
+  padding-top: 0;
 }
-.new-sale-page .readout__value {
+.new-sale__group:last-child {
+  border-bottom: 0;
+}
+.new-sale__group-head {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+.new-sale__group-head h2,
+.new-sale__group-head label,
+.new-sale__group .field > label {
+  flex: 1;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 16px;
+}
+.new-sale__group .field {
+  gap: var(--space-2);
+}
+.new-sale__group .field > label {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+}
+.new-sale__group .combobox__input {
+  min-height: 32px;
+  padding-left: 32px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+}
+.new-sale__group .combobox__field > svg {
+  left: 10px;
+  width: 14px;
+  height: 14px;
+}
+.new-sale__member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.new-sale__avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-hover);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+}
+.new-sale__member-text {
+  display: grid;
+  min-width: 0;
+}
+.new-sale__member-name {
+  font-weight: var(--font-weight-medium);
   overflow-wrap: anywhere;
+}
+.new-sale__member-sub {
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.new-sale__select {
+  position: relative;
+}
+.new-sale__select > svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-2);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.new-sale__native.select {
+  min-height: 32px;
+  padding-left: 30px;
+  padding-right: 32px;
+  border-radius: var(--radius-compact);
+  background-position: right 10px center;
+  font-size: var(--text-sm);
+}
+@media (pointer: coarse) {
+  .new-sale__group .combobox__input,
+  .new-sale__native.select {
+    min-height: 40px;
+  }
+}
+
+/* Add product: search, kind tabs, then a radio list grouped by kind. */
+.new-sale__search.list-search {
+  width: 100%;
+  height: 32px;
+}
+.new-sale__search .list-search__input {
+  font-size: var(--text-sm);
+}
+.new-sale__tabs {
+  display: flex;
+  gap: 2px;
+}
+.new-sale__tab {
+  height: 26px;
+  padding-inline: var(--space-2);
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--color-ink-2);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+}
+.new-sale__tab:hover {
+  color: var(--color-ink);
+}
+.new-sale__tab[aria-pressed="true"] {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.new-sale__tab:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.new-sale__options {
+  display: grid;
+  gap: var(--space-3);
+  max-height: min(360px, 50vh);
+  margin: 0 -8px;
+  padding: 0;
+  overflow-y: auto;
+  border: 0;
+}
+.new-sale__option-group {
+  display: grid;
+  gap: 2px;
+}
+.new-sale__option-kind {
+  padding: 4px 8px;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.new-sale__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border-radius: var(--radius-compact);
+  cursor: pointer;
+}
+.new-sale__option:hover,
+.new-sale__option:has(input:checked) {
+  background: var(--color-hover);
+}
+.new-sale__option input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--color-ink);
+}
+.new-sale__option input:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.new-sale__option-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--font-weight-medium);
+}
+.new-sale__option-facts {
+  flex: none;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+}
+.new-sale__option-amount {
+  flex: none;
+  min-width: 88px;
+  font-family: var(--font-mono);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Loading. */
+.new-sale .skeleton-line {
+  display: block;
+  height: 14px;
+  margin-block: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-well);
+}
+.new-sale .skeleton-line--small {
+  height: 10px;
+}
+.new-sale__skeleton-field {
+  display: block;
+  height: 32px;
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+}
+
+@media (max-width: 767.98px) {
+  .new-sale__icon-button {
+    margin-right: 0;
+  }
+  .new-sale__group {
+    padding-inline: 0;
+  }
+  .new-sale__option {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+  .new-sale__option-facts {
+    order: 3;
+    flex-basis: 100%;
+    padding-left: 26px;
+  }
 }
 
 /* ---------- Sale details (redesign) ---------- */
@@ -1036,9 +1415,3 @@ a.sales-row:focus-visible {
   }
 }
 
-/* One surface groups the summary and total. */
-.new-sale-page__summary .readout {
-  padding: 0;
-  border: 0;
-  background: transparent;
-}
