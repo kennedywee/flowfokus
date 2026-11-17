@@ -283,7 +283,7 @@ and `ListPager` with the members list. They show only Rails data:
   then the item, then the facts and the date.
 - No sales: one line and New sale. No match: one line and Clear filters.
 - Sale details: a tile, the item as the title, and the two facts as pills. The
-  ⋯ menu in the top bar holds Record payment (P), Fulfill (D), Refund…,
+  ⋯ menu in the top bar holds Record payment (P), Fulfill (F), Refund…,
   Revoke access…, and Void sale…; each appears only when the permission and
   the sale allow it. Items shows the fulfillment fact and time, the line with its
   period or term and rights, early-fulfillment and revoke notes, and the total.

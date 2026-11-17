@@ -61,7 +61,7 @@ export function SaleDetails({ sale }: { sale: Schemas["Sale"] }) {
   const [open, setOpen] = useState<Open>(null);
   const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
   useShortcut("p", () => setOpen("pay"), { enabled: actions.pay });
-  useShortcut("d", () => setOpen("fulfill"), { enabled: canFulfill });
+  useShortcut("f", () => setOpen("fulfill"), { enabled: canFulfill });
 
   return (
     <div className="page sale-details">
@@ -130,7 +130,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
                   <PackageCheck {...markIcon} />
                   {actions.fulfill === "early" ? "Fulfill early…" : "Fulfill"}
                   <DropdownMenuShortcut>
-                    <Kbd>D</Kbd>
+                    <Kbd>F</Kbd>
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
               ) : null}
