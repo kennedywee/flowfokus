@@ -91,7 +91,7 @@ function ProgramPage() {
               </ul>
             ) : (
               <p className="muted">
-                None yet. In <Link to="/$org/products" params={{ org: organization.slug }}>Plans &amp; offers</Link>, add a
+                None yet. In <Link to="/$org/products" params={{ org: organization.slug }}>Products</Link>, add a
                 program benefit to a pass or membership.
               </p>
             )}

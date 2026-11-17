@@ -21,7 +21,10 @@ import {
 export type SwitcherOption = {
   value: string;
   label: string;
+  /** A second line under the name. */
   detail?: string;
+  /** A short fact at the right of the row, such as the role. */
+  aside?: string;
   icon?: ReactNode;
 };
 
@@ -75,6 +78,7 @@ export function ContextSwitcher({
         return (
           !needle ||
           option.label.toLowerCase().includes(needle) ||
+          (option.aside?.toLowerCase().includes(needle) ?? false) ||
           (option.detail?.toLowerCase().includes(needle) ?? false)
         );
       }}
@@ -112,6 +116,7 @@ export function ContextSwitcher({
                 <span className="switcher__option-label">{option.label}</span>
                 {option.detail ? <span className="switcher__option-detail">{option.detail}</span> : null}
               </span>
+              {option.aside ? <span className="switcher__option-aside">{option.aside}</span> : null}
               <ComboboxItemIndicator className="switcher__check" />
             </ComboboxItem>
           )}

@@ -14,12 +14,13 @@ import {
 } from "@tanstack/react-router";
 import {
   Bot,
-  CalendarDays,
+  CalendarCheck,
+  CalendarClock,
   ChartColumn,
   ChevronDown,
   ChevronRight,
   Inbox,
-  LayoutGrid,
+  House,
   LogIn,
   LogOut,
   MapPin,
@@ -28,14 +29,12 @@ import {
   MoonStar,
   PanelLeftClose,
   PanelLeftOpen,
-  Plus,
   Receipt,
   Search,
   History,
   Settings,
   Sun,
   Tag,
-  Ticket,
   Users,
   X,
   type LucideIcon,
@@ -124,15 +123,15 @@ type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean
 
 /* One list, no group titles. What's new lives in the account menu. */
 const NAV_ITEMS: NavItem[] = [
-  { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
+  { to: "/$org", label: "Home", icon: House, exact: true, path: "" },
   { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
   { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
-  { to: "/$org/check-in", label: "Check-ins", icon: LogIn, exact: false, path: "/check-in" },
-  { to: "/$org/schedule", label: "Schedule", icon: CalendarDays, exact: false, path: "/schedule" },
   { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
   { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
-  { to: "/$org/programs", label: "Programs", icon: Ticket, exact: false, path: "/programs" },
-  { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
+  { to: "/$org/check-in", label: "Check-ins", icon: LogIn, exact: false, path: "/check-in" },
+  { to: "/$org/schedule", label: "Schedule", icon: CalendarClock, exact: false, path: "/schedule" },
+  { to: "/$org/programs", label: "Programs", icon: CalendarCheck, exact: false, path: "/programs" },
+  { to: "/$org/products", label: "Products", icon: Tag, exact: false, path: "/products" },
   { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
 ];
 
@@ -166,6 +165,15 @@ function OrganizationLayout() {
   }
 
   return <Shell organization={organization.data} organizations={organizations} canSignOut={access.kind === "workos"} />;
+}
+
+/** The letter tile of an organization in the switcher. */
+function OrgTile({ name, current }: { name: string; current: boolean }) {
+  return (
+    <span className="switcher__tile" data-current={current}>
+      {initials(name).slice(0, 1)}
+    </span>
+  );
 }
 
 type OrganizationData = Extract<Awaited<ReturnType<typeof getStaffOrganization>>, { ok: true }>["data"];
@@ -277,12 +285,18 @@ function Shell({
                 current={data.name}
                 options={
                   organizations && organizations.length > 0
-                    ? organizations.map((choice) => ({ value: choice.slug, label: choice.name, detail: roleLabel(choice.role) }))
+                    ? organizations.map((choice) => ({
+                        value: choice.slug,
+                        label: choice.name,
+                        aside: roleLabel(choice.role),
+                        icon: <OrgTile name={choice.name} current={choice.slug === data.slug} />,
+                      }))
                     : [
                         {
                           value: data.slug,
                           label: data.name,
-                          detail: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
+                          aside: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
+                          icon: <OrgTile name={data.name} current />,
                         },
                       ]
                 }
@@ -290,7 +304,7 @@ function Shell({
                 onSelect={(slug) => {
                   if (slug !== data.slug) openOrganization(slug);
                 }}
-                searchLabel="Search organizations"
+                searchLabel="Switch organization…"
                 emptyText="No organization matches."
               />
               <span className="topbar__slash" aria-hidden="true">
@@ -304,17 +318,22 @@ function Shell({
                   options={data.locations.map((location) => ({
                     value: location.id,
                     label: location.name,
-                    detail: location.address ?? undefined,
                     icon: <MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />,
                   }))}
                   value={shownLocation.id}
                   onSelect={(id) => void chooseLocation(id)}
-                  searchLabel="Search locations"
+                  searchLabel="Switch location…"
                   emptyText="No location matches."
-                  footer={() => (
-                    <Link to="/$org/settings" params={{ org: data.slug }} search={{ section: "Locations" }} className="switcher__action">
-                      <Plus strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                      Add location
+                  footer={(close) => (
+                    <Link
+                      to="/$org/settings"
+                      params={{ org: data.slug }}
+                      search={{ section: "Locations" }}
+                      className="switcher__action"
+                      onClick={close}
+                    >
+                      <Settings strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      Manage locations
                     </Link>
                   )}
                 />

@@ -37,7 +37,7 @@ function Products() {
   return (
     <div className="page offers-page">
       <PageHead
-        title="Plans & offers"
+        title="Products"
         actions={
           can("products:create") ? (
             <Button type="button" size="compact" onClick={() => setEditing({ kind: "new" })}>

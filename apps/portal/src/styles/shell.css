@@ -476,14 +476,6 @@
   width: 14px;
   height: 14px;
 }
-.switcher__option-icon svg,
-.switcher__search svg,
-.switcher__action svg,
-.switcher__check {
-  flex: none;
-  width: 16px;
-  height: 16px;
-}
 .switcher__current {
   max-width: 24ch;
   overflow: hidden;
@@ -496,24 +488,34 @@
   height: 12px;
   color: var(--color-ink-4);
 }
-/* Base UI places the panel in a portal, under the button. */
+/*
+ * Base UI places the panel in a portal, under the button. Paper's switcher
+ * menu: 260px, a 32px search row, then 32px rows with an icon or letter
+ * tile, the name, an optional fact on the right, and a check on the current one.
+ */
 .switcher__panel {
-  width: 300px;
+  width: 260px;
   max-width: calc(100vw - 24px);
   overflow: hidden;
+  padding: 4px;
   background: var(--color-overlay);
   border: 1px solid var(--color-line-strong);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: var(--shadow-popover);
 }
 .switcher__search {
   display: flex;
   align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 14px;
+  gap: 8px;
+  height: 32px;
+  margin-bottom: 4px;
+  padding: 0 8px;
   border-bottom: 1px solid var(--color-line);
   color: var(--color-ink-3);
+}
+.switcher__search svg {
+  width: 14px;
+  height: 14px;
 }
 /* The search box takes focus as the panel opens. Its row shows the focus. */
 .switcher__search:has(:focus-visible) {
@@ -537,28 +539,33 @@
 .switcher__list {
   max-height: 280px;
   margin: 0;
-  padding: 6px;
+  padding: 0;
   overflow-y: auto;
   list-style: none;
 }
 .switcher__option {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 40px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 8px;
+  min-height: 32px;
+  padding: 2px 8px;
+  border-radius: 6px;
   color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 20px;
   cursor: pointer;
 }
 .switcher__option[data-highlighted] {
   background: var(--color-hover);
 }
+.switcher__option-icon svg {
+  width: 14px;
+  height: 14px;
+}
 .switcher__option-text {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 2px;
 }
 .switcher__option-label,
 .switcher__option-detail {
@@ -566,15 +573,38 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.switcher__option-label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 18px;
-}
-.switcher__option-detail {
-  color: var(--color-ink-3);
+.switcher__option-detail,
+.switcher__option-aside {
+  color: var(--color-ink-2);
   font-size: var(--text-xs);
   line-height: 16px;
+}
+.switcher__option-aside {
+  flex: none;
+  white-space: nowrap;
+}
+.switcher__check {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+/* The letter tile of an organization. The open one is dark, as in the top bar. */
+.switcher__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--color-line);
+  color: var(--color-ink);
+  font-size: 10px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 12px;
+}
+.switcher__tile[data-current="true"] {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
 }
 /* Base UI keeps the element in place for announcements; it has text only when nothing matches. */
 .switcher__empty:empty {
@@ -582,32 +612,40 @@
 }
 .switcher__empty {
   margin: 0;
-  padding: 12px 16px;
-  color: var(--color-ink-3);
+  padding: 6px 8px;
+  color: var(--color-ink-2);
   font-size: var(--text-sm);
 }
 .switcher__footer {
   display: grid;
-  padding: 6px;
+  margin-top: 4px;
+  padding-top: 4px;
   border-top: 1px solid var(--color-line);
 }
 .switcher__action {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 36px;
-  padding: 0 10px;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: transparent;
-  color: var(--color-ink-2);
+  color: var(--color-ink);
   font: inherit;
   font-size: var(--text-sm);
   text-align: left;
   text-decoration: none;
   cursor: pointer;
 }
-.switcher__action:hover {
+.switcher__action svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-2);
+}
+.switcher__action:hover,
+.switcher__action:focus-visible {
   background: var(--color-hover);
   color: var(--color-ink);
 }
