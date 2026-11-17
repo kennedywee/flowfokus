@@ -10,7 +10,7 @@ import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Command as CommandPrimitive } from "cmdk";
 
-type MemberSearch =
+export type MemberSearch =
   | { state: "idle" }
   | { state: "loading"; q: string }
   | { state: "done"; q: string; members: Schemas["Member"][] }
@@ -20,7 +20,7 @@ const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as con
 const RESULTS = 8;
 
 /** Rails searches name and email as staff type. A later search wins. */
-function useMemberSearch(q: string, enabled: boolean): MemberSearch {
+export function useMemberSearch(q: string, enabled: boolean): MemberSearch {
   const organization = useOrganization();
   const [search, setSearch] = useState<MemberSearch>({ state: "idle" });
   useEffect(() => {

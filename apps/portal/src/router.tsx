@@ -29,5 +29,15 @@ declare module "@tanstack/react-router" {
      * for example the member's name. Return undefined while it is unknown.
      */
     crumb?: (loaderData: unknown) => string | undefined;
+    /**
+     * The sidebar section a page belongs to, when it is not the section in its
+     * path. A session lives under /schedule but belongs to its program.
+     */
+    section?: "/$org/programs";
+    /**
+     * The breadcrumbs after the section, from the loader data. A crumb with a
+     * program ID links to that program. The last crumb names the page.
+     */
+    trail?: (loaderData: unknown, timeZone: string) => { label: string; program?: string }[];
   }
 }

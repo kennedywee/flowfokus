@@ -226,8 +226,19 @@ function Shell({
     undefined,
   );
 
+  // A page can belong to another section than its path, with a longer trail:
+  // a session sits under Programs › its program.
+  const sectionOverride = matches.reduce<RoutedPath | undefined>((found, match) => match.staticData.section ?? found, undefined);
+  const trail = matches.reduce<{ label: string; program?: string }[] | undefined>(
+    (found, match) => match.staticData.trail?.(match.loaderData, data.timezone) ?? found,
+    undefined,
+  );
+  const owner = NAV_ITEMS.find((item) => item.to === sectionOverride);
+
   // The section, then the page. On a detail page the section links back to its list.
-  const section: { label: string; to?: RoutedPath } | null = routed
+  const section: { label: string; to?: RoutedPath } | null = owner
+    ? { label: owner.label, to: owner.to }
+    : routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
     : trimmed === `${base}/changelog` ? { label: "What’s new" }
     : trimmed === `${base}/settings` ? { label: "Settings" }
@@ -249,7 +260,7 @@ function Shell({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} />
+      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} activeTo={owner?.to} />
       <SidebarInset>
         <header className="topbar">
           <div className="topbar__start">
@@ -326,11 +337,23 @@ function Shell({
                           <span aria-current="page">{section.label}</span>
                         )}
                       </li>
-                      {section.to && pageCrumb ? (
-                        <li>
-                          <span aria-current="page">{pageCrumb}</span>
-                        </li>
-                      ) : null}
+                      {section.to && trail
+                        ? trail.map((crumb, index) => (
+                            <li key={index}>
+                              {crumb.program ? (
+                                <Link to="/$org/programs/$programId" params={{ org: data.slug, programId: crumb.program }}>
+                                  {crumb.label}
+                                </Link>
+                              ) : (
+                                <span aria-current={index === trail.length - 1 ? "page" : undefined}>{crumb.label}</span>
+                              )}
+                            </li>
+                          ))
+                        : section.to && pageCrumb ? (
+                            <li>
+                              <span aria-current="page">{pageCrumb}</span>
+                            </li>
+                          ) : null}
                     </ol>
                   </nav>
                 </>
@@ -375,7 +398,18 @@ function Shell({
  * menu. It lives inside the sidebar provider, so it can close the phone drawer
  * after a link is used.
  */
-function AppSidebar({ data, role, canSignOut }: { data: OrganizationData; role: string | null; canSignOut: boolean }) {
+function AppSidebar({
+  data,
+  role,
+  canSignOut,
+  activeTo,
+}: {
+  data: OrganizationData;
+  role: string | null;
+  canSignOut: boolean;
+  /** The section that owns this page, when it is not the section in the path. */
+  activeTo?: RoutedPath;
+}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { open, setOpenMobile } = useSidebar();
   const closeDrawer = () => setOpenMobile(false);
@@ -420,7 +454,13 @@ function AppSidebar({ data, role, canSignOut }: { data: OrganizationData; role: 
               <SidebarMenuButton
                 tooltip={item.label}
                 render={
-                  <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} onClick={closeDrawer} />
+                  <Link
+                    to={item.to}
+                    params={{ org: data.slug }}
+                    activeOptions={{ exact: item.exact || activeTo !== undefined }}
+                    inactiveProps={activeTo === item.to ? { "aria-current": "page" } : undefined}
+                    onClick={closeDrawer}
+                  />
                 }
               >
                 <item.icon strokeWidth={1.5} aria-hidden="true" focusable="false" />
