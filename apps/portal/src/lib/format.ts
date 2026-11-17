@@ -109,15 +109,18 @@ export const DENIAL: Record<Schemas["DenialReason"], { title: string; next: stri
   },
 };
 
-/** A short, specific message for a failed call. Field errors are shown by the form. */
+/**
+ * A short, specific message for a failed call, in staff words. It never names
+ * the API, Rails, or the database. Field errors are shown by the form.
+ */
 export function failureMessage(error: Failure): string {
   switch (error.code) {
     case "access_unavailable":
       return "Staff sign-in is not available, so this action is turned off.";
     case "api_not_configured":
-      return "The API address is not configured for this portal.";
+      return "This portal is not set up yet. Ask your administrator.";
     case "api_unreachable":
-      return "The Flowfokus API did not respond. Check that Rails is running, then try again.";
+      return "Check the connection, then try again.";
     case "organization_mismatch":
       return "You do not have staff access to this organization.";
     case "forbidden":
@@ -129,9 +132,9 @@ export function failureMessage(error: Failure): string {
       return "Your sign-in is not valid. Sign in again.";
     case "auth_not_configured":
     case "auth_unavailable":
-      return "The API cannot check staff sign-in right now. Protected actions are turned off.";
+      return "Sign-in can't be checked right now. Try again in a moment.";
     case "database_unavailable":
-      return "The database is not available. Try again in a moment.";
+      return "Something went wrong on our side. Try again in a moment.";
     case "idempotency_key_reused":
       return "This form was already sent with different values. Reload the page and try again.";
     default:

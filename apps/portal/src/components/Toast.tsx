@@ -8,11 +8,14 @@ import { Toaster } from "@/components/ui/sonner";
  *
  *   const toast = useToast();
  *   toast.show({ tone: "success", title: "Payment recorded", body: "RM 180.00 by cash." });
+ *   toast.show({ tone: "error", title: "Mei Ling Tan was not checked in.", action: { label: "Try again", onClick: retry } });
  *
  * Wrap the app once in <ToastProvider>. The root route already does this.
  * Sonner, through the shadcn Toaster, stacks and times the toasts and pauses
  * them while the pointer is over them. Success and info toasts close after 6
  * seconds; error toasts stay for 10 seconds. At most three show at once.
+ * A toast holds at most one action. The action closes the toast and replaces
+ * the dismiss button, as in Paper.
  * Never use a toast as the only place an error appears. Show errors next to the
  * form too, because a toast leaves.
  */
@@ -23,6 +26,8 @@ export type ToastInput = {
   tone: ToastTone;
   title: string;
   body?: string;
+  /** One action, such as Try again. It runs, then the toast closes. */
+  action?: { label: string; onClick: () => void };
 };
 
 type ToastApi = {
@@ -57,16 +62,34 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 function ToastCard({ id, toast }: { id: string | number; toast: ToastInput }) {
   const Icon = ICON[toast.tone];
   return (
-    <div className="toast" data-tone={toast.tone} role={toast.tone === "error" ? "alert" : undefined}>
+    <div
+      className="toast"
+      data-tone={toast.tone}
+      data-compact={toast.body ? undefined : true}
+      role={toast.tone === "error" ? "alert" : undefined}
+    >
       <Icon className="toast__icon" strokeWidth={2} aria-hidden="true" focusable="false" />
       <div className="toast__text">
         <p className="toast__title">{toast.title}</p>
         {toast.body ? <p className="toast__body">{toast.body}</p> : null}
       </div>
-      <button type="button" className="toast__dismiss" onClick={() => sonner.dismiss(id)}>
-        <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
-        <span className="visually-hidden">Dismiss: {toast.title}</span>
-      </button>
+      {toast.action ? (
+        <button
+          type="button"
+          className="toast__action"
+          onClick={() => {
+            sonner.dismiss(id);
+            toast.action?.onClick();
+          }}
+        >
+          {toast.action.label}
+        </button>
+      ) : (
+        <button type="button" className="toast__dismiss" onClick={() => sonner.dismiss(id)}>
+          <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <span className="visually-hidden">Dismiss: {toast.title}</span>
+        </button>
+      )}
     </div>
   );
 }

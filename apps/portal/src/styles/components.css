@@ -2080,6 +2080,41 @@ a.counter:hover .counter__label {
   width: 16px;
   height: 16px;
 }
+/* A title-only toast is one line, as in Paper: 40px, icon, text, one action. */
+.toast[data-compact] {
+  min-height: 40px;
+  padding: 6px 6px 6px 12px;
+  gap: 10px;
+  border-color: var(--color-line);
+  border-radius: 10px;
+}
+.toast__action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding-inline: 10px;
+  border: 0;
+  border-radius: var(--radius-compact);
+  background: var(--color-hover);
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.toast__action:hover {
+  background: color-mix(in oklab, var(--color-hover), var(--color-ink) 6%);
+}
+.toast__action:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+@media (pointer: coarse) {
+  .toast__action {
+    min-height: 44px;
+  }
+}
 /* ---------- Combobox ---------- */
 
 .combobox {

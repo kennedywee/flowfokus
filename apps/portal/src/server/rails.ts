@@ -37,7 +37,7 @@ type ClientResult = { ok: true; api: FlowfokusClient } | { ok: false; error: Fai
 function client(slug: string | null, token: string): ClientResult {
   const workerEnv = portalEnv();
   const baseUrl = resolveApiBaseUrl(dev, workerEnv);
-  if (!baseUrl) return failure(503, "api_not_configured", "The API address is not configured.");
+  if (!baseUrl) return failure(503, "api_not_configured", "This portal is not set up yet.");
 
   const request = getRequest();
   const clientIp = request.headers.get("CF-Connecting-IP") ?? undefined;
@@ -79,7 +79,7 @@ async function attempt<T>(slug: string | null, run: (api: FlowfokusClient) => Pr
   try {
     outcome = await run(made.api);
   } catch {
-    return { kind: "done", result: failure(502, "api_unreachable", "The Flowfokus API did not respond. Try again in a moment.") };
+    return { kind: "done", result: failure(502, "api_unreachable", "Flowfokus did not respond. Try again in a moment.") };
   }
 
   if (outcome.data !== undefined) return { kind: "done", result: { ok: true, data: outcome.data.data } };
