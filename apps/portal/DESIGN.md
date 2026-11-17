@@ -103,7 +103,8 @@ Existing blocks to compose before adding another abstraction:
 - `Plate`: named section with body and optional action/footer.
 - `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
-- `CheckInPanel`: member/location choice and a response after an attempt.
+- `CheckInPanel`: the Home check-in form. Check-ins and the member page use
+  `useCheckIn` from `features/check-ins/CheckInFlow.tsx`.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
 
@@ -262,8 +263,7 @@ The members list and New member are the next redesigned screens
   Email is required because Rails requires it. Errors show on the fields, with
   a summary above. Leaving with typed details asks "Discard this member?".
   After a create, the member page opens with a "Member created" toast. The
-  toast has no New sale action, because Toast has no actions; Sell (S) is on
-  the member page.
+  toast has no New sale action; Sell (S) is on the member page.
 
 The sales list and sale details are the next redesigned screens
 (`features/sales/SalesList.tsx`, `SaleDetails.tsx`, and `SaleDialogs.tsx`;
@@ -326,3 +326,30 @@ Rails data:
 - Not shown, because Rails has no data for them: custom items, quantity,
   several lines, notes, card or e-wallet, attachments, member numbers and
   phones, and "Add new member" from the search.
+
+Check-ins is the next redesigned screen (`features/check-ins/CheckIns.tsx`,
+the check-in flow in `CheckInFlow.tsx`, the search in `FindMember.tsx`, facts
+in `facts.ts`, and idempotency in `attempt.ts`). It shows only Rails data:
+
+- Today's list: the title, Check in (check_ins:create) and ⋯ with Export
+  visits as CSV in the top bar. Filter by Result (Checked in, Denied, with
+  counts) and a "/" search over today's rows. A header band, then 44px rows:
+  24-hour time, member, location when there are several, and the result with
+  its reason. Each row opens the member. The footer is the Rails day count.
+- Check in opens Find member: Rails searches name and email as staff type.
+  Choosing a member checks them in at the top bar location at once. States:
+  searching, no match (New member), search failed, no location (Add
+  location). Phones put the search in the page above the list.
+- The result is a toast. A failed request shows an error toast with Try
+  again, which resends the same idempotency key. A denial opens the denial
+  dialog: the access fact from the Rails reason, the balance due when the
+  role can read sales, then New sale (no access) or Renew (no visits left).
+  "Let in anyway…" (check_ins:override) asks for a reason and lets the
+  member in with the neutral primary button.
+- C on the member page checks in directly, with the same toast or dialog.
+- No check_ins:read: one line naming the permission. No check_ins:create: no
+  Check in.
+- Not shown, because Rails has no data for them: the right used, credits
+  used, access hours, the cause behind "no active access", Undo, member
+  numbers and phones, access in the search, a check-in detail page, and
+  walk-ins.

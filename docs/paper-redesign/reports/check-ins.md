@@ -130,57 +130,81 @@ hours; Rails just has no time window yet. It is on the build list below.
 
 The build list. Paper shows these and the app or Rails cannot do them yet.
 
+Build status, 18 November 2026: **Built** means the portal does it now.
+**Needs Rails** means it waits on Rails data; the portal does not fake it.
+
 - **Access hours** ("Denied · Outside access hours", frames 1–5). Needs a time
   window on gym-access rights and a fourth denial reason in Rails.
+  Status: Needs Rails.
 - **Access column.** The name of the right used, "6 credits left", and "No
   active access". The check-in response has only `entitlement_id`.
+  Status: Needs Rails. The column shows the location when there are several.
 - **Credits used.** "Checked in · 1 credit used" in the row and the toast.
+  Status: Needs Rails.
 - **Denial words in the row** ("Denied · Access ended 3 Nov", "Denied · Sale
   awaiting payment"). The app shows one generic title per reason.
+  Status: Built for the three Rails reasons ("Denied · No visits left"). Dates and sale causes need Rails.
 - **The cause behind "no active membership right"** (frames 4, 13, 16, 17).
   Rails returns the same reason (`no_entitlement`) for no access, access
   ended, a sale awaiting payment, and a paid sale not fulfilled. To show these
   cases, the app must load the member's open sales with the denial, or Rails
   must return the cause. The "Balance" row needs the member's balance too.
+  Status: Needs Rails. The Balance row is built from the member's sales when the role can read them.
 - **The next step per denial.** 13: New sale. 14 and 23: no main step. 15:
   Renew (Rails renewal terms, as on the member page). 16: Record payment, plus
   Fulfill early for roles with `purchases:fulfill_unpaid`. 17: Fulfill sale.
   Each button appears only for a role with the matching sales permission.
+  Status: Built: New sale (13), none (14, 23), Renew (15, with Rails renewal terms). 16 and 17 need the cause from Rails.
 - **Undo** (frames 3, 5, 11, 20, 22). Rails has only list and create. There is
   no delete or reversal, and a granted check-in records a usage.
+  Status: Needs Rails.
 - **Toast result.** The app shows the result in a panel, not a toast. The
   toast needs an error variant (frame 12) and Try again.
+  Status: Built, with the error toast and Try again (12).
 - **Check-in from the top bar search.** The app uses a form with a member field
   and Check in button. Paper checks in on choosing a member.
+  Status: Built.
 - **Member search with numbers, phones, and access status** (frame 2). Members
   have no number or phone. The search does not return access.
+  Status: Needs Rails. The search shows name and email.
 - **Server search.** The app loads every member in the route and filters in the
   browser, so "Searching…" (7) and "Search didn't load" (9) need a search
   endpoint.
+  Status: Built. The existing Rails member search (`q`) serves Find member, so 7 and 9 are real states.
 - **Search members** on the list (`/` field), **Display**, and the **Filter**
   menu with counts and the Access filter.
+  Status: Built: search and the Result filter. Display and the Access filter need Rails.
 - **Row detail.** Rows end in a chevron. There is no check-in detail page.
+  Status: Needs Rails. Rows open the member page instead.
 - **Daily count** ("86 check-ins today · 3 denied"). Rails returns the latest
   100 check-ins, not today's count.
+  Status: Built from the Rails overview (`check_ins_today`), which already counts the day.
 - **Export visits in ⋯.** The app has an Export visits button; it moves into
   the ⋯ menu.
+  Status: Built.
 - **Override in the dialog.** The app has Let in anyway in the panel. The
   dialog link, the reason line, and the button "Let in Farah" are new. The
   app's override button is red (`variant="destructive"`); change it to the
   neutral primary button. Letting a member in loses nothing.
+  Status: Built, with the neutral primary button.
 - **Check in (C) on the member page checks in directly** at the top bar
   location, with the toast or the denial dialog. The app opens a dialog with a
   location choice.
+  Status: Built (22, 23).
 - **No location in the search** (frame 10). "Add location" needs a link to
   settings.
+  Status: Built.
 - **Loading skeleton** (28) and **Try again** (29). The route loads before
   render.
+  Status: Built.
 - **Error copy.** The app's messages name the API, Rails, or the database
   ("The Flowfokus API did not respond. Check that Rails is running"). Frames
   9, 12, and 29 use staff words instead.
+  Status: Built.
 - **Permission branches.** The app does not hide Check in or the page by
   permission; it shows the API error. Frames 21, 30, and 31 need the app to
   read `check_ins:create`, `check_ins:override`, and `check_ins:read`.
+  Status: Built (21, 30, 31).
 
 ## 5. Open questions
 
