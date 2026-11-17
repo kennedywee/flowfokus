@@ -96,28 +96,48 @@ Session details page (`p-D-0`):
 
 ## 4. Needs app or Rails work
 
+Build status, 18 November 2026: **Built** means the portal does it now.
+**Needs Rails** means it waits on Rails data; the portal does not fake it.
+
 From the user's existing session frames:
 
 - Attendance states "Not marked", "Checked in", and "No-show". Rails has booked and attended only. No-show and undo are missing.
+  Status: Built for Not marked and Attended. The band and menu say "Attended", the Rails word, not "Checked in": a gym check-in is a separate Rails record. No-show and undo need Rails.
 - Bulk select, and bulk "Check in" / "No-show".
+  Status: Needs Rails. Rows keep the empty checkbox lane, as in "View only".
 - Member numbers (M-0350) and "Guest of Ben Tan" on the row.
+  Status: "Guest of" is built from the booking's holder, which Rails already sends ("Booked by" when one member books another). Member numbers need Rails.
 - Payment chip on a booking ("Unpaid", "Awaiting payment").
+  Status: Built for "Awaiting payment" on a held booking, from the Rails booking status. "Unpaid" needs the sale's payment state on the booking: Needs Rails.
 - Row menu: Change payment…, Collect payment, Move to another session…, Open member. Shortcuts A, P, M, ↵.
+  Status: Built: right-click or ⋯ opens Mark attended (A), Open member, Open sale, and Cancel booking…. The status icon opens the attendance menu. Change payment, Collect payment, and Move need Rails.
 - Book member as a top bar action with the B shortcut. The app has an inline panel.
+  Status: Built.
 - Activity feed and comments on a session.
+  Status: Needs Rails.
 - Emailing booked members when a session is cancelled.
+  Status: Needs Rails. The Cancel session dialog does not promise an email.
 - "Status" and "Reason" as properties.
+  Status: Built. Rails already returns the cancel reason, so the Reason property shows it.
 
 From the new frames:
 
 - The session page and breadcrumb sit under Programs › Morning strength in Paper. The app route is under Schedule.
+  Status: Built. The route stays /schedule/:id; the breadcrumb and the sidebar show Programs › the program › the session.
 - Schedule filter by program, with counts.
+  Status: Built, from the loaded two weeks. The URL keeps the filter (`program=`).
 - Schedule shows only the top bar location. The app shows every location.
+  Status: Built.
 - "Ended" for past sessions.
+  Status: Built.
 - "Try again" on load errors.
+  Status: Built on the Schedule and on a session that did not load. A missing session shows "Back to Schedule".
 - Book member as one dialog with a single choice and a footer action.
+  Status: Built, with several spots per ticket. A ticket sale stays on the session; its toast has Open sale.
 - Copy to fix in code: `lib/format.ts` says "The Flowfokus API did not respond. Check that Rails is running, then try again." Staff cannot act on that. Use "Flowfokus did not respond. Try again."
+  Status: Built earlier (staff-words error copy).
 - Rename "time" to "session" in the app.
+  Status: Built. Programs also says "New program".
 
 ## 5. Open questions
 

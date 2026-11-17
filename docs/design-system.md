@@ -39,7 +39,7 @@ Show dependent controls when their prerequisite is chosen. Keep labels and
 validation attached to the controls. Show check-in feedback after an attempt;
 do not fill the idle form with a description of where the result will appear.
 
-Prefer one implementation with one owner. Real views live in `features/check-ins`,
+Prefer one implementation with one owner. Real views live in `features/check-ins`, `features/schedule`,
 `features/reports`, and `features/settings`. `features/preview` owns simulated
 features only. `components/Filters.tsx` owns selection filters; `lib/export.ts`
 owns CSV export. Keep fetching and mutations at their current request boundaries.

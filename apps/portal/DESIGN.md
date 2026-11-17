@@ -353,3 +353,52 @@ in `facts.ts`, and idempotency in `attempt.ts`). It shows only Rails data:
   used, access hours, the cause behind "no active access", Undo, member
   numbers and phones, access in the search, a check-in detail page, and
   walk-ins.
+
+Schedule and Session details are the next redesigned screens
+(`features/schedule/Schedule.tsx`, `SessionDetails.tsx`, `BookMember.tsx`,
+and `SessionDialogs.tsx`; facts in `facts.ts`, status marks in `marks.tsx`,
+styles in `styles/schedule.css`). They show only Rails data:
+
+- Schedule: the title, Programs in the top bar, then Filter and the range
+  with Earlier, Today (off today), and Later. Two weeks at the top bar
+  location, one grey band per day with its session count, then 52px rows:
+  time, program, kind and host (or length), and the status mark: a green pie
+  for "9 of 14 booked", an amber dot for Full, a red cross for "Cancelled ·
+  reason", and a grey tick for "Ended · 11 of 12 booked". Ended and cancelled
+  rows are grey. Filter has a Program submenu with counts; the URL keeps
+  `from` and `program`. Phones show the start time, then "Until …", and the
+  status under the name.
+- Nothing scheduled: one line and "Add sessions from a program". No match:
+  one line and Clear filters. Did not load: one line, the reason, Try again.
+- Session details: a tile, the date and time as the title, program and kind
+  under it. Book member (B) and ⋯ (Open program, Cancel session… with
+  programs:manage) sit in the top bar while the session is open. The
+  breadcrumb is Programs › program › session, and Programs is the active
+  page. Properties: program, host, location (with several locations), time,
+  capacity, status, and the cancel reason.
+- The roster has three bands: Not marked (booked and held), Attended, and
+  Cancelled (cancelled and expired, folded unless the session is cancelled
+  or has no other bookings). The band says "Attended", the Rails word, not
+  Paper's "Checked in": a gym check-in is a separate fact. Rows show
+  initials, the name, "Guest of …" or "Booked by …" from the holder, what
+  happened to a cancelled spot (reason, "Credit returned", "Refund from the
+  sale", "Hold expired, payment not received"), the right as a chip,
+  "Awaiting payment" on a held spot, and the day it was booked. The status
+  icon opens the attendance menu; A marks the focused row; right-click or ⋯
+  opens Mark attended, Open member, Open sale, and Cancel booking….
+  Phones put Details first and write each row as two lines of text.
+- Book member is one dialog: find the member, then one choice: a pass or
+  membership they hold, or a ticket. Tickets can buy up to ten spots; each
+  other spot is a member or a named guest. The footer action names the
+  choice ("Book with Monthly unlimited", "Sell 3 × Drop-in · RM 105.00").
+  States: passes loading, passes did not load, already booked, full, not
+  booked, sale not recorded, and roles that can only book or only sell. A
+  ticket sale keeps one Idempotency-Key per request, so a retry never sells
+  twice. After a sale the page stays on the session; the toast has Open sale.
+- Cancel session and Cancel booking use the Paper confirm frame: a title,
+  the consequence, a required Reason, then Keep and the red action. Cancel
+  booking on a pass offers to give the credit back.
+- Not shown, because Rails has no data for them: no-show and undo, bulk
+  marking, member numbers, the sale's payment state on a booking, Change
+  payment, Collect payment, Move, session activity and comments, and
+  cancellation emails.
