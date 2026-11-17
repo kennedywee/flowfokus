@@ -33,7 +33,7 @@ shadcn's `--accent` means neutral hover, not the portal's blue accent.
 
 ## Typography
 
-Use Geist Variable for interface text and Geist Mono Variable for money, times,
+Use Figtree Variable for interface text and Geist Mono Variable for money, times,
 counts, and IDs. Use the existing `--text-*`, `--font-weight-*`, and `--leading-*`
 scales. Body text uses `--text-base` (14px); page titles use `--text-xl` (24px).
 Do not use mono as decoration. Use `Money` and `Time` for domain values.
@@ -192,9 +192,8 @@ the band. Dark values keep the earlier dark ink and status colours on a single
 
 Type. Redesigned screens use `--text-lg` (20px, semibold) for the page title,
 `--text-sm` (13px) for body text and headings, and `--text-xs` (12px) for
-secondary text. The base `h1` is now 20px. Geist stays the interface font;
-Paper shows Figtree. Changing the font needs a new font package and is a
-separate decision.
+secondary text. The base `h1` is now 20px. Figtree is the interface font, as in Paper.
+Geist Mono stays for money, times, counts, and IDs.
 
 Controls. `Button size="compact"` (and `"icon-compact"`) is the 28px redesign
 button with an 8px radius (`--control-height-compact`, `--radius-compact`). A

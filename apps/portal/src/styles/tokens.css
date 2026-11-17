@@ -85,7 +85,7 @@
   /* Type. Redesigned screens use three sizes: --text-lg (20px) for the page
    * title, --text-sm (13px) for body text and headings, --text-xs (12px) for
    * secondary text. Hierarchy comes from weight and ink tone. */
-  --font-sans: "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Figtree Variable", "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
 
   --text-xs: 12px;

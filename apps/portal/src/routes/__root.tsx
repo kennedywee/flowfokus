@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
-import sansFont from "@fontsource-variable/geist/index.css?url";
+import sansFont from "@fontsource-variable/figtree/index.css?url";
 import monoFont from "@fontsource-variable/geist-mono/index.css?url";
 // Emitted as files, not inlined, so browsers can cache them.
 import faviconSvg from "../assets/flowfokus-mark.svg?url&no-inline";
