@@ -270,20 +270,26 @@ export function SubmitButton({
   children,
   disabled = false,
   large = false,
+  compact = false,
   variant = "default",
+  ...rest
 }: {
   pending: boolean;
   pendingLabel: string;
   children: ReactNode;
   disabled?: boolean;
   large?: boolean;
+  /** The 28px redesign button. */
+  compact?: boolean;
   variant?: "default" | "secondary" | "ghost" | "destructive";
+  "aria-keyshortcuts"?: string;
 }) {
   return (
     <Button
       type="submit"
       variant={variant}
-      size={large ? "lg" : "default"}
+      size={compact ? "compact" : large ? "lg" : "default"}
+      {...rest}
       disabled={disabled || pending}
       aria-busy={pending || undefined}
     >

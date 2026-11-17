@@ -94,6 +94,26 @@ function DropdownMenuRadioItem({ className, children, closeOnClick = true, ...pr
   )
 }
 
+/**
+ * An on/off choice, such as one filter value. The check shows on its left.
+ * It stays open after a pick by default, so staff can tick several.
+ */
+function DropdownMenuCheckboxItem({ className, children, closeOnClick = false, ...props }: MenuPrimitive.CheckboxItem.Props) {
+  return (
+    <MenuPrimitive.CheckboxItem
+      data-slot="dropdown-menu-checkbox-item"
+      className={cn("menu__item", className)}
+      closeOnClick={closeOnClick}
+      {...props}
+    >
+      <span className="menu__check menu__check--box">
+        <MenuPrimitive.CheckboxItemIndicator render={<Check strokeWidth={2.5} aria-hidden="true" focusable="false" />} />
+      </span>
+      {children}
+    </MenuPrimitive.CheckboxItem>
+  )
+}
+
 /** A submenu. It opens on hover, on Enter, or on the Right arrow key. */
 function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
   return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
@@ -132,6 +152,7 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"spa
 
 export {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuHeader,

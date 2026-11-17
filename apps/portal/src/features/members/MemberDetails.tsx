@@ -2,21 +2,12 @@ import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Activity,
-  Banknote,
   CalendarDays,
   ChevronDown,
   ChevronRight,
-  CircleCheck,
-  CircleDashed,
-  CircleSlash,
-  Globe,
   IdCard,
-  Landmark,
   Mail,
   MoreHorizontal,
-  Package,
-  PackageCheck,
-  PackageX,
   Receipt,
   RefreshCw,
   Ticket,
@@ -46,21 +37,18 @@ import type { MemberRecord } from "../../lib/staff.functions";
 import { createLinkCode, renewMembership, unlinkMember } from "../../lib/staff.functions";
 import {
   balanceDue,
-  deliveryFact,
   formatSpan,
   isUpcoming,
   memberActivity,
   orderPeriods,
-  paymentFact,
-  paymentMethods,
   periodState,
   periodText,
   totalPaid,
   type ActivityEvent,
-  type DeliveryFact,
-  type PaymentFact,
   type PeriodState,
 } from "./facts";
+import { paymentFact, paymentMethods } from "../sales/facts";
+import { DeliveryMark, METHOD_ICON, PaymentMark } from "../sales/SaleFacts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -465,36 +453,6 @@ function BookingsSection({ bookings, now }: { bookings: Schemas["Booking"][]; no
   );
 }
 
-const PAYMENT_ICON: Record<PaymentFact["state"], LucideIcon> = {
-  paid: CircleCheck,
-  partial: CircleCheck,
-  unpaid: CircleDashed,
-  void: CircleSlash,
-};
-
-const DELIVERY_ICON: Record<DeliveryFact["state"], LucideIcon> = {
-  delivered: PackageCheck,
-  waiting: Package,
-  revoked: PackageX,
-  none: Package,
-};
-
-const METHOD_ICON: Record<Schemas["PaymentMethod"], LucideIcon> = {
-  cash: Banknote,
-  bank_transfer: Landmark,
-  online: Globe,
-};
-
-/** Half-filled ring for a part payment. */
-function PartPaidMark() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M12 6a6 6 0 0 1 0 12Z" fill="currentColor" />
-    </svg>
-  );
-}
-
 function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId: string }) {
   const organization = useOrganization();
   const shortDate = useShortDate();
@@ -512,12 +470,9 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
         <>
           <ul className="mx-rows mx-sales">
             {shown.map((sale) => {
-              const payment = paymentFact(sale);
-              const delivery = deliveryFact(sale);
-              const PaymentIcon = PAYMENT_ICON[payment.state];
-              const DeliveryIcon = DELIVERY_ICON[delivery.state];
               const methods = paymentMethods(sale);
               const MethodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
+              const payment = paymentFact(sale);
               return (
                 <li key={sale.id}>
                   <Link className="mx-sale" to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: sale.id }}>
@@ -527,14 +482,8 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
                         Sold on {shortDate(sale.purchased_at)}
                       </span>
                     </span>
-                    <span className="mx-fact mx-sale__payment" data-state={payment.state}>
-                      {payment.state === "partial" ? <PartPaidMark /> : <PaymentIcon {...statusIcon} />}
-                      {payment.label}
-                    </span>
-                    <span className="mx-fact mx-sale__delivery" data-state={delivery.state}>
-                      <DeliveryIcon {...statusIcon} />
-                      {delivery.label}
-                    </span>
+                    <PaymentMark sale={sale} className="mx-sale__payment" />
+                    <DeliveryMark sale={sale} className="mx-sale__delivery" />
                     <span className="mx-fact mx-sale__method">
                       {MethodIcon ? <MethodIcon {...statusIcon} /> : null}
                       {methods ?? "—"}

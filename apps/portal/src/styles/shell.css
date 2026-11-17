@@ -699,6 +699,24 @@
   width: 16px;
   color: var(--color-ink);
 }
+/* The box of a checkbox item: empty when off, filled with a check when on. */
+.menu__check--box {
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  border: 1.5px solid var(--color-field-line);
+  border-radius: 4px;
+}
+.menu__item[data-checked] .menu__check--box {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+}
+.menu__check--box svg,
+.menu__item .menu__check--box svg {
+  width: 12px;
+  height: 12px;
+}
 /* Right side of an item: the current value and a chevron for a submenu. */
 .menu__meta {
   display: inline-flex;

@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronLeft, ChevronRight, Plus, Search, Users } from "lucide-react";
+import { ChevronRight, Plus, Search, Users } from "lucide-react";
+import { ListPager } from "../../components/ListPager";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
 import { buttonVariants } from "@/components/ui/button";
 import { useShortDate } from "./dates";
-import { PAGE_SIZE, pageItems, rangeLabel } from "./list";
+import { PAGE_SIZE } from "../../lib/paging";
+import { rangeLabel } from "./list";
 
 const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
 
@@ -98,15 +100,15 @@ function SearchField({ q }: { q: string }) {
   }
 
   return (
-    <form role="search" className="members-search" onSubmit={onSubmit}>
+    <form role="search" className="list-search" onSubmit={onSubmit}>
       <label htmlFor="member-search" className="visually-hidden">
         Search members by name or email
       </label>
-      <Search className="members-search__icon" {...icon} />
+      <Search className="list-search__icon" {...icon} />
       <input
         ref={input}
         id="member-search"
-        className="members-search__input"
+        className="list-search__input"
         type="search"
         placeholder="Search name or email"
         autoComplete="off"
@@ -170,56 +172,13 @@ function MemberRows({ members }: { members: Schemas["Member"][] }) {
           </li>
         ))}
       </ul>
-      <nav className="members-pager" aria-label="Members pages">
-        <p className="members-pager__range" aria-live="polite">
-          {rangeLabel(first, rows.length, members.length)}
-        </p>
-        {pages > 1 ? (
-          <ul className="members-pager__list">
-            <li>
-              <button
-                type="button"
-                className="members-pager__button"
-                aria-label="Previous page"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
-                <ChevronLeft {...icon} />
-              </button>
-            </li>
-            {pageItems(page, pages).map((item, index) => (
-              <li key={item === "gap" ? `gap-${index}` : item}>
-                {item === "gap" ? (
-                  <span className="members-pager__gap" aria-hidden="true">
-                    …
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    className="members-pager__button"
-                    aria-label={`Page ${item}`}
-                    aria-current={item === page ? "page" : undefined}
-                    onClick={() => setPage(item)}
-                  >
-                    {item}
-                  </button>
-                )}
-              </li>
-            ))}
-            <li>
-              <button
-                type="button"
-                className="members-pager__button"
-                aria-label="Next page"
-                disabled={page === pages}
-                onClick={() => setPage(page + 1)}
-              >
-                <ChevronRight {...icon} />
-              </button>
-            </li>
-          </ul>
-        ) : null}
-      </nav>
+      <ListPager
+        label="Members pages"
+        range={rangeLabel(first, rows.length, members.length)}
+        page={page}
+        pages={pages}
+        onPage={setPage}
+      />
     </section>
   );
 }
@@ -227,7 +186,7 @@ function MemberRows({ members }: { members: Schemas["Member"][] }) {
 function NoResults({ q }: { q: string }) {
   const organization = useOrganization();
   return (
-    <div className="members-state" role="status">
+    <div className="list-state" role="status">
       <p>No members match “{q}”</p>
       <Link
         to="/$org/members"
@@ -243,8 +202,8 @@ function NoResults({ q }: { q: string }) {
 
 function NoMembers() {
   return (
-    <div className="members-state">
-      <Users className="members-state__icon" {...icon} />
+    <div className="list-state">
+      <Users className="list-state__icon" {...icon} />
       <p>No members yet</p>
       <NewMemberLink variant="secondary" />
     </div>
@@ -257,7 +216,7 @@ export function MembersListLoading() {
     <div className="page members-list" role="status" aria-busy="true" aria-label="Loading members">
       <ListHead />
       <div className="members-toolbar">
-        <span className="members-search skeleton-block" />
+        <span className="list-search skeleton-block" />
       </div>
       <div className="members-table">
         <div className="members-table__head" />

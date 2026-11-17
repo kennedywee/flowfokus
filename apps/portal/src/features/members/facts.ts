@@ -1,5 +1,5 @@
 import type { Schemas } from "@flowfokus/api";
-import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, PAYMENT_STATUS_LABEL, formatMoney } from "../../lib/format";
+import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, formatMoney } from "../../lib/format";
 
 /*
  * Facts for the member details page, read from Rails responses only. Each
@@ -61,32 +61,6 @@ export function orderPeriods(periods: Schemas["MembershipPeriod"][], now: number
   };
   const newestFirst = [...periods].reverse();
   return { active: newestFirst.filter(live), rest: newestFirst.filter((period) => !live(period)) };
-}
-
-export type PaymentFact = { state: "paid" | "partial" | "unpaid" | "void"; label: string };
-
-/** The payment state of a sale, from `payment_status` and `voided_at`. */
-export function paymentFact(sale: Schemas["Sale"]): PaymentFact {
-  if (sale.voided_at || sale.payment_status === "void") return { state: "void", label: PAYMENT_STATUS_LABEL.void };
-  if (sale.payment_status === "paid") return { state: "paid", label: PAYMENT_STATUS_LABEL.paid };
-  if (sale.payment_status === "partially_paid") return { state: "partial", label: PAYMENT_STATUS_LABEL.partially_paid };
-  return { state: "unpaid", label: PAYMENT_STATUS_LABEL.unpaid };
-}
-
-export type DeliveryFact = { state: "delivered" | "revoked" | "waiting" | "none"; label: string };
-
-/** The delivery state of a sale, from `fulfilled` and the fulfillment record. */
-export function deliveryFact(sale: Schemas["Sale"]): DeliveryFact {
-  if (sale.fulfillment?.revoked_at) return { state: "revoked", label: "Access revoked" };
-  if (sale.fulfilled) return { state: "delivered", label: "Delivered" };
-  if (sale.voided_at) return { state: "none", label: "Not delivered" };
-  return { state: "waiting", label: "Not delivered" };
-}
-
-/** How the sale was paid: each method once, oldest first. Null when nothing was paid. */
-export function paymentMethods(sale: Schemas["Sale"]): string | null {
-  const methods = [...new Set(sale.payments.map((payment) => PAYMENT_METHOD_LABEL[payment.method]))];
-  return methods.length ? methods.join(" + ") : null;
 }
 
 /** Sums by currency, as display strings, for example "RM 450.00". */

@@ -1,17 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { formatMoney, type Schemas } from "@flowfokus/api";
-import {
-  balanceDue,
-  deliveryFact,
-  formatSpan,
-  memberActivity,
-  orderPeriods,
-  paymentFact,
-  paymentMethods,
-  periodState,
-  periodText,
-  totalPaid,
-} from "./facts";
+import { deliveryFact, paymentFact, paymentMethods } from "../sales/facts";
+import { balanceDue, formatSpan, memberActivity, orderPeriods, periodState, periodText, totalPaid } from "./facts";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;

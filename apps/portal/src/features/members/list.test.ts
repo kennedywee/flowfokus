@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { checkNewMember, fieldMessage, pageItems, rangeLabel } from "./list";
+import { pageItems } from "../../lib/paging";
+import { checkNewMember, fieldMessage, rangeLabel } from "./list";
 
 describe("rangeLabel", () => {
   test("counts all members when they fit on one page", () => {
