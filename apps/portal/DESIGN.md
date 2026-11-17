@@ -285,3 +285,30 @@ and `ListPager` with the members list. They show only Rails data:
 - Not shown, because Rails has no data for them: sale numbers, who sold or
   recorded a payment, notes, comments, invoices, card or e-wallet payments,
   attachments, receipts, and several lines in one sale.
+
+New sale is the next redesigned screen (`features/sales/NewSale.tsx`, rules in
+`features/sales/saleDraft.ts`). It reuses the sale page's lines, totals, and
+dialog frame, and the record-payment fields (`PaymentFields`). It shows only
+Rails data:
+
+- A page, not a dialog. A tile and the title, Create sale (⌘↵) in the header
+  row. Products and Payment on the left; Member and Location on the right
+  from 1100px. Phones put Member and Location first.
+- Products holds one line, because Rails sells one line, quantity one, at the
+  price's current amount. "+ Product" opens Add product: search, then All,
+  Memberships, and Passes when both are on sale, then one choice. Tickets are
+  left out: they are sold for a session time from the schedule.
+- Record payment adds Cash or Bank transfer before the sale exists. Nothing is
+  sent until Create sale; then Rails records the sale, then the payment.
+  Balance due turns warning-coloured while money is due.
+- Member: a search of name and email; a chosen member shows the name and
+  email, with a button to change. Sell (S) on a member page and `?member=`
+  start with the member chosen. Location starts at the desk location.
+- Errors show on the member, product, and location, as in Paper "4a". Leaving
+  with a product, a payment, or a changed member asks "Discard this sale?".
+- After a create, the sale page opens with a "Sale created" toast that says
+  what is due. If the payment fails after the sale exists, an error toast says
+  so and the sale page still opens, so staff never create the sale twice.
+- Not shown, because Rails has no data for them: custom items, quantity,
+  several lines, notes, card or e-wallet, attachments, member numbers and
+  phones, and "Add new member" from the search.
