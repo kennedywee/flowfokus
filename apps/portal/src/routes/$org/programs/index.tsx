@@ -39,7 +39,7 @@ function Programs() {
             {can("programs:manage") ? (
               <Button type="button" size="compact" onClick={() => setAdding(true)}>
                 <Plus aria-hidden="true" />
-                Add program
+                New program
               </Button>
             ) : null}
           </>
@@ -51,7 +51,7 @@ function Programs() {
         <Empty title="No programs yet" icon={CalendarDays}>
           <p>
             {can("programs:manage")
-              ? "Select Add program to create a class, an event, or appointment slots."
+              ? "Select New program to create a class, an event, or appointment slots."
               : "Programs appear here once a manager adds them."}
           </p>
         </Empty>
@@ -68,7 +68,7 @@ function Programs() {
                   Spots
                 </TableHead>
                 <TableHead scope="col" className="num">
-                  Coming times
+                  Coming sessions
                 </TableHead>
               </TableRow>
             </TableHeader>

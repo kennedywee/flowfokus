@@ -49,7 +49,7 @@ function ProgramPage() {
           PROGRAM_KIND_LABEL[data.kind],
           data.location_name,
           `${data.duration_minutes} min`,
-          `${data.capacity} ${data.capacity === 1 ? "spot" : "spots"} per time`,
+          `${data.capacity} ${data.capacity === 1 ? "spot" : "spots"} per session`,
           data.host_name,
         ]
           .filter(Boolean)
@@ -76,7 +76,7 @@ function ProgramPage() {
       {data.description ? <p className="program-page__description">{data.description}</p> : null}
 
       <div className="program-page__layout">
-        <Times program={data} onAdd={manage ? () => setOpen("schedule") : undefined} />
+        <Sessions program={data} onAdd={manage ? () => setOpen("schedule") : undefined} />
         <div className="stack">
           <Tickets program={data} onAdd={manage ? () => setOpen("ticket") : undefined} />
           <Plate title="Also books it">
@@ -112,24 +112,24 @@ function spotsState(occurrence: Schemas["Occurrence"]): { state: "off" | "due" |
   return { state: "active", label: `${occurrence.spots_left} left` };
 }
 
-function Times({ program, onAdd }: { program: Schemas["ProgramDetail"]; onAdd?: () => void }) {
+function Sessions({ program, onAdd }: { program: Schemas["ProgramDetail"]; onAdd?: () => void }) {
   const organization = useOrganization();
   return (
     <Plate
-      title="Times"
+      title="Sessions"
       flush
       action={
         onAdd ? (
           <Button type="button" size="sm" onClick={onAdd}>
             <CalendarPlus aria-hidden="true" />
-            Add times
+            Add sessions
           </Button>
         ) : undefined
       }
     >
       {program.occurrences.length === 0 ? (
-        <Empty title="No coming times">
-          <p>{onAdd ? "Select Add times to put this program on the schedule." : "A manager must add times first."}</p>
+        <Empty title="No coming sessions">
+          <p>{onAdd ? "Select Add sessions to put this program on the schedule." : "A manager must add sessions first."}</p>
         </Empty>
       ) : (
         <Table>

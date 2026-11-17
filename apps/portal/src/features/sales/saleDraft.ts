@@ -4,10 +4,10 @@ import { PAYMENT_METHOD_LABEL, formatBenefitUsage, formatDuration, formatMoney }
 /*
  * Rules for the New sale page, kept apart from the screen so they can be
  * tested. Rails records one line, quantity one, at an immutable price. A
- * ticket is sold for one booked time, so it starts from the session, not here.
+ * ticket is sold for one booked session, so it starts from the session, not here.
  */
 
-/** Product kinds New sale offers. Tickets need a session time. */
+/** Product kinds New sale offers. Tickets need a session. */
 export type SaleKind = Exclude<Schemas["ProductKind"], "ticket">;
 
 /** One price that staff can sell, with its product. */

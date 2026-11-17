@@ -23,9 +23,9 @@ export function formatWhen(iso: string, timeZone: string, now: Date = new Date()
   return day.format(new Date(iso)) === day.format(now) ? formatTime(iso, timeZone) : formatDateTime(iso, timeZone);
 }
 
-/** A price's term. Tickets have none: they last until their time ends. */
+/** A price's term. Tickets have none: they last until their session ends. */
 export function formatDuration(days: number | null): string {
-  if (days === null) return "One booked time";
+  if (days === null) return "One booked session";
   if (days === 7) return "7 days (1 week)";
   return days === 1 ? "1 day" : `${days} days`;
 }

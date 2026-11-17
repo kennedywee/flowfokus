@@ -438,7 +438,7 @@ function BookingsSection({ bookings, now }: { bookings: Schemas["Booking"][]; no
         </>
       ) : (
         <p className="mx-empty">
-          No bookings yet. Book from a time on the{" "}
+          No bookings yet. Book from a session on the{" "}
           <Link to="/$org/schedule" params={{ org: organization.slug }}>
             schedule
           </Link>

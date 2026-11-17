@@ -94,7 +94,7 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
     toast.show({
       tone: "success",
       title: program ? "Program saved" : "Program added",
-      body: program ? "New times use these details. Existing times keep their spots." : "Add times and a ticket price next.",
+      body: program ? "New sessions use these details. Existing sessions keep their spots." : "Add sessions and a ticket price next.",
     });
     onClose();
     if (program) {
@@ -111,7 +111,7 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
       <DialogContent className="offer-dialog">
         <form onSubmit={onSubmit} noValidate>
           <DialogBody>
-            <DialogTitle>{program ? `Edit ${program.name}` : "Add program"}</DialogTitle>
+            <DialogTitle>{program ? `Edit ${program.name}` : "New program"}</DialogTitle>
             {problems.length || server.length ? (
               <Problems title="The program was not saved" problems={[...problems, ...server]} />
             ) : action.error ? (
@@ -137,7 +137,7 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
                 </Field>
               )}
               <div className="form-row">
-                <Field id="program-capacity" label="Spots per time">
+                <Field id="program-capacity" label="Spots per session">
                   <Input id="program-capacity" inputMode="numeric" value={capacity} onChange={(event) => setCapacity(event.target.value)} />
                 </Field>
                 <Field id="program-duration" label="Length in minutes">
@@ -183,7 +183,7 @@ export function ProgramDialog({ program, onClose }: { program?: Schemas["Program
               Cancel
             </Button>
             <SubmitButton pending={action.pending} pendingLabel="Saving…">
-              {program ? "Save program" : "Add program"}
+              {program ? "Save program" : "Create program"}
             </SubmitButton>
           </DialogFooter>
         </form>
@@ -197,7 +197,7 @@ function todayIn(timeZone: string): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone, dateStyle: "short" }).format(new Date());
 }
 
-/** Adds one time, or the same day and time for several weeks. */
+/** Adds one session, or the same day and time for several weeks. */
 export function ScheduleDialog({ program, onClose }: { program: Schemas["ProgramDetail"]; onClose: () => void }) {
   useRestoreFocus();
   const organization = useOrganization();
@@ -224,8 +224,8 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
     const added = result.data.occurrences.length - before;
     toast.show({
       tone: "success",
-      title: added === 1 ? "1 time added" : `${Math.max(added, 0)} times added`,
-      body: added < Number(weeks) ? "Times that already existed were skipped." : `Each time has ${program.capacity} spots.`,
+      title: added === 1 ? "1 session added" : `${Math.max(added, 0)} sessions added`,
+      body: added < Number(weeks) ? "Sessions that already existed were skipped." : `Each session has ${program.capacity} spots.`,
     });
     void router.invalidate();
     onClose();
@@ -236,9 +236,9 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
       <DialogContent>
         <form onSubmit={onSubmit} noValidate>
           <DialogBody>
-            <DialogTitle>Add times to {program.name}</DialogTitle>
-            {problems.length ? <Problems title="No times were added" problems={problems} /> : null}
-            {action.error ? <FailureNotice error={action.error} title="No times were added" /> : null}
+            <DialogTitle>Add sessions to {program.name}</DialogTitle>
+            {problems.length ? <Problems title="No sessions were added" problems={problems} /> : null}
+            {action.error ? <FailureNotice error={action.error} title="No sessions were added" /> : null}
             <div className="form">
               <div className="form-row">
                 <Field id="schedule-date" label="First date">
@@ -256,7 +256,7 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
                 >
                   {[1, 2, 4, 8, 12, 26].map((count) => (
                     <NativeSelectOption key={count} value={String(count)}>
-                      {count === 1 ? "1 week (one time)" : `${count} weeks`}
+                      {count === 1 ? "1 week (one session)" : `${count} weeks`}
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
@@ -268,7 +268,7 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
               Cancel
             </Button>
             <SubmitButton pending={action.pending} pendingLabel="Adding…">
-              Add times
+              Add sessions
             </SubmitButton>
           </DialogFooter>
         </form>
@@ -277,7 +277,7 @@ export function ScheduleDialog({ program, onClose }: { program: Schemas["Program
   );
 }
 
-/** Adds a ticket price. A ticket buys one spot at one time. */
+/** Adds a ticket price. A ticket buys one spot in one session. */
 export function TicketDialog({ program, onClose }: { program: Schemas["ProgramDetail"]; onClose: () => void }) {
   useRestoreFocus();
   const organization = useOrganization();
@@ -353,7 +353,7 @@ export function TicketDialog({ program, onClose }: { program: Schemas["ProgramDe
               </Field>
               <Notice tone="info" title="One ticket, one spot">
                 <p>
-                  {amountMinor !== null ? `${formatMoney(amountMinor, currency)} buys one spot at one time. ` : "A ticket buys one spot at one time. "}
+                  {amountMinor !== null ? `${formatMoney(amountMinor, currency)} buys one spot in one session. ` : "A ticket buys one spot in one session. "}
                   Members can buy it on the gym site when they book. The amount is fixed once saved.
                 </p>
               </Notice>
