@@ -105,9 +105,10 @@ These are the ones that matter most:
 - You may improve layout, grouping, and wording. If a frame needs data or an
   action the app does not have, you may still design it, but list it in the
   report under "Needs app or Rails work". Keep such additions few.
-- Words: "Deliver", "Delivered", "Not delivered". Never "Fulfill". Say
-  "Deliver early" when money is still due.
-- Payment and delivery are two separate facts. Never merge them in one status.
+- Words: "Fulfill", "Fulfilled", "Unfulfilled", "Partly fulfilled". Never
+  "Deliver" or "Delivered". Say "Fulfill early" when money is still due. The
+  existing Paper frames already use these words, and they are correct.
+- Payment and fulfillment are two separate facts. Never merge them in one status.
 - Payment methods: Cash and Bank transfer only. Recording a payment does not
   move money; do not word it as if it does.
 - A sale has one line, quantity one. A ticket is sold for one session time.
@@ -119,11 +120,14 @@ These are the ones that matter most:
 - Sample content: Chainsaw Gym, location Bangsar (also Mont Kiara, Petaling
   Jaya), currency RM, staff user "Kennedy · Owner". Reuse the member and
   product names already in the file.
-- Sidebar: keep Paper's sidebar exactly as it is on existing pages (Home,
-  Members, Sales, Check-ins, Programs, Products, Reports). The app's sidebar
-  differs today (Overview, Inbox, Agents, Check-in, Schedule, Plans & offers).
-  If your screen has no item in Paper's sidebar, add its item in your frames
-  only, and raise it in the report as an open question.
+- Names: Paper's names are settled. The pages are Home, Check-ins, and
+  Products, with "product", not "offer". The app will be renamed to match.
+- Sidebar: Paper's sidebar has Home, Members, Sales, Check-ins, Programs,
+  Products, and Reports. Inbox, Agents, and Schedule join it. The full sidebar
+  is designed once, on the Home page ("App — Sidebar with all pages"), and one
+  later pass applies it to every frame. Do not change the sidebar of an
+  existing artboard yourself. If your screen is Inbox, Agents, or Schedule,
+  show its item, selected, in your own frames, drawn like the other items.
 
 ## Report
 
