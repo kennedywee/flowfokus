@@ -8,16 +8,45 @@ built from Paper afterwards, so a missing state in Paper becomes a guess in code
 Read this file, then `apps/portal/DESIGN.md` ("Redesign direction" and
 "Redesign foundation"), then your task.
 
+## Paper is the target
+
+The user designed the existing Paper frames on purpose, ahead of the app. The
+app and Rails will follow Paper. So when an existing frame and the app differ,
+**Paper wins**. A frame is not "stale" because the app lacks the data, lays the
+screen out differently, or uses other words.
+
+Your job is to **extend** Paper's design until it also covers everything the
+real app can do. You do not redesign it.
+
+- Build every new frame as a state of the existing design: the same layout,
+  columns, controls, words, row style, and dialog style. Clone the existing
+  frame of that screen and change only what the state needs.
+- Never draw a second version of a screen or flow that already has a frame.
+  If "Check in" already opens a member search and ends in a toast or a small
+  dialog, new check-in states use that same search, toast, and dialog.
+- When the app has a capability with no place in the existing design (a
+  permission branch, a staff override, an extra real reason, an export), add
+  it in the existing design's style, in the smallest way that fits.
+- When the existing design leaves something out that the app shows (a column,
+  a field), do not add it by default. Paper left it out on purpose, or it lives
+  elsewhere (for example the location comes from the top bar). Add it only if
+  the task cannot be done without it, and say so in the report.
+- A new screen with no frame at all (for example Schedule) follows the closest
+  existing screens.
+
 ## What you do
 
-1. Read the real screen in code (`apps/portal/src`). List every screen, state,
+1. Read your Paper page(s) first. Use `get_tree_summary`, `get_screenshot`,
+   and `get_jsx`. Learn the design of each screen and flow.
+2. Read the real screen in code (`apps/portal/src`). List every screen, state,
    dialog, menu, field, action, and permission branch it has. Include loading,
    empty, error, validation, and no-permission states.
-2. Read your Paper page(s). Use `get_tree_summary`, `get_screenshot`, and
-   `get_jsx`. Map each item from step 1 to a Paper artboard.
-3. Design what is missing, as new artboards on your page(s).
-4. Review your work with screenshots. Fix what you find.
-5. Write your report (see "Report").
+3. Map each item to a Paper artboard. Find what Paper does not cover.
+4. Design what is missing, as new artboards on your page(s), as states of the
+   existing design.
+5. Review your work with screenshots, next to the existing frames. A new frame
+   must look like it belongs to the same screen. Fix what you find.
+6. Write your report (see "Report").
 
 Do not open browser preview tabs; the user is using the app. Read the code.
 Do not change code, git, Docker, or design tokens. Do not commit.
@@ -30,8 +59,8 @@ Do not change code, git, Docker, or design tokens. Do not commit.
 - Work only on your assigned page(s). Other agents work on other pages at the
   same time.
 - **Do not delete, move, rename, or restyle an existing artboard.** They are
-  the user's approved reference. If an existing frame is wrong or stale, list
-  it in your report under "Existing frames to update". Do not fix it.
+  the user's approved reference. You may delete or rework artboards that you
+  or another agent added in this project.
 - **Clone, do not redraw.** Start each new artboard from the closest existing
   artboard (`duplicate_nodes`, or `<x-paper-clone>`), so the window, sidebar,
   top bar, and spacing stay identical. Then change the content.
@@ -75,8 +104,10 @@ These are the ones that matter most:
   more. **Page actions always sit in the top bar.** 28px buttons, 8px gap. The
   primary action is a dark button (`--primary`); others are white with a
   hairline. Show a key hint only for a shortcut the app really has.
-- Page head: a 40px tile (10px radius, muted fill, hairline) with an 18px
-  icon, then the title: 20px/24px, weight 600, letter-spacing -0.01em.
+- Page head: the title is 20px/24px, weight 600, letter-spacing -0.01em. List
+  pages have a plain title, as in the Sales list. Detail and form pages have a
+  40px tile (10px radius, muted fill, hairline, 18px icon) before the title.
+  Follow the existing frame of your screen.
 - Text: three sizes only. 20px title. 13px/20px body and headings. 12px/16px
   secondary. Use weight and grey tone for hierarchy, not size.
 - Section band: 36px high, 8px radius, `--muted` fill, a 16px grey icon and a
@@ -100,11 +131,10 @@ These are the ones that matter most:
 
 ## Product rules
 
-- Design the real screen first. Every real field, action, state, and
-  permission branch needs a place in Paper.
-- You may improve layout, grouping, and wording. If a frame needs data or an
-  action the app does not have, you may still design it, but list it in the
-  report under "Needs app or Rails work". Keep such additions few.
+- Every real action, state, and permission branch needs a place in Paper,
+  inside the existing design (see "Paper is the target").
+- Data or actions that Paper shows and the app lacks are fine. List them in
+  the report under "Needs app or Rails work". Do not remove them.
 - Words: "Fulfill", "Fulfilled", "Unfulfilled", "Partly fulfilled". Never
   "Deliver" or "Delivered". Say "Fulfill early" when money is still due. The
   existing Paper frames already use these words, and they are correct.
@@ -136,9 +166,11 @@ Write `docs/paper-redesign/reports/<your-slug>.md`. Short, plain sentences.
 1. **Coverage.** A table: real screen or state → Paper artboard name →
    "existed", "added", or "not designed" (with the reason).
 2. **Added.** Each new artboard and what it shows.
-3. **Existing frames to update.** Each stale or wrong item you saw in an
-   existing artboard, with the artboard name. You did not change these.
-4. **Needs app or Rails work.** Anything a frame shows that the app cannot do.
+3. **Conflicts.** Only real conflicts: something in an existing frame that
+   cannot be true under the business rules (for example a denial reason the
+   rules never produce). Not layout or data the app merely lacks.
+4. **Needs app or Rails work.** What Paper shows that the app cannot do yet:
+   data, actions, and screens. This is the build list.
 5. **Open questions.** Decisions the user must make.
 6. **Not verified.** Anything you could not check.
 
