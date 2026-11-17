@@ -75,6 +75,36 @@ Do not change code, git, Docker, or design tokens. Do not commit.
 - If a Paper call times out, wait and try again. Do not use another tool instead.
 - Call `finish_working_on_nodes` when you finish.
 
+## Checks that reviews keep failing
+
+Reviewers found these in the first sets. Check each before you finish.
+
+- **Error text is for staff.** Never mention Rails, the API, a server, or a
+  permission code as the only message. Say what happened and what to do:
+  "The schedule did not load. Try again." If the app's own text is technical,
+  list it under "Needs app or Rails work" as copy to fix.
+- **A state frame shows the result.** A frame with a toast shows the page
+  after the action: new counts, the new row, the new activity event.
+- **Facts in a frame agree.** A footer count matches the rows shown. A feed is
+  in time order, as in the original. A filter chip matches the rows.
+- **Nothing that cannot work.** No action a state cannot perform (no Book
+  member on a program with no sessions; no checkbox on a row that cannot be
+  selected). Loading frames show no loaded data, including the breadcrumb.
+- **One style per thing.** Confirm dialogs match "Discard changes?" (`TP2-0`):
+  no header band, no close button. Form dialogs match "Add products"
+  (`P6M-0`): header, body, footer with Cancel and the action, over the dimmed
+  page. Empty states are one plain line and at most one action, with no icon
+  tile, and no action that the top bar already shows. Notices are plain text
+  with a small icon, not bordered boxes. The same status uses the same words
+  and mark on every screen.
+- **Nothing breaks the layout.** No text wraps or clips. No menu or floating
+  bar covers the content it refers to. Nothing sits on the window edge. When
+  you remove a leading element from rows (a checkbox), the row icons still
+  line up with the header icons.
+- **Coverage includes failures inside dialogs:** the request failed, a list in
+  the dialog is loading or did not load, and roles that have one permission
+  but not its pair.
+
 ## Reference artboards
 
 | Pattern | Page (pageId) | Artboard (nodeId) |
