@@ -45,6 +45,7 @@ import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
 import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
+import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { useToast } from "../../components/Toast";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
@@ -201,6 +202,8 @@ function Shell({
   const [pendingLocation, setPendingLocation] = useState<string | null>(null);
   const shownLocation = data.locations.find((location) => location.id === pendingLocation) ?? desk;
   const [searching, setSearching] = useState(false);
+  // Pages put their actions here, after Search (components/PageActions).
+  const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const modKey = useModKeyLabel();
   useShortcut("k", () => setSearching((open) => !open), { mod: true });
 
@@ -347,10 +350,13 @@ function Shell({
               <span className="visually-hidden">Search</span>
               <Kbd>{modKey}K</Kbd>
             </button>
+            <div className="topbar__actions" ref={setActionsSlot} />
           </div>
         </header>
         <main className="main" id="main" tabIndex={-1}>
-          <Outlet />
+          <PageActionsSlot.Provider value={actionsSlot}>
+            <Outlet />
+          </PageActionsSlot.Provider>
         </main>
       </SidebarInset>
       <CommandMenu

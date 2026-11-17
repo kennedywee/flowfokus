@@ -300,6 +300,16 @@
   gap: var(--space-2);
 }
 
+/* Page actions, after Search (components/PageActions). Empty when a page has none. */
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.topbar__actions:empty {
+  display: none;
+}
+
 /* Search. A compact button with its ⌘K hint, never a field in the chrome. */
 .topbar__search.button--compact {
   gap: 6px;
@@ -764,7 +774,8 @@
   line-height: 16px;
   padding-top: var(--space-1);
 }
-.page-head__actions {
+.page-head__actions,
+.page-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

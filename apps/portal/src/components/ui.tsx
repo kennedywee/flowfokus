@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { PageActions } from "./PageActions";
 import {
   Circle,
   CircleAlert,
@@ -315,8 +316,22 @@ export function SkeletonRows({ rows = 4 }: { rows?: number }) {
   );
 }
 
-/** A page title, optional record metadata, and actions. No instructional subtitle. */
-export function PageHead({ title, meta, children }: { title: string; meta?: ReactNode; children?: ReactNode }) {
+/**
+ * A page title, optional record metadata, facts beside the title (such as a
+ * status pill), and actions. Actions go to the top bar (see PageActions); use
+ * compact buttons. No instructional subtitle.
+ */
+export function PageHead({
+  title,
+  meta,
+  actions,
+  children,
+}: {
+  title: string;
+  meta?: ReactNode;
+  actions?: ReactNode;
+  children?: ReactNode;
+}) {
   return (
     <header className="page-head">
       <div className="page-head__text">
@@ -324,6 +339,7 @@ export function PageHead({ title, meta, children }: { title: string; meta?: Reac
         {meta ? <p>{meta}</p> : null}
       </div>
       {children ? <div className="page-head__actions">{children}</div> : null}
+      {actions ? <PageActions>{actions}</PageActions> : null}
     </header>
   );
 }
