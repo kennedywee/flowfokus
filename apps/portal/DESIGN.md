@@ -86,10 +86,10 @@ in `src/components/ui.tsx` and named files under `src/components/`.
 | Feedback | `Notice` defaults to info; `FailureNotice` displays API failures | Use `live` for changed feedback, not every static notice. Error text gives a next step. |
 | Collection state | `LoadingState`, `Empty`, `ErrorState` | Loading reserves space; empty describes no records; error describes a failed load. |
 
-Good: sales rows use `PaymentMark` and `DeliveryMark` from
+Good: sales rows use `PaymentMark` and `FulfillmentMark` from
 `features/sales/SaleFacts.tsx`. Payment (Paid, Part paid, Unpaid, Void) and
-delivery (Delivered, Not delivered, Access revoked) stay two separate marks.
-Bad: setting `state="delivered"` because the user clicked Deliver before Rails
+fulfillment (Fulfilled, Unfulfilled, Access revoked) stay two separate marks.
+Bad: setting `state="fulfilled"` because the user clicked Fulfill before Rails
 returns success. Payment and fulfillment are separate facts.
 
 Good: `SubmitButton pending={action.pending} pendingLabel="Saving…"` keeps a
@@ -101,7 +101,7 @@ Existing blocks to compose before adding another abstraction:
 - `PageHead`: title, optional record metadata, title facts, and actions.
 - `PageActions`: a page's actions, placed in the top bar from 768px.
 - `Plate`: named section with body and optional action/footer.
-- `PaymentMark` / `DeliveryMark`: a sale's two facts, on the sales list, sale page, and member page.
+- `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
 - `CheckInPanel`: member/location choice and a response after an attempt.
 - `ConfirmDialog`: one consequential decision with pending handling.
@@ -118,7 +118,10 @@ pieces do not each need their own request.
 
 - Use semantic tokens in screens. Change raw swatches only in the palette.
 - Reuse existing components before adding another variant.
-- Keep status words tied to Rails facts. Paid does not mean delivered.
+- Keep status words tied to Rails facts. Paid does not mean fulfilled.
+- Say Fulfill, not Deliver: Fulfill, Fulfill early, Fulfilled, Unfulfilled,
+  and Fulfillment for the filter and column. The word matches Paper and the
+  Rails domain term Fulfillment, so staff, designs, and code use one word.
 - Keep focus visible, icon-only controls named, and fields labelled. Text
   fields show focus as a 1px ink border, as in Paper, with no ring. The search
   menu's field has no box at all. Buttons, menus, and other controls keep the
@@ -233,10 +236,10 @@ only Rails data:
 - Membership: periods with a ring that fills with the time left, and grey text
   such as "Ends in 13d 11h". Access: rights with "7 of 8 left". Bookings and
   sales list recent rows and expand in place.
-- Sale rows keep payment (Paid, Part paid, Unpaid, Void) and delivery
-  (Delivered, Not delivered, Access revoked) as separate facts, then the
+- Sale rows keep payment (Paid, Part paid, Unpaid, Void) and fulfillment
+  (Fulfilled, Unfulfilled, Access revoked) as separate facts, then the
   payment method and the amount, with any balance due under it.
-- Activity merges check-ins, sales, payments, deliveries, refunds, voids,
+- Activity merges check-ins, sales, payments, fulfillments, refunds, voids,
   bookings, and the join date. It has no comment box or filters, because
   Rails has no member comments.
 - Properties: email, gym site sign-in (click the value to create a link code
@@ -269,28 +272,29 @@ list pieces in `components.css` (`.list-search`, `.list-pager`, `.list-state`)
 and `ListPager` with the members list. They show only Rails data:
 
 - Sales list: the title, New sale (purchases:create only) in the top bar. Filter
-  opens Payment and Delivery submenus with a count per value; each active fact
+  opens Payment and Fulfillment submenus with a count per value; each active fact
   shows as a chip with a clear button. Search (with a "/" hint) matches member
   name, email, and item. A header band, then 44px rows: member, item and price,
-  payment, delivery, total (with the balance due or the amount refunded), and a
-  short date. The URL keeps filters and search; old `view=due` and
-  `view=deliver` links still work. Rails returns every sale, so the list
-  filters and pages 50 at a time in the browser. Phones show member and total,
+  payment, fulfillment, total (with the balance due or the amount refunded), and a
+  short date. The URL keeps filters and search (`payment`, `fulfillment`,
+  `q`); old `view=due`, `view=deliver`, and `delivery=` links still work.
+  Rails returns every sale, so the list filters and pages 50 at a time in the
+  browser. Phones show member and total,
   then the item, then the facts and the date.
 - No sales: one line and New sale. No match: one line and Clear filters.
 - Sale details: a tile, the item as the title, and the two facts as pills. The
-  ⋯ menu in the top bar holds Record payment (P), Deliver (D), Refund…,
+  ⋯ menu in the top bar holds Record payment (P), Fulfill (D), Refund…,
   Revoke access…, and Void sale…; each appears only when the permission and
-  the sale allow it. Items shows the delivery fact and time, the line with its
-  period or term and rights, early-delivery and revoke notes, and the total.
+  the sale allow it. Items shows the fulfillment fact and time, the line with its
+  period or term and rights, early-fulfillment and revoke notes, and the total.
   Payment lists payments and refunds in order, then the balance due. Activity
   lists what Rails recorded. Properties: member, location, date, and price.
   A void sale shows one bordered notice with the reason.
 - Dialogs follow the Paper "Dialogs and menu" frame: a 48px header with a fact
   and a close button, the fields, then Cancel and the action. ⌘↵ submits the
-  record and deliver dialogs. Record payment offers Cash and Bank transfer and
-  says it does not move money. Deliver states what it creates; with money due
-  it becomes Deliver early and needs a reason. Refund chooses the payment in
+  record and fulfill dialogs. Record payment offers Cash and Bank transfer and
+  says it does not move money. Fulfill states what it creates; with money due
+  it becomes Fulfill early and needs a reason. Refund chooses the payment in
   the dialog and says access stays. Void and revoke need a reason.
 - Not shown, because Rails has no data for them: sale numbers, who sold or
   recorded a payment, notes, comments, invoices, card or e-wallet payments,
