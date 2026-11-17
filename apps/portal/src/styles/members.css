@@ -477,7 +477,7 @@ a.mx-row__title:hover {
   text-align: right;
 }
 
-/* Sales: product, payment, delivery, method, amount. Columns keep their lanes. */
+/* Sales: product, payment, fulfillment, method, amount. Columns keep their lanes. */
 .mx-sales {
   container-type: inline-size;
 }
@@ -515,7 +515,7 @@ a.mx-row__title:hover {
   color: var(--color-ink-2);
 }
 .mx-fact[data-state="paid"] svg,
-.mx-fact[data-state="delivered"] svg {
+.mx-fact[data-state="fulfilled"] svg {
   color: var(--color-good);
 }
 .mx-fact[data-state="partial"] svg {
@@ -556,7 +556,7 @@ a.mx-row__title:hover {
   height: 16px;
   color: var(--color-ink-4);
 }
-/* Narrow: product and amount first, then the payment, delivery, and method facts. */
+/* Narrow: product and amount first, then the payment, fulfillment, and method facts. */
 @container (max-width: 560px) {
   .mx-sale {
     display: flex;
@@ -583,7 +583,7 @@ a.mx-row__title:hover {
     height: 0;
   }
   .mx-sale__payment,
-  .mx-sale__delivery,
+  .mx-sale__fulfillment,
   .mx-sale__method {
     order: 5;
   }

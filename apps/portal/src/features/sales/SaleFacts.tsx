@@ -11,11 +11,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
-import { deliveryFact, paymentFact, type DeliveryState, type PaymentState } from "./facts";
+import { fulfillmentFact, paymentFact, type FulfillmentState, type PaymentState } from "./facts";
 
 /*
  * Sale facts as a small coloured mark and grey text. Colour marks the state;
- * the text says it. Payment and delivery are always two separate marks.
+ * the text says it. Payment and fulfillment are always two separate marks.
  */
 
 const markProps = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
@@ -27,8 +27,8 @@ const PAYMENT_ICON: Record<PaymentState, LucideIcon | null> = {
   void: CircleSlash,
 };
 
-const DELIVERY_ICON: Record<DeliveryState, LucideIcon> = {
-  delivered: PackageCheck,
+const FULFILLMENT_ICON: Record<FulfillmentState, LucideIcon> = {
+  fulfilled: PackageCheck,
   waiting: Package,
   revoked: PackageX,
   none: Package,
@@ -62,10 +62,10 @@ export function PaymentMark({ sale, className = "" }: { sale: Schemas["Sale"]; c
   );
 }
 
-/** "Delivered", "Not delivered", or "Access revoked", with its mark. */
-export function DeliveryMark({ sale, className = "" }: { sale: Schemas["Sale"]; className?: string }) {
-  const fact = deliveryFact(sale);
-  const Icon = DELIVERY_ICON[fact.state];
+/** "Fulfilled", "Unfulfilled", or "Access revoked", with its mark. */
+export function FulfillmentMark({ sale, className = "" }: { sale: Schemas["Sale"]; className?: string }) {
+  const fact = fulfillmentFact(sale);
+  const Icon = FULFILLMENT_ICON[fact.state];
   return (
     <span className={`mx-fact ${className}`} data-state={fact.state}>
       <Icon {...markProps} />

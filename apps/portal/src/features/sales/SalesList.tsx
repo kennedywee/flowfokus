@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  DELIVERY_FILTERS,
+  FULFILLMENT_FILTERS,
   PAYMENT_FILTERS,
   factCounts,
   filterFromSearch,
@@ -32,13 +32,13 @@ import {
   type SalesFilter,
   type SalesSearch,
 } from "./facts";
-import { DeliveryMark, PaymentMark } from "./SaleFacts";
+import { FulfillmentMark, PaymentMark } from "./SaleFacts";
 
 const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
 
 /**
  * The sales list: filters and search, then one row per sale with the member,
- * the item, payment and delivery as separate facts, the total, and the date.
+ * the item, payment and fulfillment as separate facts, the total, and the date.
  * Rails returns every sale newest first; the list filters and pages here.
  */
 export function SalesList({ sales, search }: { sales: Result<Schemas["Sale"][]>; search: SalesSearch }) {
@@ -90,7 +90,7 @@ function useSetSearch(current: SalesSearch) {
     const merged = { ...current, ...next };
     const clean: SalesSearch = {};
     if (merged.payment) clean.payment = merged.payment;
-    if (merged.delivery) clean.delivery = merged.delivery;
+    if (merged.fulfillment) clean.fulfillment = merged.fulfillment;
     if (merged.q) clean.q = merged.q;
     void navigate({ to: "/$org/sales", params: { org: organization.slug }, search: clean, replace: true });
   };
@@ -99,11 +99,11 @@ function useSetSearch(current: SalesSearch) {
 function Toolbar({ sales, filter, search }: { sales: Schemas["Sale"][]; filter: SalesFilter; search: SalesSearch }) {
   const setSearch = useSetSearch(search);
   const counts = factCounts(sales);
-  const toggle = (key: "payment" | "delivery", value: string, on: boolean) => {
+  const toggle = (key: "payment" | "fulfillment", value: string, on: boolean) => {
     const values = new Set<string>(filter[key]);
     if (on) values.add(value);
     else values.delete(value);
-    const allowed = (key === "payment" ? PAYMENT_FILTERS : DELIVERY_FILTERS).map((item) => item.value as string);
+    const allowed = (key === "payment" ? PAYMENT_FILTERS : FULFILLMENT_FILTERS).map((item) => item.value as string);
     setSearch({ [key]: allowed.filter((item) => values.has(item)).join(",") || undefined });
   };
 
@@ -138,17 +138,17 @@ function Toolbar({ sales, filter, search }: { sales: Schemas["Sale"][]; filter: 
             </DropdownMenuSub>
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                Delivery
+                Fulfillment
                 <DropdownMenuShortcut>
                   <ChevronRight {...icon} />
                 </DropdownMenuShortcut>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent className="sales-filter-menu">
-                {DELIVERY_FILTERS.map((item) => (
+                {FULFILLMENT_FILTERS.map((item) => (
                   <DropdownMenuCheckboxItem
                     key={item.value}
-                    checked={filter.delivery.includes(item.value)}
-                    onCheckedChange={(on) => toggle("delivery", item.value, on)}
+                    checked={filter.fulfillment.includes(item.value)}
+                    onCheckedChange={(on) => toggle("fulfillment", item.value, on)}
                   >
                     {item.label}
                     <DropdownMenuShortcut className="sales-filter-menu__count">{counts[item.value]}</DropdownMenuShortcut>
@@ -164,9 +164,9 @@ function Toolbar({ sales, filter, search }: { sales: Schemas["Sale"][]; filter: 
           onClear={() => setSearch({ payment: undefined })}
         />
         <FilterChip
-          name="Delivery"
-          values={DELIVERY_FILTERS.filter((item) => filter.delivery.includes(item.value)).map((item) => item.label)}
-          onClear={() => setSearch({ delivery: undefined })}
+          name="Fulfillment"
+          values={FULFILLMENT_FILTERS.filter((item) => filter.fulfillment.includes(item.value)).map((item) => item.label)}
+          onClear={() => setSearch({ fulfillment: undefined })}
         />
       </div>
       <SearchField q={search.q ?? ""} onSearch={(q) => setSearch({ q: q || undefined })} />
@@ -261,13 +261,13 @@ function Results({ sales, filter, q }: { sales: Schemas["Sale"][]; filter: Sales
           size="compact"
           onClick={() => void navigate({ to: "/$org/sales", params: { org: organization.slug }, search: {}, replace: true })}
         >
-          {q && !filter.payment.length && !filter.delivery.length ? "Clear search" : "Clear filters"}
+          {q && !filter.payment.length && !filter.fulfillment.length ? "Clear search" : "Clear filters"}
         </Button>
       </div>
     );
   }
   // A new filter starts again at page 1.
-  return <SaleRows key={`${filter.payment.join()}|${filter.delivery.join()}|${q}`} sales={shown} />;
+  return <SaleRows key={`${filter.payment.join()}|${filter.fulfillment.join()}|${q}`} sales={shown} />;
 }
 
 function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
@@ -286,7 +286,7 @@ function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
         <span>Member</span>
         <span className="sales-col--wide">Item</span>
         <span className="sales-col--wide">Payment</span>
-        <span className="sales-col--wide">Delivery</span>
+        <span className="sales-col--wide">Fulfillment</span>
         <span className="sales-col--num">Total</span>
         <span className="sales-col--num sales-col--wide">Date</span>
         <span />
@@ -311,7 +311,7 @@ function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
                 <span className="sales-row__label"> · {sale.line_item.price_label}</span>
               </span>
               <PaymentMark sale={sale} className="sales-row__payment" />
-              <DeliveryMark sale={sale} className="sales-row__delivery" />
+              <FulfillmentMark sale={sale} className="sales-row__fulfillment" />
               <span className="sales-row__amount">
                 <span className="sales-row__total" data-void={sale.voided_at ? true : undefined}>
                   {formatMoney(sale.total_minor, sale.currency)}

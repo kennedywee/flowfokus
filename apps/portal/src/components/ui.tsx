@@ -36,7 +36,7 @@ import { Skeleton } from "./ui/skeleton";
  * components/ui/button.
  */
 
-export type LampState = "off" | "granted" | "denied" | "paid" | "due" | "waiting" | "delivered" | "active" | "error";
+export type LampState = "off" | "granted" | "denied" | "paid" | "due" | "waiting" | "fulfilled" | "active" | "error";
 
 /** The tone of a pill. Each tone has a wash and an icon in the Paper kit. */
 export type PillTone = "good" | "warning" | "critical" | "info" | "neutral";
@@ -45,7 +45,7 @@ const LAMP: Record<LampState, { icon: LucideIcon; tone: PillTone }> = {
   off: { icon: Circle, tone: "neutral" },
   granted: { icon: CircleCheck, tone: "good" },
   paid: { icon: CircleCheck, tone: "good" },
-  delivered: { icon: CircleCheck, tone: "good" },
+  fulfilled: { icon: CircleCheck, tone: "good" },
   active: { icon: CircleCheck, tone: "good" },
   denied: { icon: CircleX, tone: "critical" },
   error: { icon: CircleX, tone: "critical" },

@@ -59,10 +59,10 @@ export const Route = createFileRoute("/$org/schedule/$occurrenceId")({
   component: RosterPage,
 });
 
-const STATUS_LAMP: Record<Schemas["BookingStatus"], "active" | "waiting" | "delivered" | "off"> = {
+const STATUS_LAMP: Record<Schemas["BookingStatus"], "active" | "waiting" | "fulfilled" | "off"> = {
   confirmed: "active",
   held: "waiting",
-  attended: "delivered",
+  attended: "fulfilled",
   cancelled: "off",
   expired: "off",
 };
@@ -468,7 +468,7 @@ function BookMember({ roster, members }: { roster: Schemas["Roster"]; members: S
     });
     if (result.ok) {
       renewSaleKey();
-      toast.show({ tone: "success", title: "Ticket sale recorded", body: "Take payment, then deliver it to book the spot." });
+      toast.show({ tone: "success", title: "Ticket sale recorded", body: "Take payment, then fulfill it to book the spot." });
       void navigate({ to: "/$org/sales/$saleId", params: { org: organization.slug, saleId: result.data.id } });
     }
   }

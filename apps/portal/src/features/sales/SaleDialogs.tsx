@@ -362,10 +362,10 @@ export function checkPaymentAmount(amount: string, balance_minor: number, curren
   return { minor: typed };
 }
 
-/* ---------- Deliver ---------- */
+/* ---------- Fulfill ---------- */
 
-/** What delivering this sale creates, in one sentence. */
-function deliveryConsequence(sale: Schemas["Sale"], timeZone: string): string {
+/** What fulfilling this sale creates, in one sentence. */
+function fulfillmentConsequence(sale: Schemas["Sale"], timeZone: string): string {
   const kind = PRODUCT_KIND_LABEL[sale.line_item.terms.kind].toLowerCase();
   if (sale.occurrence) {
     const spots = sale.attendees.length > 1 ? `${sale.attendees.length} people get spots` : `${sale.attendees[0]?.name ?? sale.member.name} gets a spot`;
@@ -377,11 +377,11 @@ function deliveryConsequence(sale: Schemas["Sale"], timeZone: string): string {
 }
 
 /**
- * Delivers the sale: creates the membership period, pass rights, or booking.
- * When money is still due, staff with purchases:fulfill_unpaid deliver early
+ * Fulfills the sale: creates the membership period, pass rights, or booking.
+ * When money is still due, staff with purchases:fulfill_unpaid fulfill early
  * and give a reason.
  */
-export function DeliverDialog({ sale, early, onClose }: { sale: Schemas["Sale"]; early: boolean; onClose: () => void }) {
+export function FulfillDialog({ sale, early, onClose }: { sale: Schemas["Sale"]; early: boolean; onClose: () => void }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const router = useRouter();
@@ -406,7 +406,7 @@ export function DeliverDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
       const period = result.data.fulfillment?.membership_period;
       toast.show({
         tone: "success",
-        title: `${kindLabel} delivered`,
+        title: `${kindLabel} fulfilled`,
         body: period
           ? `${sale.member.name} has access from ${formatDate(period.starts_at, organization.timezone)} until ${formatDate(period.ends_at, organization.timezone)}.`
           : sale.member.name,
@@ -418,15 +418,15 @@ export function DeliverDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
 
   return (
     <SaleDialog
-      title={early ? "Deliver before full payment" : "Deliver"}
+      title={early ? "Fulfill before full payment" : "Fulfill"}
       meta={sale.member.name}
       pending={action.pending}
       onClose={onClose}
       onSubmit={() => void submit()}
       initialFocus={early ? reasonRef : undefined}
       submit={(kbd) => (
-        <SubmitButton compact pending={action.pending} pendingLabel="Delivering…" aria-keyshortcuts="Meta+Enter Control+Enter">
-          {early ? "Deliver early" : "Deliver"}
+        <SubmitButton compact pending={action.pending} pendingLabel="Fulfilling…" aria-keyshortcuts="Meta+Enter Control+Enter">
+          {early ? "Fulfill early" : "Fulfill"}
           {kbd}
         </SubmitButton>
       )}
@@ -444,7 +444,7 @@ export function DeliverDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
         </span>
         <span className="sale-item-card__amount money">{formatMoney(line.total_minor, line.currency)}</span>
       </div>
-      <p className="sale-dialog__text">{deliveryConsequence(sale, organization.timezone)}</p>
+      <p className="sale-dialog__text">{fulfillmentConsequence(sale, organization.timezone)}</p>
       {early ? (
         <>
           <p className="sale-dialog__warning">
@@ -465,7 +465,7 @@ export function DeliverDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
           </Row>
         </>
       ) : null}
-      <DialogFailure title="The sale was not delivered" error={action.error} next="Payments are kept. Try again." />
+      <DialogFailure title="The sale was not fulfilled" error={action.error} next="Payments are kept. Try again." />
     </SaleDialog>
   );
 }
@@ -621,7 +621,7 @@ export function RefundDialog({ sale, onClose }: { sale: Schemas["Sale"]; onClose
 const REASON_COPY = {
   void: {
     title: "Void this sale?",
-    body: "No money is kept on this sale. It stays in history as void, takes no payments, and cannot be delivered.",
+    body: "No money is kept on this sale. It stays in history as void, takes no payments, and cannot be fulfilled.",
     submit: "Void sale",
     pending: "Voiding…",
     done: "Sale voided",

@@ -275,10 +275,10 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
           <Link
             to="/$org/sales"
             params={{ org: slug }}
-            search={{ payment: "paid", delivery: "waiting" }}
+            search={{ payment: "paid", fulfillment: "waiting" }}
             className={buttonVariants({ variant: "secondary" })}
           >
-            Deliver a paid sale
+            Fulfill a paid sale
           </Link>
         </>
       ) : checkIn.denial_reason === "usage_limit_reached" ? (

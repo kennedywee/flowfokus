@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { formatMoney, type Schemas } from "@flowfokus/api";
-import { deliveryFact, paymentFact, paymentMethods } from "../sales/facts";
+import { fulfillmentFact, paymentFact, paymentMethods } from "../sales/facts";
 import { balanceDue, formatSpan, memberActivity, orderPeriods, periodState, periodText, totalPaid } from "./facts";
 
 const HOUR = 3_600_000;
@@ -93,10 +93,10 @@ describe("membership periods", () => {
 });
 
 describe("sale facts", () => {
-  test("payment and delivery stay separate facts", () => {
-    const paidNotDelivered = sale({ fulfilled: false });
-    expect(paymentFact(paidNotDelivered)).toEqual({ state: "paid", label: "Paid" });
-    expect(deliveryFact(paidNotDelivered)).toEqual({ state: "waiting", label: "Not delivered" });
+  test("payment and fulfillment stay separate facts", () => {
+    const paidNotFulfilled = sale({ fulfilled: false });
+    expect(paymentFact(paidNotFulfilled)).toEqual({ state: "paid", label: "Paid" });
+    expect(fulfillmentFact(paidNotFulfilled)).toEqual({ state: "waiting", label: "Unfulfilled" });
   });
 
   test("part paid, unpaid, and void come from Rails fields", () => {
@@ -105,11 +105,11 @@ describe("sale facts", () => {
     expect(paymentFact(sale({ voided_at: iso(NOW), payment_status: "paid" })).state).toBe("void");
   });
 
-  test("a revoked delivery shows access revoked", () => {
+  test("a revoked fulfillment shows access revoked", () => {
     const revoked = sale({
       fulfillment: { revoked_at: iso(NOW) } as Schemas["Fulfillment"],
     });
-    expect(deliveryFact(revoked)).toEqual({ state: "revoked", label: "Access revoked" });
+    expect(fulfillmentFact(revoked)).toEqual({ state: "revoked", label: "Access revoked" });
   });
 
   test("payment methods are listed once each", () => {

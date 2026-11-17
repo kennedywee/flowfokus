@@ -49,7 +49,7 @@ import {
   type PeriodState,
 } from "./facts";
 import { paymentFact, paymentMethods } from "../sales/facts";
-import { DeliveryMark, METHOD_ICON, PaymentMark } from "../sales/SaleFacts";
+import { FulfillmentMark, METHOD_ICON, PaymentMark } from "../sales/SaleFacts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -191,7 +191,7 @@ function MemberHeader({ record }: { record: MemberRecord }) {
 
 /**
  * Sells another period at the member's agreed price. Rails copies the terms of
- * the latest delivered sale, never the current catalog price.
+ * the latest fulfilled sale, never the current catalog price.
  */
 function RenewDialog({
   member,
@@ -218,7 +218,7 @@ function RenewDialog({
     if (result.ok) {
       renewKey();
       onClose();
-      toast.show({ tone: "success", title: "Renewal recorded", body: "Record payment, then deliver the new period." });
+      toast.show({ tone: "success", title: "Renewal recorded", body: "Record payment, then fulfill the sale to start the new period." });
       void navigate({ to: "/$org/sales/$saleId", params: { org: organization.slug, saleId: result.data.id } });
     }
   }
@@ -238,7 +238,7 @@ function RenewDialog({
     >
       <p>
         {renewal.product_name}, {renewal.price_label}: {formatDuration(renewal.duration_days)} at the agreed price. If
-        delivered now, the new period starts {formatDate(renewal.starts_at, organization.timezone)}.
+        fulfilled now, the new period starts {formatDate(renewal.starts_at, organization.timezone)}.
       </p>
       <p>{location ? `Sold at ${location.name}.` : "Add a location before you renew."}</p>
       {action.error ? <p role="alert">{failureMessage(action.error)}</p> : null}
@@ -339,13 +339,13 @@ function MembershipSection({ member, sales, now }: { member: Schemas["MemberDeta
           <ShowMore shown={shown.length} total={periods.length} noun="periods" expanded={all} onToggle={() => setAll(!all)} />
         </>
       ) : (
-        <p className="mx-empty">No membership yet. The first delivered membership sale starts one.</p>
+        <p className="mx-empty">No membership yet. The first fulfilled membership sale starts one.</p>
       )}
     </Section>
   );
 }
 
-/** Rights to enter or book, from delivered memberships and passes. Ticket rights show on their booking. */
+/** Rights to enter or book, from fulfilled memberships and passes. Ticket rights show on their booking. */
 function AccessSection({ member }: { member: Schemas["MemberDetail"] }) {
   const locationName = useLocationName();
   const shortDate = useShortDate();
@@ -398,7 +398,7 @@ function AccessSection({ member }: { member: Schemas["MemberDetail"] }) {
           })}
         </ul>
       ) : (
-        <p className="mx-empty">No access rights. A delivered membership or pass adds them.</p>
+        <p className="mx-empty">No access rights. A fulfilled membership or pass adds them.</p>
       )}
     </Section>
   );
@@ -484,7 +484,7 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
                       </span>
                     </span>
                     <PaymentMark sale={sale} className="mx-sale__payment" />
-                    <DeliveryMark sale={sale} className="mx-sale__delivery" />
+                    <FulfillmentMark sale={sale} className="mx-sale__fulfillment" />
                     <span className="mx-fact mx-sale__method">
                       {MethodIcon ? <MethodIcon {...statusIcon} /> : null}
                       {methods ?? "—"}

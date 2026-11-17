@@ -191,7 +191,7 @@ export function recordPaymentInput(value: unknown): RecordPaymentInput {
 
 export interface FulfillInput extends SlugInput {
   saleId: string;
-  /** Delivers before full payment. Needs purchases:fulfill_unpaid. */
+  /** Fulfills before full payment. Needs purchases:fulfill_unpaid. */
   early_reason?: string;
 }
 

@@ -3,7 +3,7 @@ import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, formatMoney } from 
 
 /*
  * Facts for the member details page, read from Rails responses only. Each
- * function states one fact: payment, delivery, and access stay separate.
+ * function states one fact: payment, fulfillment, and access stay separate.
  */
 
 const MINUTE = 60_000;
@@ -98,7 +98,7 @@ export interface ActivityEvent {
 
 /**
  * One feed of what happened to this member, newest first: check-ins, sales,
- * payments, deliveries, refunds, voids, bookings, and the day they were added.
+ * payments, fulfillments, refunds, voids, bookings, and the day they were added.
  * Every line comes from a timestamp Rails returned.
  */
 export function memberActivity(
@@ -134,10 +134,10 @@ export function memberActivity(
     }
     if (sale.fulfillment) {
       events.push({
-        id: `delivery-${sale.fulfillment.id}`,
+        id: `fulfillment-${sale.fulfillment.id}`,
         at: sale.fulfillment.fulfilled_at,
         tone: "neutral",
-        text: `${product} delivered${sale.fulfillment.early ? " before full payment" : ""}`,
+        text: `${product} fulfilled${sale.fulfillment.early ? " before full payment" : ""}`,
       });
       if (sale.fulfillment.revoked_at) {
         events.push({ id: `revoke-${sale.fulfillment.id}`, at: sale.fulfillment.revoked_at, tone: "critical", text: `${product} access revoked` });

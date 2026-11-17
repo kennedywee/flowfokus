@@ -10,7 +10,7 @@
 /*
  * Paper "Sales — list": the title and New sale in one row, Filter and its
  * chips on the left, search on the right, a grey header band, then 44px rows.
- * Payment and delivery are separate columns. The band and the row hover
+ * Payment and fulfillment are separate columns. The band and the row hover
  * reach 12px past the content, so the text lines up with the title.
  */
 
@@ -242,7 +242,7 @@ a.sales-row:focus-visible {
   color: var(--color-ink-4);
 }
 
-/* Narrow: member and total, then the item, then payment, delivery, and date. */
+/* Narrow: member and total, then the item, then payment, fulfillment, and date. */
 @container sales-table (max-width: 720px) {
   .sales-table__head {
     display: flex;
@@ -278,7 +278,7 @@ a.sales-row:focus-visible {
     order: 5;
     margin-left: 32px;
   }
-  .sales-row__delivery {
+  .sales-row__fulfillment {
     order: 6;
   }
   .sales-row__date {
@@ -737,7 +737,7 @@ a.sales-row:focus-visible {
 /* ---------- Sale details (redesign) ---------- */
 /*
  * Paper "Sale details": a 40px tile, the item as the title with payment and
- * delivery pills, then Items, Payment, and Activity on one white surface.
+ * fulfillment pills, then Items, Payment, and Activity on one white surface.
  * Properties sit on the right from 1100px; on narrow screens they follow the
  * header. Section bands reuse the member page's `.mx-section__head`.
  */
@@ -1357,7 +1357,7 @@ a.sales-row:focus-visible {
   outline-offset: var(--focus-offset);
 }
 
-/* The item in the deliver dialog. */
+/* The item in the fulfill dialog. */
 .sale-item-card {
   display: flex;
   align-items: center;

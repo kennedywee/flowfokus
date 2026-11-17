@@ -40,42 +40,42 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { deliveryFact, saleActions, saleActivity, type SaleActions } from "./facts";
-import { DeliverDialog, KIND_ICON, ReasonDialog, RecordPaymentDialog, RefundDialog } from "./SaleDialogs";
-import { DeliveryMark, METHOD_ICON, PaymentMark } from "./SaleFacts";
+import { fulfillmentFact, saleActions, saleActivity, type SaleActions } from "./facts";
+import { FulfillDialog, KIND_ICON, ReasonDialog, RecordPaymentDialog, RefundDialog } from "./SaleDialogs";
+import { FulfillmentMark, METHOD_ICON, PaymentMark } from "./SaleFacts";
 
 const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
 const markIcon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
 
-type Open = "pay" | "deliver" | "refund" | "void" | "revoke" | null;
+type Open = "pay" | "fulfill" | "refund" | "void" | "revoke" | null;
 
 /**
- * One page per sale: the item and its delivery, the payments and the balance,
+ * One page per sale: the item and its fulfillment, the payments and the balance,
  * and what happened, with the sale's properties on the right. Payment and
- * delivery are separate facts. Every action opens a dialog that states its
+ * fulfillment are separate facts. Every action opens a dialog that states its
  * consequence; Rails decides whether it is allowed.
  */
 export function SaleDetails({ sale }: { sale: Schemas["Sale"] }) {
   const can = useCan();
   const actions = saleActions(sale, can);
   const [open, setOpen] = useState<Open>(null);
-  const canDeliver = actions.deliver === "ready" || actions.deliver === "early";
+  const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
   useShortcut("p", () => setOpen("pay"), { enabled: actions.pay });
-  useShortcut("d", () => setOpen("deliver"), { enabled: canDeliver });
+  useShortcut("d", () => setOpen("fulfill"), { enabled: canFulfill });
 
   return (
     <div className="page sale-details">
       <SaleHeader sale={sale} actions={actions} onOpen={setOpen} />
       <div className="sale-details__main">
         {sale.voided_at ? <VoidBanner sale={sale} /> : null}
-        <ItemsSection sale={sale} actions={actions} onDeliver={() => setOpen("deliver")} />
+        <ItemsSection sale={sale} actions={actions} onFulfill={() => setOpen("fulfill")} />
         <PaymentSection sale={sale} canPay={actions.pay} onPay={() => setOpen("pay")} />
         <ActivitySection sale={sale} />
       </div>
       <SaleProperties sale={sale} />
       {open === "pay" ? <RecordPaymentDialog sale={sale} onClose={() => setOpen(null)} /> : null}
-      {open === "deliver" && canDeliver ? (
-        <DeliverDialog sale={sale} early={actions.deliver === "early"} onClose={() => setOpen(null)} />
+      {open === "fulfill" && canFulfill ? (
+        <FulfillDialog sale={sale} early={actions.fulfill === "early"} onClose={() => setOpen(null)} />
       ) : null}
       {open === "refund" ? <RefundDialog sale={sale} onClose={() => setOpen(null)} /> : null}
       {open === "void" || open === "revoke" ? <ReasonDialog sale={sale} kind={open} onClose={() => setOpen(null)} /> : null}
@@ -87,9 +87,9 @@ export function SaleDetails({ sale }: { sale: Schemas["Sale"] }) {
 
 function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions: SaleActions; onOpen: (open: Open) => void }) {
   const line = sale.line_item;
-  const canDeliver = actions.deliver === "ready" || actions.deliver === "early";
+  const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
   const corrections = actions.refund || actions.revoke || actions.void;
-  const any = actions.pay || canDeliver || corrections;
+  const any = actions.pay || canFulfill || corrections;
 
   return (
     <header className="sale-head">
@@ -101,7 +101,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
           <h1>{line.product_name}</h1>
           <span className="sale-head__facts">
             <PaymentMark sale={sale} className="sale-pill" />
-            <DeliveryMark sale={sale} className="sale-pill" />
+            <FulfillmentMark sale={sale} className="sale-pill" />
           </span>
         </div>
         <p className="sale-head__meta">
@@ -125,16 +125,16 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
               ) : null}
-              {canDeliver ? (
-                <DropdownMenuItem onClick={() => onOpen("deliver")}>
+              {canFulfill ? (
+                <DropdownMenuItem onClick={() => onOpen("fulfill")}>
                   <PackageCheck {...markIcon} />
-                  {actions.deliver === "early" ? "Deliver early…" : "Deliver"}
+                  {actions.fulfill === "early" ? "Fulfill early…" : "Fulfill"}
                   <DropdownMenuShortcut>
                     <Kbd>D</Kbd>
                   </DropdownMenuShortcut>
                 </DropdownMenuItem>
               ) : null}
-              {(actions.pay || canDeliver) && corrections ? <DropdownMenuSeparator /> : null}
+              {(actions.pay || canFulfill) && corrections ? <DropdownMenuSeparator /> : null}
               {actions.refund ? (
                 <DropdownMenuItem onClick={() => onOpen("refund")}>
                   <Undo2 {...markIcon} />
@@ -192,8 +192,8 @@ function Band({ id, title, icon: Icon, action }: { id: string; title: string; ic
   );
 }
 
-/** What the sale is for, and its delivery: when it happened, early delivery, or revoked access. */
-function ItemsSection({ sale, actions, onDeliver }: { sale: Schemas["Sale"]; actions: SaleActions; onDeliver: () => void }) {
+/** What the sale is for, and its fulfillment: when it happened, early fulfillment, or revoked access. */
+function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; actions: SaleActions; onFulfill: () => void }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const shortDate = useShortDate();
@@ -201,7 +201,7 @@ function ItemsSection({ sale, actions, onDeliver }: { sale: Schemas["Sale"]; act
   const KindIcon = KIND_ICON[line.terms.kind];
   const fulfillment = sale.fulfillment;
   const period = fulfillment?.membership_period;
-  const delivery = deliveryFact(sale);
+  const fact = fulfillmentFact(sale);
 
   const sub = sale.occurrence
     ? `${sale.occurrence.program_name} · ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}`
@@ -216,18 +216,18 @@ function ItemsSection({ sale, actions, onDeliver }: { sale: Schemas["Sale"]; act
         title="Items"
         icon={Tag}
         action={
-          actions.deliver === "ready" || actions.deliver === "early" ? (
-            <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onDeliver}>
-              {actions.deliver === "early" ? "Deliver early" : "Deliver"}
+          actions.fulfill === "ready" || actions.fulfill === "early" ? (
+            <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onFulfill}>
+              {actions.fulfill === "early" ? "Fulfill early" : "Fulfill"}
             </Button>
           ) : null
         }
       />
       <div className="sale-group">
-        <DeliveryMark sale={sale} />
+        <FulfillmentMark sale={sale} />
         {fulfillment ? (
           <span className="sale-group__when">
-            {delivery.state === "revoked" ? "Delivered " : ""}
+            {fact.state === "revoked" ? "Fulfilled " : ""}
             <time dateTime={fulfillment.fulfilled_at} suppressHydrationWarning>
               {formatWhen(fulfillment.fulfilled_at, organization.timezone)}
             </time>
@@ -262,11 +262,11 @@ function ItemsSection({ sale, actions, onDeliver }: { sale: Schemas["Sale"]; act
       </div>
       {fulfillment?.early ? (
         <p className="sale-note" data-tone="warning">
-          Delivered before full payment. {formatMoney(fulfillment.unpaid_minor, sale.currency)} was due
+          Fulfilled before full payment. {formatMoney(fulfillment.unpaid_minor, sale.currency)} was due
           {fulfillment.early_reason ? ` · ${fulfillment.early_reason}` : ""}
         </p>
       ) : null}
-      {delivery.state === "revoked" && fulfillment?.revoked_at ? (
+      {fact.state === "revoked" && fulfillment?.revoked_at ? (
         <p className="sale-note" data-tone="critical">
           Access revoked{" "}
           <time dateTime={fulfillment.revoked_at} suppressHydrationWarning>
@@ -275,8 +275,8 @@ function ItemsSection({ sale, actions, onDeliver }: { sale: Schemas["Sale"]; act
           {fulfillment.revoke_reason ? ` · ${fulfillment.revoke_reason}` : ""}
         </p>
       ) : null}
-      {actions.deliver === "blocked" ? (
-        <p className="sale-note">Delivery opens when the sale is paid in full. {formatMoney(sale.balance_minor, sale.currency)} is still due.</p>
+      {actions.fulfill === "blocked" ? (
+        <p className="sale-note">Fulfillment opens when the sale is paid in full. {formatMoney(sale.balance_minor, sale.currency)} is still due.</p>
       ) : null}
       {fulfillment && !fulfillment.revoked_at && !sale.voided_at ? (
         <p className="sale-note">

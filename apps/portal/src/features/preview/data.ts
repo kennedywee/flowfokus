@@ -94,7 +94,7 @@ export const initialInbox = [
     category: "Payments",
     name: "Marcus Ang",
     title: "Bank transfer recorded",
-    detail: "Aina recorded RM 180.00 by bank transfer. Reference: OCT-MARCUS. The membership is ready for delivery.",
+    detail: "Aina recorded RM 180.00 by bank transfer. Reference: OCT-MARCUS. The membership is ready to fulfill.",
     time: "Yesterday",
     unread: false,
     resolved: false,

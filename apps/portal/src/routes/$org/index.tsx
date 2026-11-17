@@ -153,8 +153,8 @@ function OverviewCounts({ counts, slug }: { counts: Schemas["StaffOverview"]; sl
       </div>
       <div>
         <dt>
-          <Link to="/$org/sales" params={{ org: slug }} search={{ payment: "paid", delivery: "waiting" }}>
-            Awaiting delivery <ArrowRight aria-hidden="true" />
+          <Link to="/$org/sales" params={{ org: slug }} search={{ payment: "paid", fulfillment: "waiting" }}>
+            Awaiting fulfillment <ArrowRight aria-hidden="true" />
           </Link>
         </dt>
         <dd>{counts.awaiting_fulfillment_count}</dd>

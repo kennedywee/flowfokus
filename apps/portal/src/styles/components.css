@@ -1062,7 +1062,7 @@ a.toggle-group__item {
 }
 .lamp[data-state="granted"],
 .lamp[data-state="paid"],
-.lamp[data-state="delivered"],
+.lamp[data-state="fulfilled"],
 .lamp[data-state="active"] {
   --lamp-color: var(--color-good);
 }
