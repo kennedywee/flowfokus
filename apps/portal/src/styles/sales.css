@@ -1271,9 +1271,7 @@ a.sales-row:focus-visible {
   border-color: var(--color-ink-3);
 }
 .sale-money:has(input:focus-visible) {
-  border-color: var(--color-accent);
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  border-color: var(--color-ink);
 }
 .sale-money[data-invalid] {
   border-color: var(--color-critical);

@@ -95,7 +95,10 @@ time {
   font-variant-numeric: tabular-nums;
 }
 
-/* Every interactive element shows this ring. Do not remove it. */
+/*
+ * Every interactive element shows this ring. Do not remove it. Text fields
+ * are the one exception: they show focus with an ink border (components.css).
+ */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);

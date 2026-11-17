@@ -114,7 +114,10 @@ pieces do not each need their own request.
 - Use semantic tokens in screens. Change raw swatches only in the palette.
 - Reuse existing components before adding another variant.
 - Keep status words tied to Rails facts. Paid does not mean delivered.
-- Keep focus visible, icon-only controls named, and fields labelled.
+- Keep focus visible, icon-only controls named, and fields labelled. Text
+  fields show focus as a 1px ink border, as in Paper, with no ring. The search
+  menu's field has no box at all. Buttons, menus, and other controls keep the
+  `--color-focus` ring for keyboard focus.
 - Preserve both themes and reduced motion when changing styles.
 - Treat preview data as preview data. Do not imply it came from the API.
 

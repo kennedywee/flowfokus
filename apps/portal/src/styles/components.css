@@ -412,9 +412,14 @@ textarea.input {
 .select:hover {
   border-color: var(--color-ink-3);
 }
+/*
+ * Text fields show focus as a 1px ink border, as in Paper. The caret and the
+ * darker border mark the field, so it needs no ring. Other controls keep it.
+ */
 .input:focus-visible,
 .select:focus-visible {
-  border-color: var(--color-accent);
+  border-color: var(--color-ink);
+  outline: none;
 }
 .input[aria-invalid="true"],
 .select[aria-invalid="true"] {
@@ -597,9 +602,7 @@ textarea.input {
   border-color: var(--color-ink-3);
 }
 .input-group:has(.input:focus-visible) {
-  border-color: var(--color-accent);
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  border-color: var(--color-ink);
 }
 .input-group:has([aria-invalid="true"]) {
   border-color: var(--color-critical);
@@ -1766,9 +1769,7 @@ a.counter:hover .counter__label {
   border-color: var(--color-ink-3);
 }
 .list-search:has(input:focus-visible) {
-  border-color: var(--color-accent);
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  border-color: var(--color-ink);
 }
 .list-search__icon {
   flex: none;
@@ -2432,8 +2433,18 @@ a.counter:hover .counter__label {
   border-radius: 0;
   background: transparent;
 }
+/* The search is the dialog's only field: no box, a hairline under it. */
 .command__search {
-  padding: 6px 6px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.command__search .input,
+.command__search .input:hover,
+.command__search .input:focus-visible {
+  min-height: 48px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--text-sm);
 }
 .command__list {
   max-height: min(320px, 50dvh);
