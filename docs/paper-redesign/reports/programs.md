@@ -143,7 +143,7 @@ New program:
 3. Archive price uses the New sale confirm dialog (440px, no header) — fixed.
 4. No results matches Sales: search tile and "/" hint — fixed.
 5. Error text on all four frames is a staff sentence; developer wording listed as copy to fix — fixed.
-6. Price menu: Off sale and Archived have grey status marks; menu no longer covers a ticket row — fixed.
+6. Price menu: Off sale and Archived have grey status marks; menu no longer covers a ticket row; it now overlaps the "Also bookable with" heading below the tickets — fixed.
 7. No sessions: inline Add sessions removed; one plain line — fixed.
 8. Spots error is an instruction on one line ("Enter 1 to 10,000.") — fixed (shortened to fit the 140px column).
 9. Price error on one line ("Enter a price, like 25.50.") — fixed.
