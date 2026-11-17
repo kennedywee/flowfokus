@@ -141,7 +141,9 @@ These are the ones that matter most:
 - Payment and fulfillment are two separate facts. Never merge them in one status.
 - Payment methods: Cash and Bank transfer only. Recording a payment does not
   move money; do not word it as if it does.
-- A sale has one line, quantity one. A ticket is sold for one session time.
+- A sale has one line. A membership or a pass is quantity one. A ticket is
+  sold for one session, and one sale can buy several spots in that session,
+  for the member and for named guests.
 - Keep permission limits visible: an action the role cannot use is absent, and
   a page the role cannot use says which permission it needs.
 - Sample-data screens (Inbox, Agents) keep a "Sample data" mark.
