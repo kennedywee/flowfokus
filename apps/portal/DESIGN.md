@@ -163,3 +163,51 @@ Styling:
   "Renews in 29d 16h" and a red pie for "Ends in 27d 23h · Cancelled".
 - Use 28px buttons with shortcut keys (C, S, B, ⌘K). Do not put a search field
   in the app chrome. Search opens from ⌘K.
+
+## Redesign foundation
+
+The tokens and the shell now follow the redesign. Screens that have not moved
+still use their older components on the new palette.
+
+Tokens. `tokens.css` maps the Paper tokens to the existing roles:
+
+| Paper token | Role | Light | Dark (derived) |
+| --- | --- | --- | --- |
+| `--background` | `--color-page`, `--color-surface`, `--color-sidebar` | #FFFFFF | #101011 |
+| `--muted` | `--color-well` (section band, key hint) | #F7F7F7 | #19191B |
+| `--accent` | `--color-hover` (hover, selected nav item) | #F4F4F3 | #1F1F22 |
+| `--border` | `--color-line`, `--color-avatar` | #E3E3E3 | #26262A |
+| `--foreground` | `--color-ink` | #303030 | #F2F2EE |
+| `--muted-foreground` | `--color-ink-2` | #616161 | #A3A3AA |
+| `--subtle-foreground` | `--color-ink-4` (marks only) | #8A8A8A | #5C5C63 |
+| `--success` / `--warning` / `--destructive` | `--color-good` / `--color-warning` / `--color-critical` | #0D6B4E / #9A5B00 / #B3261E | earlier dark values |
+
+Decision on muted text: the shadcn `--muted-foreground` now maps to `ink-2`,
+which is Paper's #616161. It used to map to `ink-3`. Paper's subtle grey
+(#8A8A8A) has 3.4:1 contrast on white, so it is `ink-4` and only colours
+chevrons, slashes, and idle icons. Subtle text, such as a key hint or an ID,
+uses `ink-3` (#707070), the lightest grey that meets 4.5:1 on the surface and
+the band. Dark values keep the earlier dark ink and status colours on a single
+#101011 surface.
+
+Type. Redesigned screens use `--text-lg` (20px, semibold) for the page title,
+`--text-sm` (13px) for body text and headings, and `--text-xs` (12px) for
+secondary text. The base `h1` is now 20px. Geist stays the interface font;
+Paper shows Figtree. Changing the font needs a new font package and is a
+separate decision.
+
+Controls. `Button size="compact"` (and `"icon-compact"`) is the 28px redesign
+button with an 8px radius (`--control-height-compact`, `--radius-compact`). A
+compact secondary button has a hairline and a 1px drop (`--shadow-control`).
+Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
+`aria-keyshortcuts` on the button. Touch screens hide the hints. Show a hint
+only where the shortcut works (`lib/shortcuts.ts`).
+
+Shell. The sidebar (236px, no fill or edge) holds the logo, the collapse
+button, one list of pages, and the account menu at the foot. The account menu
+holds Settings, Theme, What's new, and Sign out. The 48px top bar holds the
+breadcrumb: organization, location, section, and page. A detail route names
+its page with `staticData.crumb(loaderData)`. The top bar has no search field:
+a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
+finds members through Rails and opens pages. The rail is 56px wide; icons stay
+at x=28 when the sidebar collapses.

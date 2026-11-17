@@ -30,7 +30,7 @@ import { Skeleton } from "./ui/skeleton";
  *
  * Exports: Lamp, Status, Pill, Money, Time, Notice, FailureNotice, Empty,
  * ErrorState, LoadingState, Plate (and Card, an alias), Field, describedBy,
- * SubmitButton, SkeletonRows, PageHead, Avatar, initials, Wordmark,
+ * SubmitButton, SkeletonRows, PageHead, Avatar, initials, Wordmark, Kbd,
  * formatDateTime. For a button, use `Button` or `buttonVariants` from
  * components/ui/button.
  */
@@ -355,6 +355,19 @@ export function Wordmark() {
       {/* Drawn as a CSS mask filled with ink, so it follows the theme. */}
       <span className="wordmark__text" role="img" aria-label="Flowfokus" />
     </span>
+  );
+}
+
+/**
+ * A keyboard hint, such as "C" or "⌘K". It is decoration: put
+ * `aria-keyshortcuts` on the control so assistive technology hears the key.
+ * Show it only where the shortcut works.
+ */
+export function Kbd({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="kbd" aria-hidden="true">
+      {children}
+    </kbd>
   );
 }
 

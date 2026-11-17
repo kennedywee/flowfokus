@@ -22,6 +22,8 @@ const buttonVariants = cva("button", {
       lg: "button--large",
       icon: "button--icon",
       "icon-sm": "button--icon button--small",
+      compact: "button--compact",
+      "icon-compact": "button--icon button--compact",
     },
   },
   defaultVariants: {

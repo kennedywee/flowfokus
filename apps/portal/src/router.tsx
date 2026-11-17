@@ -23,4 +23,11 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>;
   }
+  interface StaticDataRouteOption {
+    /**
+     * The last top bar breadcrumb for a detail page, from its loader data,
+     * for example the member's name. Return undefined while it is unknown.
+     */
+    crumb?: (loaderData: unknown) => string | undefined;
+  }
 }

@@ -102,7 +102,8 @@
     --secondary: var(--color-control);
     --secondary-foreground: var(--color-ink);
     --muted: var(--color-well);
-    --muted-foreground: var(--color-ink-3);
+    /* Paper --muted-foreground is #616161, the ink-2 role. */
+    --muted-foreground: var(--color-ink-2);
     --accent: var(--color-hover);
     --accent-foreground: var(--color-ink);
     --destructive: var(--color-critical);

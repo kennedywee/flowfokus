@@ -186,6 +186,11 @@ function SidebarContent({ className, ...props }: React.ComponentProps<"nav">) {
   return <nav data-slot="sidebar-content" className={cn("nav", className)} {...props} />
 }
 
+/** The foot of the sidebar: the account menu. */
+function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="sidebar-footer" className={cn("sidebar__footer", className)} {...props} />
+}
+
 function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="sidebar-group" className={cn("nav-group", className)} {...props} />
 }
@@ -238,6 +243,7 @@ function SidebarMenuButton({
 export {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,

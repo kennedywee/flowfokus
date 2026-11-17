@@ -254,6 +254,71 @@
 .button--icon.button--small {
   width: var(--control-height-small);
 }
+/*
+ * Compact: the redesign's 28px button, 13px medium text, 8px radius. A
+ * secondary compact button has a hairline and a 1px drop, like the Paper
+ * buttons. Coarse pointers get a 40px target.
+ */
+.button--compact {
+  gap: var(--space-2);
+  min-height: var(--control-height-compact);
+  padding: 0 10px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.button--compact:has(> .kbd:last-child) {
+  padding-right: 4px;
+}
+.button--compact.button--secondary {
+  border-color: var(--color-line);
+  box-shadow: var(--shadow-control);
+}
+.button--icon.button--compact {
+  width: var(--control-height-compact);
+  padding: 0;
+}
+.button--compact svg,
+.button--icon.button--compact svg {
+  width: 16px;
+  height: 16px;
+}
+@media (pointer: coarse) {
+  .button--compact {
+    min-height: 40px;
+  }
+  .button--icon.button--compact {
+    width: 40px;
+  }
+}
+
+/* A keyboard hint inside a button or a menu. The shortcut must work where it shows. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 5px;
+  background: var(--color-well);
+  color: var(--color-ink-3);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.button:not(.button--secondary, .button--ghost) .kbd {
+  background: color-mix(in srgb, var(--color-on-ink) 16%, transparent);
+  color: var(--color-on-ink);
+}
+@media (pointer: coarse) {
+  /* Touch screens have no keyboard to press. */
+  .kbd {
+    display: none;
+  }
+}
 .button--icon svg {
   width: 18px;
   height: 18px;
@@ -2243,6 +2308,31 @@ a.counter:hover .counter__label {
   height: 1px;
   margin: var(--space-1) 0;
   background: var(--color-line);
+}
+.command__label {
+  flex: none;
+  max-width: 60%;
+  overflow: hidden;
+  color: var(--color-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.command__detail {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Search progress and "nothing matches". Empty while results show. */
+.command__status {
+  padding: var(--space-3) 10px;
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+}
+.command__status:empty {
+  display: none;
 }
 .command__empty {
   padding: var(--space-6) 10px;

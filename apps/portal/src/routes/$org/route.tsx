@@ -1,9 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, Outlet, createFileRoute, notFound, redirect, rootRouteId, useLoaderData, useRouter, useRouterState } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createFileRoute,
+  notFound,
+  redirect,
+  rootRouteId,
+  useLoaderData,
+  useMatches,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import {
   Bot,
   CalendarDays,
   ChartColumn,
+  ChevronDown,
   ChevronRight,
   Inbox,
   LayoutGrid,
@@ -19,6 +32,7 @@ import {
   Receipt,
   Search,
   History,
+  Settings,
   Sun,
   Tag,
   Ticket,
@@ -29,12 +43,14 @@ import {
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
+import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { useToast } from "../../components/Toast";
-import { FailureNotice, Wordmark, initials } from "../../components/ui";
+import { FailureNotice, Kbd, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
+import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
 import { setTheme } from "../../lib/theme.functions";
 import { isSlug, type Theme } from "../../lib/validate";
@@ -55,8 +71,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
+  SidebarFooter,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -106,28 +121,18 @@ type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products" |
 
 type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean; path: string };
 
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Desk",
-    items: [
-      { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
-      { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
-      { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
-      { to: "/$org/check-in", label: "Check-in", icon: LogIn, exact: false, path: "/check-in" },
-      { to: "/$org/schedule", label: "Schedule", icon: CalendarDays, exact: false, path: "/schedule" },
-      { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
-      { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [
-      { to: "/$org/programs", label: "Programs", icon: Ticket, exact: false, path: "/programs" },
-      { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
-      { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
-      { to: "/$org/changelog", label: "What’s new", icon: History, exact: true, path: "/changelog" },
-    ],
-  },
+/* One list, no group titles. What's new lives in the account menu. */
+const NAV_ITEMS: NavItem[] = [
+  { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
+  { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
+  { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
+  { to: "/$org/check-in", label: "Check-in", icon: LogIn, exact: false, path: "/check-in" },
+  { to: "/$org/schedule", label: "Schedule", icon: CalendarDays, exact: false, path: "/schedule" },
+  { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
+  { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
+  { to: "/$org/programs", label: "Programs", icon: Ticket, exact: false, path: "/programs" },
+  { to: "/$org/products", label: "Plans & offers", icon: Tag, exact: false, path: "/products" },
+  { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
 ];
 
 function OrganizationLayout() {
@@ -185,17 +190,19 @@ function Shell({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const base = `/${data.slug}`;
   const trimmed = pathname.replace(/\/$/, "");
-  const routed = NAV_GROUPS.flatMap((group) => group.items).find(
-    (item) => item.to !== undefined && (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)),
-  );
+  const routed = NAV_ITEMS.find((item) => (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)));
   const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
 
   // The desk location shows the new choice at once, while the cookie is saved.
   const router = useRouter();
+  const navigate = useNavigate();
   const toast = useToast();
   const desk = useDeskLocation();
   const [pendingLocation, setPendingLocation] = useState<string | null>(null);
   const shownLocation = data.locations.find((location) => location.id === pendingLocation) ?? desk;
+  const [searching, setSearching] = useState(false);
+  const modKey = useModKeyLabel();
+  useShortcut("k", () => setSearching((open) => !open), { mod: true });
 
   async function chooseLocation(id: string) {
     setPendingLocation(id);
@@ -209,19 +216,37 @@ function Shell({
     }
   }
 
-  // The current page, for the breadcrumb. A section page has a link back to its root on detail pages.
-  const crumb: { label: string; section?: RoutedPath } | null = routed
-    ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, section: routed.to }
+  // A detail page names itself with `staticData.crumb`, for example the member's name.
+  const matches = useMatches();
+  const pageCrumb = matches.reduce<string | undefined>(
+    (found, match) => match.staticData.crumb?.(match.loaderData) ?? found,
+    undefined,
+  );
+
+  // The section, then the page. On a detail page the section links back to its list.
+  const section: { label: string; to?: RoutedPath } | null = routed
+    ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
     : trimmed === `${base}/changelog` ? { label: "What’s new" }
     : trimmed === `${base}/settings` ? { label: "Settings" }
     : null;
+
+  const role = organizations?.find((choice) => choice.slug === data.slug)?.role;
+  const pages: CommandPage[] = [
+    ...NAV_ITEMS.map((item) => ({
+      label: item.label,
+      icon: item.icon,
+      open: () => void navigate({ to: item.to, params: { org: data.slug } }),
+    })),
+    { label: "Settings", icon: Settings, open: () => void navigate({ to: "/$org/settings", params: { org: data.slug } }) },
+    { label: "What’s new", icon: History, open: () => void navigate({ to: "/$org/changelog", params: { org: data.slug } }) },
+  ];
 
   return (
     <SidebarProvider>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <AppSidebar data={data} />
+      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} />
       <SidebarInset>
         <header className="topbar">
           <div className="topbar__start">
@@ -234,6 +259,7 @@ function Shell({
               <ContextSwitcher
                 label="Organization"
                 strong
+                icon={<span className="org-tile">{initials(data.name).slice(0, 1)}</span>}
                 current={data.name}
                 options={
                   organizations && organizations.length > 0
@@ -281,7 +307,7 @@ function Shell({
               ) : (
                 <span className="topbar__none">No locations</span>
               )}
-              {crumb ? (
+              {section ? (
                 <>
                   <span className="topbar__slash topbar__slash--page" aria-hidden="true">
                     /
@@ -289,14 +315,19 @@ function Shell({
                   <nav className="breadcrumb" aria-label="Breadcrumb">
                     <ol>
                       <li>
-                        {crumb.section ? (
-                          <Link to={crumb.section} params={{ org: data.slug }} activeOptions={{ exact: true }}>
-                            {crumb.label}
+                        {section.to ? (
+                          <Link to={section.to} params={{ org: data.slug }} activeOptions={{ exact: true }}>
+                            {section.label}
                           </Link>
                         ) : (
-                          <span aria-current="page">{crumb.label}</span>
+                          <span aria-current="page">{section.label}</span>
                         )}
                       </li>
+                      {section.to && pageCrumb ? (
+                        <li>
+                          <span aria-current="page">{pageCrumb}</span>
+                        </li>
+                      ) : null}
                     </ol>
                   </nav>
                 </>
@@ -304,27 +335,41 @@ function Shell({
             </div>
           </div>
           <div className="topbar__end">
-            {/* Search opens the searchable member list. */}
-            <Link to="/$org/members" params={{ org: data.slug }} className="topbar__search">
+            {/* Search opens from here or with ⌘K. It finds members and pages. */}
+            <button
+              type="button"
+              className="button button--secondary button--compact topbar__search"
+              aria-keyshortcuts="Meta+K Control+K"
+              aria-haspopup="dialog"
+              onClick={() => setSearching(true)}
+            >
               <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
-              <span className="topbar__search-label">Search</span>
-            </Link>
-            <AccountMenu actor={data.actor} canSignOut={canSignOut} />
+              <span className="visually-hidden">Search</span>
+              <Kbd>{modKey}K</Kbd>
+            </button>
           </div>
         </header>
         <main className="main" id="main" tabIndex={-1}>
           <Outlet />
         </main>
       </SidebarInset>
+      <CommandMenu
+        slug={data.slug}
+        open={searching}
+        onOpenChange={setSearching}
+        pages={pages}
+        canSearchMembers={data.actor.permissions.includes("members:read")}
+      />
     </SidebarProvider>
   );
 }
 
 /**
- * The sidebar: logo, the staff pages, and What's new. It lives inside the
- * sidebar provider, so it can close the phone drawer after a link is used.
+ * The sidebar: the logo, the collapse button, the staff pages, and the account
+ * menu. It lives inside the sidebar provider, so it can close the phone drawer
+ * after a link is used.
  */
-function AppSidebar({ data }: { data: OrganizationData }) {
+function AppSidebar({ data, role, canSignOut }: { data: OrganizationData; role: string | null; canSignOut: boolean }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { open, setOpenMobile } = useSidebar();
   const closeDrawer = () => setOpenMobile(false);
@@ -344,16 +389,17 @@ function AppSidebar({ data }: { data: OrganizationData }) {
           className="sidebar__logo"
           onClick={closeDrawer}
         >
-          <Wordmark />
+          <img className="sidebar__mark" src={markUrl} width={20} height={20} alt="" />
+          <span className="sidebar__name">Flowfokus</span>
         </Link>
         <SidebarTrigger
           className="sidebar__collapse"
           aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
           aria-controls="app-sidebar"
         >
-          <img className="sidebar__collapse-mark" src={markUrl} width={26} height={26} alt="" />
-          <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.75} aria-hidden="true" focusable="false" />
-          <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <img className="sidebar__collapse-mark" src={markUrl} width={20} height={20} alt="" />
+          <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.5} aria-hidden="true" focusable="false" />
+          <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.5} aria-hidden="true" focusable="false" />
         </SidebarTrigger>
         <button type="button" className="sidebar__close" onClick={closeDrawer}>
           <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
@@ -361,43 +407,26 @@ function AppSidebar({ data }: { data: OrganizationData }) {
         </button>
       </SidebarHeader>
       <SidebarContent aria-label="Staff pages">
-        {/* The first group has no visible title. In the rail, later titles become dividers. */}
-        {NAV_GROUPS.map((group, index) => {
-          const labelId = `nav-${group.label.toLowerCase()}`;
-          return (
-            <SidebarGroup key={group.label}>
-              {index === 0 ? (
-                <p className="visually-hidden" id={labelId}>
-                  {group.label}
-                </p>
-              ) : (
-                <SidebarGroupLabel id={labelId}>{group.label}</SidebarGroupLabel>
-              )}
-              <SidebarMenu aria-labelledby={labelId}>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.label}>
-                    {/* The router marks the active link (aria-current="page"). A section stays active on its detail pages. */}
-                    <SidebarMenuButton
-                      tooltip={item.label}
-                      render={
-                        <Link
-                          to={item.to}
-                          params={{ org: data.slug }}
-                          activeOptions={{ exact: item.exact }}
-                          onClick={closeDrawer}
-                        />
-                      }
-                    >
-                      <item.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
-                      <span className="nav-item__label">{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          );
-        })}
+        <SidebarMenu>
+          {NAV_ITEMS.map((item) => (
+            <SidebarMenuItem key={item.label}>
+              {/* The router marks the active link (aria-current="page"). A section stays active on its detail pages. */}
+              <SidebarMenuButton
+                tooltip={item.label}
+                render={
+                  <Link to={item.to} params={{ org: data.slug }} activeOptions={{ exact: item.exact }} onClick={closeDrawer} />
+                }
+              >
+                <item.icon strokeWidth={1.5} aria-hidden="true" focusable="false" />
+                <span className="nav-item__label">{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter>
+        <AccountMenu actor={data.actor} role={role} slug={data.slug} canSignOut={canSignOut} onNavigate={closeDrawer} />
+      </SidebarFooter>
     </Sidebar>
   );
 }
@@ -416,13 +445,27 @@ function applyTheme(theme: Theme) {
 }
 
 /**
- * The account menu, on the shadcn dropdown menu. The theme choice and sign-out
- * work. Sign-out submits a hidden form, so it is a same-origin POST, not a script call.
+ * The account menu, at the foot of the sidebar. It holds the theme choice,
+ * settings, What's new, and sign-out. Sign-out submits a hidden form, so it is
+ * a same-origin POST, not a script call.
  */
-function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; canSignOut: boolean }) {
+function AccountMenu({
+  actor,
+  role,
+  slug,
+  canSignOut,
+  onNavigate,
+}: {
+  actor: OrganizationData["actor"];
+  role: string | null;
+  slug: string;
+  canSignOut: boolean;
+  onNavigate: () => void;
+}) {
   const signOutForm = useRef<HTMLFormElement>(null);
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
   const router = useRouter();
+  const navigate = useNavigate();
   const toast = useToast();
   const saved = useLoaderData({ from: rootRouteId });
   // Shown at once, before the cookie is saved and the root route reloads.
@@ -445,18 +488,32 @@ function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; 
     }
   }
 
+  function open(to: "/$org/settings" | "/$org/changelog") {
+    onNavigate();
+    void navigate({ to, params: { org: slug } });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="account__button">
-        <span aria-hidden="true">{initials(actor.name)}</span>
-        <span className="visually-hidden">Account: {actor.name}</span>
+        <span className="account__avatar" aria-hidden="true">
+          {initials(actor.name).slice(0, 1)}
+        </span>
+        <span className="account__name">{actor.name}</span>
+        {role ? <span className="account__role">· {role}</span> : null}
+        <ChevronDown className="account__chevron" {...icon} />
+        <span className="visually-hidden">, account menu</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent side="top" align="start">
         <DropdownMenuHeader>
           <span className="menu__name">{actor.name}</span>
           <span className="menu__email">{actor.email}</span>
         </DropdownMenuHeader>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => open("/$org/settings")}>
+          <Settings {...icon} />
+          Settings
+        </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
             <current.icon {...icon} />
@@ -477,6 +534,10 @@ function AccountMenu({ actor, canSignOut }: { actor: OrganizationData["actor"]; 
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuItem onClick={() => open("/$org/changelog")}>
+          <History {...icon} />
+          What’s new
+        </DropdownMenuItem>
         {canSignOut ? (
           <>
             <DropdownMenuSeparator />
