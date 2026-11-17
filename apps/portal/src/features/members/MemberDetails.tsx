@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
 import { CheckInPanel } from "../../components/CheckInPanel";
+import { PageActions } from "../../components/PageActions";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import { Kbd, initials } from "../../components/ui";
@@ -132,7 +133,7 @@ function MemberHeader({ record }: { record: MemberRecord }) {
           {due.length ? <span className="member-head__due">{due.join(" + ")} due</span> : "No balance due"}
         </p>
       </div>
-      <div className="member-head__actions">
+      <PageActions>
         <Button
           type="button"
           variant="secondary"
@@ -167,7 +168,7 @@ function MemberHeader({ record }: { record: MemberRecord }) {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
-      </div>
+      </PageActions>
       <Dialog open={checkingIn} onOpenChange={setCheckingIn}>
         <DialogContent className="member-checkin-dialog">
           <DialogBody>

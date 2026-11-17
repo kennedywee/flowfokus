@@ -96,23 +96,27 @@ function RosterPage() {
         meta={`${formatDate(data.starts_at, tz)}, ${formatTime(data.starts_at, tz)} to ${formatTime(data.ends_at, tz)} · ${
           data.program.location_name
         }${data.program.host_name ? ` · ${data.program.host_name}` : ""}`}
+        actions={
+          <>
+            <Link
+              to="/$org/programs/$programId"
+              params={{ org: organization.slug, programId: data.program.id }}
+              className={buttonVariants({ variant: "secondary", size: "compact" })}
+            >
+              {PROGRAM_KIND_LABEL[data.program.kind]} details
+            </Link>
+            {can("programs:manage") && open ? (
+              <Button type="button" variant="secondary" size="compact" onClick={() => setCancellingTime(true)}>
+                <CalendarX2 aria-hidden="true" />
+                Cancel time
+              </Button>
+            ) : null}
+          </>
+        }
       >
         <Status state={data.cancelled_at ? "off" : data.spots_left === 0 ? "due" : "active"}>
           {data.cancelled_at ? "Cancelled" : data.spots_left === 0 ? "Full" : spotsLeft(data.spots_left)}
         </Status>
-        <Link
-          to="/$org/programs/$programId"
-          params={{ org: organization.slug, programId: data.program.id }}
-          className={buttonVariants({ variant: "secondary" })}
-        >
-          {PROGRAM_KIND_LABEL[data.program.kind]} details
-        </Link>
-        {can("programs:manage") && open ? (
-          <Button type="button" variant="secondary" onClick={() => setCancellingTime(true)}>
-            <CalendarX2 aria-hidden="true" />
-            Cancel time
-          </Button>
-        ) : null}
       </PageHead>
 
       {data.cancelled_at ? (

@@ -367,11 +367,6 @@ a.sales-row:focus-visible {
   width: 18px;
   height: 18px;
 }
-.new-sale__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .new-sale__main {
   grid-area: main;
   display: grid;
@@ -835,10 +830,6 @@ a.sales-row:focus-visible {
   color: var(--color-ink-2);
   font-size: var(--text-xs);
   line-height: 16px;
-}
-.sale-head__actions {
-  flex: none;
-  align-self: flex-start;
 }
 .menu.sale-menu {
   width: 240px;

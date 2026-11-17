@@ -22,26 +22,30 @@ export function CheckIns() {
   );
   return (
     <div className="page check-in-page">
-      <PageHead title="Check-in">
-        <Button
-          variant="secondary"
-          type="button"
-          onClick={() =>
-            downloadCsv("check-ins.csv", [
-              ["Member", "Location", "Time", "Result"],
-              ...visible.map((visit) => [
-                visit.member.name,
-                locationName(visit.location_id),
-                visit.checked_in_at,
-                visit.result,
-              ]),
-            ])
-          }
-        >
-          <Download aria-hidden="true" />
-          Export visits
-        </Button>
-      </PageHead>
+      <PageHead
+        title="Check-in"
+        actions={
+          <Button
+            variant="secondary"
+            size="compact"
+            type="button"
+            onClick={() =>
+              downloadCsv("check-ins.csv", [
+                ["Member", "Location", "Time", "Result"],
+                ...visible.map((visit) => [
+                  visit.member.name,
+                  locationName(visit.location_id),
+                  visit.checked_in_at,
+                  visit.result,
+                ]),
+              ])
+            }
+          >
+            <Download aria-hidden="true" />
+            Export visits
+          </Button>
+        }
+      />
       <div className="preview-checkin-layout">
         <Plate title="Front desk">
           {members.ok ? <CheckInPanel members={members.data} /> : <FailureNotice error={members.error} />}

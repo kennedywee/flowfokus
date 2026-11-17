@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { ChevronRight, Plus, Search, Users } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
+import { PageActions } from "../../components/PageActions";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
@@ -44,7 +45,9 @@ function ListHead() {
   return (
     <header className="members-head">
       <h1>Members</h1>
-      <NewMemberLink />
+      <PageActions>
+        <NewMemberLink />
+      </PageActions>
     </header>
   );
 }

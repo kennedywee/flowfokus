@@ -60,39 +60,43 @@ export function Reports({ report, period }: { report: Result<Schemas["Report"]>;
 
   return (
     <div className="page reports-page">
-      <PageHead title="Reports">
-        <Button
-          variant="secondary"
-          type="button"
-          onClick={() =>
-            downloadCsv(`${organization.slug}-weekly-report.csv`, [
-              [
-                "Week starting",
-                "Sales",
-                `Sales (${currency})`,
-                `Payments (${currency})`,
-                `Refunds (${currency})`,
-                "Check-ins granted",
-                "Check-ins denied",
-                "New members",
-              ],
-              ...weeks.map((week) => [
-                week.starts_on,
-                week.sale_count,
-                (week.sales_minor / 100).toFixed(2),
-                (week.payments_minor / 100).toFixed(2),
-                (week.refunds_minor / 100).toFixed(2),
-                week.check_ins_granted,
-                week.check_ins_denied,
-                week.new_members,
-              ]),
-            ])
-          }
-        >
-          <Download aria-hidden="true" />
-          Export report
-        </Button>
-      </PageHead>
+      <PageHead
+        title="Reports"
+        actions={
+          <Button
+            variant="secondary"
+            size="compact"
+            type="button"
+            onClick={() =>
+              downloadCsv(`${organization.slug}-weekly-report.csv`, [
+                [
+                  "Week starting",
+                  "Sales",
+                  `Sales (${currency})`,
+                  `Payments (${currency})`,
+                  `Refunds (${currency})`,
+                  "Check-ins granted",
+                  "Check-ins denied",
+                  "New members",
+                ],
+                ...weeks.map((week) => [
+                  week.starts_on,
+                  week.sale_count,
+                  (week.sales_minor / 100).toFixed(2),
+                  (week.payments_minor / 100).toFixed(2),
+                  (week.refunds_minor / 100).toFixed(2),
+                  week.check_ins_granted,
+                  week.check_ins_denied,
+                  week.new_members,
+                ]),
+              ])
+            }
+          >
+            <Download aria-hidden="true" />
+            Export report
+          </Button>
+        }
+      />
       <div className="stack">
         <div className="preview-report-toolbar">
           <Filters

@@ -3,6 +3,7 @@ import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Banknote, MapPin, Plus, Receipt, Search, Tag, X } from "lucide-react";
 import { Combobox } from "../../components/Combobox";
+import { PageActions } from "../../components/PageActions";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import { FailureNotice, Kbd, Notice, SubmitButton, describedBy, initials } from "../../components/ui";
@@ -86,7 +87,7 @@ function NewSaleHead({ children }: { children?: ReactNode }) {
         <Receipt {...icon} />
       </span>
       <h1>New sale</h1>
-      {children ? <div className="new-sale__actions">{children}</div> : null}
+      {children ? <PageActions>{children}</PageActions> : null}
     </header>
   );
 }

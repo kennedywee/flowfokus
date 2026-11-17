@@ -38,14 +38,15 @@ function Products() {
     <div className="page offers-page">
       <PageHead
         title="Plans & offers"
-      >
-        {can("products:create") ? (
-          <Button type="button" onClick={() => setEditing({ kind: "new" })}>
-            <Plus aria-hidden="true" />
-            Add offer
-          </Button>
-        ) : null}
-      </PageHead>
+        actions={
+          can("products:create") ? (
+            <Button type="button" size="compact" onClick={() => setEditing({ kind: "new" })}>
+              <Plus aria-hidden="true" />
+              Add offer
+            </Button>
+          ) : null
+        }
+      />
       {!products.ok ? (
         <FailureNotice error={products.error} title="Offers did not load" />
       ) : products.data.length === 0 ? (

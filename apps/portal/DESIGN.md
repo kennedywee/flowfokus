@@ -42,8 +42,12 @@ Use `Money` and `Time` for domain values.
 ## Layout
 
 Use `PageHead`, `.stack`, and the existing `.grid-2` variants. `PageHead` has
-a title, optional factual `meta`, and actions; it has no instructional subtitle. Keep the page
-heading and its main action together. Use one primary action per decision group;
+a title, optional factual `meta`, facts beside the title (such as a status
+pill), and `actions`; it has no instructional subtitle. Page actions go in the
+top bar after Search, as in Paper: wrap them in `PageActions`
+(`components/PageActions.tsx`; `PageHead actions` does this). Use compact 28px
+buttons there. Phones have no room in the top bar, so the actions stay in the
+page where `PageActions` sits. Use one primary action per decision group;
 use secondary or ghost buttons for alternatives. Keep table reading order on
 small screens, and preserve key facts in the existing phone summaries.
 
@@ -94,7 +98,8 @@ with no disabled, focus, or pending behavior.
 
 Existing blocks to compose before adding another abstraction:
 
-- `PageHead`: title, optional record metadata, and actions.
+- `PageHead`: title, optional record metadata, title facts, and actions.
+- `PageActions`: a page's actions, placed in the top bar from 768px.
 - `Plate`: named section with body and optional action/footer.
 - `PaymentMark` / `DeliveryMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
@@ -211,7 +216,8 @@ only where the shortcut works (`lib/shortcuts.ts`).
 Shell. The sidebar (236px, no fill or edge) holds the logo, the collapse
 button, one list of pages, and the account menu at the foot. The account menu
 holds Settings, Theme, What's new, and Sign out. The 48px top bar holds the
-breadcrumb: organization, location, section, and page. A detail route names
+breadcrumb: organization, location, section, and page, then Search and the
+page's actions on the right. A detail route names
 its page with `staticData.crumb(loaderData)`. The top bar has no search field:
 a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
 finds members through Rails and opens pages. The rail is 56px wide; icons stay
@@ -240,7 +246,7 @@ The members list and New member are the next redesigned screens
 (`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
 `features/members/list.ts`). They show only Rails data:
 
-- Members list: the title with New member (members:create only) in one row,
+- Members list: the title, New member (members:create only) in the top bar,
   then a 28px search field with a "/" hint. Rails searches name and email as
   staff type; Escape clears. A grey header band, then 52px rows with the
   initials, name, email, and join date. Each row opens the member. The footer
@@ -249,7 +255,7 @@ The members list and New member are the next redesigned screens
   member status, filters, or bulk endpoints.
 - No results: one line and Clear search. No members: one line and New member.
 - New member: a page, not a dialog. An icon tile and the title, Create member
-  (⌘↵) in the header row, then the Profile band with Full name and Email.
+  (⌘↵) in the top bar, then the Profile band with Full name and Email.
   Email is required because Rails requires it. Errors show on the fields, with
   a summary above. Leaving with typed details asks "Discard this member?".
   After a create, the member page opens with a "Member created" toast. The
@@ -262,7 +268,7 @@ facts, filters, and action rules in `features/sales/facts.ts`). They share the
 list pieces in `components.css` (`.list-search`, `.list-pager`, `.list-state`)
 and `ListPager` with the members list. They show only Rails data:
 
-- Sales list: the title with New sale (purchases:create only) in one row. Filter
+- Sales list: the title, New sale (purchases:create only) in the top bar. Filter
   opens Payment and Delivery submenus with a count per value; each active fact
   shows as a chip with a clear button. Search (with a "/" hint) matches member
   name, email, and item. A header band, then 44px rows: member, item and price,
@@ -273,7 +279,7 @@ and `ListPager` with the members list. They show only Rails data:
   then the item, then the facts and the date.
 - No sales: one line and New sale. No match: one line and Clear filters.
 - Sale details: a tile, the item as the title, and the two facts as pills. The
-  ⋯ menu in the header row holds Record payment (P), Deliver (D), Refund…,
+  ⋯ menu in the top bar holds Record payment (P), Deliver (D), Refund…,
   Revoke access…, and Void sale…; each appears only when the permission and
   the sale allow it. Items shows the delivery fact and time, the line with its
   period or term and rights, early-delivery and revoke notes, and the total.
@@ -295,8 +301,8 @@ New sale is the next redesigned screen (`features/sales/NewSale.tsx`, rules in
 dialog frame, and the record-payment fields (`PaymentFields`). It shows only
 Rails data:
 
-- A page, not a dialog. A tile and the title, Create sale (⌘↵) in the header
-  row. Products and Payment on the left; Member and Location on the right
+- A page, not a dialog. A tile and the title, Create sale (⌘↵) in the top
+  bar. Products and Payment on the left; Member and Location on the right
   from 1100px. Phones put Member and Location first.
 - Products holds one line, because Rails sells one line, quantity one, at the
   price's current amount. "+ Product" opens Add product: search, then All,

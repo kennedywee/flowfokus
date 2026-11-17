@@ -14,9 +14,8 @@ export function PreviewPage({
 }) {
   return (
     <div className="page">
-      <PageHead title={title}>
+      <PageHead title={title} actions={actions}>
         <Pill>Sample data</Pill>
-        {actions}
       </PageHead>
       {children}
     </div>

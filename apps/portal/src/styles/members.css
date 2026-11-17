@@ -184,11 +184,6 @@ a.members-row:focus-visible {
   width: 18px;
   height: 18px;
 }
-.new-member__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 .new-member__form {
   display: grid;
   gap: var(--space-6);
@@ -326,12 +321,6 @@ a.members-row:focus-visible {
 }
 .member-head__due {
   color: var(--color-warning);
-}
-.member-head__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 /* A list section: the grey band reaches 12px past the rows, so titles line up. */
@@ -816,10 +805,10 @@ a.mx-row__title:hover {
 }
 
 @media (max-width: 767.98px) {
-  .member-head__actions {
+  .member-head .page-actions {
     width: 100%;
   }
-  .member-head__actions > .button:not(.button--icon) {
+  .member-head .page-actions > .button:not(.button--icon) {
     flex: 1;
   }
   .mx-row {

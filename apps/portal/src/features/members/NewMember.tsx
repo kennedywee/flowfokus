@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
 import { User, UserPlus } from "lucide-react";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
 import { FailureNotice, Field, Kbd, Notice, describedBy } from "../../components/ui";
 import { useAction } from "../../lib/hooks";
@@ -48,7 +49,7 @@ function NewMemberHead({ children }: { children?: ReactNode }) {
         <UserPlus {...icon} />
       </span>
       <h1>New member</h1>
-      {children ? <div className="new-member__actions">{children}</div> : null}
+      {children ? <PageActions>{children}</PageActions> : null}
     </header>
   );
 }

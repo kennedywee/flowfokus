@@ -32,7 +32,8 @@ identity, permission limits, error recovery, and the consequences of payments,
 early access, refunds, and overrides. These are data and action feedback.
 Do not hide them to make a screen appear simpler.
 
-Use `PageHead` for a title and actions. Its optional `meta` slot holds record
+Use `PageHead` for a title and actions. Actions show in the top bar after
+Search, as in the Paper redesign; on phones they stay in the page. Its optional `meta` slot holds record
 metadata, such as a sale date or program location. It has no description prop.
 Show dependent controls when their prerequisite is chosen. Keep labels and
 validation attached to the controls. Show check-in feedback after an attempt;

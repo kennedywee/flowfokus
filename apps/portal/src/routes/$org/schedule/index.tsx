@@ -62,12 +62,17 @@ function Schedule() {
     <div className="page schedule-page">
       <PageHead
         title="Schedule"
-      >
-        <Link to="/$org/programs" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary" })}>
-          <LayoutList aria-hidden="true" />
-          Programs
-        </Link>
-      </PageHead>
+        actions={
+          <Link
+            to="/$org/programs"
+            params={{ org: organization.slug }}
+            className={buttonVariants({ variant: "secondary", size: "compact" })}
+          >
+            <LayoutList aria-hidden="true" />
+            Programs
+          </Link>
+        }
+      />
       <nav className="schedule-page__range" aria-label="Weeks">
         <span>{dayTitle(from)} – {dayTitle(shiftDay(from, DAYS - 1))}</span>
         <Link

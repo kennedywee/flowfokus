@@ -32,12 +32,15 @@ function FrontDesk() {
 
   return (
     <div className="page desk-page">
-      <PageHead title="Overview">
-        <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants()}>
-          <Plus aria-hidden="true" strokeWidth={1.75} />
-          New sale
-        </Link>
-      </PageHead>
+      <PageHead
+        title="Overview"
+        actions={
+          <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants({ size: "compact" })}>
+            <Plus aria-hidden="true" strokeWidth={1.75} />
+            New sale
+          </Link>
+        }
+      />
 
       <div className="grid-2 grid-2--wide-first">
         <div className="stack">

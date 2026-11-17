@@ -18,6 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import { Kbd } from "../../components/ui";
+import { PageActions } from "../../components/PageActions";
 import {
   PAYMENT_METHOD_LABEL,
   PRODUCT_KIND_LABEL,
@@ -109,7 +110,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
         </p>
       </div>
       {any ? (
-        <div className="sale-head__actions">
+        <PageActions>
           <DropdownMenu>
             <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="Sale actions">
               <MoreHorizontal {...icon} />
@@ -154,7 +155,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
               ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </PageActions>
       ) : null}
     </header>
   );

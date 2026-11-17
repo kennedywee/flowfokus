@@ -24,18 +24,27 @@ function Programs() {
 
   return (
     <div className="page programs-page">
-      <PageHead title="Programs">
-        <Link to="/$org/schedule" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary" })}>
-          <CalendarDays aria-hidden="true" />
-          Schedule
-        </Link>
-        {can("programs:manage") ? (
-          <Button type="button" onClick={() => setAdding(true)}>
-            <Plus aria-hidden="true" />
-            Add program
-          </Button>
-        ) : null}
-      </PageHead>
+      <PageHead
+        title="Programs"
+        actions={
+          <>
+            <Link
+              to="/$org/schedule"
+              params={{ org: organization.slug }}
+              className={buttonVariants({ variant: "secondary", size: "compact" })}
+            >
+              <CalendarDays aria-hidden="true" />
+              Schedule
+            </Link>
+            {can("programs:manage") ? (
+              <Button type="button" size="compact" onClick={() => setAdding(true)}>
+                <Plus aria-hidden="true" />
+                Add program
+              </Button>
+            ) : null}
+          </>
+        }
+      />
       {!programs.ok ? (
         <FailureNotice error={programs.error} title="Programs did not load" />
       ) : programs.data.length === 0 ? (

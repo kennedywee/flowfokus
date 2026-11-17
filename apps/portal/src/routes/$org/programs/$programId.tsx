@@ -54,6 +54,14 @@ function ProgramPage() {
         ]
           .filter(Boolean)
           .join(" · ")}
+        actions={
+          manage ? (
+            <Button type="button" variant="secondary" size="compact" onClick={() => setOpen("edit")}>
+              <Pencil aria-hidden="true" />
+              Edit
+            </Button>
+          ) : null
+        }
       >
         {data.published ? (
           <Pill tone="good" icon={Globe}>
@@ -64,12 +72,6 @@ function ProgramPage() {
             Staff only
           </Pill>
         )}
-        {manage ? (
-          <Button type="button" variant="secondary" onClick={() => setOpen("edit")}>
-            <Pencil aria-hidden="true" />
-            Edit
-          </Button>
-        ) : null}
       </PageHead>
       {data.description ? <p className="program-page__description">{data.description}</p> : null}
 
