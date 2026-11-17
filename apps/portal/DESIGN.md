@@ -306,6 +306,9 @@ Rails data:
   start with the member chosen. Location starts at the desk location.
 - Errors show on the member, product, and location, as in Paper "4a". Leaving
   with a product, a payment, or a changed member asks "Discard this sale?".
+- Money uses Figtree with tabular figures (`font-variant-numeric:
+  tabular-nums`), as in Paper, not Geist Mono. The rule is scoped to
+  `.new-sale` and `.new-sale-dialog`; other screens keep Geist Mono for now.
 - After a create, the sale page opens with a "Sale created" toast that says
   what is due. If the payment fails after the sale exists, an error toast says
   so and the sale page still opens, so staff never create the sale twice.

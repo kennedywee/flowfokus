@@ -596,6 +596,7 @@ function AddProductDialog({
     <SaleDialog
       title="Add product"
       wide
+      className="new-sale-dialog"
       pending={false}
       onClose={onClose}
       initialFocus={searchRef}
@@ -701,6 +702,7 @@ function DraftPaymentDialog({
       title="Record payment"
       meta={`${formatMoney(total, currency)} due`}
       wide
+      className="new-sale-dialog"
       pending={false}
       onClose={onClose}
       onSubmit={() => {

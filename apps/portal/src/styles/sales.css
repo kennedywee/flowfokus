@@ -702,6 +702,19 @@ a.sales-row:focus-visible {
   white-space: nowrap;
 }
 
+/*
+ * Money on New sale uses Figtree with tabular figures, as in Paper, so
+ * amounts line up without a second typeface.
+ */
+.new-sale .sale-line__total,
+.new-sale .sale-total__amount,
+.new-sale__option-amount,
+.new-sale-dialog .sale-money__input,
+.new-sale-dialog .sale-dialog__meta {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Loading. */
 .new-sale .skeleton-line {
   display: block;

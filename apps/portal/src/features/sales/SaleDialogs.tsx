@@ -55,6 +55,7 @@ export function SaleDialog({
   title,
   meta,
   wide = false,
+  className,
   pending,
   onClose,
   onSubmit,
@@ -65,6 +66,8 @@ export function SaleDialog({
   title: string;
   meta?: ReactNode;
   wide?: boolean;
+  /** An extra class on the dialog, for a screen's own rules. */
+  className?: string;
   pending: boolean;
   onClose: () => void;
   onSubmit: () => void;
@@ -85,7 +88,7 @@ export function SaleDialog({
   }
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
-      <DialogContent className={`sale-dialog${wide ? " sale-dialog--wide" : ""}`} initialFocus={initialFocus}>
+      <DialogContent className={`sale-dialog${wide ? " sale-dialog--wide" : ""}${className ? ` ${className}` : ""}`} initialFocus={initialFocus}>
         <form
           ref={form}
           noValidate
