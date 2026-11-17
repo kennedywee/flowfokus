@@ -169,8 +169,11 @@ These are the ones that matter most:
   "Deliver" or "Delivered". Say "Fulfill early" when money is still due. The
   existing Paper frames already use these words, and they are correct.
 - Payment and fulfillment are two separate facts. Never merge them in one status.
-- Payment methods: Cash and Bank transfer only. Recording a payment does not
-  move money; do not word it as if it does.
+- Payment methods: the app records Cash and Bank transfer today. The original
+  frames also show Card, E-wallet, and Stripe. Keep whatever the original
+  frame of your screen shows; do not add or remove methods. Whether card and
+  online payments stay is the user's decision. Recording a cash or bank
+  payment does not move money; do not word it as if it does.
 - A sale has one line. A membership or a pass is quantity one. A ticket is
   sold for one session, and one sale can buy several spots in that session,
   for the member and for named guests.
