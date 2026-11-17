@@ -81,8 +81,9 @@ in `src/components/ui.tsx` and named files under `src/components/`.
 | Feedback | `Notice` defaults to info; `FailureNotice` displays API failures | Use `live` for changed feedback, not every static notice. Error text gives a next step. |
 | Collection state | `LoadingState`, `Empty`, `ErrorState` | Loading reserves space; empty describes no records; error describes a failed load. |
 
-Good: `SalesTable` uses `saleState(sale)` and `saleStateLabel(sale)` from
-`src/lib/format.ts`. This distinguishes paid, delivered, void and revoked states.
+Good: sales rows use `PaymentMark` and `DeliveryMark` from
+`features/sales/SaleFacts.tsx`. Payment (Paid, Part paid, Unpaid, Void) and
+delivery (Delivered, Not delivered, Access revoked) stay two separate marks.
 Bad: setting `state="delivered"` because the user clicked Deliver before Rails
 returns success. Payment and fulfillment are separate facts.
 
@@ -94,7 +95,8 @@ Existing blocks to compose before adding another abstraction:
 
 - `PageHead`: title, optional record metadata, and actions.
 - `Plate`: named section with body and optional action/footer.
-- `SalesTable`: organization links, current sale state, money, mobile summary.
+- `PaymentMark` / `DeliveryMark`: a sale's two facts, on the sales list, sale page, and member page.
+- `ListPager`: the range and page buttons under a redesigned list.
 - `CheckInPanel`: member/location choice and a response after an attempt.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
@@ -249,3 +251,37 @@ The members list and New member are the next redesigned screens
   After a create, the member page opens with a "Member created" toast. The
   toast has no New sale action, because Toast has no actions; Sell (S) is on
   the member page.
+
+The sales list and sale details are the next redesigned screens
+(`features/sales/SalesList.tsx`, `SaleDetails.tsx`, and `SaleDialogs.tsx`;
+facts, filters, and action rules in `features/sales/facts.ts`). They share the
+list pieces in `components.css` (`.list-search`, `.list-pager`, `.list-state`)
+and `ListPager` with the members list. They show only Rails data:
+
+- Sales list: the title with New sale (purchases:create only) in one row. Filter
+  opens Payment and Delivery submenus with a count per value; each active fact
+  shows as a chip with a clear button. Search (with a "/" hint) matches member
+  name, email, and item. A header band, then 44px rows: member, item and price,
+  payment, delivery, total (with the balance due or the amount refunded), and a
+  short date. The URL keeps filters and search; old `view=due` and
+  `view=deliver` links still work. Rails returns every sale, so the list
+  filters and pages 50 at a time in the browser. Phones show member and total,
+  then the item, then the facts and the date.
+- No sales: one line and New sale. No match: one line and Clear filters.
+- Sale details: a tile, the item as the title, and the two facts as pills. The
+  ⋯ menu in the header row holds Record payment (P), Deliver (D), Refund…,
+  Revoke access…, and Void sale…; each appears only when the permission and
+  the sale allow it. Items shows the delivery fact and time, the line with its
+  period or term and rights, early-delivery and revoke notes, and the total.
+  Payment lists payments and refunds in order, then the balance due. Activity
+  lists what Rails recorded. Properties: member, location, date, and price.
+  A void sale shows one bordered notice with the reason.
+- Dialogs follow the Paper "Dialogs and menu" frame: a 48px header with a fact
+  and a close button, the fields, then Cancel and the action. ⌘↵ submits the
+  record and deliver dialogs. Record payment offers Cash and Bank transfer and
+  says it does not move money. Deliver states what it creates; with money due
+  it becomes Deliver early and needs a reason. Refund chooses the payment in
+  the dialog and says access stays. Void and revoke need a reason.
+- Not shown, because Rails has no data for them: sale numbers, who sold or
+  recorded a payment, notes, comments, invoices, card or e-wallet payments,
+  attachments, receipts, and several lines in one sale.
