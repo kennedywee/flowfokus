@@ -12,7 +12,7 @@ class Fulfillment < ApplicationRecord
 
   class SaleNotPaid < StandardError; end
   class NotDelivered < StandardError
-    def initialize(msg = "This sale has not been delivered, so there is no access to revoke.") = super
+    def initialize(msg = "This sale has not been fulfilled, so there is no access to revoke.") = super
   end
 
   validates :early_reason, length: { maximum: 500 }

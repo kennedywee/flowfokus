@@ -98,6 +98,7 @@ RSpec.describe "Refunds, voids, and revocation" do
       delivered = grant_access(chainsaw, member: create_member(chainsaw), location:)
       api :post, "/staff/sales/#{delivered.id}/void", body: { reason: "No" }
       expect(error_code).to eq("sale_not_voidable")
+      expect(json.dig("error", "message")).to eq("A fulfilled sale cannot be void. Revoke its access instead.")
     end
 
     it "needs a reason" do
@@ -153,6 +154,7 @@ RSpec.describe "Refunds, voids, and revocation" do
       undelivered = record_sale(chainsaw, member:, price:, location:)
       api :post, "/staff/sales/#{undelivered.id}/revoke", body: { reason: "No" }
       expect(error_code).to eq("sale_not_delivered")
+      expect(json.dig("error", "message")).to eq("This sale has not been fulfilled, so there is no access to revoke.")
     end
   end
 

@@ -62,6 +62,7 @@ RSpec.describe "Renewals" do
     expect { renew }.not_to change(Sale, :count)
     expect(response).to have_http_status(:unprocessable_content)
     expect(error_code).to eq("renewal_unavailable")
+    expect(json.dig("error", "message")).to eq("This member has no fulfilled membership to renew. Sell a new membership instead.")
   end
 
   it "replays the same key and rejects a reused key" do

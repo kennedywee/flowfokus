@@ -18,7 +18,7 @@ class Sale < ApplicationRecord
   class OccurrenceRequired < StandardError; end
 
   class RenewalUnavailable < StandardError
-    def initialize(msg = "This member has no delivered membership to renew. Sell a new membership instead.") = super
+    def initialize(msg = "This member has no fulfilled membership to renew. Sell a new membership instead.") = super
   end
 
   belongs_to :member
@@ -170,7 +170,7 @@ class Sale < ApplicationRecord
     transaction do
       lock!
       next [ self, false ] if voided?
-      raise NotVoidable, "A delivered sale cannot be void. Revoke its access instead." if fulfilled?
+      raise NotVoidable, "A fulfilled sale cannot be void. Revoke its access instead." if fulfilled?
       raise NotVoidable, "Refund the #{kept_minor} kept on this sale before you void it." if kept_minor.positive?
 
       update!(voided_at: at, voided_by_user: actor, void_reason: reason.to_s.strip.presence)
