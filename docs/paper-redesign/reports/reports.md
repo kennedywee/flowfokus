@@ -111,5 +111,6 @@ To build Paper, Rails must return:
 
 - I did not run the app or open a browser, as the brief says. I read the code only.
 - I did not check dark mode in Paper.
-- The location menu uses Home's names (Bangsar, Mont Kiara, Damansara). The brief lists Petaling Jaya instead of Damansara.
+- The location menu is a clone of Home's menu and keeps its names: Bangsar, Mont Kiara, Damansara. The brief lists Petaling Jaya instead of Damansara. I followed the original frames.
+- I checked the 13 added frames again after the last edits. None is half-edited.
 - Some new member names (Siti Aminah, Arjun Pillai, Lim Wei Jie, Chen Yi, Zul Hakim) are new to the file.
