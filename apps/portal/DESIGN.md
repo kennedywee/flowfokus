@@ -114,3 +114,52 @@ pieces do not each need their own request.
 - Keep focus visible, icon-only controls named, and fields labelled.
 - Preserve both themes and reduced motion when changing styles.
 - Treat preview data as preview data. Do not imply it came from the API.
+
+## Redesign direction
+
+This section records the target for the portal redesign. The sections above
+describe the live app. Where they conflict, the live rules apply until a screen
+moves to the redesign. The reference is the "Member details page" in the
+Paper file "Flowfokus Redesign". Earlier explorations live in the separate
+file "Flowfokus Redesign — Explorations".
+
+Layout:
+
+- Use one white surface. Separate sections with spacing and headings, not cards.
+- Use few lines. Keep borders only on buttons, the comment box, and floating menus.
+- Do not use decorative backgrounds. Use grey fills only for interaction states,
+  such as the selected nav item or a hovered menu item. The one exception is
+  the list section header: a flat light-grey band with rounded corners. It
+  extends 12px past the content on each side, so its title lines up with the
+  rows. The activity feed header has no band, because the comment box below it
+  already marks the start.
+- Use neutral colors first. Keep color for small status marks.
+
+Information:
+
+- Show only what helps the owner act. Remove pills, counts, and banners that repeat a fact.
+- Show each fact once.
+- Show recent or active items in each list. Put the total in the heading, such as
+  "Recent 5 of 11", and put "View all …" at the bottom right.
+- Write rows as short facts, such as a date range or "3 of 5 left".
+
+Structure:
+
+- Keep one page per member. Membership, passes, bookings, sales, activity, and
+  details sit on that page. Check in, Sell, and Book start there.
+- Show details as Linear-style properties: a grey label, then a value with a
+  small icon. Click the value to edit it. Do not use pencil buttons.
+- Show comments, pinned comments, and system events in one feed. Filter it by
+  All, Comments, or Activity. Fold older events behind "Show earlier events".
+- Put organization, location, section, and page in the top bar breadcrumb. The
+  sidebar holds only the logo, the collapse button, the nav, and the account menu.
+
+Styling:
+
+- Use three text sizes: 20px for the page title, 13px for body text and
+  headings, and 12px for secondary text. Use weight and grey tone for hierarchy.
+- Put one 16px grey icon on each section title. Keep list rows as plain text.
+- Show status as a colored 16px icon with grey text, such as a green pie for
+  "Renews in 29d 16h" and a red pie for "Ends in 27d 23h · Cancelled".
+- Use 28px buttons with shortcut keys (C, S, B, ⌘K). Do not put a search field
+  in the app chrome. Search opens from ⌘K.
