@@ -211,3 +211,22 @@ its page with `staticData.crumb(loaderData)`. The top bar has no search field:
 a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
 finds members through Rails and opens pages. The rail is 56px wide; icons stay
 at x=28 when the sidebar collapses.
+
+Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
+facts in `features/members/facts.ts`, styles in `styles/members.css`). It shows
+only Rails data:
+
+- Header: name, last visit, and balance due. Check in (C) opens the check-in
+  panel in a dialog; Sell (S) opens a new sale for the member. The more menu
+  holds Renew when Rails offers renewal terms. There is no Book action yet.
+- Membership: periods with a ring that fills with the time left, and grey text
+  such as "Ends in 13d 11h". Access: rights with "7 of 8 left". Bookings and
+  sales list recent rows and expand in place.
+- Sale rows keep payment (Paid, Part paid, Unpaid, Void) and delivery
+  (Delivered, Not delivered, Access revoked) as separate facts, then the
+  payment method and the amount, with any balance due under it.
+- Activity merges check-ins, sales, payments, deliveries, refunds, voids,
+  bookings, and the join date. It has no comment box or filters, because
+  Rails has no member comments.
+- Properties: email, gym site sign-in (click the value to create a link code
+  or unlink, with members:link), member since, and total paid.
