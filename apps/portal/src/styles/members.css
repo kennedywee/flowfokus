@@ -785,10 +785,6 @@ a.mx-row__title:hover {
   user-select: all;
 }
 
-.member-checkin-dialog {
-  width: min(560px, calc(100vw - 32px));
-}
-
 /* Loading: grey bars in the page's shape. */
 .member-details .skeleton-block {
   background: var(--color-well);

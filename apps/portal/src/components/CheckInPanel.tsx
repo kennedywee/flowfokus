@@ -18,19 +18,12 @@ const sendCheckIn = (input: Input) => createCheckIn({ data: input });
 const MEMBER_FIELD = "check-in-member";
 
 /**
- * Checks a member in at a location and shows the answer. Rails decides the
- * result; this panel only shows it, with the reason and the next step for a
- * denial. After each result, focus goes back to the member field.
+ * The Home check-in form: a member and a location, then the answer. Rails
+ * decides the result; this panel only shows it, with the reason and the next
+ * step for a denial. After each result, focus goes back to the member field.
+ * The Check-ins page and the member page use `features/check-ins` instead.
  */
-export function CheckInPanel({
-  members,
-  fixedMember,
-}: {
-  /** Members to choose from. Leave out when `fixedMember` is set. */
-  members?: Schemas["Member"][];
-  /** Check in this member only, for example on the member page. */
-  fixedMember?: Schemas["MemberSummary"];
-}) {
+export function CheckInPanel({ members }: { members: Schemas["Member"][] }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const router = useRouter();
@@ -38,7 +31,7 @@ export function CheckInPanel({
   const action = useAction(sendCheckIn);
   const formRef = useRef<HTMLFormElement>(null);
 
-  const [memberId, setMemberId] = useState<string | null>(fixedMember?.id ?? null);
+  const [memberId, setMemberId] = useState<string | null>(null);
   // Start at the desk location, and follow it when the top bar changes it.
   const deskLocationId = useDeskLocation()?.id ?? "";
   const [locationId, setLocationId] = useState(deskLocationId);
@@ -99,10 +92,8 @@ export function CheckInPanel({
       setFresh(true);
       void router.invalidate();
       // Ready for the next person. The result stays on screen until the next pick.
-      if (!fixedMember) {
-        setMemberId(null);
-        focusMember();
-      }
+      setMemberId(null);
+      focusMember();
     }
   }
 
@@ -122,22 +113,20 @@ export function CheckInPanel({
 
   return (
     <form className="form checkin" ref={formRef} onSubmit={onSubmit} noValidate aria-label="Check in">
-      {fixedMember ? null : (
-        <Combobox
-          id={MEMBER_FIELD}
-          label="Member"
-          options={(members ?? []).map((member) => ({ value: member.id, label: member.name, detail: member.email }))}
-          value={memberId}
-          onChange={(value) => {
-            setMemberId(value);
-            setMemberError(undefined);
-            onChange();
-          }}
-          placeholder="Type a name or email"
-          emptyText="No member matches. Check the spelling, or add the member on the Members page."
-          error={memberError}
-        />
-      )}
+      <Combobox
+        id={MEMBER_FIELD}
+        label="Member"
+        options={members.map((member) => ({ value: member.id, label: member.name, detail: member.email }))}
+        value={memberId}
+        onChange={(value) => {
+          setMemberId(value);
+          setMemberError(undefined);
+          onChange();
+        }}
+        placeholder="Type a name or email"
+        emptyText="No member matches. Check the spelling, or add the member on the Members page."
+        error={memberError}
+      />
 
       <div className="checkin__submit">
         {manyLocations ? (
@@ -159,7 +148,7 @@ export function CheckInPanel({
           </Field>
         ) : null}
         <SubmitButton pending={action.pending} pendingLabel="Checking…" disabled={noLocations} large>
-          Check in{fixedMember ? ` ${fixedMember.name.split(" ")[0]}` : ""}
+          Check in
         </SubmitButton>
       </div>
 
@@ -217,7 +206,6 @@ export function CheckInPanel({
               </Button>
               <Button
                 type="button"
-                variant="destructive"
                 onClick={() => void letIn()}
                 disabled={action.pending}
                 aria-busy={action.pending || undefined}

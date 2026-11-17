@@ -127,7 +127,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/$org", label: "Overview", icon: LayoutGrid, exact: true, path: "" },
   { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
   { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
-  { to: "/$org/check-in", label: "Check-in", icon: LogIn, exact: false, path: "/check-in" },
+  { to: "/$org/check-in", label: "Check-ins", icon: LogIn, exact: false, path: "/check-in" },
   { to: "/$org/schedule", label: "Schedule", icon: CalendarDays, exact: false, path: "/schedule" },
   { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
   { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },

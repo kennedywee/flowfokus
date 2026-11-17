@@ -16,8 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
-import { CheckInPanel } from "../../components/CheckInPanel";
 import { PageActions } from "../../components/PageActions";
+import { useCheckIn } from "../check-ins/CheckInFlow";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import { Kbd, initials } from "../../components/ui";
@@ -51,7 +51,6 @@ import {
 import { paymentFact, paymentMethods } from "../sales/facts";
 import { FulfillmentMark, METHOD_ICON, PaymentMark } from "../sales/SaleFacts";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dialog, DialogBody, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,15 +99,20 @@ function MemberHeader({ record }: { record: MemberRecord }) {
   const organization = useOrganization();
   const can = useCan();
   const navigate = useNavigate();
-  const [checkingIn, setCheckingIn] = useState(false);
   const [renewing, setRenewing] = useState(false);
+  // C checks the member in at the top bar location: a toast, or the denial dialog.
+  const flow = useCheckIn({ record });
+  const canCheckIn = can("check_ins:create");
+  const checkIn = () => {
+    if (!flow.pending) void flow.checkIn(member);
+  };
   const due = balanceDue(sales);
   const lastVisit = checkIns.find((checkIn) => checkIn.result === "granted");
   const canRenew = member.renewal !== null && can("purchases:create");
 
   const sell = () =>
     void navigate({ to: "/$org/sales/new", params: { org: organization.slug }, search: { member: member.id } });
-  useShortcut("c", () => setCheckingIn(true));
+  useShortcut("c", checkIn, { enabled: canCheckIn });
   useShortcut("s", sell);
 
   return (
@@ -134,17 +138,20 @@ function MemberHeader({ record }: { record: MemberRecord }) {
         </p>
       </div>
       <PageActions>
-        <Button
-          type="button"
-          variant="secondary"
-          size="compact"
-          aria-keyshortcuts="C"
-          aria-haspopup="dialog"
-          onClick={() => setCheckingIn(true)}
-        >
-          Check in
-          <Kbd>C</Kbd>
-        </Button>
+        {canCheckIn ? (
+          <Button
+            type="button"
+            variant="secondary"
+            size="compact"
+            aria-keyshortcuts="C"
+            disabled={flow.pending}
+            aria-busy={flow.pending || undefined}
+            onClick={checkIn}
+          >
+            {flow.pending ? "Checking in…" : "Check in"}
+            <Kbd>C</Kbd>
+          </Button>
+        ) : null}
         <Link
           to="/$org/sales/new"
           params={{ org: organization.slug }}
@@ -169,19 +176,7 @@ function MemberHeader({ record }: { record: MemberRecord }) {
           </DropdownMenu>
         ) : null}
       </PageActions>
-      <Dialog open={checkingIn} onOpenChange={setCheckingIn}>
-        <DialogContent className="member-checkin-dialog">
-          <DialogBody>
-            <DialogTitle>Check in {member.name}</DialogTitle>
-            <CheckInPanel fixedMember={member} />
-          </DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setCheckingIn(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {flow.dialog}
       {member.renewal && canRenew ? (
         <RenewDialog member={member} renewal={member.renewal} open={renewing} onClose={() => setRenewing(false)} />
       ) : null}
@@ -193,7 +188,7 @@ function MemberHeader({ record }: { record: MemberRecord }) {
  * Sells another period at the member's agreed price. Rails copies the terms of
  * the latest fulfilled sale, never the current catalog price.
  */
-function RenewDialog({
+export function RenewDialog({
   member,
   renewal,
   open,
