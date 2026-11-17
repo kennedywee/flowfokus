@@ -41,6 +41,7 @@ import {
 import { useAction, useIdempotencyKey } from "../../lib/hooks";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
+import { useShortDate } from "./dates";
 import type { MemberRecord } from "../../lib/staff.functions";
 import { createLinkCode, renewMembership, unlinkMember } from "../../lib/staff.functions";
 import {
@@ -78,22 +79,6 @@ const statusIcon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } 
 
 /** Lists show this many rows until staff ask for the rest. */
 const RECENT = 5;
-
-/** "3 Nov", or "3 Nov 2025" outside the current year, in the organization's time zone. */
-function useShortDate() {
-  const { timezone } = useOrganization();
-  const year = new Intl.DateTimeFormat("en-MY", { timeZone: timezone, year: "numeric" }).format(new Date());
-  return (iso: string) => {
-    const date = new Date(iso);
-    const sameYear = new Intl.DateTimeFormat("en-MY", { timeZone: timezone, year: "numeric" }).format(date) === year;
-    return new Intl.DateTimeFormat("en-MY", {
-      timeZone: timezone,
-      day: "numeric",
-      month: "short",
-      ...(sameYear ? {} : { year: "numeric" }),
-    }).format(date);
-  };
-}
 
 /**
  * One page per member: membership, access, bookings, sales, and activity on

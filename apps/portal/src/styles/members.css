@@ -1,147 +1,399 @@
 /* Screen styles: members. Add rules here, not in components.css. */
 
-/* ---------- Shared by the list and the detail page ---------- */
+/* ---------- Members list (redesign) ---------- */
+/*
+ * Paper "Members": title and New member in one row, the search on the right
+ * of the toolbar, a grey header band, then 52px rows that open the member.
+ * The band and the row hover reach 12px past the content, so text lines up.
+ */
 
-.members-page .members-state {
-  padding: var(--space-5) var(--space-6) var(--space-6);
-}
-.members-page .members-state .empty {
-  border-style: dashed;
+.members-list {
+  max-width: 1280px;
+  gap: var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
 }
 
-/* ---------- Members list ---------- */
-
-/* Add form: shown only in the dialog opened from the page header. The dialog renders in a portal, outside the page. */
-.members-dialog .members-add {
-  display: grid;
-  gap: var(--space-4);
-  align-items: start;
+.members-head,
+.new-member__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
-.members-dialog .members-add__submit {
+.members-head h1,
+.new-member__head h1 {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.members-toolbar {
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
 }
-.members-dialog .members-errors {
-  margin: var(--space-1) 0 0;
-  padding-left: var(--space-5);
-}
 
-/* The pager closes the card, so the table above it keeps square corners. */
-.members-page .plate__body--flush .table-wrap:has(+ .pager) {
-  border-radius: 0;
-}
-
-/* The card has no header, so the toolbar opens it. */
-.members-page .members-toolbar {
-  padding: var(--space-5) var(--space-6) var(--space-4);
-}
-.members-page .members-count {
-  color: var(--color-ink-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.members-page .members-search {
-  display: flex;
-  flex: 0 1 340px;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.members-page .members-search .search-field {
-  flex: 1 1 auto;
-}
-
-.members-page .members-name {
+/* Search: a 28px field with a "/" hint. The hint hides while staff type. */
+.members-search {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: 6px;
+  width: 260px;
+  max-width: 100%;
+  height: var(--control-height-compact);
+  padding: 0 6px 0 8px;
+  border: 1px solid var(--color-field-line);
+  border-radius: var(--radius-compact);
+  background: var(--color-control);
+  transition: border-color var(--duration-hover) var(--ease-out);
 }
-.members-page .members-name__text {
+.members-search:hover {
+  border-color: var(--color-ink-3);
+}
+.members-search:has(input:focus-visible) {
+  border-color: var(--color-accent);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.members-search__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+.members-search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: var(--text-xs);
+  caret-color: var(--color-accent);
+}
+.members-search__input::placeholder {
+  color: var(--color-ink-3);
+  opacity: 1;
+}
+.members-search__input:focus-visible {
+  outline: none;
+}
+.members-search .kbd {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.members-search:has(input:focus-visible) .kbd,
+.members-search:has(input:not(:placeholder-shown)) .kbd {
+  display: none;
+}
+@media (pointer: coarse) {
+  .members-search {
+    height: 40px;
+  }
+}
+
+/* The table: a header band, then rows. */
+.members-table {
   display: grid;
+  gap: var(--space-1);
   min-width: 0;
 }
-.members-page .members-email {
-  overflow-wrap: anywhere;
-}
-.members-page .members-added {
-  color: var(--color-ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  white-space: nowrap;
-}
-
-/* Pagination, from Paper "Components II": range on the left, 32px page buttons on the right. */
-.members-page .pager {
+.members-table__head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-6);
-  border-top: 1px solid var(--color-line);
+  height: 36px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-compact);
   background: var(--color-well);
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
-}
-.members-page .pager__range {
-  color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  color: var(--color-ink-2);
   font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
 }
-.members-page .pager__list {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
+.members-table__member {
+  flex: 1;
+  color: var(--color-ink);
+}
+.members-table__joined,
+.members-row__joined {
+  flex: none;
+  width: 110px;
+}
+.members-table__chevron,
+.members-row__chevron {
+  flex: none;
+  width: 16px;
+}
+
+.members-rows {
+  display: grid;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.members-page .pager__button {
+.members-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-compact);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+a.members-row:hover {
+  background: var(--color-hover);
+}
+a.members-row:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+.members-row__avatar {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 var(--space-2);
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--color-avatar);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 16px;
+}
+.members-row__main {
+  flex: 1 1 0;
+  display: grid;
+  min-width: 0;
+}
+.members-row__name {
+  overflow: hidden;
+  color: var(--color-ink);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.members-row__email {
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.members-row__joined {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.members-row__joined time {
+  font-family: inherit;
+}
+.members-row__chevron {
+  height: 16px;
+  color: var(--color-ink-4);
+}
+
+/* Pager: the count on the left, 24px page buttons on the right. */
+.members-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 40px;
+}
+.members-pager__range {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.members-pager__list {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.members-pager__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 6px;
   background: transparent;
   color: var(--color-ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 16px;
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
-.members-page .pager__button:hover:not(:disabled, [aria-current="page"]) {
+.members-pager__button:hover:not(:disabled, [aria-current="page"]) {
   background: var(--color-hover);
   color: var(--color-ink);
 }
-.members-page .pager__button[aria-current="page"] {
-  background: var(--color-ink);
-  color: var(--color-on-ink);
-  font-weight: var(--font-weight-medium);
+.members-pager__button[aria-current="page"] {
+  background: var(--color-hover);
+  color: var(--color-ink);
   cursor: default;
 }
-.members-page .pager__button:has(svg) {
-  border-color: var(--color-line-strong);
-}
-.members-page .pager__button:disabled {
+.members-pager__button:disabled {
   color: var(--color-ink-4);
   cursor: not-allowed;
 }
-.members-page .pager__button svg {
+.members-pager__button svg {
   width: 14px;
   height: 14px;
 }
-.members-page .pager__gap {
+.members-pager__gap {
   display: inline-flex;
   justify-content: center;
   width: 24px;
   color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+@media (pointer: coarse) {
+  .members-pager__button {
+    min-width: 40px;
+    height: 40px;
+  }
+}
+
+/* Empty list and no results: one line and one action, centred. */
+.members-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding-block: 96px;
+  color: var(--color-ink);
+  text-align: center;
+}
+.members-state__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-ink-4);
+}
+
+/* Loading. */
+.members-list .skeleton-block {
+  background: var(--color-well);
+}
+.members-list .members-search.skeleton-block {
+  border-color: transparent;
+}
+.members-list .skeleton-line {
+  display: block;
+  height: 12px;
+  margin-block: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-well);
+}
+.members-list .skeleton-line--small {
+  height: 10px;
+}
+
+/* ---------- New member (redesign) ---------- */
+/* Paper "New member": an icon tile and the title, then the Profile band and two fields per row. */
+
+.new-member {
+  max-width: 1280px;
+  gap: var(--space-6);
   font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.new-member__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-well);
+  color: var(--color-ink-2);
+}
+.new-member__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.new-member__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.new-member__form {
+  display: grid;
+  gap: var(--space-6);
+}
+.new-member__errors {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-5);
+}
+.new-member__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  max-width: 756px;
+  padding-block: var(--space-3);
+}
+.new-member .field {
+  gap: 6px;
+  align-content: start;
+}
+.new-member .field label {
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+}
+/* The 32px redesign field. Coarse pointers keep a 40px target. */
+.new-member .input--compact {
+  min-height: 32px;
+  padding-inline: 10px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+}
+@media (pointer: coarse) {
+  .new-member .input--compact {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .members-toolbar {
+    justify-content: stretch;
+  }
+  .members-search {
+    width: 100%;
+  }
+  /* Phones: name and email, then the chevron, as in the Paper phone lists. */
+  .members-table__joined,
+  .members-row__joined {
+    display: none;
+  }
+  .members-state {
+    padding-block: 64px;
+  }
+  .new-member__fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---------- Member details (redesign) ---------- */

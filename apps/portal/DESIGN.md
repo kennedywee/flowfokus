@@ -229,3 +229,23 @@ only Rails data:
   Rails has no member comments.
 - Properties: email, gym site sign-in (click the value to create a link code
   or unlink, with members:link), member since, and total paid.
+
+The members list and New member are the next redesigned screens
+(`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
+`features/members/list.ts`). They show only Rails data:
+
+- Members list: the title with New member (members:create only) in one row,
+  then a 28px search field with a "/" hint. Rails searches name and email as
+  staff type; Escape clears. A grey header band, then 52px rows with the
+  initials, name, email, and join date. Each row opens the member. The footer
+  counts members and pages them 50 at a time. Phones hide the join date.
+  There is no Filter, Display, selection, or bulk action, because Rails has no
+  member status, filters, or bulk endpoints.
+- No results: one line and Clear search. No members: one line and New member.
+- New member: a page, not a dialog. An icon tile and the title, Create member
+  (⌘↵) in the header row, then the Profile band with Full name and Email.
+  Email is required because Rails requires it. Errors show on the fields, with
+  a summary above. Leaving with typed details asks "Discard this member?".
+  After a create, the member page opens with a "Member created" toast. The
+  toast has no New sale action, because Toast has no actions; Sell (S) is on
+  the member page.

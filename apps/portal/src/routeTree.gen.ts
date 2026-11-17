@@ -25,6 +25,7 @@ import { Route as OrgSettingsRouteImport } from './routes/$org/settings'
 import { Route as OrgSoonRouteImport } from './routes/$org/soon'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
+import { Route as OrgMembersNewRouteImport } from './routes/$org/members/new'
 import { Route as OrgProgramsIndexRouteImport } from './routes/$org/programs/index'
 import { Route as OrgProgramsProgramIdRouteImport } from './routes/$org/programs/$programId'
 import { Route as OrgSalesIndexRouteImport } from './routes/$org/sales/index'
@@ -113,6 +114,11 @@ const OrgMembersMemberIdRoute = OrgMembersMemberIdRouteImport.update({
   path: '/members/$memberId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgMembersNewRoute = OrgMembersNewRouteImport.update({
+  id: '/members/new',
+  path: '/members/new',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 const OrgProgramsIndexRoute = OrgProgramsIndexRouteImport.update({
   id: '/programs/',
   path: '/programs/',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/$org/soon': typeof OrgSoonRoute
   '/$org': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
+  '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
@@ -242,6 +251,7 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
+    | '/$org/members/new'
     | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org'
     | '/$org/members/$memberId'
+    | '/$org/members/new'
     | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
+    | '/$org/members/new'
     | '/$org/programs/$programId'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgMembersMemberIdRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/members/new': {
+      id: '/$org/members/new'
+      path: '/members/new'
+      fullPath: '/$org/members/new'
+      preLoaderRoute: typeof OrgMembersNewRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/programs/': {
       id: '/$org/programs/'
       path: '/programs'
@@ -486,6 +505,7 @@ interface OrgRouteRouteChildren {
   OrgSoonRoute: typeof OrgSoonRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
+  OrgMembersNewRoute: typeof OrgMembersNewRoute
   OrgProgramsProgramIdRoute: typeof OrgProgramsProgramIdRoute
   OrgSalesSaleIdRoute: typeof OrgSalesSaleIdRoute
   OrgSalesNewRoute: typeof OrgSalesNewRoute
@@ -507,6 +527,7 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgSoonRoute: OrgSoonRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
+  OrgMembersNewRoute: OrgMembersNewRoute,
   OrgProgramsProgramIdRoute: OrgProgramsProgramIdRoute,
   OrgSalesSaleIdRoute: OrgSalesSaleIdRoute,
   OrgSalesNewRoute: OrgSalesNewRoute,
