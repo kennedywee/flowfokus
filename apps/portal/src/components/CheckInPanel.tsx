@@ -267,7 +267,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
           <Link
             to="/$org/sales"
             params={{ org: slug }}
-            search={{ view: "due" }}
+            search={{ payment: "unpaid,partial" }}
             className={buttonVariants({ variant: "secondary" })}
           >
             Record a payment
@@ -275,7 +275,7 @@ function NextSteps({ checkIn, slug }: { checkIn: Schemas["CheckIn"]; slug: strin
           <Link
             to="/$org/sales"
             params={{ org: slug }}
-            search={{ view: "deliver" }}
+            search={{ payment: "paid", delivery: "waiting" }}
             className={buttonVariants({ variant: "secondary" })}
           >
             Deliver a paid sale

@@ -142,7 +142,7 @@ function OverviewCounts({ counts, slug }: { counts: Schemas["StaffOverview"]; sl
       </div>
       <div>
         <dt>
-          <Link to="/$org/sales" params={{ org: slug }} search={{ view: "due" }}>
+          <Link to="/$org/sales" params={{ org: slug }} search={{ payment: "unpaid,partial" }}>
             Unpaid sales <ArrowRight aria-hidden="true" />
           </Link>
         </dt>
@@ -150,7 +150,7 @@ function OverviewCounts({ counts, slug }: { counts: Schemas["StaffOverview"]; sl
       </div>
       <div>
         <dt>
-          <Link to="/$org/sales" params={{ org: slug }} search={{ view: "deliver" }}>
+          <Link to="/$org/sales" params={{ org: slug }} search={{ payment: "paid", delivery: "waiting" }}>
             Awaiting delivery <ArrowRight aria-hidden="true" />
           </Link>
         </dt>
