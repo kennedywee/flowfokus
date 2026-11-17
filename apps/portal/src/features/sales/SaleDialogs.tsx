@@ -51,7 +51,7 @@ export const KIND_ICON: Record<Schemas["ProductKind"], LucideIcon> = {
  * close button; the form; then Cancel and the action under a hairline. ⌘↵
  * (Ctrl+Enter elsewhere) submits. Nothing closes the dialog while it saves.
  */
-function SaleDialog({
+export function SaleDialog({
   title,
   meta,
   wide = false,
@@ -136,7 +136,7 @@ function Row({ id, label, error, children, top = false }: { id?: string; label: 
 }
 
 /** A request failure inside a dialog. The form keeps what staff typed. */
-function DialogFailure({ title, error, next }: { title: string; error: Failure | null; next?: string }) {
+export function DialogFailure({ title, error, next }: { title: string; error: Failure | null; next?: string }) {
   if (!error) return null;
   return (
     <div className="sale-dialog__failure" role="alert">
@@ -171,7 +171,6 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
   const [reference, setReference] = useState("");
   const [localError, setLocalError] = useState<string | undefined>();
   const due = formatMoney(sale.balance_minor, sale.currency);
-  const typed = parseAmountToMinor(amount, sale.currency);
 
   const server = action.error?.code === "validation_failed" ? action.error.details : undefined;
   const amountError =
@@ -187,14 +186,12 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
   }
 
   async function submit() {
-    if (typed === null || typed <= 0) {
-      setLocalError("Enter an amount above zero, for example 50 or 50.00.");
+    const checked = checkPaymentAmount(amount, sale.balance_minor, sale.currency);
+    if ("error" in checked) {
+      setLocalError(checked.error);
       return;
     }
-    if (typed > sale.balance_minor) {
-      setLocalError(`The amount is more than the balance of ${due}.`);
-      return;
-    }
+    const typed = checked.minor;
     setLocalError(undefined);
     const result = await action.run({
       slug: organization.slug,
@@ -234,6 +231,61 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
         </SubmitButton>
       )}
     >
+      <PaymentFields
+        currency={sale.currency}
+        balance_minor={sale.balance_minor}
+        method={method}
+        amount={amount}
+        reference={reference}
+        amountError={amountError}
+        onMethod={(value) => {
+          setMethod(value);
+          edited();
+        }}
+        onAmount={(value) => {
+          setAmount(value);
+          setLocalError(undefined);
+          edited();
+        }}
+        onReference={(value) => {
+          setReference(value);
+          edited();
+        }}
+      />
+      <p className="sale-dialog__note">Records money the desk already received. Flowfokus does not charge cards or move money.</p>
+      <DialogFailure title="The payment was not recorded" error={otherError} next="Nothing was saved. Check the details and try again." />
+    </SaleDialog>
+  );
+}
+
+/**
+ * The record-payment fields: Cash or Bank transfer, the amount with a Full
+ * button for the balance, and an optional reference. New sale uses them too.
+ */
+export function PaymentFields({
+  currency,
+  balance_minor,
+  method,
+  amount,
+  reference,
+  amountError,
+  onMethod,
+  onAmount,
+  onReference,
+}: {
+  currency: string;
+  balance_minor: number;
+  method: Schemas["ManualPaymentMethod"];
+  amount: string;
+  reference: string;
+  amountError?: string;
+  onMethod: (method: Schemas["ManualPaymentMethod"]) => void;
+  onAmount: (amount: string) => void;
+  onReference: (reference: string) => void;
+}) {
+  const typed = parseAmountToMinor(amount, currency);
+  return (
+    <>
       <fieldset className="sale-methods">
         <legend className="sale-stack__label">Method</legend>
         <div className="sale-methods__options">
@@ -245,10 +297,7 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
                 value={value}
                 className="visually-hidden"
                 checked={method === value}
-                onChange={() => {
-                  setMethod(value);
-                  edited();
-                }}
+                onChange={() => onMethod(value)}
               />
               <Icon {...icon} />
               {PAYMENT_METHOD_LABEL[value]}
@@ -262,7 +311,7 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
             Amount
           </label>
           <div className="sale-money" data-invalid={amountError ? true : undefined}>
-            <span className="sale-money__currency">{sale.currency}</span>
+            <span className="sale-money__currency">{currency}</span>
             <input
               id="payment-amount"
               className="sale-money__input"
@@ -271,21 +320,13 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
               value={amount}
               aria-invalid={amountError ? true : undefined}
               aria-describedby={describedBy("payment-amount", undefined, amountError)}
-              onChange={(event) => {
-                setAmount(event.target.value);
-                setLocalError(undefined);
-                edited();
-              }}
+              onChange={(event) => onAmount(event.target.value)}
             />
             <button
               type="button"
               className="sale-money__full"
-              aria-pressed={typed === sale.balance_minor}
-              onClick={() => {
-                setAmount(minorToInput(sale.balance_minor, sale.currency));
-                setLocalError(undefined);
-                edited();
-              }}
+              aria-pressed={typed === balance_minor}
+              onClick={() => onAmount(minorToInput(balance_minor, currency))}
             >
               Full
             </button>
@@ -302,17 +343,20 @@ export function RecordPaymentDialog({ sale, onClose }: { sale: Schemas["Sale"]; 
             maxLength={200}
             autoComplete="off"
             value={reference}
-            onChange={(event) => {
-              setReference(event.target.value);
-              edited();
-            }}
+            onChange={(event) => onReference(event.target.value)}
           />
         </div>
       </div>
-      <p className="sale-dialog__note">Records money the desk already received. Flowfokus does not charge cards or move money.</p>
-      <DialogFailure title="The payment was not recorded" error={otherError} next="Nothing was saved. Check the details and try again." />
-    </SaleDialog>
+    </>
   );
+}
+
+/** Checks a typed payment amount against the balance. Returns the minor units or a message. */
+export function checkPaymentAmount(amount: string, balance_minor: number, currency: string): { minor: number } | { error: string } {
+  const typed = parseAmountToMinor(amount, currency);
+  if (typed === null || typed <= 0) return { error: "Enter an amount above zero, for example 50 or 50.00." };
+  if (typed > balance_minor) return { error: `The amount is more than the balance of ${formatMoney(balance_minor, currency)}.` };
+  return { minor: typed };
 }
 
 /* ---------- Deliver ---------- */
