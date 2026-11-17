@@ -108,14 +108,16 @@
 }
 .readout__label {
   color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   letter-spacing: var(--tracking-caps);
   line-height: 14px;
   text-transform: uppercase;
 }
 .readout__value {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.04em;
@@ -427,7 +429,8 @@ textarea.input {
 }
 .input--money,
 .input--mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 .input--small,
 .select--small {
@@ -617,7 +620,8 @@ textarea.input {
   align-items: center;
   padding-inline: 14px;
   color: var(--color-ink-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-base);
 }
 .input-group__affix:first-child {
@@ -812,7 +816,8 @@ input[type="radio"]:disabled {
   line-height: 18px;
 }
 .choice__price {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-regular);
 }
 .choice--compact {
@@ -914,7 +919,8 @@ input[type="radio"]:disabled {
 .radio-card__trailing {
   flex: none;
   text-align: right;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   line-height: var(--leading-normal);
 }
 
@@ -1326,7 +1332,8 @@ a.toggle-group__item {
 /* Times and dates stay on one line, so a column never breaks "2:38 pm" in two. */
 .table .when {
   color: var(--color-ink-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   white-space: nowrap;
 }
@@ -1439,7 +1446,8 @@ a.counter:hover .counter__label {
   color: var(--color-ink-2);
 }
 .counter__value {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xl);
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.04em;
@@ -1708,7 +1716,8 @@ a.counter:hover .counter__label {
 }
 .state__eyebrow {
   color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   letter-spacing: var(--tracking-caps);
   line-height: 14px;
@@ -2099,7 +2108,8 @@ a.counter:hover .counter__label {
   right: 14px;
   top: 50%;
   color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
   transform: translateY(-50%);
   pointer-events: none;
@@ -2466,7 +2476,8 @@ a.counter:hover .counter__label {
 .command__shortcut {
   margin-left: auto;
   color: var(--color-ink-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
 }
 .command__separator {

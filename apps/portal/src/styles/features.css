@@ -9,7 +9,8 @@
   align-self: center;
 }
 .page .preview-mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
 }
 .page .preview-footnote {
@@ -30,7 +31,8 @@
   padding-inline: 6px;
   border-radius: var(--radius-sm);
   background: var(--color-hover);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
   font-weight: 400;
 }
@@ -153,7 +155,8 @@
   font-weight: 400;
 }
 .page .preview-message__meta time {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .page .preview-message strong {
@@ -525,7 +528,8 @@
 }
 .page .preview-chart__column > span {
   color: var(--color-ink-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
   text-align: center;
   white-space: nowrap;

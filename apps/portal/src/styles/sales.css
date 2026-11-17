@@ -213,7 +213,7 @@ a.sales-row:focus-visible {
   text-align: right;
 }
 .sales-row__total {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -697,22 +697,10 @@ a.sales-row:focus-visible {
 .new-sale__option-amount {
   flex: none;
   min-width: 88px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
-}
-
-/*
- * Money on New sale uses Figtree with tabular figures, as in Paper, so
- * amounts line up without a second typeface.
- */
-.new-sale .sale-line__total,
-.new-sale .sale-total__amount,
-.new-sale__option-amount,
-.new-sale-dialog .sale-money__input,
-.new-sale-dialog .sale-dialog__meta {
-  font-family: inherit;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Loading. */
@@ -987,7 +975,8 @@ a.sales-row:focus-visible {
   flex: none;
   width: 120px;
   color: var(--color-ink-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
   text-align: right;
   white-space: nowrap;
@@ -995,7 +984,8 @@ a.sales-row:focus-visible {
 .sale-line__total {
   flex: none;
   min-width: 96px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   text-align: right;
   white-space: nowrap;
@@ -1037,7 +1027,8 @@ a.sales-row:focus-visible {
   flex: 1;
 }
 .sale-total__amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 .sale-total[data-state="due"] .sale-total__amount {
   color: var(--color-warning);
@@ -1299,7 +1290,8 @@ a.sales-row:focus-visible {
   border: 0;
   background: transparent;
   color: var(--color-ink);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   caret-color: var(--color-accent);
 }

@@ -789,7 +789,8 @@ a.mx-row__title:hover {
 }
 .mx-code__value {
   color: var(--color-ink);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   letter-spacing: 0.06em;
   user-select: all;

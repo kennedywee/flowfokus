@@ -32,7 +32,8 @@
 }
 .desk-summary dd {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-lg);
 }
 .desk-summary__detail {

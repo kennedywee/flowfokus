@@ -33,10 +33,11 @@ shadcn's `--accent` means neutral hover, not the portal's blue accent.
 
 ## Typography
 
-Use Figtree Variable for interface text and Geist Mono Variable for money, times,
-counts, and IDs. Use the existing `--text-*`, `--font-weight-*`, and `--leading-*`
+Use Figtree Variable for all text, as in Paper. Money, times, counts, and IDs
+use equal-width figures (`font-variant-numeric: tabular-nums`) so they line up.
+There is no mono font. Use the existing `--text-*`, `--font-weight-*`, and `--leading-*`
 scales. Body text uses `--text-base` (14px); page titles use `--text-xl` (24px).
-Do not use mono as decoration. Use `Money` and `Time` for domain values.
+Use `Money` and `Time` for domain values.
 
 ## Layout
 
@@ -194,8 +195,8 @@ the band. Dark values keep the earlier dark ink and status colours on a single
 
 Type. Redesigned screens use `--text-lg` (20px, semibold) for the page title,
 `--text-sm` (13px) for body text and headings, and `--text-xs` (12px) for
-secondary text. The base `h1` is now 20px. Figtree is the interface font, as in Paper.
-Geist Mono stays for money, times, counts, and IDs.
+secondary text. The base `h1` is now 20px. Figtree is the only font, as in Paper.
+Numbers use its equal-width figures.
 
 Controls. `Button size="compact"` (and `"icon-compact"`) is the 28px redesign
 button with an 8px radius (`--control-height-compact`, `--radius-compact`). A
@@ -306,9 +307,6 @@ Rails data:
   start with the member chosen. Location starts at the desk location.
 - Errors show on the member, product, and location, as in Paper "4a". Leaving
   with a product, a payment, or a changed member asks "Discard this sale?".
-- Money uses Figtree with tabular figures (`font-variant-numeric:
-  tabular-nums`), as in Paper, not Geist Mono. The rule is scoped to
-  `.new-sale` and `.new-sale-dialog`; other screens keep Geist Mono for now.
 - After a create, the sale page opens with a "Sale created" toast that says
   what is due. If the payment fails after the sale exists, an error toast says
   so and the sale page still opens, so staff never create the sale twice.

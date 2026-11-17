@@ -2,7 +2,6 @@
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import sansFont from "@fontsource-variable/figtree/index.css?url";
-import monoFont from "@fontsource-variable/geist-mono/index.css?url";
 // Emitted as files, not inlined, so browsers can cache them.
 import faviconSvg from "../assets/flowfokus-mark.svg?url&no-inline";
 import faviconPng from "../assets/favicon-32.png?url&no-inline";
@@ -47,7 +46,6 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/png", sizes: "32x32", href: faviconPng },
       { rel: "apple-touch-icon", href: appleTouchIcon },
       { rel: "stylesheet", href: sansFont },
-      { rel: "stylesheet", href: monoFont },
       { rel: "stylesheet", href: appCss },
     ],
   }),

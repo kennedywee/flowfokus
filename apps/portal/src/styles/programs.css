@@ -47,7 +47,7 @@
   width: 11rem;
 }
 .schedule-page__time {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

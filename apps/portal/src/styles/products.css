@@ -23,7 +23,7 @@
 }
 /* The term is a number, so it reads in mono beside the amount. */
 .offers-page .offer__term {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }

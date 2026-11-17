@@ -78,7 +78,7 @@ a:hover {
   color: var(--color-ink);
 }
 
-/* Numbers, times, and IDs read in mono. */
+/* Numbers, times, and IDs use equal-width figures so they line up. */
 .money,
 .num,
 .mono,
@@ -86,7 +86,8 @@ a:hover {
 time,
 code,
 kbd {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 .money,
 .num,
