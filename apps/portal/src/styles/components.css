@@ -1214,50 +1214,6 @@ a.toggle-group__item {
   flex: none;
 }
 
-/* ---------- Check-in result ---------- */
-
-.result {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-1) var(--space-4);
-  align-items: start;
-  padding: var(--space-5) var(--space-6);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
-  background: var(--color-well);
-}
-.result > .lamp {
-  width: 28px;
-  height: 28px;
-}
-.result__title {
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--tracking-tight);
-  line-height: 28px;
-}
-.result__detail {
-  grid-column: 2;
-  color: var(--color-ink-2);
-}
-.result[data-state="granted"] {
-  background: var(--color-good-wash);
-  border-color: var(--color-good-line);
-}
-.result[data-state="denied"] {
-  background: var(--color-critical-wash);
-  border-color: var(--color-critical-line);
-}
-.result[data-fresh="true"] {
-  animation: result-in 260ms var(--ease-out);
-}
-@keyframes result-in {
-  from {
-    opacity: 0.4;
-    transform: translateY(4px);
-  }
-}
-
 /* ---------- Tables, toolbar, facts, lists ---------- */
 
 .toolbar {

@@ -103,8 +103,8 @@ Existing blocks to compose before adding another abstraction:
 - `Plate`: named section with body and optional action/footer.
 - `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
-- `CheckInPanel`: the Home check-in form. Check-ins and the member page use
-  `useCheckIn` from `features/check-ins/CheckInFlow.tsx`.
+- `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and
+  shows the toast or the denial dialog. Home, Check-ins, and the member page use it.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
 
