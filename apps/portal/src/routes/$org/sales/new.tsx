@@ -4,9 +4,11 @@ import { listMembers, listProducts } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 
 export const Route = createFileRoute("/$org/sales/new")({
-  // Sell (S) on a member page opens this page for that member.
-  validateSearch: (search: Record<string, unknown>): { member?: string } =>
-    isUuid(search.member) ? { member: search.member } : {},
+  // Sell (S) on a member page opens this page for that member; on a product page, with that price.
+  validateSearch: (search: Record<string, unknown>): { member?: string; price?: string } => ({
+    ...(isUuid(search.member) ? { member: search.member } : {}),
+    ...(isUuid(search.price) ? { price: search.price } : {}),
+  }),
   loader: async ({ params }) => {
     const [members, products] = await Promise.all([
       listMembers({ data: { slug: params.org } }),
@@ -22,6 +24,6 @@ export const Route = createFileRoute("/$org/sales/new")({
 
 function NewSalePage() {
   const data = Route.useLoaderData();
-  const { member } = Route.useSearch();
-  return <NewSale data={data} memberId={member} />;
+  const { member, price } = Route.useSearch();
+  return <NewSale data={data} memberId={member} priceId={price} />;
 }

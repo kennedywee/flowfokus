@@ -27,6 +27,14 @@ describe("keyboard shortcuts sheet", () => {
     expect(groups.map((group) => group.title)).toContain("Programs");
   });
 
+  test("lists the product page keys only for roles that can use them", () => {
+    const keysOf = (groups: ReturnType<typeof shortcutGroups>) => groups.find((group) => group.title === "Product page")?.items.flatMap((item) => item.keys);
+    expect(keysOf(shortcutGroups("⌘", role("products:read", "products:update", "purchases:create")))).toEqual(["S", "E"]);
+    expect(keysOf(shortcutGroups("⌘", role("products:read", "purchases:create")))).toEqual(["S"]);
+    expect(keysOf(shortcutGroups("⌘", role("products:read")))).toBeUndefined();
+    expect(shortcutGroups("⌘", role("products:read")).map((group) => group.title)).toContain("Products");
+  });
+
   test("shows no list search without a list to read", () => {
     expect(keys(shortcutGroups("⌘", role()))).not.toContain("/");
   });

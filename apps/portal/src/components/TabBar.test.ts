@@ -20,6 +20,8 @@ describe("phone tab bar", () => {
     expect(hidesTabBar("/chainsaw/members/new/", "chainsaw")).toBe(true);
     expect(hidesTabBar("/chainsaw/programs/new", "chainsaw")).toBe(true);
     expect(hidesTabBar("/chainsaw/programs/0b0c/edit", "chainsaw")).toBe(true);
+    expect(hidesTabBar("/chainsaw/products/new", "chainsaw")).toBe(true);
+    expect(hidesTabBar("/chainsaw/products/0b0c/edit", "chainsaw")).toBe(true);
     expect(hidesTabBar("/chainsaw/sales", "chainsaw")).toBe(false);
     expect(hidesTabBar("/chainsaw/programs/0b0c", "chainsaw")).toBe(false);
   });

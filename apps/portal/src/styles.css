@@ -22,8 +22,8 @@
 @import "./styles/sales.css" layer(components);
 @import "./styles/checkin.css" layer(components);
 @import "./styles/home.css" layer(components);
-@import "./styles/products.css" layer(components);
 @import "./styles/programs.css" layer(components);
+@import "./styles/products.css" layer(components);
 @import "./styles/schedule.css" layer(components);
 @import "./styles/features.css" layer(components);
 @import "tw-animate-css";

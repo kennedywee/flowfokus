@@ -12,8 +12,8 @@ const TABS: Tab[] = [
 ];
 
 /** Full-page create and edit forms hide the tab bar on phones, as in Paper. */
-const CREATE_FORMS = ["/members/new", "/sales/new", "/programs/new"];
-const EDIT_FORM = /^\/programs\/[^/]+\/edit$/;
+const CREATE_FORMS = ["/members/new", "/sales/new", "/programs/new", "/products/new"];
+const EDIT_FORM = /^\/(programs|products)\/[^/]+\/edit$/;
 
 /** The tab that owns a page. Pages reached from More select More. */
 export function ownerTab(pathname: string, slug: string): string {

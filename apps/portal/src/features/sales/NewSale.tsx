@@ -56,7 +56,7 @@ export interface NewSaleData {
  * price, and the location, and can add the payment the desk received. Create
  * sale (⌘↵) records the sale in Rails, then the payment, and opens the sale.
  */
-export function NewSale({ data, memberId }: { data: NewSaleData; memberId?: string }) {
+export function NewSale({ data, memberId, priceId }: { data: NewSaleData; memberId?: string; priceId?: string }) {
   const can = useCan();
   if (!can("purchases:create")) {
     return (
@@ -77,7 +77,7 @@ export function NewSale({ data, memberId }: { data: NewSaleData; memberId?: stri
       </div>
     );
   }
-  return <NewSaleForm members={data.members.data} options={saleOptions(data.products.data)} initialMemberId={memberId} />;
+  return <NewSaleForm members={data.members.data} options={saleOptions(data.products.data)} initialMemberId={memberId} initialPriceId={priceId} />;
 }
 
 function NewSaleHead({ children }: { children?: ReactNode }) {
@@ -106,10 +106,12 @@ function NewSaleForm({
   members,
   options,
   initialMemberId,
+  initialPriceId,
 }: {
   members: Schemas["Member"][];
   options: SaleOption[];
   initialMemberId?: string;
+  initialPriceId?: string;
 }) {
   const organization = useOrganization();
   const can = useCan();
@@ -126,7 +128,8 @@ function NewSaleForm({
 
   const preselected = members.some((member) => member.id === initialMemberId) ? initialMemberId! : "";
   const [memberId, setMemberId] = useState(preselected);
-  const [priceId, setPriceId] = useState("");
+  const preselectedPrice = options.some((item) => item.price.id === initialPriceId) ? initialPriceId! : "";
+  const [priceId, setPriceId] = useState(preselectedPrice);
   const [payment, setPayment] = useState<DraftPayment | null>(null);
   // Start at the desk location, and follow it when the top bar changes it.
   const deskLocationId = useDeskLocation()?.id ?? "";
@@ -147,7 +150,7 @@ function NewSaleForm({
   const option = options.find((item) => item.price.id === priceId);
   const canPay = can("payments:create");
 
-  const dirty = Boolean(priceId || payment || memberId !== preselected);
+  const dirty = Boolean(priceId !== preselectedPrice || payment || memberId !== preselected);
   const blocker = useBlocker({
     shouldBlockFn: () => dirty && !saved.current,
     enableBeforeUnload: () => dirty && !saved.current,

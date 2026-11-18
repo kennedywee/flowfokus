@@ -19,13 +19,15 @@ import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
 import { Route as OrgChangelogRouteImport } from './routes/$org/changelog'
 import { Route as OrgCheckInRouteImport } from './routes/$org/check-in'
 import { Route as OrgInboxRouteImport } from './routes/$org/inbox'
-import { Route as OrgProductsRouteImport } from './routes/$org/products'
 import { Route as OrgReportsRouteImport } from './routes/$org/reports'
 import { Route as OrgSettingsRouteImport } from './routes/$org/settings'
 import { Route as OrgSoonRouteImport } from './routes/$org/soon'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
 import { Route as OrgMembersNewRouteImport } from './routes/$org/members/new'
+import { Route as OrgProductsIndexRouteImport } from './routes/$org/products/index'
+import { Route as OrgProductsProductIdRouteImport } from './routes/$org/products/$productId'
+import { Route as OrgProductsNewRouteImport } from './routes/$org/products/new'
 import { Route as OrgProgramsIndexRouteImport } from './routes/$org/programs/index'
 import { Route as OrgProgramsProgramIdRouteImport } from './routes/$org/programs/$programId'
 import { Route as OrgProgramsNewRouteImport } from './routes/$org/programs/new'
@@ -34,6 +36,7 @@ import { Route as OrgSalesSaleIdRouteImport } from './routes/$org/sales/$saleId'
 import { Route as OrgSalesNewRouteImport } from './routes/$org/sales/new'
 import { Route as OrgScheduleIndexRouteImport } from './routes/$org/schedule/index'
 import { Route as OrgScheduleOccurrenceIdRouteImport } from './routes/$org/schedule/$occurrenceId'
+import { Route as OrgProductsProductIdEditRouteImport } from './routes/$org/products/$productId_.edit'
 import { Route as OrgProgramsProgramIdEditRouteImport } from './routes/$org/programs/$programId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -86,11 +89,6 @@ const OrgInboxRoute = OrgInboxRouteImport.update({
   path: '/inbox',
   getParentRoute: () => OrgRouteRoute,
 } as any)
-const OrgProductsRoute = OrgProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
 const OrgReportsRoute = OrgReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -119,6 +117,21 @@ const OrgMembersMemberIdRoute = OrgMembersMemberIdRouteImport.update({
 const OrgMembersNewRoute = OrgMembersNewRouteImport.update({
   id: '/members/new',
   path: '/members/new',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgProductsIndexRoute = OrgProductsIndexRouteImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgProductsProductIdRoute = OrgProductsProductIdRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgProductsNewRoute = OrgProductsNewRouteImport.update({
+  id: '/products/new',
+  path: '/products/new',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgProgramsIndexRoute = OrgProgramsIndexRouteImport.update({
@@ -161,6 +174,12 @@ const OrgScheduleOccurrenceIdRoute = OrgScheduleOccurrenceIdRouteImport.update({
   path: '/schedule/$occurrenceId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgProductsProductIdEditRoute =
+  OrgProductsProductIdEditRouteImport.update({
+    id: '/products/$productId_/edit',
+    path: '/products/$productId/edit',
+    getParentRoute: () => OrgRouteRoute,
+  } as any)
 const OrgProgramsProgramIdEditRoute =
   OrgProgramsProgramIdEditRouteImport.update({
     id: '/programs/$programId_/edit',
@@ -178,22 +197,25 @@ export interface FileRoutesByFullPath {
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
-  '/$org/products': typeof OrgProductsRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
+  '/$org/products/$productId': typeof OrgProductsProductIdRoute
+  '/$org/products/new': typeof OrgProductsNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members/': typeof OrgMembersIndexRoute
+  '/$org/products/': typeof OrgProductsIndexRoute
   '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
   '/$org/schedule/': typeof OrgScheduleIndexRoute
+  '/$org/products/$productId/edit': typeof OrgProductsProductIdEditRoute
   '/$org/programs/$programId/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -205,22 +227,25 @@ export interface FileRoutesByTo {
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
-  '/$org/products': typeof OrgProductsRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
+  '/$org/products/$productId': typeof OrgProductsProductIdRoute
+  '/$org/products/new': typeof OrgProductsNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members': typeof OrgMembersIndexRoute
+  '/$org/products': typeof OrgProductsIndexRoute
   '/$org/programs': typeof OrgProgramsIndexRoute
   '/$org/sales': typeof OrgSalesIndexRoute
   '/$org/schedule': typeof OrgScheduleIndexRoute
+  '/$org/products/$productId/edit': typeof OrgProductsProductIdEditRoute
   '/$org/programs/$programId/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRoutesById {
@@ -234,22 +259,25 @@ export interface FileRoutesById {
   '/$org/changelog': typeof OrgChangelogRoute
   '/$org/check-in': typeof OrgCheckInRoute
   '/$org/inbox': typeof OrgInboxRoute
-  '/$org/products': typeof OrgProductsRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/settings': typeof OrgSettingsRoute
   '/$org/soon': typeof OrgSoonRoute
   '/$org/': typeof OrgIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
+  '/$org/products/$productId': typeof OrgProductsProductIdRoute
+  '/$org/products/new': typeof OrgProductsNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
   '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/members/': typeof OrgMembersIndexRoute
+  '/$org/products/': typeof OrgProductsIndexRoute
   '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
   '/$org/schedule/': typeof OrgScheduleIndexRoute
+  '/$org/products/$productId_/edit': typeof OrgProductsProductIdEditRoute
   '/$org/programs/$programId_/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRouteTypes {
@@ -264,22 +292,25 @@ export interface FileRouteTypes {
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
-    | '/$org/products'
     | '/$org/reports'
     | '/$org/settings'
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
     | '/$org/members/new'
+    | '/$org/products/$productId'
+    | '/$org/products/new'
     | '/$org/programs/$programId'
     | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/members/'
+    | '/$org/products/'
     | '/$org/programs/'
     | '/$org/sales/'
     | '/$org/schedule/'
+    | '/$org/products/$productId/edit'
     | '/$org/programs/$programId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -291,22 +322,25 @@ export interface FileRouteTypes {
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
-    | '/$org/products'
     | '/$org/reports'
     | '/$org/settings'
     | '/$org/soon'
     | '/$org'
     | '/$org/members/$memberId'
     | '/$org/members/new'
+    | '/$org/products/$productId'
+    | '/$org/products/new'
     | '/$org/programs/$programId'
     | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/members'
+    | '/$org/products'
     | '/$org/programs'
     | '/$org/sales'
     | '/$org/schedule'
+    | '/$org/products/$productId/edit'
     | '/$org/programs/$programId/edit'
   id:
     | '__root__'
@@ -319,22 +353,25 @@ export interface FileRouteTypes {
     | '/$org/changelog'
     | '/$org/check-in'
     | '/$org/inbox'
-    | '/$org/products'
     | '/$org/reports'
     | '/$org/settings'
     | '/$org/soon'
     | '/$org/'
     | '/$org/members/$memberId'
     | '/$org/members/new'
+    | '/$org/products/$productId'
+    | '/$org/products/new'
     | '/$org/programs/$programId'
     | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/members/'
+    | '/$org/products/'
     | '/$org/programs/'
     | '/$org/sales/'
     | '/$org/schedule/'
+    | '/$org/products/$productId_/edit'
     | '/$org/programs/$programId_/edit'
   fileRoutesById: FileRoutesById
 }
@@ -418,13 +455,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgInboxRouteImport
       parentRoute: typeof OrgRouteRoute
     }
-    '/$org/products': {
-      id: '/$org/products'
-      path: '/products'
-      fullPath: '/$org/products'
-      preLoaderRoute: typeof OrgProductsRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
     '/$org/reports': {
       id: '/$org/reports'
       path: '/reports'
@@ -465,6 +495,27 @@ declare module '@tanstack/react-router' {
       path: '/members/new'
       fullPath: '/$org/members/new'
       preLoaderRoute: typeof OrgMembersNewRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/products/': {
+      id: '/$org/products/'
+      path: '/products'
+      fullPath: '/$org/products/'
+      preLoaderRoute: typeof OrgProductsIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/products/$productId': {
+      id: '/$org/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/$org/products/$productId'
+      preLoaderRoute: typeof OrgProductsProductIdRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/products/new': {
+      id: '/$org/products/new'
+      path: '/products/new'
+      fullPath: '/$org/products/new'
+      preLoaderRoute: typeof OrgProductsNewRouteImport
       parentRoute: typeof OrgRouteRoute
     }
     '/$org/programs/': {
@@ -523,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgScheduleOccurrenceIdRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/products/$productId_/edit': {
+      id: '/$org/products/$productId_/edit'
+      path: '/products/$productId/edit'
+      fullPath: '/$org/products/$productId/edit'
+      preLoaderRoute: typeof OrgProductsProductIdEditRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/programs/$programId_/edit': {
       id: '/$org/programs/$programId_/edit'
       path: '/programs/$programId/edit'
@@ -538,22 +596,25 @@ interface OrgRouteRouteChildren {
   OrgChangelogRoute: typeof OrgChangelogRoute
   OrgCheckInRoute: typeof OrgCheckInRoute
   OrgInboxRoute: typeof OrgInboxRoute
-  OrgProductsRoute: typeof OrgProductsRoute
   OrgReportsRoute: typeof OrgReportsRoute
   OrgSettingsRoute: typeof OrgSettingsRoute
   OrgSoonRoute: typeof OrgSoonRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
   OrgMembersNewRoute: typeof OrgMembersNewRoute
+  OrgProductsProductIdRoute: typeof OrgProductsProductIdRoute
+  OrgProductsNewRoute: typeof OrgProductsNewRoute
   OrgProgramsProgramIdRoute: typeof OrgProgramsProgramIdRoute
   OrgProgramsNewRoute: typeof OrgProgramsNewRoute
   OrgSalesSaleIdRoute: typeof OrgSalesSaleIdRoute
   OrgSalesNewRoute: typeof OrgSalesNewRoute
   OrgScheduleOccurrenceIdRoute: typeof OrgScheduleOccurrenceIdRoute
   OrgMembersIndexRoute: typeof OrgMembersIndexRoute
+  OrgProductsIndexRoute: typeof OrgProductsIndexRoute
   OrgProgramsIndexRoute: typeof OrgProgramsIndexRoute
   OrgSalesIndexRoute: typeof OrgSalesIndexRoute
   OrgScheduleIndexRoute: typeof OrgScheduleIndexRoute
+  OrgProductsProductIdEditRoute: typeof OrgProductsProductIdEditRoute
   OrgProgramsProgramIdEditRoute: typeof OrgProgramsProgramIdEditRoute
 }
 
@@ -562,22 +623,25 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgChangelogRoute: OrgChangelogRoute,
   OrgCheckInRoute: OrgCheckInRoute,
   OrgInboxRoute: OrgInboxRoute,
-  OrgProductsRoute: OrgProductsRoute,
   OrgReportsRoute: OrgReportsRoute,
   OrgSettingsRoute: OrgSettingsRoute,
   OrgSoonRoute: OrgSoonRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
   OrgMembersNewRoute: OrgMembersNewRoute,
+  OrgProductsProductIdRoute: OrgProductsProductIdRoute,
+  OrgProductsNewRoute: OrgProductsNewRoute,
   OrgProgramsProgramIdRoute: OrgProgramsProgramIdRoute,
   OrgProgramsNewRoute: OrgProgramsNewRoute,
   OrgSalesSaleIdRoute: OrgSalesSaleIdRoute,
   OrgSalesNewRoute: OrgSalesNewRoute,
   OrgScheduleOccurrenceIdRoute: OrgScheduleOccurrenceIdRoute,
   OrgMembersIndexRoute: OrgMembersIndexRoute,
+  OrgProductsIndexRoute: OrgProductsIndexRoute,
   OrgProgramsIndexRoute: OrgProgramsIndexRoute,
   OrgSalesIndexRoute: OrgSalesIndexRoute,
   OrgScheduleIndexRoute: OrgScheduleIndexRoute,
+  OrgProductsProductIdEditRoute: OrgProductsProductIdEditRoute,
   OrgProgramsProgramIdEditRoute: OrgProgramsProgramIdEditRoute,
 }
 
