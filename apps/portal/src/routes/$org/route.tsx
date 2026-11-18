@@ -32,6 +32,7 @@ import {
   Receipt,
   Search,
   History,
+  Keyboard,
   Settings,
   Sun,
   Tag,
@@ -44,6 +45,8 @@ import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
 import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
+import { KeyboardShortcuts } from "../../components/KeyboardShortcuts";
+import { useCheckIn } from "../../features/check-ins/CheckInFlow";
 import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { useToast } from "../../components/Toast";
@@ -213,7 +216,12 @@ function Shell({
   // Pages put their actions here, after Search (components/PageActions).
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const modKey = useModKeyLabel();
+  const [shortcuts, setShortcuts] = useState(false);
+  // ⌘K checks a member in with the same flow as Home: a toast, or the denial dialog.
+  const checkInFlow = useCheckIn();
   useShortcut("k", () => setSearching((open) => !open), { mod: true });
+  useShortcut(",", () => void navigate({ to: "/$org/settings", params: { org: data.slug } }), { mod: true });
+  useShortcut("?", () => setShortcuts(true));
 
   async function chooseLocation(id: string) {
     setPendingLocation(id);
@@ -268,7 +276,7 @@ function Shell({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} activeTo={owner?.to} />
+      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
       <SidebarInset>
         <header className="topbar">
           <div className="topbar__start">
@@ -401,13 +409,21 @@ function Shell({
           </PageActionsSlot.Provider>
         </main>
       </SidebarInset>
+      <KeyboardShortcuts open={shortcuts} onOpenChange={setShortcuts} />
       <CommandMenu
         slug={data.slug}
         open={searching}
         onOpenChange={setSearching}
         pages={pages}
         canSearchMembers={data.actor.permissions.includes("members:read")}
+        actions={{
+          checkIn: data.actor.permissions.includes("check_ins:create") ? (member) => void checkInFlow.checkIn(member) : undefined,
+          sell: data.actor.permissions.includes("purchases:create")
+            ? (member) => void navigate({ to: "/$org/sales/new", params: { org: data.slug }, search: { member: member.id } })
+            : undefined,
+        }}
       />
+      {checkInFlow.dialog}
     </SidebarProvider>
   );
 }
@@ -422,8 +438,10 @@ function AppSidebar({
   role,
   canSignOut,
   activeTo,
+  onShortcuts,
 }: {
   data: OrganizationData;
+  onShortcuts: () => void;
   role: string | null;
   canSignOut: boolean;
   /** The section that owns this page, when it is not the section in the path. */
@@ -490,7 +508,17 @@ function AppSidebar({
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <AccountMenu actor={data.actor} role={role} slug={data.slug} canSignOut={canSignOut} onNavigate={closeDrawer} />
+        <AccountMenu
+          actor={data.actor}
+          role={role}
+          slug={data.slug}
+          canSignOut={canSignOut}
+          onNavigate={closeDrawer}
+          onShortcuts={() => {
+            closeDrawer();
+            onShortcuts();
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );
@@ -520,13 +548,17 @@ function AccountMenu({
   slug,
   canSignOut,
   onNavigate,
+  onShortcuts,
 }: {
   actor: OrganizationData["actor"];
   role: string | null;
   slug: string;
   canSignOut: boolean;
   onNavigate: () => void;
+  /** Opens the keyboard shortcuts sheet. */
+  onShortcuts: () => void;
 }) {
+  const modKey = useModKeyLabel();
   const signOutForm = useRef<HTMLFormElement>(null);
   const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
   const router = useRouter();
@@ -571,13 +603,17 @@ function AccountMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start">
         <DropdownMenuHeader>
-          <span className="menu__name">{actor.name}</span>
           <span className="menu__email">{actor.email}</span>
         </DropdownMenuHeader>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => open("/$org/settings")}>
           <Settings {...icon} />
           Settings
+          <DropdownMenuShortcut>{modKey},</DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onShortcuts}>
+          <Keyboard {...icon} />
+          Keyboard shortcuts
+          <DropdownMenuShortcut>?</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
@@ -599,6 +635,7 @@ function AccountMenu({
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => open("/$org/changelog")}>
           <History {...icon} />
           What’s new

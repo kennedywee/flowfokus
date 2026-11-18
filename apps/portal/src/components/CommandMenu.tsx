@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { User, type LucideIcon } from "lucide-react";
+import { LogIn, Receipt, User, type LucideIcon } from "lucide-react";
 import type { Schemas } from "@flowfokus/api";
 import { failureMessage } from "../lib/format";
 import { listMembers } from "../lib/staff.functions";
@@ -12,6 +12,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+
+/** What staff can do with the first member found. Each is present only when the role allows it. */
+export interface CommandMemberActions {
+  checkIn?: (member: Schemas["Member"]) => void;
+  sell?: (member: Schemas["Member"]) => void;
+}
 
 export interface CommandPage {
   label: string;
@@ -38,12 +44,14 @@ export function CommandMenu({
   onOpenChange,
   pages,
   canSearchMembers,
+  actions = {},
 }: {
   slug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pages: CommandPage[];
   canSearchMembers: boolean;
+  actions?: CommandMemberActions;
 }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -121,6 +129,37 @@ export function CommandMenu({
                 <span className="command__detail">{member.email}</span>
               </CommandItem>
             ))}
+          </CommandGroup>
+        ) : null}
+        {/* Paper's Actions group: check in or sell to the first member found. */}
+        {members[0] && (actions.checkIn || actions.sell) ? (
+          <CommandGroup heading="Actions">
+            {actions.checkIn ? (
+              <CommandItem
+                value={`check-in-${members[0].id}`}
+                onSelect={() => {
+                  const member = members[0]!;
+                  close();
+                  actions.checkIn?.(member);
+                }}
+              >
+                <LogIn {...icon} />
+                <span className="command__label">Check in {members[0].name}</span>
+              </CommandItem>
+            ) : null}
+            {actions.sell ? (
+              <CommandItem
+                value={`sell-${members[0].id}`}
+                onSelect={() => {
+                  const member = members[0]!;
+                  close();
+                  actions.sell?.(member);
+                }}
+              >
+                <Receipt {...icon} />
+                <span className="command__label">New sale for {members[0].name}</span>
+              </CommandItem>
+            ) : null}
           </CommandGroup>
         ) : null}
         {shownPages.length ? (

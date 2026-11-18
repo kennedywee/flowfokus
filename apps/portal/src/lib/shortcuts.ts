@@ -35,7 +35,8 @@ export function useShortcut(
       if (mod) {
         if (!modPressed || event.altKey || event.shiftKey) return;
       } else {
-        if (modPressed || event.altKey || event.shiftKey) return;
+        // Shift is part of keys such as "?", so it only blocks letters.
+        if (modPressed || event.altKey || (event.shiftKey && /^[a-z]$/i.test(key))) return;
         if (isEditable(event.target) || overlayOpen()) return;
       }
       event.preventDefault();

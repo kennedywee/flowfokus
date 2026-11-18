@@ -1222,3 +1222,44 @@
     height: 40px;
   }
 }
+
+/* Keyboard shortcuts (components/KeyboardShortcuts.tsx): one group per place, the action, then its keys. */
+.shortcuts-dialog {
+  max-width: 440px;
+}
+.shortcuts-dialog__body {
+  gap: var(--space-4);
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+}
+.shortcuts-dialog__group {
+  display: grid;
+  gap: 2px;
+}
+.shortcuts-dialog__group h3 {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 16px;
+}
+.shortcuts-dialog__group dl {
+  display: grid;
+  margin: 0;
+}
+.shortcuts-dialog__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 32px;
+  font-size: var(--text-sm);
+}
+.shortcuts-dialog__row dd {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+}
+/* The sheet lists keys, so it shows them on touch screens too. */
+.shortcuts-dialog .kbd {
+  display: inline-flex;
+}
