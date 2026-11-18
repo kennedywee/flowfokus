@@ -138,49 +138,60 @@ None in my frames. Card and Stripe moved to "Needs app or Rails work".
 
 Home (Paper's design differs from the current Overview):
 
-- Up next: today's sessions with time, type, trainer, booking fill, and
-  "View all 9 sessions". Needs a sessions-for-today feed.
-- Needs attention: count of sales with a balance due and the total due, the
-  oldest sale and its age; count of unfulfilled sales with names; memberships
-  that end this week. Rails has `unpaid_sale_count` and
-  `awaiting_fulfillment_count` only.
-- Today properties: sales total and count, collected, new members, bookings
-  ("58 of 96 spots"). Payments today by method.
+- **Built.** Up next: today's sessions with time, type, trainer, booking fill, and
+  "View all 9 sessions". The schedule API supplies them (`days=1`). Waiting lists
+  ("Full · 3 waiting") still need Rails.
+- **Partly built.** Needs attention: the two counts show and open the filtered sales
+  list. Still needs Rails: the total due, the oldest sale and its age, names of
+  unfulfilled sales, and memberships that end this week. Rails counts only paid
+  sales as awaiting fulfillment, so the row says "1 paid sale unfulfilled".
+- **Partly built.** Today properties: Check-ins and Bookings ("58 of 96 spots",
+  from the schedule). Still needs Rails: sales total and count, collected, new
+  members, and Payments today by method. The group is left out until then.
 - Sale numbers (#1041). Rails has no sale numbers.
 - Card and online (Stripe) payments in "Payments today". The app records Cash
   and Bank transfer only. Every Home state shows the same four rows as the
   original; whether Card and Stripe stay is the user's decision.
-- Error copy: the app's failure text ("The Flowfokus API did not respond. Check
+- **Built** (in the toast slice). Error copy: the app's failure text ("The Flowfokus API did not respond. Check
   that Rails is running…") is for developers. Frames say "Check your
   connection, then try again."; the app copy must change.
-- Page title "Today" with the date and desk location.
-- Top bar "Check in (C)" and "Sell (S)" on Home, with ⋯. The app has New sale
+- **Built.** Page title "Today" with the date and desk location.
+- **Built.** Top bar "Check in (C)" and "Sell (S)" on Home, with ⋯ (New member). The app has New sale
   and no shortcuts on Overview. Hide Sell without `purchases:create`; the app
   shows New sale to every role today.
-- "Try again" on a failed list. The app shows a notice with no retry.
-- Quiet day: "Open schedule" link.
-- First run checklist (existing frame): needs setup progress from Rails.
+- **Built.** "Try again" on a failed list.
+- **Built.** Quiet day: "Open schedule" link.
+- Not built. First run checklist (existing frame): needs setup progress from Rails.
 
 Chrome:
 
-- Sidebar: rename to Paper's names (Home, Check-ins, Products) and use the
+- **Built.** Sidebar: rename to Paper's names (Home, Check-ins, Products) and use the
   ten-item order above.
-- Organization switcher: show the role on the right in one row (the app shows
+- **Built.** Organization switcher: show the role on the right in one row (the app shows
   it as a second line).
-- Location switcher (existing frame): "All locations" and "Manage locations".
-  The app has neither; it has "Add location".
-- ⌘K (existing frame): member numbers (M-0412) and an Actions group ("Check in
-  Priya Nair C", "New sale for Priya Nair S"). The app shows name and email,
-  and a Pages group.
-- Account menu (existing frame): Profile, Keyboard shortcuts (?), Get help, and
-  Settings ⌘,. The app has Settings, Theme, What's new, and Sign out only.
-  Theme must be added to Paper's menu (done in my frame).
-- Toasts: Paper puts them at the bottom centre, one line, no close button, with
+- **Partly built.** Location switcher (existing frame): "Manage locations" opens the
+  Settings locations section. "All locations" is left out: check-in, sales, and the
+  schedule all need one desk location.
+- **Partly built.** ⌘K (existing frame): the Actions group is built, without the C
+  and S hints (typing goes into the search field). Member numbers (M-0412) need
+  Rails. Paper's Actions group: "Check in
+  Priya Nair C", "New sale for Priya Nair S". The app shows name and email
+  until Rails has member numbers.
+- **Partly built.** Account menu (existing frame): Settings ⌘,, Keyboard shortcuts (?)
+  with a shortcuts sheet, Theme, What's new, and Sign out. Profile and Get help are
+  left out: no page exists for them.
+- **Built** (in the toast slice). Toasts: Paper puts them at the bottom centre, one line, no close button, with
   an optional action ("Print receipt"). The app shows a two-line card with a
   close button, bottom right.
-- Collapsed sidebar: the logo doubles as the expand button (the app does this).
-- What's new: the app's page uses pills and cards; rebuild it with bands and
+- **Built.** Collapsed sidebar: the logo doubles as the expand button (the app does this).
+- Not built (sample page, out of this slice). What's new: the app's page uses pills and cards; rebuild it with bands and
   rows. Keep the "Sample data" mark.
+
+Phone and tablet (from `reports/phone.md`):
+
+- **Built.** Phone Home, the tab bar (Home, Members, Check in, Sales, More), and the
+  phone app bar. More opens the existing drawer, not a separate More page.
+- **Already built.** The tablet rail with all ten pages.
 
 ## 5. Open questions
 

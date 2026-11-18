@@ -224,7 +224,11 @@ breadcrumb: organization, location, section, and page, then Search and the
 page's actions on the right. A detail route names
 its page with `staticData.crumb(loaderData)`. The top bar has no search field:
 a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
-finds members through Rails and opens pages. The rail is 56px wide; icons stay
+finds members through Rails and opens pages. Its Actions group checks in or
+sells to the first member found, for roles that can. The organization
+switcher shows the role on the right; the location switcher ends with Manage
+locations. Below 768px the tab bar (`components/TabBar.tsx`) holds Home,
+Members, Check in, Sales, and More, which opens the drawer. The rail is 56px wide; icons stay
 at x=28 when the sidebar collapses.
 
 Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
@@ -402,3 +406,29 @@ styles in `styles/schedule.css`). They show only Rails data:
   marking, member numbers, the sale's payment state on a booking, Change
   payment, Collect payment, Move, session activity and comments, and
   cancellation emails.
+
+Home is the next redesigned screen (`features/home/Home.tsx`, facts in
+`facts.ts`, styles in `styles/home.css`). It shows only Rails data:
+
+- The title "Today" with the date and the desk location. Check in (C) opens
+  Find member and uses `useCheckIn`; Sell (S) shows only with
+  purchases:create; ⋯ holds New member (members:create).
+- Up next: today's sessions at the desk location that have not ended, from
+  `/staff/occurrences?days=1`, up to four, with the Schedule status marks.
+  The band says "4 of 9 today"; the link opens the schedule. Roles without
+  programs:read do not see it.
+- Needs attention: "4 sales with a balance due" and "1 paid sale
+  unfulfilled" from the overview counts. Each opens the filtered sales list
+  for roles with purchases:read. Rails counts only paid sales as awaiting
+  fulfillment, so the row says "paid".
+- Today: Check-ins (total and denied) and Bookings (booked of capacity in
+  today's sessions that run).
+- Quiet day: "No more sessions today." with Open schedule, and "Nothing
+  needs attention." Loading keeps the title and bands. Did not load shows
+  one row per section with Try again, and "Counts did not load".
+- Phones: the check-in count under the title, no properties, no actions in
+  the page (Check in is a tab), and two-line rows.
+- Not shown, because Rails has no data for them: sales, collected, new
+  members, and payments today; the total due and the oldest sale; names of
+  unfulfilled sales; memberships ending this week; sale and member numbers;
+  waiting lists; and first-run setup progress.
