@@ -260,9 +260,12 @@
 @media (max-width: 767.98px) {
   .product-form__row,
   .product-benefit-fields__row,
-  .product-benefit-fields__row--three,
-  .product-kinds {
+  .product-benefit-fields__row--three {
     grid-template-columns: minmax(0, 1fr);
+  }
+  /* Paper keeps the two type cards side by side on phones. */
+  .product-kinds {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .product-form__terms {
     max-width: none;
