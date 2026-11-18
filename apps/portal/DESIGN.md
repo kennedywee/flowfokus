@@ -486,3 +486,43 @@ tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
   subtitle, program activity and comments, Duplicate and Archive program,
   pass credits per program, ticket Covers, Who can buy, and Sell online,
   several days per schedule, Until, and specific dates.
+
+Products, Product details, and New and Edit product are the next redesigned
+screens (`features/products/ProductsList.tsx`, `ProductDetails.tsx`, and
+`ProductForm.tsx`; rules in `facts.ts`, the price change in
+`priceChange.ts`, loading in `load.ts`, styles in `styles/products.css` on
+top of the programs pieces). They show only Rails data:
+
+- One price per product (decision of 18 Nov 2026). Staff see the first price
+  on sale; Rails keeps fixed prices underneath. A new amount or length adds a
+  new price, then archives the old one; members who bought keep theirs. The
+  form says this under Price before staff save. The new price exists before
+  the old one goes, so a product never has nothing on sale. If the archive
+  fails, the form says both prices are on sale, and saving again only
+  archives: each save first loads the product and reuses a price an earlier
+  try made. Other prices still on sale show in an "Other prices" band.
+- Products: the title, New product (products:create) in the top bar, Filter
+  (Type, Status, with counts and chips) and a "/" search over names. A header
+  band, then 44px rows: the kind icon and name, type, terms ("10 bookings ·
+  60 days"), status (On sale, Staff only, Not sold), and the price. Not sold
+  rows are grey and sort last. Tickets are left out; they live on the program
+  page. Phones put type, terms, and status on line 2.
+- Product details: the tile, the name (with "Not sold"), and "Membership ·
+  30 days · RM 220.00". Sell (S, purchases:create, price on sale) opens New
+  sale with the product chosen; Edit (E) and ⋯ (Publish or Make staff only,
+  Take off sale or Put on sale, Edit product, Archive price…) need
+  products:update. Main column: Other prices, then Benefits ("Changes apply
+  to new sales"). Properties: Type, Price, Length or Valid for, Uses (pass),
+  Sold, and the Note. Phones put Sell first and dark.
+- New product and Edit product: Details (Name, Price, Type cards), Terms
+  (Length or Valid for, in days from fulfillment), and Benefits (Name,
+  Gives, visits or bookings, Location, Programs). Gym site and Note on the
+  right. ⌘↵ saves; leaving with changes asks first. Edit has no Type. A new
+  product needs products:create and products:update, because adding its
+  price needs update. If the price fails after the product exists, an error
+  toast says so and the product page opens, so staff never create it twice.
+- Not shown, because Rails has no data for them: holders, product activity
+  and comments, archive and restore of a whole product, access hours, who
+  can buy and member tags, a desk or online channel beyond the gym site,
+  product-level locations, pass credits and "valid from first use", and
+  Sold or Last 30 days counts.

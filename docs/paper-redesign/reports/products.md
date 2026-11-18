@@ -148,26 +148,62 @@ trigger enforces it.
 
 ## 4. Needs app or Rails work
 
-The build list for the original design:
+The build list for the original design.
+
+Build status, 18 November 2026: **Built** means the portal does it now.
+**Needs Rails** means it waits on Rails data; the portal does not fake it.
 
 - One product page per product with holders and activity; New and Edit
   product as full pages.
+  Status: Built for the product page (`/products/:id`) and New and Edit
+  product as full pages with ⌘↵, the discard guard, field errors, and the
+  created and saved toasts. Edit has no Type. Holders and activity need Rails.
 - One visible price per product; "change price" or "change length" adds a new
   price and archives the old one.
+  Status: Built (decision of 18 Nov 2026). The page shows the first price on
+  sale. Saving a new amount or length loads the product, creates the new
+  price, then archives the old one; members who bought keep their price. The
+  form says so under Price before staff save. If the archive fails, the form
+  says both prices are on sale, and saving again only archives. A retry
+  reuses a price an earlier try made, so it never adds a second one. Other
+  prices still on sale show in an "Other prices" band with ⋯ (Take off sale,
+  Archive price…). Benefits are edited in place: each sale keeps its copy.
 - A renewal rule that matches the user's answer to open question 1.
+  Status: Not changed. Rails renewals keep the price the member paid.
 - Pass "credits" and "valid for … from first use".
+  Status: Needs Rails. A pass shows its bookings or visits ("Uses") and
+  "Valid for … days from fulfillment".
 - Access hours, "who can buy" with member tags, and the desk/online channel.
+  Status: Needs Rails. "Sold" shows Rails `published` and prices on sale:
+  "Gym site and desk", "Staff only", or "Not sold".
 - Locations on the product (today per benefit).
+  Status: Needs Rails. Each benefit shows and edits its own location.
 - Product note; holders per product; product activity with comments.
+  Status: Built for the note (Rails `description`). Holders and activity
+  need Rails.
 - Archive and restore a whole product. Restore lives in the ⋯ menu, which is
   not drawn yet.
+  Status: Needs Rails. The ⋯ menu holds what Rails supports: Publish on the
+  gym site or Make staff only, Take off sale or Put on sale, Edit product,
+  and Archive price… for the shown price.
 - Sell (S) and Edit (E) shortcuts; New product ⌘↵.
+  Status: Built, with permission checks, and listed in the shortcuts sheet.
+  Sell opens New sale with the product chosen (`?price=`).
 - List "Sold" and "Last 30 days" columns, Filter, search, and Display.
+  Status: Built for Filter (Type and Status, with counts and chips), the "/"
+  search over names, and the pager, on the loaded list; the URL keeps them.
+  The Status column shows On sale, Staff only, or Not sold. "Last 30 days"
+  needs Rails. Display is left out: it has no setting to change yet.
 - "Try again" on load errors; the app's error copy names the server, so
   rewrite it in staff words.
+  Status: Built on the list and the product page, with staff-words errors.
 - Books with no programs chosen means "every program" in Rails; Paper's
   Books field needs a way to show that.
+  Status: Built: each program benefit has Programs: Every program, All of a
+  kind, or Selected programs. A role without programs:read keeps the chosen
+  programs as they are.
 - Toasts should centre on the main column (the reference sits at a fixed x).
+  Status: Not changed; toasts use the shared position.
 
 ## 5. Open questions
 
