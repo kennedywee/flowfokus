@@ -90,35 +90,60 @@ Toast copy (all in the Sale details toast style, each frame shows the result on 
 
 ## 4. Needs app or Rails work (build list)
 
+Build status, 18 November 2026: **Built** means the portal does it now.
+**Needs Rails** means it waits on Rails data; the portal does not fake it.
+
 Programs list:
 - Filter, Display, search ("Search programs or hosts"), sort, and the pager.
+  Status: Built for Filter (Kind and Visibility, with counts and chips), the "/" search over names and hosts, sort by name, and the pager (50 a page), on the loaded list. The URL keeps them (`kind`, `visibility`, `q`). Display is left out: it has no setting to change yet.
 - Next session with booked count per program; Upcoming count is in Rails, next session is not.
+  Status: Upcoming count built ("16 sessions", "None"). The Session column needs Rails.
 - Several hosts per program with avatars. Rails stores one free-text host.
+  Status: Built for one host with an initial avatar, or "No host". Several hosts need Rails.
 - Kind icon tiles and the Staff only mark per row (data exists).
+  Status: Built. Rows also name the location when the organization has several.
 
 Program page:
 - Subtitle with the weekly pattern ("Every Mon, Wed, Thu and Fri"). Rails has no recurrence rule.
+  Status: Needs Rails. The page head has the tile and the name only.
 - Activity feed with comments, filters, and events (session added, cancelled). Rails has no program activity or comments.
+  Status: Needs Rails.
 - Sell ticket and Book member from the program page (Rails supports them on the session; the app has them only there).
+  Status: Built. Both open the schedule's Book member dialog with a Session picker; Sell ticket shows tickets only. They show only when a session can be booked, and Sell ticket only when a price is on sale and the role can sell.
 - ⋯ menu: Publish, Edit program, Duplicate, Cancel a session…, Archive program. Rails has publish (PATCH `published`) and edit. Duplicate and archive program are missing.
+  Status: Built for Publish / Make staff only (⇧P) and Edit program. Cancel a session stays on the session page. Duplicate and Archive program need Rails.
 - Click-to-edit properties (capacity popover) and pass credits per program (p-C-0). Rails has no credits per booking.
+  Status: Not built: properties are read-only and Edit program changes them. Pass credits per program need Rails.
 - Key hints T, S, B, ⇧P need shortcuts in the app.
+  Status: Built, each shown only where it works, and listed in the shortcuts sheet.
 - Ended state: the app must compare `ends_at` with now; Rails returns today's ended times.
+  Status: Built, with the schedule's status marks.
 - Price menu actions exist in Rails (update `available`, archive). Try again on load errors is app work.
+  Status: Built: Put on sale / Take off sale, Archive price… with the confirm, and Try again on the list and the program page.
 
 Copy to fix in code (developer wording shown to staff today):
 - "The Flowfokus API did not respond. Check that Rails is running, then try again." → "Flowfokus did not respond. Try again in a moment."
+  Status: Built earlier (staff-words error copy in `lib/format.ts`).
 - "Spots must be a whole number from 1 to 10000." → "Enter 1 to 10,000."
+  Status: Built.
 - "Enter an amount, for example 25 or 25.50." → "Enter a price, like 25.50."
+  Status: Built.
 - "Not on sale" → "Off sale" in the ticket row.
+  Status: Built, with grey marks for Off sale and Archived.
 
 New program:
 - The full page instead of a dialog, with discard guard.
+  Status: Built, with ⌘↵. Edit program reuses it with Save changes and without Kind and Schedule.
 - Host as a staff picker (Rails: free text).
+  Status: Needs Rails. Host is a text field.
 - Schedule section in the create flow: days, start, from, until, specific dates. Rails takes first date, time, and 1–26 weeks per call.
+  Status: Built as Starts at, From, and "Repeat weekly for" (or "No sessions yet"). Rails creates the program, then the sessions. If the sessions fail, an error toast says so and the program page opens, so staff never create the program twice. Several days, Until, and specific dates need Rails.
 - Tickets section in the create flow; ticket fields Covers, Who can buy, Sell online. Rails ticket price is label and amount.
+  Status: Not in the create flow: staff add tickets with + on the program page (New ticket: Name and Price). Covers, Who can buy, and Sell online need Rails and wait on the ticket coverage decision.
 - Note in properties: map to Rails `description`.
+  Status: Built. The program page shows the note in its properties.
 - Created toast with Publish; Published toast with View on site.
+  Status: Built. View on site shows when the gym site is public and opens its schedule.
 
 ## 5. Open questions
 

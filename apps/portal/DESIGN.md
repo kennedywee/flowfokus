@@ -103,6 +103,8 @@ Existing blocks to compose before adding another abstraction:
 - `Plate`: named section with body and optional action/footer.
 - `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
+- `FormNotice`: a form's failed request in one bordered line (red icon, title,
+  staff sentence). The fields keep their values.
 - `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and
   shows the toast or the denial dialog. Home, Check-ins, and the member page use it.
 - `ConfirmDialog`: one consequential decision with pending handling.
@@ -432,3 +434,55 @@ Home is the next redesigned screen (`features/home/Home.tsx`, facts in
   members, and payments today; the total due and the oldest sale; names of
   unfulfilled sales; memberships ending this week; sale and member numbers;
   waiting lists; and first-run setup progress.
+
+Programs, Program details, and New program are the next redesigned screens
+(`features/programs/ProgramsList.tsx`, `ProgramDetails.tsx`,
+`ProgramForm.tsx`, and `ProgramDialogs.tsx`; facts in `facts.ts`, kind
+tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
+`styles/programs.css`). They show only Rails data:
+
+- Programs: the title, New program (programs:manage) in the top bar, Filter
+  (Kind, Visibility, with counts and chips) and a "/" search over names and
+  hosts. A header band, then 52px rows: the kind tile (two people, ticket,
+  clock), the name with Staff only, kind and length (and the location when
+  there are several), the host with an initial, and the upcoming count. Rails
+  returns every program; the list sorts by name, filters, and pages 50 at a
+  time in the browser. The URL keeps `kind`, `visibility`, and `q`. Phones
+  drop the header band and put the host on line 2.
+- No programs: one line ("A manager adds programs." without manage). No
+  match: the search tile, one line, Clear search or Clear filters. Did not
+  load: one line, the reason, Try again. Loading keeps the toolbar and band.
+- Program details: the kind tile and the name. Add sessions (T), Sell ticket
+  (S), Book member (B), and ⋯ with Publish or Make staff only (⇧P) and Edit
+  program in the top bar, each only for roles and states that allow it. The
+  Sessions band lists sessions from today, ten first, then "Show N more".
+  Rows show the day, the time, Today, and the schedule's status marks; Ended
+  compares `ends_at` with now. Properties: Kind, Host, Length, Capacity,
+  Visibility, Location (several locations), then Tickets (+ opens New ticket),
+  "Also bookable with", and the Note. Phones put Book member first, hide
+  Add sessions from the action row, and add it to the Sessions band.
+- Ticket rows: the name, Off sale or Archived with a grey mark, the amount,
+  and ⋯ with Put on sale or Take off sale, and Archive price… (the shared
+  confirm). Prices sort by name, so a change of state does not move a row.
+- Sell ticket and Book member reuse `BookMemberDialog` from the schedule with
+  a Session picker (`sessions`); Sell ticket (`mode="sell"`) offers tickets
+  only. A ticket buys spots in one session.
+- Add sessions and New ticket use the sale dialog frame: labels above 32px
+  fields, ⌘↵, and `FormNotice` when Rails does not answer. Add sessions sends
+  Rails' first date, start time, and 1 to 26 weeks; the summary says
+  "4 sessions · Tuesdays, 07:00 · 17 Nov to 8 Dec · 12 spots each".
+- New program: a page with Details (Name, Kind cards, Host, Length, Spots
+  per session) and Schedule (Starts at, From, Repeat weekly for, or "No
+  sessions yet") on the left; Location, Visibility, and Note on the right.
+  Create program (⌘↵) creates the program with an Idempotency-Key, then adds
+  the sessions. The created toast offers Publish; the published toast offers
+  View on site when the gym site is public. Leaving with changes asks
+  "Discard this program?". Phones put the properties first and the create
+  bar at the bottom, with no tab bar.
+- Edit program (`/programs/:id/edit`): the same page with Save changes, no
+  Kind and no Schedule.
+- Not shown, because Rails has no data for them: the next session per
+  program, several hosts and a staff host picker, the weekly pattern
+  subtitle, program activity and comments, Duplicate and Archive program,
+  pass credits per program, ticket Covers, Who can buy, and Sell online,
+  several days per schedule, Until, and specific dates.
