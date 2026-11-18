@@ -867,27 +867,3 @@
   }
 }
 
-/* Team: on narrow screens the role picker and status sit under the person. */
-.team-person__phone {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-.team-person__phone .team-role {
-  min-width: 10rem;
-}
-.team-invite__email {
-  overflow-wrap: anywhere;
-}
-
-.settings-switch {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-}
-.settings-state {
-  padding: var(--space-5) var(--space-6);
-}

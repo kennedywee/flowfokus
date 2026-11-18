@@ -7,12 +7,12 @@ import type { Failure } from "../lib/result";
  * and one staff sentence. Use it when a form's request failed and the fields
  * keep their values, for example "The program was not saved".
  */
-export function FormNotice({ title, error, after }: { title: string; error: Failure; after?: string }) {
+export function FormNotice({ title, error, text, after }: { title: string; error: Failure; text?: string; after?: string }) {
   return (
     <div className="form-notice" role="alert">
       <CircleAlert className="form-notice__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
       <p className="form-notice__text">
-        <span className="form-notice__title">{title}</span> · {failureMessage(error)}
+        <span className="form-notice__title">{title}</span> · {text ?? failureMessage(error)}
         {after ? ` ${after}` : null}
       </p>
     </div>

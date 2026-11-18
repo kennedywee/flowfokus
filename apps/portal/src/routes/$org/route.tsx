@@ -47,6 +47,8 @@ import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
 import { KeyboardShortcuts } from "../../components/KeyboardShortcuts";
 import { useCheckIn } from "../../features/check-ins/CheckInFlow";
+import { SettingsNav } from "../../features/settings/SettingsNav";
+import { isSettingsPath } from "../../features/settings/sections";
 import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { TabBar } from "../../components/TabBar";
@@ -205,6 +207,8 @@ function Shell({
   const trimmed = pathname.replace(/\/$/, "");
   const routed = NAV_ITEMS.find((item) => (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)));
   const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
+  // Settings has its own sidebar. Its breadcrumb is the organization, then Settings, as in Paper.
+  const inSettings = isSettingsPath(pathname, data.slug);
 
   // The desk location shows the new choice at once, while the cookie is saved.
   const router = useRouter();
@@ -258,7 +262,7 @@ function Shell({
     : routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
     : trimmed === `${base}/changelog` ? { label: "What’s new" }
-    : trimmed === `${base}/settings` ? { label: "Settings" }
+    : inSettings ? { label: "Settings" }
     : null;
 
   const role = organizations?.find((choice) => choice.slug === data.slug)?.role;
@@ -316,10 +320,12 @@ function Shell({
                 searchLabel="Switch organization…"
                 emptyText="No organization matches."
               />
-              <span className="topbar__slash" aria-hidden="true">
-                /
-              </span>
-              {shownLocation ? (
+              {inSettings ? null : (
+                <span className="topbar__slash" aria-hidden="true">
+                  /
+                </span>
+              )}
+              {inSettings ? null : shownLocation ? (
                 <ContextSwitcher
                   label="Location"
                   icon={<MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />}
@@ -335,9 +341,8 @@ function Shell({
                   emptyText="No location matches."
                   footer={(close) => (
                     <Link
-                      to="/$org/settings"
+                      to="/$org/settings/locations"
                       params={{ org: data.slug }}
-                      search={{ section: "Locations" }}
                       className="switcher__action"
                       onClick={close}
                     >
@@ -452,6 +457,7 @@ function AppSidebar({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { open, setOpenMobile } = useSidebar();
   const closeDrawer = () => setOpenMobile(false);
+  const inSettings = isSettingsPath(pathname, data.slug);
 
   // A link inside the drawer was used. Close it, so the new page shows.
   useEffect(() => {
@@ -485,8 +491,11 @@ function AppSidebar({
           <span className="visually-hidden">Close navigation</span>
         </button>
       </SidebarHeader>
-      <SidebarContent aria-label="Staff pages">
-        <SidebarMenu>
+      <SidebarContent aria-label={inSettings ? "Settings" : "Staff pages"}>
+        {inSettings ? (
+          <SettingsNav slug={data.slug} organization={data.name} onNavigate={closeDrawer} />
+        ) : (
+          <SidebarMenu>
           {NAV_ITEMS.map((item) => (
             <SidebarMenuItem key={item.label}>
               {/* The router marks the active link (aria-current="page"). A section stays active on its detail pages. */}
@@ -507,7 +516,8 @@ function AppSidebar({
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-        </SidebarMenu>
+          </SidebarMenu>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <AccountMenu

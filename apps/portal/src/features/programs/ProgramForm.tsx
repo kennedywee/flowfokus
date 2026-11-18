@@ -445,7 +445,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
                 </NativeSelect>
               </span>
               {organization.locations.length ? null : (
-                <Link to="/$org/settings" params={{ org: organization.slug }} search={{ section: "Locations" }} className="program-form__link">
+                <Link to="/$org/settings/locations" params={{ org: organization.slug }} className="program-form__link">
                   Add a location
                 </Link>
               )}

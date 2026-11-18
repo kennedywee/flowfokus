@@ -1,0 +1,534 @@
+import { useState } from "react";
+import { Link, useRouter } from "@tanstack/react-router";
+import type { Schemas } from "@flowfokus/api";
+import {
+  CircleMinus,
+  Clock3,
+  Mail,
+  MoreHorizontal,
+  Ban,
+  Plus,
+  XCircle,
+} from "lucide-react";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { FormNotice } from "../../components/FormNotice";
+import { PageActions } from "../../components/PageActions";
+import { useToast } from "../../components/Toast";
+import { SubmitButton, initials } from "../../components/ui";
+import { useAction } from "../../lib/hooks";
+import { useOrganization } from "../../lib/organization";
+import type { Result } from "../../lib/result";
+import {
+  changeStaffRole,
+  inviteStaff,
+  removeStaff,
+  revokeInvitation,
+} from "../../lib/staff.functions";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { SaleDialog } from "../sales/SaleDialogs";
+import { FieldError } from "./Locations";
+import { LockLine, SettingsPage } from "./SettingsPage";
+import {
+  firstName,
+  invitationLine,
+  listedMembers,
+  inviteFailure,
+  memberStatus,
+  roleChoices,
+  roleName,
+  staffChangeFailure,
+  staffCount,
+  type TeamInvitation,
+  type TeamMember,
+  type TeamRole,
+} from "./team";
+
+const sendInvite = (input: Parameters<typeof inviteStaff>[0]["data"]) =>
+  inviteStaff({ data: input });
+const sendRevoke = (input: Parameters<typeof revokeInvitation>[0]["data"]) =>
+  revokeInvitation({ data: input });
+const sendRole = (input: Parameters<typeof changeStaffRole>[0]["data"]) =>
+  changeStaffRole({ data: input });
+const sendRemove = (input: Parameters<typeof removeStaff>[0]["data"]) =>
+  removeStaff({ data: input });
+
+const icon = {
+  strokeWidth: 1.5,
+  "aria-hidden": true,
+  focusable: false,
+} as const;
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Paper "Settings — Staff". WorkOS holds staff access: every change goes
+ * through Rails, which refuses escalation and keeps someone who can manage
+ * staff. Rows show only what Rails returns: name, email, role, and status.
+ */
+export function Staff({ team }: { team: Result<Schemas["Team"]> }) {
+  const organization = useOrganization();
+  const [inviting, setInviting] = useState(false);
+
+  if (!team.ok) {
+    return (
+      <SettingsPage title="Staff" className="settings-page--wide">
+        {team.error.code === "forbidden" ? (
+          <LockLine>Seeing staff needs a role that can manage staff.</LockLine>
+        ) : (
+          <DidNotLoad />
+        )}
+      </SettingsPage>
+    );
+  }
+
+  const { invitations, roles } = team.data;
+  const members = listedMembers(team.data);
+  const grantable = roles.filter((role) => role.grantable);
+  return (
+    <SettingsPage
+      title="Staff"
+      className="settings-page--wide"
+      actions={
+        <PageActions>
+          <Link
+            to="/$org/settings/roles"
+            params={{ org: organization.slug }}
+            className={buttonVariants({
+              variant: "secondary",
+              size: "compact",
+            })}
+          >
+            Roles
+          </Link>
+          {grantable.length ? (
+            <Button
+              type="button"
+              size="compact"
+              onClick={() => setInviting(true)}
+            >
+              <Plus {...icon} />
+              Invite staff
+            </Button>
+          ) : null}
+        </PageActions>
+      }
+    >
+      <section className="settings-table" aria-label="Staff">
+        <div
+          className="settings-table__head settings-staff__grid"
+          aria-hidden="true"
+        >
+          <span>Name</span>
+          <span className="settings-col--wide">Role</span>
+          <span className="settings-col--wide">Status</span>
+          <span />
+        </div>
+        <ul className="settings-rows">
+          {members.map((member) => (
+            <MemberRow key={member.id} member={member} roles={roles} />
+          ))}
+          {invitations.map((invitation) => (
+            <InvitationRow
+              key={invitation.id}
+              invitation={invitation}
+              roles={roles}
+            />
+          ))}
+        </ul>
+        <p className="settings-foot">{staffCount(team.data)}</p>
+      </section>
+      {inviting ? (
+        <InviteDialog roles={grantable} onClose={() => setInviting(false)} />
+      ) : null}
+    </SettingsPage>
+  );
+}
+
+function DidNotLoad() {
+  const router = useRouter();
+  const [retrying, setRetrying] = useState(false);
+  return (
+    <div className="settings-state" role="alert">
+      <p>Staff did not load. Reload the page to try again.</p>
+      <Button
+        type="button"
+        variant="secondary"
+        size="compact"
+        disabled={retrying}
+        aria-busy={retrying || undefined}
+        onClick={async () => {
+          setRetrying(true);
+          await router.invalidate();
+          setRetrying(false);
+        }}
+      >
+        Reload
+      </Button>
+    </div>
+  );
+}
+
+/** Paper's status style for a member who is not active: a coloured icon with grey text. */
+function StatusMark({ member }: { member: TeamMember }) {
+  const status = memberStatus(member.status);
+  if (!status) return <span className="settings-status">Active</span>;
+  const Icon = status.tone === "warning" ? Clock3 : CircleMinus;
+  return (
+    <span className="settings-status" data-tone={status.tone}>
+      <Icon {...icon} />
+      {status.label}
+    </span>
+  );
+}
+
+function MemberRow({
+  member,
+  roles,
+}: {
+  member: TeamMember;
+  roles: TeamRole[];
+}) {
+  const organization = useOrganization();
+  const router = useRouter();
+  const toast = useToast();
+  const changing = useAction(sendRole);
+  const removing = useAction(sendRemove);
+  const [confirming, setConfirming] = useState(false);
+  const choices = roleChoices(member, roles);
+  const roleLabel = member.role_name;
+
+  async function changeRole(role: string) {
+    if (role === member.role || changing.pending) return;
+    const result = await changing.run({
+      slug: organization.slug,
+      id: member.id,
+      role,
+    });
+    if (result.ok) {
+      toast.show({
+        tone: "success",
+        title: `${member.name} is now ${roleName(roles, role)}. This can take a few minutes.`,
+      });
+      void router.invalidate();
+      return;
+    }
+    const failure = staffChangeFailure(result.error, member.name);
+    toast.show({ tone: "error", title: `Role not changed. ${failure.text}` });
+    if (failure.reload) void router.invalidate();
+  }
+
+  async function remove() {
+    const result = await removing.run({
+      slug: organization.slug,
+      id: member.id,
+    });
+    setConfirming(false);
+    if (result.ok) {
+      toast.show({ tone: "success", title: `Access removed · ${member.name}` });
+      void router.invalidate();
+      return;
+    }
+    const failure = staffChangeFailure(result.error, member.name);
+    toast.show({
+      tone: "error",
+      title: `Access was not removed. ${failure.text}`,
+    });
+    if (failure.reload) void router.invalidate();
+  }
+
+  return (
+    <li className="settings-row-item settings-staff__grid">
+      <span className="settings-staff__person">
+        <span className="settings-avatar" aria-hidden="true">
+          {initials(member.name)}
+        </span>
+        <span className="settings-row-text">
+          <span className="settings-row-text__name">{member.name}</span>
+          <span className="settings-row-text__sub">{member.email}</span>
+          {/* Phones: role and status on line 3, as in "Phone — Settings · Staff". */}
+          <span className="settings-row-text__phone">
+            {roleLabel}
+            {member.status === "active"
+              ? null
+              : ` · ${memberStatus(member.status)?.label}`}
+          </span>
+        </span>
+      </span>
+      <span className="settings-staff__role settings-col--wide">
+        {roleLabel}
+      </span>
+      <span className="settings-col--wide">
+        <StatusMark member={member} />
+      </span>
+      {choices.length || member.manageable ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="settings-more"
+            aria-label={`Change ${member.name}`}
+            disabled={changing.pending || removing.pending}
+          >
+            <MoreHorizontal {...icon} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="sale-menu settings-menu">
+            {choices.length ? (
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Role</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={member.role}
+                  onValueChange={(value) => void changeRole(value as string)}
+                >
+                  {choices.map((choice) => (
+                    <DropdownMenuRadioItem
+                      key={choice.slug}
+                      value={choice.slug}
+                    >
+                      {choice.name}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuGroup>
+            ) : null}
+            {choices.length ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuItem
+              className="menu__item--critical"
+              onClick={() => setConfirming(true)}
+            >
+              <Ban {...icon} />
+              Remove access…
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <span className="settings-more-slot" aria-hidden="true" />
+      )}
+      <ConfirmDialog
+        open={confirming}
+        tone="critical"
+        title={`Remove ${member.name}'s access?`}
+        confirmLabel="Remove access"
+        pendingLabel="Removing…"
+        pending={removing.pending}
+        onConfirm={() => void remove()}
+        onCancel={() => setConfirming(false)}
+      >
+        <p>
+          {firstName(member.name)} can no longer open {organization.name}. This
+          can take a few minutes. Their past sales and check-ins stay.
+        </p>
+      </ConfirmDialog>
+    </li>
+  );
+}
+
+function InvitationRow({
+  invitation,
+  roles,
+}: {
+  invitation: TeamInvitation;
+  roles: TeamRole[];
+}) {
+  const organization = useOrganization();
+  const router = useRouter();
+  const toast = useToast();
+  const action = useAction(sendRevoke);
+  const role = roles.find((item) => item.slug === invitation.role);
+  const name = roleName(roles, invitation.role);
+  // Rails lets staff revoke only an invitation for a role they could grant.
+  const revocable = role?.grantable ?? true;
+  const line = invitationLine(invitation.expires_at, organization.timezone);
+
+  async function revoke() {
+    const result = await action.run({
+      slug: organization.slug,
+      invitationId: invitation.id,
+    });
+    if (result.ok) {
+      toast.show({
+        tone: "success",
+        title: `Invitation revoked · ${invitation.email}`,
+      });
+      void router.invalidate();
+      return;
+    }
+    const failure = staffChangeFailure(
+      result.error,
+      invitation.email,
+      "invitation",
+    );
+    toast.show({
+      tone: "error",
+      title: `The invitation was not revoked. ${failure.text}`,
+    });
+    if (failure.reload) void router.invalidate();
+  }
+
+  return (
+    <li className="settings-row-item settings-staff__grid">
+      <span className="settings-staff__person">
+        <span
+          className="settings-avatar settings-avatar--invite"
+          aria-hidden="true"
+        >
+          <Mail {...icon} />
+        </span>
+        <span className="settings-row-text">
+          <span className="settings-row-text__name">{invitation.email}</span>
+          <span className="settings-row-text__sub settings-row-text__sub--warning">
+            {line}
+          </span>
+          <span className="settings-row-text__phone">{name} · Not joined</span>
+        </span>
+      </span>
+      <span className="settings-staff__role settings-col--wide">{name}</span>
+      <span className="settings-col--wide">
+        <span className="settings-status settings-status--subtle">
+          Not joined
+        </span>
+      </span>
+      {revocable ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="settings-more"
+            aria-label={`Change the invitation for ${invitation.email}`}
+            disabled={action.pending}
+          >
+            <MoreHorizontal {...icon} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="sale-menu settings-menu">
+            <DropdownMenuItem
+              className="menu__item--critical"
+              onClick={() => void revoke()}
+            >
+              <XCircle {...icon} />
+              Revoke invitation
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <span className="settings-more-slot" aria-hidden="true" />
+      )}
+    </li>
+  );
+}
+
+/** Paper "Settings — Invite staff": an email and one role card. Only roles the viewer may grant. */
+function InviteDialog({
+  roles,
+  onClose,
+}: {
+  roles: TeamRole[];
+  onClose: () => void;
+}) {
+  const organization = useOrganization();
+  const router = useRouter();
+  const toast = useToast();
+  const action = useAction(sendInvite);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState(
+    roles.find((item) => item.slug === "receptionist")?.slug ??
+      roles[roles.length - 1]?.slug ??
+      "",
+  );
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const refused = action.error ? inviteFailure(action.error) : {};
+  const fieldError = emailError ?? refused.field;
+
+  async function submit() {
+    if (!EMAIL.test(email.trim())) {
+      setEmailError("Enter an email address, for example name@example.com");
+      return;
+    }
+    setEmailError(undefined);
+    const sent = email.trim();
+    const result = await action.run({
+      slug: organization.slug,
+      email: sent,
+      role,
+    });
+    if (result.ok) {
+      toast.show({ tone: "success", title: `Invitation sent · ${sent}` });
+      onClose();
+      void router.invalidate();
+    }
+  }
+
+  return (
+    <SaleDialog
+      title="Invite staff"
+      wide
+      className="settings-dialog settings-dialog--invite"
+      pending={action.pending}
+      onClose={onClose}
+      onSubmit={() => void submit()}
+      submit={(shortcut) => (
+        <SubmitButton
+          compact
+          pending={action.pending}
+          pendingLabel="Sending…"
+          aria-keyshortcuts="Meta+Enter Control+Enter"
+        >
+          Send invite
+          {shortcut}
+        </SubmitButton>
+      )}
+    >
+      <div className="settings-field">
+        <label className="settings-field__label" htmlFor="invite-email">
+          Email
+        </label>
+        <Input
+          id="invite-email"
+          type="email"
+          className="settings-input"
+          value={email}
+          autoFocus
+          autoComplete="off"
+          disabled={action.pending}
+          aria-invalid={fieldError ? true : undefined}
+          aria-describedby={fieldError ? "invite-email-error" : undefined}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+        {fieldError ? (
+          <FieldError id="invite-email-error">{fieldError}</FieldError>
+        ) : null}
+      </div>
+      <fieldset className="program-kinds settings-roles-pick">
+        <legend className="settings-field__label">Role</legend>
+        <div className="program-kinds__cards">
+          {roles.map((item) => (
+            <label key={item.slug} className="program-kind">
+              <input
+                type="radio"
+                name="invite-role"
+                className="program-kind__input"
+                value={item.slug}
+                checked={role === item.slug}
+                disabled={action.pending}
+                onChange={() => setRole(item.slug)}
+              />
+              <span className="program-kind__title">{item.name}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      {action.error && !refused.field ? (
+        <FormNotice
+          title="The invitation was not sent"
+          error={action.error}
+          text={refused.text}
+        />
+      ) : null}
+    </SaleDialog>
+  );
+}

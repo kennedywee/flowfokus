@@ -1,0 +1,673 @@
+/*
+ * Screen styles: settings. Paper "Settings — General", "— Locations",
+ * "— Staff", "— Roles", and the settings sidebar. Lists reuse the band and
+ * row sizes of the programs list; dialogs reuse the sale dialog frame.
+ */
+
+/* ---------- Settings sidebar ---------- */
+/* Back to app, the organization's sections, then the samples. Section icons show on the rail only. */
+
+.settings-nav {
+  display: grid;
+  gap: 2px;
+}
+.settings-nav__back {
+  margin-bottom: var(--space-2);
+}
+.settings-nav__group {
+  display: grid;
+  gap: 2px;
+}
+.settings-nav__group + .settings-nav__group {
+  margin-top: var(--space-3);
+}
+.settings-nav__label {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  margin: 0;
+  padding-inline: var(--space-2);
+  overflow: hidden;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-nav .settings-nav__icon {
+  display: none;
+}
+@media (min-width: 768px) and (max-width: 1180px) {
+  .shell .settings-nav .settings-nav__icon {
+    display: block;
+  }
+  .shell .settings-nav__label {
+    display: none;
+  }
+}
+@media (min-width: 1181px) {
+  .shell[data-collapsed="true"] .settings-nav .settings-nav__icon {
+    display: block;
+  }
+  .shell[data-collapsed="true"] .settings-nav__label {
+    display: none;
+  }
+}
+
+/* ---------- Page ---------- */
+
+.settings-page {
+  max-width: 1280px;
+  margin-inline: 0;
+  gap: var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.settings-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+.settings-head h1 {
+  min-width: 0;
+}
+.settings-head .page-actions {
+  margin-left: auto;
+}
+/* "‹ Settings" shows on phones only. */
+.settings-back {
+  display: none;
+}
+.settings-start--phone {
+  display: none;
+}
+
+/* Paper's lock line: a small lock and grey text. */
+.settings-lock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.settings-lock svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-3);
+}
+.settings-empty,
+.settings-state {
+  margin: 0;
+  color: var(--color-ink-2);
+}
+.settings-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ---------- General ---------- */
+
+.settings-form {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 760px;
+}
+.settings-group {
+  display: grid;
+  gap: var(--space-1);
+  margin-inline: calc(-1 * var(--space-3));
+}
+/* The grey section band, as in Paper. */
+.settings-band {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  margin: 0;
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding-inline: var(--space-3);
+}
+.settings-row__label {
+  flex: none;
+  width: 180px;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.settings-row__value {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+.settings-row__value--site {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.settings-row__value--site {
+  flex-wrap: wrap;
+}
+.settings-row__address {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: normal;
+}
+.settings-public {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+}
+.settings-public__text {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.settings-public:has(:disabled) {
+  cursor: default;
+}
+.settings-select.select {
+  width: 100%;
+  min-height: 32px;
+  padding-inline: 10px 32px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+}
+
+/* Paper's save bar: what changed, Discard, and Save changes. */
+.settings-savebar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: 6px var(--space-3);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-compact);
+}
+.settings-savebar__text {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  color: var(--color-ink);
+}
+.settings-savebar__text--error svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--color-critical);
+}
+
+/* ---------- Lists: Locations and Staff ---------- */
+
+.settings-table {
+  container: settings-table / inline-size;
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.settings-table__head {
+  height: 36px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.settings-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.settings-row-item {
+  min-height: 52px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: 6px var(--space-3);
+  border: 0;
+  border-radius: var(--radius-compact);
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  text-align: left;
+}
+button.settings-row-item {
+  width: calc(100% + 2 * var(--space-3));
+  cursor: pointer;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+button.settings-row-item:hover {
+  background: var(--color-hover);
+}
+button.settings-row-item:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+.settings-row-text {
+  display: grid;
+  min-width: 0;
+}
+.settings-row-text__name {
+  overflow: hidden;
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-row-text__sub,
+.settings-row-text__phone {
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-row-text__sub--warning {
+  color: var(--color-warning);
+}
+.settings-row-text__phone {
+  display: none;
+}
+.settings-rows__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-4);
+}
+.settings-foot {
+  margin: var(--space-3) 0 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+
+.settings-locations__grid {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 16px;
+  align-items: center;
+  column-gap: 10px;
+}
+.settings-table__head.settings-locations__grid {
+  grid-template-columns: minmax(0, 1fr) 16px;
+}
+.settings-locations__pin {
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-2);
+}
+
+.settings-staff__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 140px 24px;
+  align-items: center;
+  column-gap: var(--space-4);
+}
+.settings-staff__person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.settings-avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--color-hover);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.settings-avatar--invite {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+.settings-avatar svg {
+  width: 12px;
+  height: 12px;
+}
+.settings-staff__role {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Paper's status style: a coloured 16px icon with grey text. */
+.settings-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-ink-2);
+  white-space: nowrap;
+}
+.settings-status svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+.settings-status[data-tone="warning"] svg {
+  color: var(--color-warning);
+}
+.settings-status[data-tone="muted"] svg {
+  color: var(--color-ink-3);
+}
+.settings-status--subtle {
+  color: var(--color-ink-3);
+}
+.settings-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-2);
+  cursor: pointer;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+.settings-more:hover,
+.settings-more[aria-expanded="true"] {
+  background: var(--color-hover);
+}
+.settings-more:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.settings-more:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.settings-more svg {
+  width: 16px;
+  height: 16px;
+}
+.settings-more-slot {
+  width: 24px;
+}
+.settings-menu {
+  min-width: 220px;
+}
+
+/* Narrow lists: role and status move to line 3 under the email. */
+@container settings-table (max-width: 640px) {
+  .settings-table__head {
+    display: none;
+  }
+  .settings-staff__grid {
+    grid-template-columns: minmax(0, 1fr) 24px;
+  }
+  .settings-col--wide {
+    display: none;
+  }
+  .settings-row-text__phone {
+    display: block;
+  }
+  .settings-staff__grid.settings-row-item {
+    padding-block: var(--space-2);
+  }
+  .settings-staff__person {
+    align-items: flex-start;
+  }
+  .settings-avatar {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ---------- Roles ---------- */
+
+.settings-roles {
+  overflow-x: auto;
+  margin-inline: calc(-1 * var(--space-3));
+}
+.settings-roles:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+.settings-roles__table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+}
+.settings-roles__table thead th {
+  height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--color-well);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+.settings-roles__table thead th:first-child {
+  border-radius: var(--radius-compact) 0 0 var(--radius-compact);
+  text-align: left;
+}
+.settings-roles__table thead th:last-child {
+  border-radius: 0 var(--radius-compact) var(--radius-compact) 0;
+}
+.settings-roles__table tbody th {
+  height: 40px;
+  padding: 0 var(--space-3);
+  color: var(--color-ink);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+}
+.settings-roles__table td {
+  width: 116px;
+  padding: 0 var(--space-3);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+.settings-roles__table td svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin-inline: auto;
+}
+.settings-roles__table td[data-reach="all"] svg {
+  color: var(--color-good);
+}
+.settings-roles__table td[data-reach="none"] svg {
+  color: var(--color-ink-4);
+}
+
+/* ---------- Dialogs ---------- */
+/* Paper's form dialog: labels above 32px fields, a red line under a bad field. */
+
+.settings-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.settings-field__label {
+  padding: 0;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+}
+.settings-field__optional {
+  margin-left: 4px;
+  color: var(--color-ink-3);
+  font-weight: var(--font-weight-regular);
+}
+.settings-dialog .settings-input {
+  min-height: 32px;
+  padding-inline: 10px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+}
+.settings-field__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--color-critical);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.settings-field__error svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.settings-roles-pick .program-kind {
+  padding: 10px 12px;
+}
+
+/* ---------- Samples ---------- */
+
+.settings-sample {
+  max-width: 760px;
+}
+
+/* ---------- Phones ---------- */
+
+@media (max-width: 767.98px) {
+  .settings-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    justify-self: start;
+    min-height: 44px;
+    margin-block: calc(-1 * var(--space-3)) calc(-1 * var(--space-4));
+    color: var(--color-ink-2);
+    text-decoration: none;
+  }
+  .settings-back svg {
+    width: 18px;
+    height: 18px;
+  }
+  .settings-start--phone {
+    display: block;
+  }
+  .settings-start--wide {
+    display: none;
+  }
+  .settings-head .page-actions {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+  .settings-head .page-actions > * {
+    flex: 1;
+  }
+  /* Phones put the primary action first, as in "Phone — Settings · Staff". */
+  .settings-head .page-actions > .button--secondary {
+    order: 1;
+  }
+  .settings-row {
+    flex-wrap: wrap;
+    gap: 6px var(--space-3);
+  }
+  .settings-row__label {
+    width: 112px;
+  }
+  .settings-savebar {
+    position: sticky;
+    bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + var(--space-2));
+    z-index: 5;
+    background: var(--color-page);
+  }
+  /* 16px text stops iOS from zooming into a focused field. */
+  .settings-dialog .settings-input,
+  .settings-select.select {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .settings-more {
+    width: 44px;
+    height: 44px;
+    margin-right: -10px;
+  }
+  .settings-more-slot {
+    width: 44px;
+  }
+  .settings-staff__grid {
+    grid-template-columns: minmax(0, 1fr) 34px;
+  }
+
+  /* The settings list, built like Paper's "Phone — More". */
+  .settings-index {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .settings-index__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .settings-index__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 44px;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .settings-index__row svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--color-ink-2);
+  }
+  .settings-index__label {
+    flex: 1;
+    font-size: 15px;
+  }
+  .settings-index__row .settings-index__chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--color-ink-4);
+  }
+  .settings-index__band {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    margin: var(--space-2) calc(-1 * var(--space-2)) 0;
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-compact);
+    background: var(--color-well);
+    font-weight: var(--font-weight-semibold);
+  }
+}
+@media (pointer: coarse) {
+  .settings-more {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}

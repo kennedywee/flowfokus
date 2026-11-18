@@ -134,7 +134,10 @@ export function failureMessage(error: Failure): string {
     case "auth_unavailable":
       return "Sign-in can't be checked right now. Try again in a moment.";
     case "database_unavailable":
+    case "internal_error":
       return "Something went wrong on our side. Try again in a moment.";
+    case "workos_unavailable":
+      return "Staff sign-in is not answering. Try again in a moment.";
     case "idempotency_key_reused":
       return "This form was already sent with different values. Reload the page and try again.";
     default:

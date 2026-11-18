@@ -95,9 +95,8 @@ function FindMemberSearch({
           <p className="find-member__state-text">Add a location to check members in.</p>
           {can("settings:manage") ? (
             <Link
-              to="/$org/settings"
+              to="/$org/settings/locations"
               params={{ org: organization.slug }}
-              search={{ section: "Locations" }}
               className={buttonVariants({ variant: "secondary", size: "compact" })}
             >
               Add location
