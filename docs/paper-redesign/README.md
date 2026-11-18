@@ -50,7 +50,12 @@ desktop frame.
     `--subtle-foreground` neutral-500 (field borders, 3:1), `--muted-foreground`
     neutral-600, `--foreground` and `--primary` neutral-800.
   - Radius is 8px for controls and 12px for floating surfaces (menus, dialogs,
-    toasts, panels, cards). Only circles and 16px checkboxes (4px) differ.
+    toasts, panels, cards). Exceptions: circles keep their shape, and
+    checkboxes and square tiles under 20px (org tile, small logos) use 4px.
+  - Progress bars are solid by default: a `--muted-foreground` fill on a
+    `--border` track, pill ends, a sharp edge at the exact value. A dotted
+    pattern is an optional variant for credit and pass bars.
+  - Dark theme: the window is neutral-900 on a neutral-950 canvas.
   - Icons: Hugeicons Solid is the wish, but it needs a Pro licence. Icons stay
     as they are until the owner decides.
 - Layout (decided 18 Nov 2026): all page content shares one left edge with the

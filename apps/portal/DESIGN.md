@@ -180,7 +180,9 @@ Styling:
 - Take greys from the Tailwind CSS neutral palette (see
   `docs/paper-redesign/README.md` for the token map).
 - Use an 8px radius on controls and 12px on floating surfaces (menus, dialogs,
-  toasts, panels, cards). Only circles and 16px checkboxes (4px) differ.
+  toasts, panels, cards). Circles keep their shape; checkboxes and square
+  tiles under 20px use 4px.
+- Draw progress bars solid by default. A dotted pattern is an optional variant.
 - Put one 16px grey icon on each section title. Keep list rows as plain text.
 - Show status as a colored 16px icon with grey text, such as a green pie for
   "Renews in 29d 16h" and a red pie for "Ends in 27d 23h · Cancelled".
