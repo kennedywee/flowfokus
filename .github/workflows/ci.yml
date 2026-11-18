@@ -44,7 +44,7 @@ jobs:
           MISE_DISABLE_TOOLS: ruby
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4.5"
+          ruby-version: "3.4.12"
           bundler-cache: true
           working-directory: apps/server
       - run: bun install --frozen-lockfile

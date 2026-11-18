@@ -85,9 +85,9 @@ checksum = "sha256:50efaf01a08c520b4bbe499c09a8c5a5c370002c419c0d9da2c6815d3066a
 url = "https://nodejs.org/dist/v26.12.0/node-v26.12.0-win-x64.zip"
 
 [[tools.ruby]]
-version = "3.4.5"
+version = "3.4.12"
 backend = "core:ruby"
-specifiers = ["3.4.5"]
+specifiers = ["3.4.12"]
 
 [tools.ruby.options]
 compile = "false"
@@ -96,37 +96,37 @@ ruby_build_repo = "https://github.com/rbenv/ruby-build.git"
 ruby_install = "false"
 
 [tools.ruby."platforms.linux-arm64"]
-checksum = "sha256:79dbdc986002397373c0ed877d3a1c0312006a22467ac30df4b192cfe91f9c07"
-url = "https://github.com/jdx/ruby/releases/download/3.4.5-6/ruby-3.4.5.arm64_linux.tar.gz"
+checksum = "sha256:c098862e9416148e0d5c8851ce222323ef93c23d6176e12ab5c0effc06268f49"
+url = "https://github.com/jdx/ruby/releases/download/3.4.12-1/ruby-3.4.12.arm64_linux.tar.gz"
 provenance = "github-attestations"
 
 [tools.ruby."platforms.linux-arm64-musl"]
-checksum = "sha256:1d88d8a27b442fdde4aa06dc99e86b0bbf0b288963d8433112dd5fac798fd5ee"
-url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.5.tar.gz"
+checksum = "sha256:5e5d85ad93b0adcccbad47733680f4892bd0078e3342437f7babce01c1872479"
+url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.12.tar.gz"
 
 [tools.ruby."platforms.linux-x64"]
-checksum = "sha256:b651efeabc1da30531aa0a3c6ac743512bb72beb01357d8fca38408fbeb5d736"
-url = "https://github.com/jdx/ruby/releases/download/3.4.5-6/ruby-3.4.5.x86_64_linux.tar.gz"
+checksum = "sha256:12bbaa27dd857892daa21d5c57e1a48908c37b03540388474cf96974d03770d1"
+url = "https://github.com/jdx/ruby/releases/download/3.4.12-1/ruby-3.4.12.x86_64_linux.tar.gz"
 provenance = "github-attestations"
 
 [tools.ruby."platforms.linux-x64-musl"]
-checksum = "sha256:1d88d8a27b442fdde4aa06dc99e86b0bbf0b288963d8433112dd5fac798fd5ee"
-url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.5.tar.gz"
+checksum = "sha256:5e5d85ad93b0adcccbad47733680f4892bd0078e3342437f7babce01c1872479"
+url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.12.tar.gz"
 
 [tools.ruby."platforms.macos-arm64"]
-checksum = "sha256:cc932be2e6f2a5255c68383661008bcb4400a50955f5e9ceff8d6867338cbe1b"
-url = "https://github.com/jdx/ruby/releases/download/3.4.5-6/ruby-3.4.5.macos.tar.gz"
+checksum = "sha256:865b429c511c40a96fe3c25466bbf9b300e5cae22c70c7dd68e0af003b849de4"
+url = "https://github.com/jdx/ruby/releases/download/3.4.12-1/ruby-3.4.12.macos.tar.gz"
 provenance = "github-attestations"
 
 [tools.ruby."platforms.macos-x64"]
-checksum = "sha256:1d88d8a27b442fdde4aa06dc99e86b0bbf0b288963d8433112dd5fac798fd5ee"
-url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.5.tar.gz"
+checksum = "sha256:5e5d85ad93b0adcccbad47733680f4892bd0078e3342437f7babce01c1872479"
+url = "https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.12.tar.gz"
 
 [[tools.ruby]]
-version = "3.4.5"
+version = "3.4.12"
 backend = "core:ruby"
-specifiers = ["3.4.5"]
+specifiers = ["3.4.12"]
 
 [tools.ruby."platforms.windows-x64"]
-checksum = "sha256:61634b204f808deec191a6819e4c25c7b3005d84537b24c4fbe7c604aeece89f"
-url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-3.4.5-1/rubyinstaller-3.4.5-1-x64.7z"
+checksum = "sha256:3806f164377824bcb17e1cf39b17d967e2bdc01e8547ce0254cd786dbe2cfe13"
+url = "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-3.4.12-1/rubyinstaller-3.4.12-1-x64.7z"

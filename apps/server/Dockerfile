@@ -6,7 +6,7 @@
 #         docker run --rm -e DATABASE_URL=... -e SECRET_KEY_BASE=... flowfokus-server bin/rails db:migrate
 # Local development uses Dockerfile.dev instead.
 
-ARG RUBY_VERSION=3.4.5
+ARG RUBY_VERSION=3.4.12
 FROM docker.io/library/ruby:${RUBY_VERSION}-slim AS base
 
 WORKDIR /rails
