@@ -85,26 +85,6 @@
   white-space: nowrap;
 }
 
-/* The mark and the wordmark, for the entry pages: centred on one line, 10px apart. */
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-.wordmark__mark {
-  flex: none;
-  width: 22px;
-  height: 22px;
-}
-.wordmark__text {
-  flex: none;
-  display: inline-block;
-  width: 104px;
-  height: 13px;
-  background: var(--color-ink);
-  mask: url("../assets/flowfokus-wordmark.svg") center / 100% 100% no-repeat;
-}
-
 .sidebar__close,
 .nav-toggle {
   display: none;
@@ -855,57 +835,125 @@
   }
 }
 
-/* ---------- Entry (organization chooser, blocked states, 404) ---------- */
+/* ---------- Entry: sign-in, organization chooser, blocked states, 404, error ---------- */
+/*
+ * Paper's sign-in card: a 380px card on the grey page, the logo mark, a
+ * 16px title, one message, one dark button, and the account line.
+ */
 
 .entry {
   min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: var(--space-6) var(--space-4);
+  background: var(--color-well);
+  font-size: var(--text-sm);
+  line-height: 20px;
 }
-.entry__panel {
-  width: min(100%, 34rem);
+.entry__card {
+  width: min(100%, 380px);
   display: grid;
-  gap: var(--space-6);
+  gap: 20px;
+  padding: 28px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-line), var(--shadow-popover);
 }
-.entry__panel .wordmark {
+.entry__head {
+  display: grid;
+  justify-items: start;
   gap: 12px;
 }
-.entry__panel .wordmark__mark {
-  width: 28px;
-  height: 28px;
+.entry__mark {
+  color: var(--color-ink);
 }
-.entry__panel .wordmark__text {
-  width: 132px;
-  height: 17px;
+.entry__mark-dot {
+  fill: var(--color-surface);
 }
-.entry__text {
-  display: grid;
+.entry__title {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: 16px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.entry__message {
+  display: flex;
+  align-items: flex-start;
   gap: var(--space-2);
+  margin: 0;
+  color: var(--color-ink);
 }
-.entry__text p {
+.entry__message--quiet {
   color: var(--color-ink-2);
+}
+.entry__icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--color-critical);
+}
+.entry__message[data-tone="warning"] .entry__icon {
+  color: var(--color-warning);
+}
+.entry__action {
+  width: 100%;
+  min-height: 36px;
+  border-radius: var(--radius-compact);
+}
+.entry__account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: 12px;
+  box-shadow: inset 0 1px 0 var(--color-line);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.entry__email {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.entry__signout {
+  display: contents;
+}
+.entry__link {
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-2);
+  font: inherit;
+  text-decoration: underline 1px;
+  text-underline-position: from-font;
+  cursor: pointer;
+}
+.entry__link:hover {
+  color: var(--color-ink);
+}
+.entry__link:focus-visible {
+  border-radius: var(--radius-sm);
+  outline: var(--focus-ring);
+  outline-offset: 2px;
 }
 .entry__list {
   display: grid;
-  margin: 0;
+  gap: 2px;
+  margin: 0 -8px;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  overflow: hidden;
-}
-.entry__list li + li {
-  border-top: 1px solid var(--color-line);
 }
 .entry__choice {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 56px;
-  padding: var(--space-3) var(--space-4);
+  gap: 10px;
+  min-height: 44px;
+  padding-inline: 8px;
+  border-radius: var(--radius-compact);
   color: var(--color-ink);
   text-decoration: none;
   transition: background-color var(--duration-hover) var(--ease-out);
@@ -915,28 +963,61 @@
 }
 .entry__choice:focus-visible {
   outline: var(--focus-ring);
-  outline-offset: calc(var(--focus-offset) * -1);
+  outline-offset: -2px;
 }
-.entry__choice svg {
+.entry__choice > svg {
   flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--color-ink-3);
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-4);
+}
+.entry__tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-ink-2);
+  font-weight: var(--font-weight-semibold);
+}
+/* The row under the pointer or focus shows a dark tile, as Paper's first row does. */
+.entry__choice:hover .entry__tile,
+.entry__choice:focus-visible .entry__tile {
+  background: var(--color-ink);
+  box-shadow: none;
+  color: var(--color-surface);
 }
 .entry__choice-text {
+  flex: 1;
   display: grid;
-  gap: 2px;
   min-width: 0;
 }
 .entry__choice-name {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   overflow-wrap: anywhere;
 }
 .entry__choice-detail {
   color: var(--color-ink-2);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  line-height: 16px;
 }
 
+/* Phones: a 24px gutter, as in "Phone — Sign in". */
+@media (max-width: 767.98px) {
+  .entry {
+    padding-inline: 24px;
+  }
+  .entry__card {
+    padding: 24px;
+  }
+  .entry__link {
+    min-height: 44px;
+  }
+}
 
 /* ---------- Icon rail ---------- */
 /*

@@ -1,8 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AccessUnavailable } from "../components/AccessUnavailable";
 import { Blocked } from "../components/Blocked";
-import { OrganizationChoices, SignInLink, SignOutForm } from "../components/Session";
-import { FailureNotice, Notice } from "../components/ui";
+import { OrganizationChoices, SignInLink } from "../components/Session";
 import { getAccess, listMyOrganizations } from "../lib/staff.functions";
 import { startOrganization } from "../lib/start";
 
@@ -48,60 +47,39 @@ export const Route = createFileRoute("/")({
 function Start() {
   const data = Route.useLoaderData();
 
-  if (data.view === "unavailable") {
-    return (
-      <Blocked title="Staff access is turned off">
-        <AccessUnavailable reason={data.reason} />
-      </Blocked>
-    );
-  }
+  if (data.view === "unavailable") return <AccessUnavailable reason={data.reason} />;
 
+  // Paper "Sign in — portal start" and "Sign in — Did not finish". The password is typed at WorkOS.
   if (data.view === "signed_out") {
     return (
-      <Blocked title="Sign in">
-        {data.failed ? (
-          <Notice tone="error" title="Sign-in did not finish" live>
-            <p>The sign-in link expired or was already used. Start again.</p>
-          </Notice>
-        ) : null}
-        <div className="actions">
-          <SignInLink />
-        </div>
+      <Blocked
+        title="Sign in to Flowfokus"
+        tone={data.failed ? "error" : undefined}
+        message={data.failed ? "Sign-in did not finish. The link expired or was already used. Sign in again." : undefined}
+      >
+        <SignInLink />
       </Blocked>
     );
   }
 
   const { user, organizations } = data;
   if (!organizations.ok) {
-    return (
-      <Blocked title="Your organizations did not load" description={user.email}>
-        <FailureNotice error={organizations.error} title="The list did not load" />
-        <div className="actions">
-          <SignOutForm />
-        </div>
-      </Blocked>
-    );
+    return <Blocked title="Your organizations did not load" tone="error" message="Reload the page to try again." account={user.email} />;
   }
 
   if (organizations.data.length === 0) {
     return (
-      <Blocked title="No staff access yet" description={user.email}>
-        <Notice tone="warning" title="You are not staff at any organization">
-          <p>Ask an owner to add you as staff, then sign in again.</p>
-        </Notice>
-        <div className="actions">
-          <SignOutForm />
-        </div>
-      </Blocked>
+      <Blocked
+        title="No staff access yet"
+        message="You are not staff at any organization. Ask an owner to invite you, then sign in again."
+        account={user.email}
+      />
     );
   }
 
   return (
-    <Blocked title="Choose an organization" description={user.email}>
+    <Blocked title="Choose an organization" account={user.email}>
       <OrganizationChoices organizations={organizations.data} />
-      <div className="actions">
-        <SignOutForm />
-      </div>
     </Blocked>
   );
 }

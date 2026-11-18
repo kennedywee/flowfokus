@@ -11,7 +11,6 @@ import {
   TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
-import markUrl from "../assets/flowfokus-mark.svg?url";
 import { failureMessage, formatDateTime, formatMoney } from "../lib/format";
 import type { Failure } from "../lib/result";
 import { Alert, AlertAction, AlertContent, AlertDescription, AlertTitle } from "./ui/alert";
@@ -362,21 +361,6 @@ export function Avatar({ name, size = 24 }: { name: string; size?: number }) {
     <AvatarRoot size={size} aria-hidden="true">
       <AvatarFallback>{initials(name)}</AvatarFallback>
     </AvatarRoot>
-  );
-}
-
-/**
- * The Flowfokus logo mark and the dot-matrix wordmark, both taken from the Paper
- * file. The wordmark image names the brand for assistive technology. The mark is
- * decoration.
- */
-export function Wordmark() {
-  return (
-    <span className="wordmark">
-      <img className="wordmark__mark" src={markUrl} width={22} height={22} alt="" />
-      {/* Drawn as a CSS mask filled with ink, so it follows the theme. */}
-      <span className="wordmark__text" role="img" aria-label="Flowfokus" />
-    </span>
   );
 }
 

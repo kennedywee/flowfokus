@@ -53,13 +53,14 @@ import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { TabBar } from "../../components/TabBar";
 import { useToast } from "../../components/Toast";
-import { FailureNotice, Kbd, initials } from "../../components/ui";
+import { Kbd, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
 import { setTheme } from "../../lib/theme.functions";
 import { isSlug, type Theme } from "../../lib/validate";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,8 +94,9 @@ export const Route = createFileRoute("/$org")({
     if (!isSlug(params.org)) throw notFound();
   },
   loader: async ({ params, location }) => {
-    const { access } = await getAccess();
-    if (access.kind === "unavailable") return { access, organization: null, organizations: null, deskLocationId: null };
+    const { access, user } = await getAccess();
+    const email = user?.email ?? null;
+    if (access.kind === "unavailable") return { access, email, organization: null, organizations: null, deskLocationId: null };
     // A full page load, so the server can set the PKCE cookie and leave for WorkOS.
     const toSignIn = () => redirect({ href: signInHref(location.href), reloadDocument: true });
 
@@ -106,7 +108,7 @@ export const Route = createFileRoute("/$org")({
       access.kind === "workos" ? listMyOrganizations() : null,
       getDeskLocation({ data: { slug: params.org } }),
     ]);
-    return { access, organization, organizations: organizations?.ok ? organizations.data : null, deskLocationId };
+    return { access, email, organization, organizations: organizations?.ok ? organizations.data : null, deskLocationId };
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -142,30 +144,22 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function OrganizationLayout() {
-  const { access, organization, organizations } = Route.useLoaderData();
+  const { access, email, organization, organizations } = Route.useLoaderData();
   const { org } = Route.useParams();
 
-  if (access.kind === "unavailable") {
-    return (
-      <Blocked
-        title="Staff access is turned off"
-      >
-        <AccessUnavailable reason={access.reason} />
-      </Blocked>
-    );
-  }
+  if (access.kind === "unavailable") return <AccessUnavailable reason={access.reason} />;
+  // Paper "Sign in — Cannot open organization". One line covers a missing organization and a failure.
   if (!organization?.ok) {
     return (
       <Blocked
-        homeLink
         title={`Cannot open “${org}”`}
+        tone="error"
+        message="This organization did not open. It may not exist, or you are not staff there."
+        account={access.kind === "workos" ? email : null}
       >
-        {organization ? <FailureNotice error={organization.error} title="The organization did not open" /> : null}
-        {access.kind === "workos" ? (
-          <div className="actions">
-            <SignOutForm />
-          </div>
-        ) : null}
+        <Link to="/" className={`${buttonVariants()} entry__action`}>
+          Go to the staff portal
+        </Link>
       </Blocked>
     );
   }

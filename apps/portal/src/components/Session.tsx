@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, LogIn, LogOut } from "lucide-react";
+import { ChevronRight, LogOut } from "lucide-react";
+import { initials } from "./ui";
 import type { StaffOrganizationChoice } from "../lib/staff.functions";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -17,11 +18,14 @@ export function signInHref(returnTo?: string): string {
   return returnTo && returnTo !== "/" ? `/sign-in?returnTo=${encodeURIComponent(returnTo)}` : "/sign-in";
 }
 
-/** Starts WorkOS sign-in. A full page load, because the server sets the PKCE cookie and redirects. */
+/**
+ * Starts sign-in at WorkOS, Paper's one dark button. A full page load,
+ * because the server sets the PKCE cookie and redirects. The password is
+ * typed at WorkOS, never in the portal.
+ */
 export function SignInLink({ returnTo, label = "Sign in" }: { returnTo?: string; label?: string }) {
   return (
-    <a href={signInHref(returnTo)} className={buttonVariants()}>
-      <LogIn {...icon} />
+    <a href={signInHref(returnTo)} className={`${buttonVariants()} entry__action`}>
       {label}
     </a>
   );
@@ -32,17 +36,23 @@ export function SignInLink({ returnTo, label = "Sign in" }: { returnTo?: string;
  * only. The server clears the session cookie and ends the WorkOS session.
  * Give it an `id` to submit it from a menu item with `form.requestSubmit()`.
  */
-export const SignOutForm = forwardRef<HTMLFormElement, { id?: string; showButton?: boolean }>(function SignOutForm(
-  { id, showButton = true },
-  ref,
-) {
+export const SignOutForm = forwardRef<
+  HTMLFormElement,
+  { id?: string; showButton?: boolean; /** "link" is Paper's underlined Sign out on the sign-in card. */ variant?: "button" | "link" }
+>(function SignOutForm({ id, showButton = true, variant = "button" }, ref) {
   return (
-    <form ref={ref} id={id} method="post" action="/sign-out" hidden={!showButton}>
+    <form ref={ref} id={id} method="post" action="/sign-out" hidden={!showButton} className={variant === "link" ? "entry__signout" : undefined}>
       {showButton ? (
-        <button type="submit" className={buttonVariants({ variant: "secondary" })}>
-          <LogOut {...icon} />
-          Sign out
-        </button>
+        variant === "link" ? (
+          <button type="submit" className="entry__link">
+            Sign out
+          </button>
+        ) : (
+          <button type="submit" className={buttonVariants({ variant: "secondary" })}>
+            <LogOut {...icon} />
+            Sign out
+          </button>
+        )
       ) : null}
     </form>
   );
@@ -58,7 +68,7 @@ export function roleLabel(role: string): string {
   return ROLE_LABEL[role] ?? role.charAt(0).toUpperCase() + role.slice(1);
 }
 
-/** The organizations the signed-in person can open, as links. */
+/** Paper "Sign in — Choose organization": a letter tile, the name and role, and a chevron. */
 export function OrganizationChoices({ organizations }: { organizations: StaffOrganizationChoice[] }) {
   return (
     <nav aria-label="Your organizations">
@@ -66,6 +76,9 @@ export function OrganizationChoices({ organizations }: { organizations: StaffOrg
         {organizations.map((organization) => (
           <li key={organization.slug}>
             <Link to="/$org" params={{ org: organization.slug }} className="entry__choice">
+              <span className="entry__tile" aria-hidden="true">
+                {initials(organization.name).slice(0, 1)}
+              </span>
               <span className="entry__choice-text">
                 <span className="entry__choice-name">{organization.name}</span>
                 <span className="entry__choice-detail">{roleLabel(organization.role)}</span>

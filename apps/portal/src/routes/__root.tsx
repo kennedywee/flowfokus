@@ -1,13 +1,13 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react";
-import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Link, Outlet, Scripts, createRootRoute, useRouterState, type ErrorComponentProps } from "@tanstack/react-router";
 import sansFont from "@fontsource-variable/figtree/index.css?url";
 // Emitted as files, not inlined, so browsers can cache them.
 import faviconSvg from "../assets/flowfokus-mark.svg?url&no-inline";
 import faviconPng from "../assets/favicon-32.png?url&no-inline";
 import appleTouchIcon from "../assets/apple-touch-icon.png?url&no-inline";
 import { ToastProvider } from "../components/Toast";
-import { Wordmark } from "../components/ui";
+import { Blocked } from "../components/Blocked";
 import { getTheme } from "../lib/theme.functions";
 import type { Theme } from "../lib/validate";
 import appCss from "../styles.css?url";
@@ -51,6 +51,7 @@ export const Route = createRootRoute({
   }),
   component: RootComponent,
   notFoundComponent: NotFound,
+  errorComponent: AppError,
 });
 
 function RootComponent() {
@@ -62,7 +63,8 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const theme = Route.useLoaderData();
+  // Read from the router state, so the error screen still renders when the root loader failed.
+  const theme = useRouterState({ select: (state) => state.matches[0]?.loaderData as Theme | undefined }) ?? "system";
   return (
     // No class for `system`: tokens.css then follows the operating system.
     <html lang="en" className={theme === "system" ? undefined : theme}>
@@ -77,21 +79,30 @@ function RootDocument({ children }: { children: ReactNode }) {
   );
 }
 
+/** Paper "Sign in — Page not found". */
 function NotFound() {
   return (
-    <main className="entry">
-      <div className="entry__panel">
-        <Wordmark />
-        <div className="entry__text">
-          <h1>Page not found</h1>
-          <p>This address does not match a portal page. Check the address, or go to the staff portal.</p>
-        </div>
-        <div className="actions">
-          <Link to="/" className={buttonVariants({ variant: "secondary" })}>
-            Go to the staff portal
-          </Link>
-        </div>
-      </div>
-    </main>
+    <Blocked title="Page not found" message="This address does not match a portal page. Check the address, or go to the staff portal.">
+      <Link to="/" className={`${buttonVariants()} entry__action`}>
+        Go to the staff portal
+      </Link>
+    </Blocked>
+  );
+}
+
+/**
+ * Paper "Sign in — Something went wrong": an error no screen handled. It
+ * makes no promise about unsaved input, because an error can lose it.
+ */
+function AppError({ error }: ErrorComponentProps) {
+  if (import.meta.env.DEV) console.error(error);
+  return (
+    <RootDocument>
+      <Blocked title="Something went wrong" message="The page could not open. Reload to try again.">
+        <button type="button" className={`${buttonVariants()} entry__action`} onClick={() => window.location.reload()}>
+          Reload
+        </button>
+      </Blocked>
+    </RootDocument>
   );
 }
