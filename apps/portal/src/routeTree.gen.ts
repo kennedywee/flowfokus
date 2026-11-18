@@ -28,6 +28,7 @@ import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$m
 import { Route as OrgMembersNewRouteImport } from './routes/$org/members/new'
 import { Route as OrgProgramsIndexRouteImport } from './routes/$org/programs/index'
 import { Route as OrgProgramsProgramIdRouteImport } from './routes/$org/programs/$programId'
+import { Route as OrgProgramsNewRouteImport } from './routes/$org/programs/new'
 import { Route as OrgSalesIndexRouteImport } from './routes/$org/sales/index'
 import { Route as OrgSalesSaleIdRouteImport } from './routes/$org/sales/$saleId'
 import { Route as OrgSalesNewRouteImport } from './routes/$org/sales/new'
@@ -129,6 +130,11 @@ const OrgProgramsProgramIdRoute = OrgProgramsProgramIdRouteImport.update({
   path: '/programs/$programId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgProgramsNewRoute = OrgProgramsNewRouteImport.update({
+  id: '/programs/new',
+  path: '/programs/new',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
 const OrgSalesIndexRoute = OrgSalesIndexRouteImport.update({
   id: '/sales/',
   path: '/sales/',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
+  '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
+  '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/programs/$programId': typeof OrgProgramsProgramIdRoute
+  '/$org/programs/new': typeof OrgProgramsNewRoute
   '/$org/sales/$saleId': typeof OrgSalesSaleIdRoute
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
@@ -253,6 +262,7 @@ export interface FileRouteTypes {
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/programs/$programId'
+    | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/programs/$programId'
+    | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/programs/$programId'
+    | '/$org/programs/new'
     | '/$org/sales/$saleId'
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
@@ -456,6 +468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgProgramsProgramIdRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/programs/new': {
+      id: '/$org/programs/new'
+      path: '/programs/new'
+      fullPath: '/$org/programs/new'
+      preLoaderRoute: typeof OrgProgramsNewRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
     '/$org/sales/': {
       id: '/$org/sales/'
       path: '/sales'
@@ -507,6 +526,7 @@ interface OrgRouteRouteChildren {
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
   OrgMembersNewRoute: typeof OrgMembersNewRoute
   OrgProgramsProgramIdRoute: typeof OrgProgramsProgramIdRoute
+  OrgProgramsNewRoute: typeof OrgProgramsNewRoute
   OrgSalesSaleIdRoute: typeof OrgSalesSaleIdRoute
   OrgSalesNewRoute: typeof OrgSalesNewRoute
   OrgScheduleOccurrenceIdRoute: typeof OrgScheduleOccurrenceIdRoute
@@ -529,6 +549,7 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
   OrgMembersNewRoute: OrgMembersNewRoute,
   OrgProgramsProgramIdRoute: OrgProgramsProgramIdRoute,
+  OrgProgramsNewRoute: OrgProgramsNewRoute,
   OrgSalesSaleIdRoute: OrgSalesSaleIdRoute,
   OrgSalesNewRoute: OrgSalesNewRoute,
   OrgScheduleOccurrenceIdRoute: OrgScheduleOccurrenceIdRoute,

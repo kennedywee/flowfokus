@@ -1,5 +1,324 @@
 /* Screen styles: programs. The schedule and sessions are in schedule.css. */
 
+/* ---------- Shared ---------- */
+
+/* Paper's kind tile: a grey rounded square with a hairline and the kind icon. */
+.program-tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--color-well);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-ink-2);
+}
+.program-tile svg {
+  width: 14px;
+  height: 14px;
+}
+.program-tile[data-size="40"] {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+.program-tile[data-size="40"] svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Programs list (redesign) ---------- */
+/*
+ * Paper "Programs": the title, New program in the top bar, Filter and the
+ * search, a grey header band, then 52px rows: the kind tile, the name with
+ * its kind and length, the host, and the upcoming sessions.
+ */
+
+.programs-list {
+  max-width: 1280px;
+  gap: var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.programs-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.programs-head h1 {
+  flex: 1;
+  min-width: 0;
+}
+.programs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.programs-toolbar__filters {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.programs-toolbar__search {
+  margin-left: auto;
+}
+
+.programs-table {
+  container: programs-table / inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+  min-width: 0;
+}
+.programs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 96px 16px;
+  align-items: center;
+  column-gap: var(--space-3);
+}
+.programs-col--num {
+  text-align: right;
+}
+.programs-table__head {
+  height: 36px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.programs-table__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-ink);
+}
+.programs-table__sort svg {
+  width: 12px;
+  height: 12px;
+}
+.programs-rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.programs-row {
+  min-height: 52px;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-compact);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+a.programs-row:hover {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+a.programs-row:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+.programs-row__program {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.programs-row__text {
+  display: grid;
+  min-width: 0;
+}
+.programs-row__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.programs-row__name {
+  overflow: hidden;
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The Staff only mark: a hairline pill with grey text. */
+.programs-row__staff {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding-inline: 6px;
+  border-radius: var(--radius-full);
+  box-shadow: inset 0 0 0 1px var(--color-line);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.programs-row__line {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.programs-row__dot {
+  color: var(--color-ink-4);
+}
+.programs-row__clock {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.programs-row__phone-host {
+  display: none;
+}
+.programs-row__host {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.programs-row__avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-page);
+  border-radius: var(--radius-full);
+  background: var(--color-avatar);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+.programs-row__host-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.programs-row__no-host {
+  color: var(--color-ink-3);
+}
+.programs-row__upcoming {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.programs-row__chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--color-ink-4);
+}
+/* No match: a muted 40px tile with the search icon, as in the Sales list. */
+.programs-state__tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-well);
+  color: var(--color-ink-2);
+}
+.programs-state__tile svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Narrow: name and upcoming on line 1, then kind, length, and host. */
+@container programs-table (max-width: 640px) {
+  .programs-table__head > :not(:first-child) {
+    display: none;
+  }
+  .programs-grid {
+    grid-template-columns: minmax(0, 1fr) auto 16px;
+  }
+  .programs-col--host {
+    display: none;
+  }
+  .programs-row__phone-host {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .programs-row__upcoming {
+    align-self: start;
+    padding-top: 2px;
+  }
+}
+
+/* Loading: grey bars in the list's shape. */
+.programs-list .skeleton-block {
+  background: var(--color-well);
+}
+.programs-list .list-search.skeleton-block {
+  border-color: transparent;
+}
+.programs-skeleton__button {
+  display: block;
+  width: 72px;
+  height: var(--control-height-compact);
+  border-radius: var(--radius-compact);
+}
+.programs-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.programs-skeleton__text {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+}
+.programs-list .skeleton-line {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-well);
+}
+.programs-list .skeleton-line--small {
+  height: 10px;
+}
+
+@media (max-width: 767.98px) {
+  .programs-head .page-actions {
+    flex-basis: 100%;
+  }
+  .programs-head .page-actions > a {
+    flex: 1;
+  }
+  .programs-toolbar__search {
+    flex: 1 1 100%;
+    order: 1;
+    margin-left: 0;
+  }
+  .programs-toolbar__filters {
+    flex: none;
+  }
+}
+
 .program-page__description {
   max-width: 65ch;
   margin: calc(var(--space-2) * -1) 0 var(--space-5);
@@ -29,4 +348,362 @@
 }
 .program-page .offer__price-menu {
   display: none;
+}
+
+/* ---------- New program and Edit program (redesign) ---------- */
+/*
+ * Paper "New program": a tile and the title with Create program (⌘↵), then
+ * the Details and Schedule bands on the left, and Location, Visibility, and
+ * Note on the right from 1100px. Fields are 32px with a 13px label above.
+ */
+
+.program-form {
+  max-width: 1280px;
+  gap: var(--space-6);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.program-form__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.program-form__head h1 {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.program-form__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+.program-form__main {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+.program-form__section {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.program-form__fields {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 756px;
+  padding-block: var(--space-3) 0;
+}
+.program-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 140px;
+  gap: var(--space-4);
+}
+.program-form__row--schedule {
+  grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
+}
+.program-field {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+.program-field__label {
+  padding: 0;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 20px;
+}
+.program-field__optional {
+  color: var(--color-ink-3);
+  font-weight: var(--font-weight-regular);
+}
+.program-field__error {
+  color: var(--color-critical);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+/* The 32px redesign field. Coarse pointers keep a 40px target. */
+.program-form .program-input,
+.program-dialog .program-input {
+  min-height: 32px;
+  padding-inline: 10px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+.program-form .select.program-input,
+.program-dialog .select.program-input {
+  padding-right: 32px;
+}
+.program-form textarea.program-input {
+  min-height: 72px;
+  padding-block: 6px;
+}
+/* A field with a unit or an icon inside its box: the box takes the border. */
+.program-input--suffix {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-field-line);
+  background-color: var(--color-control);
+  transition: border-color var(--duration-hover) var(--ease-out);
+}
+.program-input--suffix:hover {
+  border-color: var(--color-ink-3);
+}
+.program-input--suffix:focus-within {
+  border-color: var(--color-ink);
+}
+.program-input--suffix[data-invalid] {
+  border-color: var(--color-critical);
+}
+.program-input__bare {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.program-input__bare:disabled {
+  color: var(--color-ink-4);
+}
+.program-input__unit {
+  flex: none;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* Kind: three cards with an icon, a title, and one line. */
+.program-kinds {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.program-kinds__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.program-kind {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color var(--duration-hover) var(--ease-out), background-color var(--duration-hover) var(--ease-out);
+}
+.program-kind:hover {
+  border-color: var(--color-ink-3);
+}
+.program-kind:has(:checked) {
+  border-color: var(--color-ink);
+  background: var(--color-well);
+  box-shadow: inset 0 0 0 0.5px var(--color-ink);
+}
+.program-kind:has(:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.program-kind__input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.program-kind__icon {
+  width: 16px;
+  height: 16px;
+  margin-bottom: 10px;
+  color: var(--color-ink-2);
+}
+.program-kind__title {
+  font-weight: var(--font-weight-medium);
+}
+.program-kind__meta {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+
+.program-form__summary {
+  max-width: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-line);
+}
+.program-form__summary-count {
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.program-form__summary-detail {
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}
+
+/* The right column: groups split by hairlines, as in Paper. */
+.program-form__side {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+}
+.program-form__side-group {
+  padding: var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+}
+.program-form__side-group:first-child {
+  padding-top: 0;
+}
+.program-form__side-group:last-child {
+  border-bottom: 0;
+}
+.program-select {
+  position: relative;
+  display: block;
+}
+.program-select__icon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: var(--color-ink-2);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.program-form .program-select__control {
+  padding-left: 30px;
+}
+.program-form__note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  row-gap: 4px;
+}
+.program-form__no-note {
+  grid-column: 1 / -1;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.program-form__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-2);
+  cursor: pointer;
+}
+.program-form__add:hover {
+  background: var(--color-hover);
+}
+.program-form__add:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.program-form__add svg {
+  width: 14px;
+  height: 14px;
+}
+.program-form__link {
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+}
+
+@media (pointer: coarse) {
+  .program-form .program-input,
+  .program-dialog .program-input {
+    min-height: 40px;
+  }
+  .program-input__bare {
+    min-height: 38px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .program-form__layout {
+    grid-template-columns: minmax(0, 1fr) 268px;
+    column-gap: var(--space-8);
+  }
+  .program-form__side {
+    position: sticky;
+    top: calc(var(--topbar-height) + var(--space-5));
+  }
+}
+
+/* Phones: properties first, one column, and the create bar at the bottom of the screen. */
+@media (max-width: 1099.98px) {
+  .program-form__side {
+    order: -1;
+  }
+  .program-form__side-group {
+    padding-inline: 0;
+  }
+}
+@media (max-width: 767.98px) {
+  .program-form__row,
+  .program-form__row--schedule {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .program-form__row > :first-child {
+    grid-column: 1 / -1;
+  }
+  .program-kinds__cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .program-kind__icon {
+    display: none;
+  }
+  /* 16px text stops iOS from zooming into a focused field. */
+  .program-form .program-input,
+  .program-input__bare {
+    font-size: 16px;
+  }
+  .program-form {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+  .program-form__head .page-actions {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-line);
+    background: var(--color-page);
+  }
+  .program-form__submit {
+    flex: 1;
+    min-height: 44px;
+  }
+  .program-form__submit .kbd {
+    display: none;
+  }
 }

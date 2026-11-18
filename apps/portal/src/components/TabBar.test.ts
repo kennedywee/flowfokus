@@ -18,6 +18,9 @@ describe("phone tab bar", () => {
   test("hides on full-page create forms", () => {
     expect(hidesTabBar("/chainsaw/sales/new", "chainsaw")).toBe(true);
     expect(hidesTabBar("/chainsaw/members/new/", "chainsaw")).toBe(true);
+    expect(hidesTabBar("/chainsaw/programs/new", "chainsaw")).toBe(true);
+    expect(hidesTabBar("/chainsaw/programs/0b0c/edit", "chainsaw")).toBe(true);
     expect(hidesTabBar("/chainsaw/sales", "chainsaw")).toBe(false);
+    expect(hidesTabBar("/chainsaw/programs/0b0c", "chainsaw")).toBe(false);
   });
 });

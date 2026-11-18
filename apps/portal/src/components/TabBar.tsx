@@ -11,8 +11,9 @@ const TABS: Tab[] = [
   { label: "Sales", icon: Receipt, to: "/$org/sales", path: "/sales" },
 ];
 
-/** Full-page create forms hide the tab bar on phones, as in Paper. */
-const CREATE_FORMS = ["/members/new", "/sales/new"];
+/** Full-page create and edit forms hide the tab bar on phones, as in Paper. */
+const CREATE_FORMS = ["/members/new", "/sales/new", "/programs/new"];
+const EDIT_FORM = /^\/programs\/[^/]+\/edit$/;
 
 /** The tab that owns a page. Pages reached from More select More. */
 export function ownerTab(pathname: string, slug: string): string {
@@ -25,7 +26,7 @@ export function ownerTab(pathname: string, slug: string): string {
 
 export function hidesTabBar(pathname: string, slug: string): boolean {
   const rest = pathname.replace(/\/$/, "").slice(`/${slug}`.length);
-  return CREATE_FORMS.includes(rest);
+  return CREATE_FORMS.includes(rest) || EDIT_FORM.test(rest);
 }
 
 /**
