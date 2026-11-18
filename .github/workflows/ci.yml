@@ -1,9 +1,17 @@
 name: CI
 
+# Skip CI when a change touches only documentation. No check reads these files.
+# Never add apps/server/openapi.yaml here: it is the API contract.
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 permissions:
   contents: read

@@ -30,7 +30,7 @@ There is no staging environment yet. Production is the only deployed environment
 
 | Workflow | Trigger | Does |
 | --- | --- | --- |
-| `ci.yml` | Pull request, push to `master` | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
+| `ci.yml` | Pull request, push to `master`. Skipped when only `docs/**` or `*.md` files change. | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
 | `preview.yml` | PR with the `preview` label | Builds every app from the PR. Uploads portal and site Worker preview versions. No secrets in the build job. |
 | `release.yml` | Push of a `v*` tag | Runs CI, builds each app once, publishes the server image, writes the release manifest, creates one GitHub Release. Deploys nothing. |
 | `deploy.yml` | Manual: tag, apps | Approval, database backup, migration, server start, smoke test, then web sites. |
