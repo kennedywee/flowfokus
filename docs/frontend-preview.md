@@ -30,6 +30,12 @@ status colors, and centered page column.
 - Settings, Organization and Locations: the time zone, gym site publication,
   and locations, from Rails. Staff with `settings:manage` change them. The
   name comes from WorkOS. The currency is fixed.
+- Reports: weekly sales, payments, refunds, check-ins, and new members from
+  `/staff/report`, in the organization time zone. Period and metric filters, a
+  breakdown by location and payment method, and CSV export of the shown weeks.
+- Settings, Team: staff, pending invitations, and roles, through Rails and
+  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
+  access.
 
 `apps/portal/src/lib/staff.functions.ts` holds the server functions for these
 screens. They call Rails through the existing server boundary. The browser never
@@ -41,12 +47,6 @@ These actions persist in PostgreSQL, including during local demo development.
 - Inbox: filter, read, resolve, and reopen sample updates.
 - Agents: suggested prompts, prepared replies, and message drafts. No AI service
   is called and no message is sent.
-- Reports: weekly sales, payments, refunds, check-ins, and new members from
-  `/staff/report`, in the organization time zone. Period and metric filters, a
-  breakdown by location and payment method, and CSV export of the shown weeks.
-- Settings, Team: staff, pending invitations, and roles, through Rails and
-  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
-  access.
 - Settings, Notifications and Integrations: sample notification switches and
   integration states. Edits do not update Rails or contact external systems.
 - Changelog: static notes for the preview and portal layout.
