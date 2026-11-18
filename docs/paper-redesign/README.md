@@ -60,7 +60,7 @@ desktop frame.
   left, Search and Display on the right. Clicking a chip's operator toggles
   "is" ↔ "is not" ("is any of" ↔ "is none of").
 - Toasts stack in the Sonner model: newest in front, at most 3 visible, hover
-  expands, 4s, errors stay until closed, bottom centre, 440px wide.
+  expands, 4s, errors stay until closed, bottom right (24px in), 440px wide.
 - The Paper file starts with three component pages: Components — Core,
   Components — Complex, Components — Data. They are the reference for parts.
 - Product model (decided 18 Nov 2026): Paper's surface on Rails' model. Staff
