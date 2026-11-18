@@ -526,3 +526,47 @@ top of the programs pieces). They show only Rails data:
   can buy and member tags, a desk or online channel beyond the gym site,
   product-level locations, pass credits and "valid from first use", and
   Sold or Last 30 days counts.
+
+Settings and the sign-in screens are the last redesigned screens
+(`features/settings/`: `General.tsx`, `Locations.tsx`, `Staff.tsx`,
+`Roles.tsx`, the sidebar in `SettingsNav.tsx`, the page frame in
+`SettingsPage.tsx`; rules in `facts.ts`, `team.ts`, `abilities.ts`, and
+`sections.ts`; styles in `styles/settings.css`). They show only Rails data:
+
+- The settings sidebar replaces the page list: Back to app, the organization's
+  General, Locations, and Staff, then Notifications and Integrations under
+  "Samples" (`features/preview/SettingsSamples.tsx`, with the Sample data
+  pill). Section icons show on the rail only. The breadcrumb is the
+  organization, then Settings, with no location switcher. ⌘, opens Settings.
+  Old `?section=` links still work. Phones get a section list and "‹ Settings".
+- General: the name and currency as text, the gym site address
+  (`<slug>.flowfokus.com`) with a Public switch, and the time zone. Changes wait
+  in Paper's save bar (what changed, Discard, Save changes); leaving asks to
+  discard. Roles without settings:manage see the values and the lock line.
+- Locations: pin, name, address, and a chevron. A row opens the edit dialog
+  (no detail page). New location in the top bar. A taken name reads "Another
+  location is already called Bangsar". No remove: Rails keeps every location.
+- Staff: name and email, role, and status ("Active", or a coloured icon with
+  grey text for "Not synced yet" and "Inactive"). Invitations show "Invite
+  expires …" in warning colour and "Not joined". A pending member with an
+  invitation for the same email shows once, as the invitation. The ⋯ menu
+  holds Role (only roles the viewer may grant) and Remove access…; an
+  invitation's ⋯ holds Revoke invitation. Rails' `manageable` decides the ⋯.
+  Toasts use Paper's words ("This can take a few minutes"). A refusal never
+  shows Rails' text, which can name permission codes: `team.ts` maps it to a
+  staff sentence and reloads the list when it is out of date.
+- Roles: a table of what each role can do. Columns and ticks come from the
+  WorkOS roles in `/staff/team`; `abilities.ts` only names groups of
+  permissions. It needs staff:manage, like the staff list.
+- Sign-in card (`components/Blocked.tsx`): the mark, a 16px title, one
+  message (a red or amber icon for errors and warnings), one dark 36px
+  button, and the account line with an underlined Sign out (still a POST
+  form). The portal start sends staff to the WorkOS sign-in page; there is no
+  password form in the portal. Staff access is turned off shows one plain
+  message for every reason. `__root.tsx` has Page not found and the app error
+  screen ("Something went wrong", Reload).
+- Not shown, because Rails has no data for them: logo, editable name,
+  contact email, week start, member ID prefix, location hours and counts,
+  removing a location, staff last active and locations, the day an invite was
+  sent, resend invitation, role descriptions, and the Payments, Booking rules,
+  and Profile screens.

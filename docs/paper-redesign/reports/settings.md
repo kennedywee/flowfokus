@@ -135,19 +135,35 @@ Sign in (cloned from "Sign in"; same card, logo, title, and dark button):
 
 ## 4. Needs app or Rails work
 
-Settings shown in Paper that the app lacks:
+Settings shown in Paper that the app lacks.
+
+Build status, 18 November 2026: **Built** means the portal does it now.
+**Needs Rails** means it waits on Rails data; the portal does not fake it.
+The decisions of 18 Nov 2026 apply: the app's three roles (Owner, Manager,
+Receptionist), the WorkOS sign-in page, location rows that open the edit
+dialog, and a status mark for members who are not active.
 
 - General: logo, editable name (Rails has no name update), contact email, week start, member ID prefix. The app's gym site address is `<slug>.flowfokus.com`; Paper shows `.flowfokus.app`.
+  Status: Built for what Rails stores: the name and currency as text, the gym site address (`<slug>.flowfokus.com`, as the app has it) with Paper's Public switch, and the time zone, behind Paper's save bar. Logo, editable name, contact email, week start, and member ID prefix need Rails.
 - Locations: open hours, home member count, staff count, a location detail page (Paper rows have chevrons), and removing a location.
+  Status: Built for the list (pin, name, address, chevron, count), New location, and the edit dialog, which a row opens (decision: no detail page). Open hours, counts, and removing a location need Rails.
 - Staff: last active, locations per staff member, "Invite sent 2 days ago" (the app shows the expiry date), the role menu in ⋯ (the app uses a select), resend invitation, and locations in the invite.
+  Status: Built for the role menu in ⋯ (Role with a check, then Remove access…), revoke in the invitation's ⋯, and the pending invitation with "Invite expires 21 Nov" in warning colour. Rails gives the expiry, not the day the invite was sent. A Status column holds "Active", or Paper's status style for "Not synced yet" and "Inactive". Last active, staff locations, resend invitation, and locations in the invite need Rails.
 - Roles: Paper's four roles and its permission table (see Conflicts). The app has no Roles view.
+  Status: Built with the app's three roles. Roles opens from the Staff top bar. Its columns and ticks come live from the WorkOS roles that Rails returns with the staff list, so nothing is hard-coded per role. Rows name groups of permissions in staff words ("Refund and void sales"); "Some" marks a role that holds part of a group. Only staff who can manage staff see it.
 - Invite staff: role descriptions on the role cards; locations field.
+  Status: Built for the email and Paper's role cards, offering only the roles the viewer may grant. Role descriptions and the locations field need Rails.
 - Payments, Booking rules, Profile: whole screens.
+  Status: Needs Rails. They are not in the settings sidebar.
 - Settings navigation: the app uses section tabs (Organization, Locations, Team, Notifications, Integrations). Paper uses a settings sidebar with Back to app. Organization → General, Team → Staff.
+  Status: Built. Each section has its own address (`/settings/general`, `/locations`, `/staff`, `/roles`). Old `?section=Organization` and `?section=Team` links still open General and Staff. ⌘, opens Settings. The location switcher's Manage locations opens Locations. Phones get a section list and a "‹ Settings" back link.
 - Sample data in the app today: **Notifications** and **Integrations** are sample screens with a "Sample data" pill. Nothing is saved or sent. Paper has no frame for them (Profile has "Email me when").
+  Status: Built. They live in `features/preview/SettingsSamples.tsx`, under "Samples" after the real sections, with the pill and a note.
 - App error screen: `__root.tsx` has a not-found screen but no error screen.
+  Status: Built: "Something went wrong" with Reload, in the sign-in card.
 - A refused role change should reload the list or say to reload; today the app shows the Rails message.
-- Copy to fix in the app:
+  Status: Built. The toast says "Role not changed. Daniel's access changed elsewhere. Reload the page." and the list reloads.
+- Copy to fix in the app (all built):
   - AccessUnavailable texts name env vars and WorkOS settings. Staff need the plain text drawn in Paper.
   - "Only staff with staff:manage can see the team" names a permission code.
   - "Your role can view these settings but not change them" → the Paper line.
@@ -156,6 +172,8 @@ Settings shown in Paper that the app lacks:
   - Location name taken returns "has already been taken"; Paper says "Another location is already called Bangsar".
   - The invite sent toast names WorkOS.
   - "Cannot open" shows the same text for a missing organization and a server failure; Paper uses one line that covers both.
+- Sign-in pages.
+  Status: Built. The portal start, Did not finish, Choose organization, No staff access, Organizations did not load, Staff access is turned off, Cannot open, and Page not found all use Paper's sign-in card. Sign in goes to the WorkOS sign-in page; the portal has no password form (decision of 18 Nov 2026).
 
 ## 5. Open questions
 
