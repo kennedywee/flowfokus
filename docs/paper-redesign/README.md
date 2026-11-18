@@ -43,6 +43,26 @@ desktop frame.
   full-page create forms use a bar at the bottom with no tab bar.
 - A ticket sale can buy several spots in one session.
 - Figtree only, with tabular figures for numbers.
+- Design system (decided 18 Nov 2026):
+  - Two font weights: 400 for body text, 500 for headings and emphasis.
+  - Greys come from the Tailwind CSS neutral palette. Paper tokens:
+    `--muted` neutral-50, `--accent` neutral-100, `--border` neutral-200,
+    `--subtle-foreground` neutral-500 (field borders, 3:1), `--muted-foreground`
+    neutral-600, `--foreground` and `--primary` neutral-800.
+  - Radius is 8px for controls and 12px for floating surfaces (menus, dialogs,
+    toasts, panels, cards). Only circles and 16px checkboxes (4px) differ.
+  - Icons: Hugeicons Solid is the wish, but it needs a Pro licence. Icons stay
+    as they are until the owner decides.
+- Layout (decided 18 Nov 2026): all page content shares one left edge with the
+  title. Grey bands and table headers do not hang outside the column; their
+  text sits 12px inside, and rows below have 12px side padding to match.
+- Every data table uses the standard toolbar: Filter and filter chips on the
+  left, Search and Display on the right. Clicking a chip's operator toggles
+  "is" ↔ "is not" ("is any of" ↔ "is none of").
+- Toasts stack in the Sonner model: newest in front, at most 3 visible, hover
+  expands, 4s, errors stay until closed, bottom centre, 440px wide.
+- The Paper file starts with three component pages: Components — Core,
+  Components — Complex, Components — Data. They are the reference for parts.
 - Product model (decided 18 Nov 2026): Paper's surface on Rails' model. Staff
   see one price per product. Underneath it stays a Rails fixed price. Changing
   the price creates a new price, so members keep the price they paid.

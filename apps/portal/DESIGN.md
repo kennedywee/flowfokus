@@ -147,9 +147,10 @@ Layout:
 - Do not use decorative backgrounds. Use grey fills only for interaction states,
   such as the selected nav item or a hovered menu item. The one exception is
   the list section header: a flat light-grey band with rounded corners. It
-  extends 12px past the content on each side, so its title lines up with the
-  rows. The activity feed header has no band, because the comment box below it
-  already marks the start.
+  starts on the content edge, like the page title, and its text sits 12px
+  inside. Rows below it have 12px side padding so their text lines up with the
+  band's. Nothing hangs outside the content column. The activity feed header
+  has no band, because the comment box below it already marks the start.
 - Use neutral colors first. Keep color for small status marks.
 
 Information:
@@ -175,6 +176,11 @@ Styling:
 
 - Use three text sizes: 20px for the page title, 13px for body text and
   headings, and 12px for secondary text. Use weight and grey tone for hierarchy.
+- Use two font weights only: 400 for body text, 500 for headings and emphasis.
+- Take greys from the Tailwind CSS neutral palette (see
+  `docs/paper-redesign/README.md` for the token map).
+- Use an 8px radius on controls and 12px on floating surfaces (menus, dialogs,
+  toasts, panels, cards). Only circles and 16px checkboxes (4px) differ.
 - Put one 16px grey icon on each section title. Keep list rows as plain text.
 - Show status as a colored 16px icon with grey text, such as a green pie for
   "Renews in 29d 16h" and a red pie for "Ends in 27d 23h · Cancelled".
