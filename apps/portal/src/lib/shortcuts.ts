@@ -21,7 +21,7 @@ function overlayOpen(): boolean {
 export function useShortcut(
   key: string,
   handler: () => void,
-  { mod = false, enabled = true }: { mod?: boolean; enabled?: boolean } = {},
+  { mod = false, shift = false, enabled = true }: { mod?: boolean; shift?: boolean; enabled?: boolean } = {},
 ) {
   // The latest handler, so a new closure does not re-register the listener.
   const latest = useRef(handler);
@@ -35,8 +35,9 @@ export function useShortcut(
       if (mod) {
         if (!modPressed || event.altKey || event.shiftKey) return;
       } else {
-        // Shift is part of keys such as "?", so it only blocks letters.
-        if (modPressed || event.altKey || (event.shiftKey && /^[a-z]$/i.test(key))) return;
+        // Shift is part of keys such as "?", so it only blocks letters. A shift shortcut (⇧P) needs it.
+        const shiftWrong = shift ? !event.shiftKey : event.shiftKey && /^[a-z]$/i.test(key);
+        if (modPressed || event.altKey || shiftWrong) return;
         if (isEditable(event.target) || overlayOpen()) return;
       }
       event.preventDefault();
@@ -44,7 +45,7 @@ export function useShortcut(
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [key, mod, enabled]);
+  }, [key, mod, shift, enabled]);
 }
 
 const noSubscribe = () => () => {};

@@ -19,6 +19,7 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
     can("members:read") ? "Members" : null,
     can("purchases:read") ? "Sales" : null,
     can("check_ins:read") ? "Check-ins" : null,
+    can("programs:read") ? "Programs" : null,
   ].filter((name): name is string => name !== null);
   const groups: ShortcutGroup[] = [
     {
@@ -47,6 +48,17 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
         ? [
             ...(can("payments:create") ? [{ keys: ["P"], label: "Record payment" }] : []),
             ...(can("purchases:fulfill") ? [{ keys: ["F"], label: "Fulfill" }] : []),
+          ]
+        : [],
+    },
+    {
+      title: "Program page",
+      items: can("programs:read")
+        ? [
+            ...(can("programs:manage") ? [{ keys: ["T"], label: "Add sessions" }] : []),
+            ...(can("purchases:create") ? [{ keys: ["S"], label: "Sell ticket" }] : []),
+            ...(can("bookings:create") || can("purchases:create") ? [{ keys: ["B"], label: "Book member" }] : []),
+            ...(can("programs:manage") ? [{ keys: ["⇧P"], label: "Publish or make staff only" }] : []),
           ]
         : [],
     },

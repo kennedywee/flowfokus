@@ -37,13 +37,29 @@ const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as con
 
 type Choice = { kind: "right"; id: string } | { kind: "price"; id: string };
 
+/** What the dialog needs to know about a session. A roster and a program's sessions both have it. */
+export type BookingSession = Pick<Schemas["Occurrence"], "id" | "starts_at" | "spots_left">;
+
 /**
  * Paper "Book member": choose the member, then one choice: a pass or
  * membership they hold, or a ticket for this session. A ticket can buy several
  * spots; each other spot is a member or a named guest. After a ticket sale the
  * page stays on the session and the toast opens the sale.
  */
-export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"]; onClose: () => void }) {
+export function BookMemberDialog({
+  roster: fixed,
+  sessions = [],
+  mode = "book",
+  onClose,
+}: {
+  /** The session to book. Omit it and pass `sessions` to choose one in the dialog. */
+  roster?: BookingSession;
+  /** Sessions to choose from, when the dialog starts from a program. */
+  sessions?: BookingSession[];
+  /** "sell" opens Paper's Sell ticket: tickets only, no passes. */
+  mode?: "book" | "sell";
+  onClose: () => void;
+}) {
   const organization = useOrganization();
   const desk = useDeskLocation();
   const can = useCan();
@@ -53,8 +69,10 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
   const options = useAction(loadOptions);
   const booking = useAction(sendBooking);
   const sale = useAction(sendSale);
-  const canBook = can("bookings:create");
+  const canBook = can("bookings:create") && mode === "book";
   const canSell = can("purchases:create");
+  const [sessionId, setSessionId] = useState(() => fixed?.id ?? sessions[0]?.id ?? "");
+  const roster = fixed ?? sessions.find((session) => session.id === sessionId) ?? sessions[0]!;
 
   const [member, setMember] = useState<Schemas["Member"] | null>(null);
   const [choice, setChoice] = useState<Choice | null>(null);
@@ -76,7 +94,7 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
   const chosenPrice = choice?.kind === "price" ? prices.find((price) => price.id === choice.id) : undefined;
   const blocked = full || !!loaded?.booking;
 
-  async function choose(next: Schemas["Member"] | null) {
+  async function choose(next: Schemas["Member"] | null, occurrenceId: string = roster.id) {
     setMember(next);
     setChoice(null);
     setSpots([]);
@@ -87,7 +105,7 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
     options.reset();
     if (!next) return;
     requestAnimationFrame(() => changeRef.current?.focus());
-    const result = await options.run({ slug: organization.slug, id: roster.id, memberId: next.id });
+    const result = await options.run({ slug: organization.slug, id: occurrenceId, memberId: next.id });
     if (!result.ok) return;
     // Start on the first pass, as in Paper; otherwise the first ticket price.
     const firstRight = canBook ? result.data.rights[0] : undefined;
@@ -144,15 +162,17 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
   const label = chosenRight ? `Book with ${chosenRight.name}` : chosenPrice ? sellLabel(chosenPrice, count) : "Book";
   return (
     <SaleDialog
-      title="Book member"
+      title={mode === "sell" ? "Sell ticket" : "Book member"}
       wide
       className="book-dialog"
       meta={
+        fixed ? (
         <span className="book-dialog__meta" data-full={full || undefined}>
           {full ? <span className="book-dialog__dot" aria-hidden="true" /> : null}
           {sessionName(roster.starts_at, organization.timezone)} ·{" "}
           {full ? "Full" : roster.spots_left === 1 ? "1 spot left" : `${roster.spots_left} spots left`}
         </span>
+        ) : undefined
       }
       pending={pending}
       onClose={onClose}
@@ -170,6 +190,30 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
         </SubmitButton>
       )}
     >
+      {fixed ? null : (
+        <div className="book-dialog__group">
+          <label className="book-dialog__label" htmlFor="book-session">
+            Session
+          </label>
+          <NativeSelect
+            id="book-session"
+            className="sale-input"
+            value={roster.id}
+            disabled={pending}
+            onChange={(event) => {
+              setSessionId(event.target.value);
+              // The member's passes and an existing booking depend on the session.
+              if (member) void choose(member, event.target.value);
+            }}
+          >
+            {sessions.map((session) => (
+              <NativeSelectOption key={session.id} value={session.id}>
+                {sessionName(session.starts_at, organization.timezone)} · {spotsLeftText(session.spots_left)}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
       <div className="book-dialog__group">
         <span className="book-dialog__label" id="book-member-label">
           Member
@@ -309,6 +353,11 @@ export function BookMemberDialog({ roster, onClose }: { roster: Schemas["Roster"
       ) : null}
     </SaleDialog>
   );
+}
+
+function spotsLeftText(left: number): string {
+  if (left === 0) return "Full";
+  return left === 1 ? "1 spot left" : `${left} spots left`;
 }
 
 /** Step 1: Rails searches name and email as staff type. */

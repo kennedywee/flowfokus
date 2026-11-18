@@ -34,6 +34,7 @@ import { Route as OrgSalesSaleIdRouteImport } from './routes/$org/sales/$saleId'
 import { Route as OrgSalesNewRouteImport } from './routes/$org/sales/new'
 import { Route as OrgScheduleIndexRouteImport } from './routes/$org/schedule/index'
 import { Route as OrgScheduleOccurrenceIdRouteImport } from './routes/$org/schedule/$occurrenceId'
+import { Route as OrgProgramsProgramIdEditRouteImport } from './routes/$org/programs/$programId_.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -160,6 +161,12 @@ const OrgScheduleOccurrenceIdRoute = OrgScheduleOccurrenceIdRouteImport.update({
   path: '/schedule/$occurrenceId',
   getParentRoute: () => OrgRouteRoute,
 } as any)
+const OrgProgramsProgramIdEditRoute =
+  OrgProgramsProgramIdEditRouteImport.update({
+    id: '/programs/$programId_/edit',
+    path: '/programs/$programId/edit',
+    getParentRoute: () => OrgRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
   '/$org/schedule/': typeof OrgScheduleIndexRoute
+  '/$org/programs/$programId/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/$org/programs': typeof OrgProgramsIndexRoute
   '/$org/sales': typeof OrgSalesIndexRoute
   '/$org/schedule': typeof OrgScheduleIndexRoute
+  '/$org/programs/$programId/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/$org/programs/': typeof OrgProgramsIndexRoute
   '/$org/sales/': typeof OrgSalesIndexRoute
   '/$org/schedule/': typeof OrgScheduleIndexRoute
+  '/$org/programs/$programId_/edit': typeof OrgProgramsProgramIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/$org/programs/'
     | '/$org/sales/'
     | '/$org/schedule/'
+    | '/$org/programs/$programId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/$org/programs'
     | '/$org/sales'
     | '/$org/schedule'
+    | '/$org/programs/$programId/edit'
   id:
     | '__root__'
     | '/'
@@ -323,6 +335,7 @@ export interface FileRouteTypes {
     | '/$org/programs/'
     | '/$org/sales/'
     | '/$org/schedule/'
+    | '/$org/programs/$programId_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -510,6 +523,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgScheduleOccurrenceIdRouteImport
       parentRoute: typeof OrgRouteRoute
     }
+    '/$org/programs/$programId_/edit': {
+      id: '/$org/programs/$programId_/edit'
+      path: '/programs/$programId/edit'
+      fullPath: '/$org/programs/$programId/edit'
+      preLoaderRoute: typeof OrgProgramsProgramIdEditRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
   }
 }
 
@@ -534,6 +554,7 @@ interface OrgRouteRouteChildren {
   OrgProgramsIndexRoute: typeof OrgProgramsIndexRoute
   OrgSalesIndexRoute: typeof OrgSalesIndexRoute
   OrgScheduleIndexRoute: typeof OrgScheduleIndexRoute
+  OrgProgramsProgramIdEditRoute: typeof OrgProgramsProgramIdEditRoute
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
@@ -557,6 +578,7 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgProgramsIndexRoute: OrgProgramsIndexRoute,
   OrgSalesIndexRoute: OrgSalesIndexRoute,
   OrgScheduleIndexRoute: OrgScheduleIndexRoute,
+  OrgProgramsProgramIdEditRoute: OrgProgramsProgramIdEditRoute,
 }
 
 const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(

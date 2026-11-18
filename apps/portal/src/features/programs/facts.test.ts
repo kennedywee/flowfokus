@@ -15,11 +15,13 @@ import {
   lengthText,
   planSummary,
   priceState,
+  pricesOnSale,
   programCounts,
   programsRange,
   readProgramsSearch,
   sessionsAdded,
   siteScheduleUrl,
+  ticketPrices,
   todayIn,
   upcomingText,
   type ProgramDraft,
@@ -95,6 +97,22 @@ describe("program page", () => {
     expect(priceState({ available: true, archived_at: null })).toBe("on_sale");
     expect(priceState({ available: false, archived_at: null })).toBe("off_sale");
     expect(priceState({ available: false, archived_at: "2026-11-01T00:00:00Z" })).toBe("archived");
+  });
+
+  test("lists ticket prices by name and sells only those on sale", () => {
+    const price = (label: string, available: boolean, archived_at: string | null = null) => ({
+      id: label,
+      label,
+      amount_minor: 2500,
+      currency: "MYR",
+      duration_days: null,
+      available,
+      archived_at,
+    });
+    const program = { ticket: { product_id: "t", prices: [price("Member guest", false), price("drop-in", true), price("Early bird", false, "2026-11-01T00:00:00Z")] } };
+    expect(ticketPrices(program).map((item) => item.label)).toEqual(["drop-in", "Early bird", "Member guest"]);
+    expect(pricesOnSale(program).map((item) => item.label)).toEqual(["drop-in"]);
+    expect(pricesOnSale({ ticket: null })).toEqual([]);
   });
 
   test("links to the gym site schedule", () => {

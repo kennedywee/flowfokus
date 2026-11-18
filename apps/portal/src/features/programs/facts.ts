@@ -120,6 +120,11 @@ export function bookableSessions(occurrences: Schemas["Occurrence"][]): Schemas[
   return occurrences.filter((occurrence) => occurrence.bookable);
 }
 
+/** Ticket prices by name, so a change of state does not move a row. */
+export function ticketPrices(program: Pick<Schemas["ProgramDetail"], "ticket">): Schemas["Price"][] {
+  return [...(program.ticket?.prices ?? [])].sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" }));
+}
+
 /** Ticket prices staff can sell now. */
 export function pricesOnSale(program: Pick<Schemas["ProgramDetail"], "ticket">): Schemas["Price"][] {
   return (program.ticket?.prices ?? []).filter((price) => priceState(price) === "on_sale");
