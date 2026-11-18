@@ -7,6 +7,8 @@ where Paper and the app differ, the app changes.
 - `brief.md` holds the rules every design agent followed.
 - `reports/` has one report per set: coverage, what was added, conflicts, the
   build list ("Needs app or Rails work"), and open questions.
+- `rails-gaps.md` lists what Paper shows and Rails cannot supply yet. It is
+  the input for the Rails work.
 - `reviews/` has the independent review of each set. Each report ends with a
   "Review fixes" section that answers its review.
 

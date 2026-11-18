@@ -316,3 +316,28 @@ account items are gone. No business records were changed by these browser checks
 Backend specs and the full payment, delivery, and override flows were not rerun.
 No Rails code, database schema, API contract, or authentication rules changed.
 Nothing was pushed or deployed.
+
+## Portal redesign from Paper — 18 November 2026
+
+Every staff portal screen except Reports now follows the Paper file "Flowfokus
+Redesign": shell and chrome, Home, Members, Member details, New member, Sales,
+Sale details, New sale, Check-ins, Schedule, Session details, Programs, Program
+details, New and Edit program, Products, Product details, New and Edit product,
+Settings, and the sign-in screens. Reports waits for its Rails endpoints.
+
+The only Rails change was wording: three staff-facing messages now say
+"fulfilled". No schema, OpenAPI contract, WorkOS role, or authentication rule
+changed. Sign-in still uses the WorkOS page.
+
+Passed on master after the last slice: 360 Rails specs, 260 portal and 56 site
+tests, type checks, the design token check, the portal build, and
+`smoke:session`. Each slice was also checked in the running Docker stack with
+headless Chromium at 1440 and 390 pixels, in light and dark, through the real
+flows it changed. The build still shows the known CSS source-map warning.
+
+Not verified: real touch devices, screen readers, real WorkOS, forced server
+failures for most "did not load" states, and roles the local data lacks.
+Local test records from these checks remain in the development database.
+
+What Paper shows and Rails cannot supply yet is listed in
+[Rails gaps](paper-redesign/rails-gaps.md).
