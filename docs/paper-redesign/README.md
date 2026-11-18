@@ -41,19 +41,20 @@ desktop frame.
   full-page create forms use a bar at the bottom with no tab bar.
 - A ticket sale can buy several spots in one session.
 - Figtree only, with tabular figures for numbers.
+- Product model (decided 18 Nov 2026): Paper's surface on Rails' model. Staff
+  see one price per product. Underneath it stays a Rails fixed price. Changing
+  the price creates a new price, so members keep the price they paid.
+- Roles (decided 18 Nov 2026): the app's three roles for now: Owner, Manager,
+  Receptionist. Coach and the "Front desk" name wait for WorkOS and Rails work.
+- Sign-in (decided 18 Nov 2026): the WorkOS sign-in page, not a form in the
+  portal. Passwords never reach our app.
+- Reports (decided 18 Nov 2026): not rebuilt in the portal-only pass. Build the
+  report list and pages together with their Rails endpoints.
 
 ## Decisions the user still owes
 
 Each report explains its items. Until they are decided, the frames follow Paper.
 
-1. **Product model.** One price per product (Paper) or several fixed prices
-   and benefits (Rails). Recommended: Paper's surface on Rails' fixed prices.
-   Also: do renewing members move to a new price or keep the one they paid?
-   (`reports/products.md`)
-2. **Role model.** Owner, Manager, Front desk, Coach (Paper) or Owner,
-   Manager, Receptionist (app). Can a Manager manage staff? (`reports/settings.md`)
-3. **Sign-in.** A form in the portal (Paper) or the identity provider's page
-   (app). (`reports/settings.md`)
 4. **Card, e-wallet, and online payments.** In the design or not.
    (`reports/home.md`, `reports/reports.md`)
 5. **Tickets that cover several sessions** ("All sessions", "Pack").
