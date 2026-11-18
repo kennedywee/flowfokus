@@ -1162,8 +1162,8 @@
     transform: none;
     visibility: visible;
   }
-  .sidebar__close,
-  .nav-toggle {
+  /* More in the tab bar opens the drawer, so the top bar has no menu button. */
+  .sidebar__close {
     display: inline-flex;
   }
   /* The drawer is always the full sidebar, so it has no rail button. */
@@ -1186,7 +1186,64 @@
     width: calc(100vw - 24px);
   }
   .main {
-    padding: var(--space-4) var(--space-4) 48px;
+    padding: var(--space-4) var(--space-4) calc(var(--tab-bar-height) + env(safe-area-inset-bottom) + 32px);
+  }
+  /*
+   * Paper's phone app bar: the organization as its letter tile, the location
+   * name, then Search as a 36px icon button.
+   */
+  .topbar {
+    padding-inline: var(--space-4) var(--space-2);
+  }
+  .topbar__context .switcher__button[data-strong="true"] .switcher__current,
+  .topbar__context .switcher__button[data-strong="true"] .switcher__chevron,
+  .topbar__slash,
+  .topbar__context .switcher__icon:not(:has(.org-tile)) {
+    display: none;
+  }
+  .topbar__context .switcher__button[data-strong="true"] {
+    padding-inline: 2px;
+  }
+  .topbar__context .org-tile {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+  .topbar__context .switcher__button:not([data-strong="true"]) {
+    font-size: 14px;
+    font-weight: var(--font-weight-semibold);
+  }
+  .topbar .topbar__search.button--compact.button--secondary {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    box-shadow: none;
+    background: transparent;
+  }
+  .topbar__search svg {
+    width: 18px;
+    height: 18px;
+  }
+  .topbar__search .kbd {
+    display: none;
+  }
+  .topbar .topbar__search.button--compact.button--secondary:hover {
+    background: var(--color-hover);
+    border-color: transparent;
+  }
+  .tab-bar {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    height: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+    padding-top: 8px;
+    border-top: 1px solid var(--color-line);
+    background: var(--color-page);
   }
   .page {
     gap: var(--space-5);
@@ -1262,4 +1319,63 @@
 /* The sheet lists keys, so it shows them on touch screens too. */
 .shortcuts-dialog .kbd {
   display: inline-flex;
+}
+
+/*
+ * Paper's phone tab bar (components/TabBar.tsx). Hidden from 768px. The
+ * selected tab is ink; the others are grey. Check in is a dark pill on every
+ * screen, as in Paper. Each tab is at least 44px tall to tap.
+ */
+@media (min-width: 768px) {
+  .tab-bar {
+    display: none;
+  }
+}
+.tab-bar__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 64px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-ink-3);
+  font: inherit;
+  font-size: 11px;
+  font-weight: var(--font-weight-medium);
+  line-height: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tab-bar__tab[aria-current="page"],
+.tab-bar__tab[data-current],
+.tab-bar__tab[data-check-in] {
+  color: var(--color-ink);
+}
+.tab-bar__tab:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+.tab-bar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+}
+.tab-bar__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.tab-bar__tab[data-check-in] .tab-bar__icon {
+  width: 44px;
+  border-radius: 15px;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+}
+.tab-bar__tab[data-check-in] .tab-bar__icon svg {
+  width: 18px;
+  height: 18px;
 }

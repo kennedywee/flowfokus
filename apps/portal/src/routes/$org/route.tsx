@@ -49,6 +49,7 @@ import { KeyboardShortcuts } from "../../components/KeyboardShortcuts";
 import { useCheckIn } from "../../features/check-ins/CheckInFlow";
 import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
+import { TabBar } from "../../components/TabBar";
 import { useToast } from "../../components/Toast";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
@@ -408,6 +409,7 @@ function Shell({
             <Outlet />
           </PageActionsSlot.Provider>
         </main>
+        <TabBar slug={data.slug} />
       </SidebarInset>
       <KeyboardShortcuts open={shortcuts} onOpenChange={setShortcuts} />
       <CommandMenu

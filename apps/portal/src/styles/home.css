@@ -375,7 +375,8 @@ a.home-row:focus-visible {
   .home-row--attention .home-row__tile {
     display: none;
   }
-  .home-band__count {
+  .home-band__count,
+  .home-band svg {
     display: none;
   }
   .home-empty {
