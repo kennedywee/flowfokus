@@ -7,8 +7,8 @@ where Paper and the app differ, the app changes.
 - `brief.md` holds the rules every design agent followed.
 - `reports/` has one report per set: coverage, what was added, conflicts, the
   build list ("Needs app or Rails work"), and open questions.
-- `rails-gaps.md` lists what Paper shows and Rails cannot supply yet. It is
-  the input for the Rails work.
+- `rails-gaps.md` links to the GitHub issues for what Paper shows and Rails
+  cannot supply yet. The issues are the input for the Rails work.
 - `reviews/` has the independent review of each set. Each report ends with a
   "Review fixes" section that answers its review.
 
@@ -80,25 +80,22 @@ desktop frame.
 
 ## Decisions the user still owes
 
-Each report explains its items. Until they are decided, the frames follow Paper.
+Each decision is a GitHub issue. Its report explains the detail. Until they are
+decided, the frames follow Paper. The numbers 4 to 10 are the names the reports
+use.
 
-4. **Card, e-wallet, and online payments.** In the design or not.
-   (`reports/home.md`, `reports/reports.md`)
-5. **Tickets that cover several sessions** ("All sessions", "Pack").
-   (`reports/programs.md`)
-6. **Check-in rules:** off-peak hours, walk-ins, and a booking counting as
-   access. (`reports/check-ins.md`)
-7. **Cancel session needs a reason** (proposed frame beside the original), and
-   "Also end access" on Refund. (`reports/schedule.md`, `reports/members-sales.md`)
-8. **Email** required or optional on New member. Rails requires it.
-   (`reports/members-sales.md`)
-9. **Status words.** "Partly paid", "Awaiting payment", "Access ended" (Paper)
-   or "Part paid", "Unpaid", "Access revoked" (app). The originals also
-   disagree with each other in places. (`reports/members-sales.md`)
-10. **Slips in original frames:** two Reports totals that do not add up, two
-    Products frames that sit on top of each other, a Product details feed out
-    of time order, and statuses drawn with two dot colours.
-    (`reports/reports.md`, `reports/products.md`, `reviews/phone.md`)
+| No. | Decision | Issue |
+| --- | --- | --- |
+| 4 | Card, e-wallet, and online payments | [#9](https://github.com/kennedywee/flowfokus/issues/9) |
+| 5 | Tickets that cover several sessions | [#10](https://github.com/kennedywee/flowfokus/issues/10) |
+| 6 | Check-in rules: access hours, walk-ins, bookings as access | [#11](https://github.com/kennedywee/flowfokus/issues/11) |
+| 7 | A reason for Cancel session, and "Also end access" on Refund | [#12](https://github.com/kennedywee/flowfokus/issues/12) |
+| 8 | Email required or optional on New member | [#13](https://github.com/kennedywee/flowfokus/issues/13) |
+| 9 | Status words for sales and access | [#14](https://github.com/kennedywee/flowfokus/issues/14) |
+| 10 | Slips in the original frames | [#15](https://github.com/kennedywee/flowfokus/issues/15) |
+| | The Hugeicons Pro licence | [#16](https://github.com/kennedywee/flowfokus/issues/16) |
+
+When a decision is made, record it under "Settled" and close its issue.
 
 ## Building from this
 

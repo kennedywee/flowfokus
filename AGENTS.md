@@ -7,6 +7,7 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 - Use short sentences and familiar words. Prefer active voice.
 - Each topic has one home document. Link to it instead of repeating it.
 - When a decision changes, update its home document and `docs/decisions.md` together.
+- Track work to do in GitHub issues. Do not add task lists to the docs. Docs hold agreed rules, decisions, and verification records.
 
 ## Git
 
