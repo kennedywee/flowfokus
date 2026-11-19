@@ -176,6 +176,10 @@ a.home-row:focus-visible {
   width: 14px;
   height: 14px;
 }
+/* A finished first-run step: the green check. */
+.home-row__tile[data-done] {
+  color: var(--color-good);
+}
 .home-row__tile--skeleton {
   border: none;
 }

@@ -1,10 +1,10 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ArrowRight, CalendarDays, ChevronRight, CircleAlert, House, MoreHorizontal, Package, UserPlus } from "lucide-react";
+import { ArrowRight, CalendarClock, CalendarDays, Check, ChevronRight, CircleAlert, House, ListChecks, MoreHorizontal, Package, UserPlus } from "lucide-react";
 import { PageActions } from "../../components/PageActions";
 import { Kbd } from "../../components/ui";
-import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
+import { PAYMENT_METHOD_LABEL, PROGRAM_KIND_LABEL, failureMessage, formatMoney } from "../../lib/format";
 import { useCan, useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
 import { useShortcut } from "../../lib/shortcuts";
@@ -18,11 +18,14 @@ import {
   bookingsText,
   checkInsLine,
   checkInsText,
+  salesText,
+  setupSteps,
   todayLabel,
   todaysSessions,
   upNext,
   upNextCount,
   type AttentionItem,
+  type SetupStep,
 } from "./facts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -36,6 +39,8 @@ const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as cons
  * Home: today at the desk location. Up next lists the sessions that have not
  * ended, Needs attention lists the Rails counts that ask for work, and the
  * properties hold today's counts. Check in (C) and Sell (S) start in the top bar.
+ * Set up lists the first-run steps until the organization has done them all.
+ * Rails sends money only to roles with purchases:read.
  */
 export function Home({ overview, schedule }: { overview: Result<Overview>; schedule: Result<Entry[]> }) {
   const organization = useOrganization();
@@ -45,11 +50,30 @@ export function Home({ overview, schedule }: { overview: Result<Overview>; sched
   // A role without programs:read has no sessions to see, so Up next and Bookings stay out.
   const seesSessions = can("programs:read") && !(!schedule.ok && schedule.error.code === "forbidden");
   const today = schedule.ok ? todaysSessions(atLocation(schedule.data, desk?.id ?? null), organization.timezone, now) : [];
+  const steps = overview.ok ? setupSteps(overview.data.setup) : null;
+  const money = overview.ok ? overview.data.money : undefined;
+  const currency = overview.ok ? (overview.data.currency ?? organization.currency) : organization.currency;
 
   return (
     <div className="page home">
       <div className="home__main">
         <HomeHead overview={overview} />
+        {steps ? (
+          <section className="home-section" aria-labelledby="home-setup">
+            <SectionBand id="home-setup" icon={<ListChecks {...icon} />} title="Set up">
+              <span className="home-band__count">
+                {steps.filter((step) => step.done).length} of {steps.length} done
+              </span>
+            </SectionBand>
+            <ul className="home-rows">
+              {steps.map((step) => (
+                <li key={step.key}>
+                  <SetupRow step={step} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {seesSessions ? (
           <section className="home-section" aria-labelledby="home-up-next">
             <SectionBand id="home-up-next" icon={<CalendarDays {...icon} />} title="Up next">
@@ -68,6 +92,15 @@ export function Home({ overview, schedule }: { overview: Result<Overview>; sched
           <h2>Today</h2>
           {overview.ok ? (
             <dl>
+              {money ? (
+                <>
+                  <Property label="Sales">{salesText(money.sales_today, currency)}</Property>
+                  <Property label="Collected">{formatMoney(money.collected_today_minor, currency)}</Property>
+                </>
+              ) : null}
+              {overview.data.new_members_today === undefined ? null : (
+                <Property label="New members">{overview.data.new_members_today}</Property>
+              )}
               <Property label="Check-ins">{checkInsText(overview.data.check_ins_today)}</Property>
               {seesSessions && schedule.ok ? <Property label="Bookings">{bookingsText(today) ?? "No sessions"}</Property> : null}
             </dl>
@@ -78,6 +111,18 @@ export function Home({ overview, schedule }: { overview: Result<Overview>; sched
             </p>
           )}
         </section>
+        {money ? (
+          <section className="home-props__group">
+            <h2>Payments today</h2>
+            <dl>
+              {money.payments_today.map((payment) => (
+                <Property key={payment.method} label={PAYMENT_METHOD_LABEL[payment.method]}>
+                  {formatMoney(payment.amount_minor, currency)}
+                </Property>
+              ))}
+            </dl>
+          </section>
+        ) : null}
       </aside>
     </div>
   );
@@ -270,21 +315,25 @@ function NeedsAttention({ overview }: { overview: Overview }) {
   );
 }
 
-/** Each row opens the sales list with the matching filter, for roles that can read sales. */
+/**
+ * Each sales row opens the sales list with the matching filter, for roles that
+ * can read sales. Memberships that end soon have no list to open yet.
+ */
 function AttentionRow({ item }: { item: AttentionItem }) {
   const organization = useOrganization();
   const can = useCan();
   const content = (
     <>
       <span className="home-row__tile" aria-hidden="true">
-        {item.kind === "balance_due" ? <DueMark /> : <Package {...icon} />}
+        {item.kind === "balance_due" ? <DueMark /> : item.kind === "unfulfilled" ? <Package {...icon} /> : <CalendarClock {...icon} />}
       </span>
       <span className="home-row__text">
         <span className="home-row__title">{item.title}</span>
+        {item.line ? <span className="home-row__line">{item.line}</span> : null}
       </span>
     </>
   );
-  if (!can("purchases:read")) return <div className="home-row home-row--attention">{content}</div>;
+  if (item.kind === "ending" || !can("purchases:read")) return <div className="home-row home-row--attention">{content}</div>;
   return (
     <Link
       to="/$org/sales"
@@ -292,6 +341,46 @@ function AttentionRow({ item }: { item: AttentionItem }) {
       search={item.kind === "balance_due" ? { payment: "unpaid,partial" } : { payment: "paid", fulfillment: "waiting" }}
       className="home-row home-row--attention"
     >
+      {content}
+      <ChevronRight className="home-row__chevron" {...icon} />
+    </Link>
+  );
+}
+
+/** Where each first-run step is done, and the permission its form needs. */
+const SETUP_LINK = {
+  location: { to: "/$org/settings/locations", permission: "settings:manage" },
+  product: { to: "/$org/products/new", permission: "products:create" },
+  member: { to: "/$org/members/new", permission: "members:create" },
+  sale: { to: "/$org/sales/new", permission: "purchases:create" },
+} as const;
+
+/** One first-run step. An open step links to its form, for roles that can do it. */
+function SetupRow({ step }: { step: SetupStep }) {
+  const organization = useOrganization();
+  const can = useCan();
+  const link = SETUP_LINK[step.key];
+  const content = (
+    <>
+      <span className="home-row__tile" data-done={step.done || undefined} aria-hidden="true">
+        {step.done ? <Check {...icon} /> : null}
+      </span>
+      <span className="home-row__text">
+        <span className="home-row__title">{step.title}</span>
+      </span>
+    </>
+  );
+  if (step.done) {
+    return (
+      <div className="home-row home-row--attention" data-past>
+        {content}
+        <span className="visually-hidden">Done</span>
+      </div>
+    );
+  }
+  if (!can(link.permission)) return <div className="home-row home-row--attention">{content}</div>;
+  return (
+    <Link to={link.to} params={{ org: organization.slug }} className="home-row home-row--attention">
       {content}
       <ChevronRight className="home-row__chevron" {...icon} />
     </Link>
@@ -389,7 +478,7 @@ export function HomeLoading() {
         <section className="home-props__group">
           <h2>Today</h2>
           <dl>
-            {["Check-ins", "Bookings"].map((label) => (
+            {[...(can("purchases:read") ? ["Sales", "Collected"] : []), "New members", "Check-ins", "Bookings"].map((label) => (
               <Property key={label} label={label}>
                 <span className="skeleton-line" style={{ width: 80 }} />
               </Property>

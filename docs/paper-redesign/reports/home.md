@@ -141,13 +141,13 @@ Home (Paper's design differs from the current Overview):
 - **Built.** Up next: today's sessions with time, type, trainer, booking fill, and
   "View all 9 sessions". The schedule API supplies them (`days=1`). Waiting lists
   ("Full · 3 waiting") still need Rails.
-- **Partly built.** Needs attention: the two counts show and open the filtered sales
-  list. Still needs Rails: the total due, the oldest sale and its age, names of
-  unfulfilled sales, and memberships that end this week. Rails counts only paid
-  sales as awaiting fulfillment, so the row says "1 paid sale unfulfilled".
-- **Partly built.** Today properties: Check-ins and Bookings ("58 of 96 spots",
-  from the schedule). Still needs Rails: sales total and count, collected, new
-  members, and Payments today by method. The group is left out until then.
+- **Built.** Needs attention: the two counts show and open the filtered sales
+  list, with the total due, the oldest sale's age, and names of unfulfilled
+  sales. Rails counts only paid sales as awaiting fulfillment, so the row says
+  "1 paid sale unfulfilled". Memberships that end count the next 7 days, not the
+  calendar week.
+- **Built.** Today properties: Sales, Collected, New members, Check-ins, and
+  Bookings ("58 of 96 spots", from the schedule), then Payments today by method.
 - Sale numbers (#1041). Rails has no sale numbers.
 - Card and online (Stripe) payments in "Payments today". The app records Cash
   and Bank transfer only. Every Home state shows the same four rows as the
@@ -161,7 +161,9 @@ Home (Paper's design differs from the current Overview):
   shows New sale to every role today.
 - **Built.** "Try again" on a failed list.
 - **Built.** Quiet day: "Open schedule" link.
-- Not built. First run checklist (existing frame): needs setup progress from Rails.
+- **Built, not compared with the frame.** First run checklist: Rails reports four
+  steps (location, product, member, sale). The steps and their layout were chosen
+  without the Paper frame open; check them against "Home — First run".
 
 Chrome:
 

@@ -1,10 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import type { Schemas } from "@flowfokus/api";
+import { formatMoney, type Schemas } from "@flowfokus/api";
 import {
   attentionItems,
   bookingsText,
   checkInsLine,
   checkInsText,
+  dueLine,
+  nameList,
+  salesText,
+  setupSteps,
   todayLabel,
   todaysSessions,
   upNext,
@@ -12,6 +16,8 @@ import {
 } from "./facts";
 
 const TZ = "Asia/Kuala_Lumpur";
+// Intl puts a no-break space after "RM", so the tests format amounts the same way.
+const rm = (minor: number) => formatMoney(minor, "MYR");
 
 function entry(id: string, startsAt: string, endsAt: string, over: Partial<Schemas["ScheduleEntry"]> = {}): Schemas["ScheduleEntry"] {
   return {
@@ -89,11 +95,81 @@ describe("check-ins", () => {
 });
 
 describe("needs attention", () => {
+  const none = { unpaid_sale_count: 0, awaiting_fulfillment_count: 0 };
+
   test("lists only counts above zero", () => {
-    expect(attentionItems({ unpaid_sale_count: 0, awaiting_fulfillment_count: 0 })).toEqual([]);
-    expect(attentionItems({ unpaid_sale_count: 4, awaiting_fulfillment_count: 1 })).toEqual([
+    expect(attentionItems(none, NOW)).toEqual([]);
+    expect(attentionItems({ unpaid_sale_count: 4, awaiting_fulfillment_count: 1 }, NOW)).toEqual([
       { kind: "balance_due", title: "4 sales with a balance due" },
       { kind: "unfulfilled", title: "1 paid sale unfulfilled" },
+    ]);
+  });
+
+  test("adds the amount due, the oldest sale, and who waits, for roles that see money", () => {
+    const items = attentionItems(
+      {
+        unpaid_sale_count: 4,
+        awaiting_fulfillment_count: 5,
+        currency: "MYR",
+        money: {
+          sales_today: { count: 0, total_minor: 0 },
+          collected_today_minor: 0,
+          payments_today: [],
+          due: { total_minor: 64000, oldest_sale: { id: "s1", purchased_at: "2026-10-01T04:00:00Z" } },
+          awaiting_fulfillment: [
+            { sale_id: "s2", member_name: "Ben Lee" },
+            { sale_id: "s3", member_name: "Aina Zul" },
+            { sale_id: "s4", member_name: "Priya Nair" },
+          ],
+        },
+      },
+      NOW,
+    );
+    expect(items).toEqual([
+      { kind: "balance_due", title: "4 sales with a balance due", line: `${rm(64000)} · oldest 34 days` },
+      { kind: "unfulfilled", title: "5 paid sales unfulfilled", line: "Ben Lee, Aina Zul, Priya Nair, and 2 more" },
+    ]);
+  });
+
+  test("names memberships that end soon", () => {
+    expect(attentionItems({ ...none, memberships_ending_count: 1 }, NOW)).toEqual([
+      { kind: "ending", title: "1 membership ends in the next 7 days" },
+    ]);
+    expect(attentionItems({ ...none, memberships_ending_count: 3 }, NOW)[0]?.title).toBe("3 memberships end in the next 7 days");
+  });
+
+  test("gives the oldest sale's age in whole days", () => {
+    const due = (purchased_at: string) => ({ total_minor: 12000, oldest_sale: { id: "s1", purchased_at } });
+    expect(dueLine(due("2026-11-04T01:00:00Z"), "MYR", NOW)).toBe(`${rm(12000)} · oldest today`);
+    expect(dueLine(due("2026-11-03T03:00:00Z"), "MYR", NOW)).toBe(`${rm(12000)} · oldest 1 day`);
+    expect(dueLine({ total_minor: 12000, oldest_sale: null }, "MYR", NOW)).toBe(`${rm(12000)}`);
+  });
+
+  test("joins names and counts the rest", () => {
+    expect(nameList(["Ben"], 1)).toBe("Ben");
+    expect(nameList(["Ben", "Aina"], 2)).toBe("Ben and Aina");
+    expect(nameList(["Ben", "Aina", "Priya"], 3)).toBe("Ben, Aina, and Priya");
+    expect(nameList(["Ben", "Aina"], 3)).toBe("Ben, Aina, and 1 more");
+  });
+});
+
+describe("money today", () => {
+  test("gives the sales total with the count", () => {
+    expect(salesText({ count: 2, total_minor: 20000 }, "MYR")).toBe(`${rm(20000)} · 2 sales`);
+    expect(salesText({ count: 1, total_minor: 12000 }, "MYR")).toBe(`${rm(12000)} · 1 sale`);
+    expect(salesText({ count: 0, total_minor: 0 }, "MYR")).toBe(`${rm(0)}`);
+  });
+});
+
+describe("first run", () => {
+  test("lists the steps until every one is done", () => {
+    expect(setupSteps(undefined)).toBeNull();
+    expect(setupSteps({ location: true, product: true, member: true, sale: true })).toBeNull();
+    expect(setupSteps({ location: true, product: false, member: false, sale: false })).toEqual([
+      { key: "location", title: "Add a location", done: true },
+      { key: "product", title: "Add a product", done: false },
+      { key: "member", title: "Add a member", done: false },
+      { key: "sale", title: "Record a sale", done: false },
     ]);
   });
 });
