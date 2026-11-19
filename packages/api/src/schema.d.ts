@@ -269,7 +269,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Counts for the staff dashboard. */
+        /** Figures for the staff Home screen. */
         get: operations["getStaffOverview"];
         put?: never;
         post?: never;
@@ -1262,6 +1262,51 @@ export interface components {
                 granted: number;
                 denied: number;
             };
+            /** @description The organization's currency, for the amounts in `money`. */
+            currency?: string;
+            /** @description Members added since midnight in the organization's time zone. */
+            new_members_today?: number;
+            /** @description Memberships whose access ends within seven days, with no later period. */
+            memberships_ending_count?: number;
+            /** @description First-run progress. Each fact is true once the organization has at least one such record. */
+            setup?: {
+                location: boolean;
+                product: boolean;
+                member: boolean;
+                sale: boolean;
+            };
+            money?: components["schemas"]["StaffOverviewMoney"];
+        };
+        /** @description Money facts. Left out for staff without `purchases:read`. "Today" starts at midnight in the organization's time zone. */
+        StaffOverviewMoney: {
+            /** @description Sales recorded today, at their total. Void sales are left out. */
+            sales_today: {
+                count: number;
+                total_minor: number;
+            };
+            /** @description Payments recorded today. Refunds are not taken off. */
+            collected_today_minor: number;
+            /** @description Payments recorded today, one entry per payment method. */
+            payments_today: {
+                method: components["schemas"]["PaymentMethod"];
+                amount_minor: number;
+            }[];
+            /** @description The balance on open sales that are not fully paid. */
+            due: {
+                total_minor: number;
+                oldest_sale: {
+                    /** Format: uuid */
+                    id: string;
+                    /** Format: date-time */
+                    purchased_at: string;
+                } | null;
+            };
+            /** @description The oldest fully paid sales that are not fulfilled. `awaiting_fulfillment_count` has the full count. */
+            awaiting_fulfillment: {
+                /** Format: uuid */
+                sale_id: string;
+                member_name: string;
+            }[];
         };
         MemberInput: {
             name: string;

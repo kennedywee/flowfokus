@@ -1,7 +1,7 @@
 module Staff
   class OverviewsController < BaseController
     def show
-      render_data current_organization.overview
+      render_data Organization::Overview.new(current_organization, money: permitted?("purchases:read")).as_api
     end
   end
 end
