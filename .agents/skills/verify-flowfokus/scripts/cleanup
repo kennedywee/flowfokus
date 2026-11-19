@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Stop the Docker stack only if `launch` started it in this run.
+# Never removes evidence in .artifacts/verify-flowfokus/runs/.
+set -euo pipefail
+
+REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.." && pwd)
+MARKER="$REPO/.artifacts/verify-flowfokus/started-by-run"
+cd "$REPO"
+
+if [[ ! -f $MARKER ]]; then
+  echo "No marker: this run did not start the stack. Leaving it running."
+  exit 0
+fi
+
+if [[ $(cat "$MARKER") == fresh ]]; then
+  # The run created this database, so its test records go with it.
+  docker compose down -v
+else
+  # The database existed before the run. Keep it; test records stay in it.
+  docker compose down
+fi
+rm -f -- "$MARKER"
+echo "Stopped the stack. Evidence stays in $REPO/.artifacts/verify-flowfokus/runs/"
+ls -1 "$REPO/.artifacts/verify-flowfokus/runs" 2>/dev/null || true
