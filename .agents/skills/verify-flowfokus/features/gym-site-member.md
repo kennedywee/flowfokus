@@ -16,7 +16,7 @@ buy online.
 
 - Open `http://chainsaw.localhost:4002/`. The banner and the hero both have `Member sign-in`.
 - Open `http://chainsaw.localhost:4002/sign-in`, then choose `Sign in`.
-- In the portal, the member page of Mei Lim has `Create link code`.
+- In the portal, the member page of Patrick Ng has `Create link code`.
 
 ## How to drive it
 
@@ -28,18 +28,18 @@ Preconditions:
 
 Steps:
 
-- **Catalog.** Open `/` and wait for `networkidle`. The heading reads `Chainsaw Gym`. The region
+- **Catalog.** Open `/` and wait for `networkidle`. The heading reads `Chainsaw`. The region
   `Memberships and passes` lists `Monthly Unlimited` at `RM 120.00`, and the region `Locations` lists
   `Bangsar` and `Mont Kiara`. `Staff Trial` is unpublished and must not appear.
 - **Sign in.** Open `/sign-in` and run `page.getByRole('link', { name: 'Sign in' }).click()`. On the
-  emulator pages, enter `member@example.com`, choose `Continue`, enter `local-password`, and choose
+  emulator pages, enter `patrick@example.com`, choose `Continue`, enter `123123qwe`, and choose
   `Continue`. The URL becomes `http://chainsaw.localhost:4002/account`.
-- **Unlinked account.** The heading reads `Link your account to Chainsaw Gym`, with the textbox
-  `Link code` and the button `Link my account`. The text `Signed in as member@example.com` shows.
-- **Get a code.** In a portal context signed in as the demo owner, open Mei Lim from
+- **Unlinked account.** The heading reads `Link your account to Chainsaw`, with the textbox
+  `Link code` and the button `Link my account`. The text `Signed in as patrick@example.com` shows.
+- **Get a code.** In a portal context signed in as the demo owner, open Patrick Ng from
   `/chainsaw/members` and choose `Create link code`. The code shows once.
 - **Link.** On the site, fill `Link code` with that code and choose `Link my account`. The account
-  page then shows Mei's membership, rights, and purchases.
+  page then shows Patrick's membership, rights, and purchases.
 - **Checkout.** With test payments on, choose a product's buy button on the site, then pay on the
   clearly marked test payment page. The account lists the purchase. In the portal, Sales lists an
   online sale with no staff actor or location.
@@ -51,7 +51,7 @@ Steps:
 
 ## Gotchas
 
-- Use the host `chainsaw.localhost`. `localhost:4002` has no gym, and `ironworks.localhost:4002`
+- Use the host `chainsaw.localhost`. `localhost:4002` has no gym, and `irongate.localhost:4002`
   shows the other tenant.
 - A matching email never links a member. Only the code does.
 - The link code shows once, works once, and expires after seven days. Capture it from the portal

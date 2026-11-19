@@ -20,7 +20,7 @@ visit is recorded. A member without access is refused, and the refusal is record
 Preconditions:
 
 - The doctor prints `READY`.
-- Signed in as `demo.owner@flowfokus.test` or `receptionist@example.com`. The location combobox in the
+- Signed in as `kennedy@flowfokus.com` or `aiman@flowfokus.com`. The location combobox in the
   banner reads `Bangsar`.
 - For `checkin-admit`, the member has a fulfilled membership. Run [Desk sale](desk-sale.md) for Chloe
   Lim first. On fresh seeds, no member has access.

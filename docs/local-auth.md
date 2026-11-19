@@ -53,17 +53,35 @@ to clear cached signing keys, then sign in again.
 
 ### Fake staff accounts
 
-Each fake user has the password `local-password`:
+Each fake user has the password `123123qwe`:
 
-- `demo.owner@flowfokus.test`: Owner at Chainsaw Gym. Can use the complete
-  membership sale, payment, access delivery, and check-in workflow.
-- `receptionist@example.com`: Receptionist at Chainsaw Gym. Can read members,
-  offers, and sales, and check members in. Cannot create members, record sales,
-  record payments, or deliver access.
-- `ironworks.owner@example.com`: Owner at Ironworks Fitness. Has no access to
-  Chainsaw Gym.
-- `manager@example.com`: Owner at Chainsaw Gym and Receptionist at Ironworks
-  Fitness. Use this account to test organization selection and switching.
+| Person | Email | Gym | Role |
+| --- | --- | --- | --- |
+| Kennedy | `kennedy@flowfokus.com` | Chainsaw | Owner |
+| Rachel | `rachel@flowfokus.com` | Irongate | Owner |
+| Rachel | `rachel@flowfokus.com` | Chainsaw | Manager |
+| Aiman | `aiman@flowfokus.com` | Chainsaw | Receptionist |
+
+- Kennedy can use the complete membership sale, payment, access delivery, and
+  check-in workflow. Kennedy is also the fixed demo actor.
+- Rachel works at both gyms. Use her account to test organization selection and
+  switching.
+- Aiman can read members, offers, and sales, and check members in. Aiman cannot
+  create members, record sales, record payments, or deliver access.
+- Kennedy and Aiman have no access to Irongate.
+
+Staff use a first name and `<first name>@flowfokus.com`. Members use a first
+name and `<first name>@example.com`.
+
+A database seeded before these accounts still holds the old demo users and gyms.
+Seeds do not delete records. Reset the local database, then sign in again:
+
+```sh
+docker compose stop server jobs
+docker compose run --rm server bin/rails db:reset
+docker compose restart workos
+docker compose up -d --wait server jobs
+```
 
 These identities are fake and local. Their IDs match Rails seeds. Change users,
 memberships, and roles in `workos-emulate.config.yaml`, then restart the emulator:
@@ -138,10 +156,10 @@ The gym site signs members in through the same emulator. Each gym host has its
 own callback, for example `http://chainsaw.localhost:4002/callback`, and its own
 host-only cookie. The emulator allows `*.localhost` callbacks.
 
-1. In the portal, open the member **Mei Lim** and select **Create link code**.
+1. In the portal, open the member **Patrick Ng** and select **Create link code**.
    The code shows once. It works once and expires after seven days.
 2. Open `http://chainsaw.localhost:4002/sign-in` and sign in as
-   `member@example.com` with password `local-password`. This user has no staff
+   `patrick@example.com` with password `123123qwe`. This user has no staff
    membership.
 3. Enter the code. The account page then shows the membership, rights, visits,
    and purchases that the desk recorded.

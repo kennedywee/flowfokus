@@ -14,7 +14,7 @@ const workos = new WorkOS('sk_test_default', {
   apiHostname: emulator.hostname, port: Number(emulator.port || 80), https: emulator.protocol === 'https:',
 })
 const auth = await workos.userManagement.authenticateWithPassword({
-  clientId: 'client_flowfokus_local', email: 'demo.owner@flowfokus.test', password: 'local-password',
+  clientId: 'client_flowfokus_local', email: 'kennedy@flowfokus.com', password: '123123qwe',
 })
 const sessionId = JSON.parse(Buffer.from(auth.accessToken.split('.')[1], 'base64url').toString()).sid
 
@@ -37,7 +37,7 @@ try {
   const response = await request(await sealStaleSession(auth.refreshToken))
   assert.equal(response.status, 200, 'The portal must refresh the session and render the protected page')
   const html = await response.text()
-  assert.ok(html.includes('demo.owner@flowfokus.test'), 'The refreshed session must retain the staff identity')
+  assert.ok(html.includes('kennedy@flowfokus.com'), 'The refreshed session must retain the staff identity')
   assert.ok(!/eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/.test(html), 'HTML must not contain a JWT')
   assert.equal(response.headers.get('cache-control'), 'private, no-store')
   const cookie = response.headers.getSetCookie().find(value => value.startsWith('hf_session='))
@@ -48,7 +48,7 @@ try {
   const refreshed = await sessionEncryption.unsealData(sealed, { password })
   assert.ok(refreshed.refreshToken !== auth.refreshToken, 'The rotated refresh token must be saved')
   const claims = JSON.parse(Buffer.from(refreshed.accessToken.split('.')[1], 'base64url').toString())
-  assert.ok(claims.exp > Date.now() / 1000 && claims.org_id === 'org_demo_chainsaw')
+  assert.ok(claims.exp > Date.now() / 1000 && claims.org_id === 'org_chainsaw')
 
   const next = await request(sealed)
   assert.equal(next.status, 200, 'The next request must accept the refreshed cookie')

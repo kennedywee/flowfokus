@@ -12,7 +12,7 @@ RSpec.describe "Authentication and permissions" do
       expect(response).to have_http_status(:ok)
       expect(data["slug"]).to eq("chainsaw")
       expect(data["locations"].map { _1["name"] }).to eq([ "Bangsar" ])
-      expect(data["actor"]).to include("demo" => true, "email" => "demo.owner@flowfokus.test")
+      expect(data["actor"]).to include("demo" => true, "email" => Flowfokus::DemoIdentity::USER[:email])
       expect(data["actor"]["permissions"]).to match_array(Flowfokus::DemoIdentity::PERMISSIONS)
       expect(response.headers["Cache-Control"]).to include("no-store")
     end

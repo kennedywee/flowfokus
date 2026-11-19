@@ -28,7 +28,7 @@ Preconditions:
 The script `.agents/skills/verify-flowfokus/scripts/proof-create-member.mjs` runs the first five
 steps and writes all the proof.
 
-- **Sign in.** Sign in as `demo.owner@flowfokus.test`. The URL becomes `http://localhost:4001/chainsaw`
+- **Sign in.** Sign in as `kennedy@flowfokus.com`. The URL becomes `http://localhost:4001/chainsaw`
   and the heading reads `Today`.
 - **Open the form.** Choose `Members` in the sidebar, then `New member`. The URL becomes
   `/chainsaw/members/new`, and the heading reads `New member`. Run:
@@ -46,7 +46,7 @@ steps and writes all the proof.
 - **Confirm the stored row.** Run:
   `docker exec flowfokus-db psql -U flowfokus -d flowfokus_development -Atc "select m.name, m.email, o.slug from members m join organizations o on o.id = m.organization_id where m.email = '<email>'"`.
   It prints one row that ends in `|chainsaw`. The Chainsaw member count rose by one.
-- **Permission.** Sign in as `receptionist@example.com` in a new browser context and open
+- **Permission.** Sign in as `aiman@flowfokus.com` in a new browser context and open
   `/chainsaw/members`. There is no `New member` link. Open `/chainsaw/members/new`: a notice reads
   `You cannot add members`.
 - **Proof.** Screenshots of the refused form, the filled form, the member page, and the list, plus

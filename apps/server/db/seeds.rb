@@ -1,6 +1,6 @@
-# Local demo data. Idempotent: run it as often as you like.
+# Local seed data. Idempotent: run it as often as you like.
 # Refuses to run in production. Production data comes from WorkOS sync and staff.
-abort "db/seeds.rb is local demo data and does not run in production." if Rails.env.production?
+abort "db/seeds.rb is local seed data and does not run in production." if Rails.env.production?
 # Specs build their own data. bin/rails db:prepare seeds new databases, so skip test.
 return if Rails.env.test?
 
@@ -8,11 +8,11 @@ demo = Flowfokus::DemoIdentity
 
 # Local staff identities. IDs and emails match workos-emulate.config.yaml at the
 # repository root, so emulator sign-ins find these users. Fake data only.
+# Kennedy (the fixed demo actor) and Aiman work at Chainsaw only. Rachel works at both gyms.
 LOCAL_STAFF = [
   demo::USER,
-  { workos_id: "user_demo_chainsaw_receptionist", email: "receptionist@example.com", first_name: "Demo", last_name: "Receptionist" },
-  { workos_id: "user_demo_ironworks_owner", email: "ironworks.owner@example.com", first_name: "Ironworks", last_name: "Owner" },
-  { workos_id: "user_demo_multi_org", email: "manager@example.com", first_name: "Demo", last_name: "Manager" }
+  { workos_id: "user_rachel", email: "rachel@flowfokus.com", first_name: "Rachel", last_name: "Lim" },
+  { workos_id: "user_aiman", email: "aiman@flowfokus.com", first_name: "Aiman", last_name: "Hakim" }
 ].freeze
 
 ActiveRecord::Base.transaction do
@@ -100,10 +100,10 @@ ActiveRecord::Base.transaction do
 
   # Chainsaw: the demo organization. The demo token maps to its owner.
   chainsaw = seed_organization.(slug: demo::ORGANIZATION_SLUG, workos_id: demo::ORGANIZATION_WORKOS_ID,
-    name: "Chainsaw Gym", published: true)
+    name: "Chainsaw", published: true)
   seed_membership.(chainsaw, owner.workos_id, "owner")
-  seed_membership.(chainsaw, "user_demo_chainsaw_receptionist", "receptionist")
-  seed_membership.(chainsaw, "user_demo_multi_org", "owner")
+  seed_membership.(chainsaw, "user_rachel", "manager")
+  seed_membership.(chainsaw, "user_aiman", "receptionist")
   bangsar = seed_location.(chainsaw, "Bangsar", "12 Jalan Telawi, Bangsar, Kuala Lumpur")
   seed_location.(chainsaw, "Mont Kiara", "3 Jalan Kiara, Mont Kiara, Kuala Lumpur")
 
@@ -119,11 +119,6 @@ ActiveRecord::Base.transaction do
     benefits: [ { name: "8 gym visits", usage_limit: 8, location: nil } ])
   seed_price.(visits, label: "Monthly", amount_minor: 8_000, duration_days: 30)
 
-  weekly = seed_product.(chainsaw, name: "Bangsar Weekly", position: 3,
-    description: "Unlimited access at Bangsar for 7 days.",
-    benefits: [ { name: "Bangsar gym access", usage_limit: nil, location: bangsar } ])
-  seed_price.(weekly, label: "Weekly", amount_minor: 3_500, duration_days: 7)
-
   trial = seed_product.(chainsaw, name: "Staff Trial", position: 9, published: false,
     description: "Complimentary trial issued by staff. Not shown on the gym site.",
     benefits: [ { name: "Trial visits", usage_limit: 3, location: nil } ])
@@ -133,9 +128,9 @@ ActiveRecord::Base.transaction do
   yoga = seed_program.(chainsaw, name: "Yoga Flow", kind: "group_class", location: bangsar, capacity: 12,
     duration_minutes: 60, host_name: "Aina", description: "A steady vinyasa class for every level. Mats provided.")
   hiit = seed_program.(chainsaw, name: "HIIT Express", kind: "group_class", location: bangsar, capacity: 16,
-    duration_minutes: 45, host_name: "Ben", description: "Short, hard intervals. Bring water and a towel.")
+    duration_minutes: 45, host_name: "Farid", description: "Short, hard intervals. Bring water and a towel.")
   seminar = seed_program.(chainsaw, name: "Deadlift Seminar", kind: "event", location: bangsar, capacity: 30,
-    duration_minutes: 180, host_name: "Coach Ravi", description: "Technique, bracing, and programming for the deadlift.")
+    duration_minutes: 180, host_name: "Ravi", description: "Technique, bracing, and programming for the deadlift.")
   coaching = seed_program.(chainsaw, name: "PT with Aina", kind: "appointment", location: bangsar, capacity: 1,
     duration_minutes: 60, host_name: "Aina", description: "One-to-one personal training.")
 
@@ -151,42 +146,32 @@ ActiveRecord::Base.transaction do
   seed_ticket.(seminar, label: "Standard", amount_minor: 12_000)
   seed_ticket.(coaching, label: "Single session", amount_minor: 15_000)
 
-  class_pass = seed_product.(chainsaw, name: "10-Class Pass", kind: "pass", position: 4,
+  class_pass = seed_product.(chainsaw, name: "10-Class Pass", kind: "pass", position: 3,
     description: "Ten group classes at Chainsaw within 60 days.",
     benefits: [ { kind: "program_access", name: "10 group classes", usage_limit: 10, program_kind: "group_class" } ])
   seed_price.(class_pass, label: "10 classes", amount_minor: 20_000, duration_days: 60)
-  pt_pack = seed_product.(chainsaw, name: "PT 5-Pack", kind: "pass", position: 5,
-    description: "Five personal training sessions with Aina within 90 days.",
-    benefits: [ { kind: "program_access", name: "5 PT sessions", usage_limit: 5, program_ids: [ coaching.id ] } ])
-  seed_price.(pt_pack, label: "5 sessions", amount_minor: 65_000, duration_days: 90)
 
   seed_member.(chainsaw, "Aisyah Rahman", "aisyah@example.com")
   seed_member.(chainsaw, "Ben Tan", "ben@example.com")
   seed_member.(chainsaw, "Chloe Lim", "chloe@example.com")
-  # Not linked to a sign-in. Staff give Mei a link code; she signs in on the
-  # gym site as member@example.com and enters it.
-  seed_member.(chainsaw, "Mei Lim", "member@example.com")
+  # Not linked to a sign-in. Staff give Patrick a link code; he signs in on the
+  # gym site as patrick@example.com and enters it.
+  seed_member.(chainsaw, "Patrick Ng", "patrick@example.com")
 
-  # Ironworks: a second tenant for isolation checks. The demo token has no access.
-  ironworks = seed_organization.(slug: "ironworks", workos_id: "org_demo_ironworks",
-    name: "Ironworks Fitness", published: true)
-  seed_location.(ironworks, "Penang", "88 Lebuh Pantai, George Town, Penang")
-  seed_membership.(ironworks, "user_demo_ironworks_owner", "owner")
-  seed_membership.(ironworks, "user_demo_multi_org", "receptionist")
-  iron_monthly = seed_product.(ironworks, name: "Ironworks Monthly", position: 1,
-    description: "Unlimited access for 30 days.",
+  # Irongate: a second gym for isolation and organization switching. The demo token has no access.
+  irongate = seed_organization.(slug: "irongate", workos_id: "org_irongate", name: "Irongate", published: true)
+  seed_location.(irongate, "George Town", "88 Lebuh Pantai, George Town, Penang")
+  seed_membership.(irongate, "user_rachel", "owner")
+  iron_monthly = seed_product.(irongate, name: "Monthly Unlimited", position: 1,
+    description: "Unlimited gym access for 30 days.",
     benefits: [ { name: "Gym access", usage_limit: nil, location: nil } ])
   seed_price.(iron_monthly, label: "Monthly", amount_minor: 9_900, duration_days: 30)
-  iron_ten = seed_product.(ironworks, name: "Ironworks 10 Visits", position: 2,
-    description: "Ten visits within 60 days.",
+  iron_visits = seed_product.(irongate, name: "10 Visits", position: 2,
+    description: "Ten gym visits within 60 days.",
     benefits: [ { name: "10 gym visits", usage_limit: 10, location: nil } ])
-  seed_price.(iron_ten, label: "10 visits", amount_minor: 15_000, duration_days: 60)
-  seed_member.(ironworks, "Dinesh Kumar", "dinesh@example.com")
-  seed_member.(ironworks, "Aisyah Rahman", "aisyah@example.com")
-
-  # Unpublished tenant: public endpoints must return 404.
-  hidden = seed_organization.(slug: "hidden", workos_id: "org_demo_hidden", name: "Hidden Gym", published: false)
-  seed_location.(hidden, "Main", nil)
+  seed_price.(iron_visits, label: "10 visits", amount_minor: 15_000, duration_days: 60)
+  seed_member.(irongate, "Dinesh Kumar", "dinesh@example.com")
+  seed_member.(irongate, "Sofia Wong", "sofia@example.com")
 end
 
 puts "Seeded: #{Organization.count} organizations, #{Location.count} locations, #{Member.count} members, " \

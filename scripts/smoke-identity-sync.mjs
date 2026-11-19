@@ -11,9 +11,9 @@ for (const url of [workos, rails]) {
 }
 const secret = 'whsec_flowfokus_local_only'
 const apiKey = 'sk_test_default'
-const organization = 'org_demo_chainsaw'
+const organization = 'org_chainsaw'
 const email = `sync-${randomUUID()}@example.test`
-const password = 'local-password'
+const password = '123123qwe'
 
 async function emulator(path, { method = 'GET', body, status = 200 } = {}) {
   const response = await fetch(new URL(path, workos), {

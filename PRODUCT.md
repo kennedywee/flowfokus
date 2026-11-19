@@ -27,7 +27,7 @@ Every right a member uses traces back to a purchase. Sale, payment, fulfillment,
 - Gym site: one build serves every gym. The host chooses the gym, `<slug>.flowfokus.com` or `<slug>.localhost:4002` in development.
 - Both web apps are TanStack Start on Cloudflare Workers. They are the backend for frontend. The browser never calls Rails and never holds an access token.
 - Money is integer minor units with a currency. Times are UTC and display in the organization's time zone.
-- Seed gyms: Chainsaw Gym (Bangsar, Mont Kiara, MYR), Ironworks Fitness (Penang, MYR).
+- Seed gyms: Chainsaw (Bangsar, Mont Kiara, MYR), Irongate (George Town, MYR).
 
 ## Capabilities and Constraints
 

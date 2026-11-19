@@ -33,12 +33,12 @@ const sql = (query) => execFileSync("docker", ["exec", "flowfokus-db", "psql", "
   "-d", "flowfokus_development", "-Atc", query], { encoding: "utf8" }).trim();
 
 // Signs in through the real portal and WorkOS Emulate pages.
-async function signIn(page, email = "demo.owner@flowfokus.test") {
+async function signIn(page, email = "kennedy@flowfokus.com") {
   await page.goto(`${PORTAL}/`);
   await page.getByRole("link", { name: "Sign in" }).click();
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByRole("textbox", { name: "Password" }).fill("local-password");
+  await page.getByRole("textbox", { name: "Password" }).fill("123123qwe");
   await page.getByRole("button", { name: "Continue" }).click();
   await page.waitForURL(`${PORTAL}/chainsaw`);
   await page.waitForLoadState("networkidle"); // Wait for hydration before typing.
@@ -50,7 +50,7 @@ const page = await context.newPage();
 try {
   const before = sql(`select count(*) from members m join organizations o on o.id = m.organization_id where o.slug = 'chainsaw'`);
 
-  await assert("demo.owner signs in and lands on /chainsaw", async () => {
+  await assert("Kennedy signs in and lands on /chainsaw", async () => {
     await signIn(page);
     await page.getByRole("heading", { name: "Today", level: 1 }).waitFor();
   });
@@ -88,7 +88,7 @@ try {
   });
   await shot(page, "members-list");
 
-  await assert("exactly one row is stored in Chainsaw Gym", async () => {
+  await assert("exactly one row is stored in Chainsaw", async () => {
     const rows = sql(`select m.name, m.email, o.slug from members m join organizations o on o.id = m.organization_id where m.email = '${EMAIL}'`);
     const after = sql(`select count(*) from members m join organizations o on o.id = m.organization_id where o.slug = 'chainsaw'`);
     writeFileSync(`${OUT}/db.txt`, `members in chainsaw before: ${before}\nmembers in chainsaw after: ${after}\nrow: ${rows}\n`);

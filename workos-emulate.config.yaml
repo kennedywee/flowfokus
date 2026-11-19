@@ -16,63 +16,51 @@ webhookEndpoints:
       - organization_membership.deleted
 
 users:
-  - id: user_demo_chainsaw_owner
-    email: demo.owner@flowfokus.test
-    first_name: Demo
-    last_name: Owner
-    password: local-password
+  - id: user_kennedy
+    email: kennedy@flowfokus.com
+    first_name: Kennedy
+    last_name: Wee
+    password: 123123qwe
     email_verified: true
-  - id: user_demo_chainsaw_receptionist
-    email: receptionist@example.com
-    first_name: Demo
-    last_name: Receptionist
-    password: local-password
+  - id: user_rachel
+    email: rachel@flowfokus.com
+    first_name: Rachel
+    last_name: Lim
+    password: 123123qwe
     email_verified: true
-  - id: user_demo_ironworks_owner
-    email: ironworks.owner@example.com
-    first_name: Ironworks
-    last_name: Owner
-    password: local-password
-    email_verified: true
-  - id: user_demo_multi_org
-    email: manager@example.com
-    first_name: Demo
-    last_name: Manager
-    password: local-password
+  - id: user_aiman
+    email: aiman@flowfokus.com
+    first_name: Aiman
+    last_name: Hakim
+    password: 123123qwe
     email_verified: true
   # A gym member, not staff. Links to a member record with a code from the desk.
-  - id: user_demo_member
-    email: member@example.com
-    first_name: Mei
-    last_name: Lim
-    password: local-password
+  - id: user_patrick
+    email: patrick@example.com
+    first_name: Patrick
+    last_name: Ng
+    password: 123123qwe
     email_verified: true
 
 organizations:
-  - id: org_demo_chainsaw
-    name: Chainsaw Gym
+  - id: org_chainsaw
+    name: Chainsaw
     memberships:
-      - email: demo.owner@flowfokus.test
+      - email: kennedy@flowfokus.com
         role: owner
         status: active
-      - email: receptionist@example.com
+      - email: rachel@flowfokus.com
+        role: manager
+        status: active
+      - email: aiman@flowfokus.com
         role: receptionist
         status: active
-      - email: manager@example.com
-        role: owner
-        status: active
-  - id: org_demo_ironworks
-    name: Ironworks Fitness
+  - id: org_irongate
+    name: Irongate
     memberships:
-      - email: ironworks.owner@example.com
+      - email: rachel@flowfokus.com
         role: owner
         status: active
-      - email: manager@example.com
-        role: receptionist
-        status: active
-  - id: org_demo_hidden
-    name: Hidden Gym
-    memberships: []
 
 roles:
   - slug: owner

@@ -52,7 +52,7 @@ Demo access is opt-in and local only. It skips sign-in. All of these must hold:
 1. A development build (`vite dev`). Production builds do not contain the demo code path at all.
 2. `FLOWFOKUS_DEMO_MODE=true` and a demo token of at least 16 characters.
 
-The Worker attaches the demo Bearer token on the server. The browser never sees it. Rails maps it to the fixed seeded actor (Demo Owner, Chainsaw). The portal labels every demo page **Local demo**.
+The Worker attaches the demo Bearer token on the server. The browser never sees it. Rails maps it to the fixed seeded actor (Kennedy, owner at Chainsaw). The portal labels every demo page **Local demo**.
 
 Without WorkOS settings or demo access, the portal shows sign-in as unavailable and turns off every staff page and action.
 

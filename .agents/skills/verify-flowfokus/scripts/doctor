@@ -59,7 +59,7 @@ code() { curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$@"; }
 [[ $(code http://127.0.0.1:4000/ready) == 200 ]] && ok "Rails /ready is 200" || bad "Rails /ready is not 200"
 [[ $(code http://127.0.0.1:4100/health) == 200 ]] && ok "WorkOS emulator /health is 200" || bad "WorkOS emulator /health is not 200"
 curl -s --max-time 60 http://localhost:4001/ | grep -q 'href="/sign-in' && ok "portal / renders the sign-in link" || bad "portal / does not render the sign-in link"
-curl -s --max-time 60 http://chainsaw.localhost:4002/ | grep -q 'Chainsaw Gym' && ok "gym site renders Chainsaw Gym" || bad "gym site does not render Chainsaw Gym"
+curl -s --max-time 60 http://chainsaw.localhost:4002/ | grep -q 'Chainsaw' && ok "gym site renders Chainsaw" || bad "gym site does not render Chainsaw"
 
 # 4. Login works: an emulator password sign-in gives a token that Rails accepts.
 #    The session is revoked at once. Tokens never leave this process.
@@ -68,8 +68,8 @@ const post = (path, body) => fetch("http://127.0.0.1:4100" + path, { method: "PO
   headers: { "Content-Type": "application/json", Authorization: "Bearer sk_test_default" },
   body: JSON.stringify(body), signal: AbortSignal.timeout(10_000) })
 const auth = await post("/user_management/authenticate", { client_id: "client_flowfokus_local",
-  client_secret: "sk_test_default", grant_type: "password", email: "demo.owner@flowfokus.test",
-  password: "local-password", organization_id: "org_demo_chainsaw" })
+  client_secret: "sk_test_default", grant_type: "password", email: "kennedy@flowfokus.com",
+  password: "123123qwe", organization_id: "org_chainsaw" })
 if (auth.status !== 200) { console.log("FAIL  emulator sign-in returned " + auth.status); process.exit(1) }
 const { access_token } = await auth.json()
 const rails = await fetch("http://127.0.0.1:4000/staff/organization", { signal: AbortSignal.timeout(10_000),
@@ -78,7 +78,7 @@ const body = rails.status === 200 ? await rails.json() : {}
 const { sid } = JSON.parse(Buffer.from(access_token.split(".")[1], "base64url").toString())
 await post("/user_management/sessions/revoke", { session_id: sid })
 if (rails.status !== 200) { console.log("FAIL  Rails /staff/organization returned " + rails.status); process.exit(1) }
-console.log("ok    demo.owner signs in, and Rails returns " + JSON.stringify(body.data?.name ?? body.name))
+console.log("ok    Kennedy signs in, and Rails returns " + JSON.stringify(body.data?.name ?? body.name))
 ' || FAIL=1
 
 [[ $FAIL == 0 ]] && echo "READY: drive http://localhost:4001 and http://chainsaw.localhost:4002" || echo "NOT READY: fix the FAIL lines first"

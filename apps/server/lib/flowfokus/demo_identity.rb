@@ -14,14 +14,14 @@ module Flowfokus
     MIN_TOKEN_LENGTH = 16
 
     USER = {
-      workos_id: "user_demo_chainsaw_owner",
-      email: "demo.owner@flowfokus.test",
-      first_name: "Demo",
-      last_name: "Owner"
+      workos_id: "user_kennedy",
+      email: "kennedy@flowfokus.com",
+      first_name: "Kennedy",
+      last_name: "Wee"
     }.freeze
 
     ORGANIZATION_SLUG = "chainsaw".freeze
-    ORGANIZATION_WORKOS_ID = "org_demo_chainsaw".freeze
+    ORGANIZATION_WORKOS_ID = "org_chainsaw".freeze
 
     PERMISSIONS = %w[
       members:read members:create members:link
