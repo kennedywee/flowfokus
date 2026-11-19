@@ -6,9 +6,9 @@ records cover only features whose APIs are not implemented yet.
 ## Design reference
 
 The reference is the [Flowfokus Paper file](https://app.paper.design/file/01M5CMH3NK5Q37J3EJN86P3W5C/p-7-0).
-Its Components page supplies tabs, table rows, chat, integrations, and state
-controls. The portal keeps its Geist fonts, dark and light surfaces, hairline borders,
-status colors, and centered page column.
+The portal follows its redesign: Figtree type, dark and light surfaces,
+hairline borders, status colors, and a centered page column. The visual rules
+live in [the design system](design-system.md) and `apps/portal/DESIGN.md`.
 
 ## API-backed screens
 
@@ -16,27 +16,35 @@ status colors, and centered page column.
   organization list comes from `/staff/memberships`. The portal start, `/`,
   offers sign-in and opens the session's selected organization. A chooser is a
   fallback when no organization is selected and several memberships are available.
-  The optional fixed demo actor opens Chainsaw directly. The chosen desk location is an HttpOnly cookie per organization. It
-  sets the default location for check-in and new sales. Add location opens
+  The optional fixed demo actor opens Chainsaw directly. The chosen desk
+  location is an HttpOnly cookie per organization. It sets the default
+  location for check-in and new sales. Add location opens
   Settings.
-- Overview: membership counts, recent visits, and check-in.
-- Members: search, create, and view member records.
-- Sales: list and create sales, record payments, and deliver access.
-- Plans & offers: membership catalog, prices, and availability. Staff with
-  `products:create` add offers. Staff with `products:update` edit offers and
-  benefits, add prices, take prices off sale, and archive them.
-- Check-in: the same member and visit endpoints used by Overview, with filters
+- Home: today's sessions, what comes next, items that need attention, and
+  check-in.
+- Members: search, create, and view member records. Staff create gym site
+  link codes and unlink members from their sign-in.
+- Sales: list and create sales, record payments, deliver access, renew,
+  refund, void, and end access.
+- Check-ins: the same member and visit endpoints used by Home, with filters
   and CSV export.
-- Settings, Organization and Locations: the time zone, gym site publication,
-  and locations, from Rails. Staff with `settings:manage` change them. The
-  name comes from WorkOS. The currency is fixed.
-
+- Schedule: sessions by day, the roster of each session, booking a member,
+  cancelling a booking or a session, and marking attendance.
+- Programs: create and edit programs, add sessions, and add or change ticket
+  prices.
+- Products: the membership catalog, prices, and availability. Staff with
+  `products:create` add products. Staff with `products:update` edit products
+  and benefits, add prices, take prices off sale, and archive them.
 - Reports: weekly sales, payments, refunds, check-ins, and new members from
   `/staff/report`, in the organization time zone. Period and metric filters, a
   breakdown by location and payment method, and CSV export of the shown weeks.
-- Settings, Team: staff, pending invitations, and roles, through Rails and
-  WorkOS. Staff with `staff:manage` invite, revoke, change roles, and remove
-  access.
+  This is the page from before the redesign. See issue #23.
+- Settings, General and Locations: the time zone, gym site publication, and
+  locations, from Rails. Staff with `settings:manage` change them. The name
+  comes from WorkOS. The currency is fixed.
+- Settings, Staff and Roles: staff, pending invitations, and roles, through
+  Rails and WorkOS. Staff with `staff:manage` invite, revoke, change roles, and
+  remove access.
 
 `apps/portal/src/lib/staff.functions.ts` holds the server functions for these
 screens. They call Rails through the existing server boundary. The browser never
@@ -50,7 +58,8 @@ These actions persist in PostgreSQL, including during local demo development.
   is called and no message is sent.
 - Settings, Notifications and Integrations: sample notification switches and
   integration states. Edits do not update Rails or contact external systems.
-- Changelog: static notes for the preview and portal layout.
+- What's new: static notes for the preview and portal layout. It opens from
+  the account menu.
 
 These screens display a Sample data label. Local edits reset when the screen
 unmounts. The sample fixtures live in `src/features/preview/data.ts` and the
