@@ -2,7 +2,16 @@
 
 A membership platform for service businesses. The Rails API owns business rules. The staff portal and gym site use TanStack Start on Cloudflare Workers.
 
-Implementation starts with [Sprint 1](docs/sprint-1.md). The agreed design is in [docs](docs/README.md).
+The agreed design is in [docs](docs/README.md). Work to do and open decisions are [GitHub issues](https://github.com/kennedywee/flowfokus/issues).
+
+## Status
+
+Flowfokus runs locally as a tested deployment candidate. It is not deployed.
+
+- **Built and backed by Rails:** members, membership products and prices, sales, manual payments, fulfillment, renewal, refunds, check-in, programs, sessions, bookings, passes, tickets, locations, settings, the staff team, and weekly reports. Members can sign in on the gym site, buy online through a local test payment provider, and book sessions.
+- **Staff portal redesign:** every portal screen except Reports now follows the Paper file "Flowfokus Redesign". The [Paper redesign](docs/paper-redesign/README.md) notes record what is settled. The [Rails gaps](docs/paper-redesign/rails-gaps.md) list what the new screens show that Rails cannot supply yet.
+- **Sample data only:** Inbox, Agents, Notifications and Integrations settings, and Changelog. See [Frontend preview](docs/frontend-preview.md).
+- **Next:** the Rails work for the redesigned screens, the open `decision` issues, live WorkOS verification, and the first deployment.
 
 ## Project directory
 
@@ -23,12 +32,9 @@ docker compose up
 
 Open the staff portal at `http://localhost:4001` and the gym site at `http://chainsaw.localhost:4002`. The API uses `http://127.0.0.1:4000`. Local staff sign-in uses WorkOS Emulate in Docker and needs no external credentials. Sign in as `kennedy@flowfokus.com` with password `123123qwe`. Run `docker compose run --rm server bin/rails db:seed` once when updating an existing database. See [Local staff authentication](docs/local-auth.md) for other fake users and roles. Manual payment records do not collect money.
 
-Portal screens with existing APIs use Rails records, including member creation,
-sales, payments, delivery, and check-in. New sections without APIs use clearly
-labelled frontend sample data. See [Frontend preview](docs/frontend-preview.md)
-for the current boundary.
+Online checkout on the gym site needs the local test payment provider. Start Rails with `FLOWFOKUS_TEST_PAYMENTS=true docker compose up -d server jobs`. Production refuses this setting.
 
-Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator port 4100 defaults to loopback. To sign in from another device, configure the allowed development hosts and emulator binding in [Local staff authentication](docs/local-auth.md#access-from-another-device). The optional fixed demo actor remains opt-in. Production refuses demo access. The gym site still selects the organization from its hostname.
+Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator port 4100 defaults to loopback. To sign in from another device, configure the allowed development hosts and emulator binding in [Local staff authentication](docs/local-auth.md#access-from-another-device). On a Boat machine, run `scripts/links` once the stack is up instead. It prints HTTPS links for the portal and the sign-in emulator that open on any device. See [Access through a Boat link](docs/local-auth.md#access-through-a-boat-link). The optional fixed demo actor remains opt-in. Production refuses demo access. The gym site still selects the organization from its hostname.
 
 PostgreSQL, WorkOS Emulate, all three apps, and a jobs process run in containers. The jobs process (`flowfokus-jobs`) retries lost WorkOS events and reconciles gyms. Run `db:prepare` explicitly on first setup and after adding migrations. It loads demo data into a new database. To reload demo data later, run `docker compose run --rm server bin/rails db:seed`. Data stays in the Compose volume when the stack stops with `docker compose down`.
 
@@ -90,6 +96,6 @@ seeds or restarting it. Import, repair, and retry commands are in
 
 ## Release boundary
 
-This is a local demo and deployment candidate. Local staff authentication uses the emulator. Live WorkOS verification and cloud deployment still need credentials. Production refuses demo authentication. See the [deployment guide](docs/deployment.md) for builds, artifacts, migration commands, and remaining requirements.
+This is a local demo and deployment candidate. Local staff authentication uses the emulator. Live WorkOS verification and cloud deployment still need credentials. Production refuses demo authentication and test payments. No real card processor is built; payments and refunds are records and move no money. See the [deployment guide](docs/deployment.md) for builds, artifacts, migration commands, and remaining requirements. The deployment steps are issues [#25](https://github.com/kennedywee/flowfokus/issues/25), [#26](https://github.com/kennedywee/flowfokus/issues/26), and [#27](https://github.com/kennedywee/flowfokus/issues/27).
 
 The completed local checks and browser workflow are recorded in [Verification](docs/verification.md).
