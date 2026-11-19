@@ -121,13 +121,11 @@ deploy() {
   portal="$(sbx 30 'cat ~/preview-links.txt' | awk '/^Staff portal:/ { print $3 }')"
   [[ -n "$portal" ]] || failed "no portal link from scripts/links"
   boat extend "$ID" --ttl "$TTL" --json >/dev/null
-  sleeps="$(date -u -d "+$TTL seconds" '+%H:%M UTC')"
+  sleeps="$(date -u -d "+$TTL seconds" '+%H:%M UTC') ($(TZ=Asia/Kuala_Lumpur date -d "+$TTL seconds" '+%H:%M MYT'))"
 
   comment "**Preview is up** for \`$short\`.
 
 [Open the staff portal]($portal)
-
-Sign in as \`kennedy@flowfokus.com\` with the password \`123123qwe\`. It is a fake user of the sign-in emulator. The preview holds demo data only.
 
 It sleeps at $sleeps. To start it again, remove the \`preview\` label and add it back. That builds a new preview with fresh data."
 }
