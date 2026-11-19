@@ -63,7 +63,7 @@ The next sprint must configure the API URL, the portal host, the wildcard gym ro
 - Cloudflare account, API token, zone, Worker names, routes, and runtime bindings.
 - VPS access, TLS/network restrictions, image registry, PostgreSQL host, backups, and restore procedure.
 - A test organization in WorkOS, with verified staff permissions and a member-linking policy.
-- Confirm duration, activation, renewal, refund, and access override policies from [Decisions](decisions.md).
+- Settle the open [`decision` issues](https://github.com/kennedywee/flowfokus/issues?q=is%3Aissue+is%3Aopen+label%3Adecision) that affect the release.
 
 Verify AuthKit on Workers, CSRF checks, organization switching, revoked access, and webhook reconciliation with the real environment. These checks are required before calling the system production-ready.
 
