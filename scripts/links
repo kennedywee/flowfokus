@@ -29,7 +29,11 @@ link() {
   fi
 }
 
-emulator="$(link 4100 --public)"
-portal="$(link 4001 --private)"
+# The machine's own tool still prints Boat's older domain. Both lead to the
+# same place; sign-in accepts on.boat.dev.
+current() { sed 's/\.on\.ascii\.dev/.on.boat.dev/'; }
+
+emulator="$(link 4100 --public | current)"
+portal="$(link 4001 --private | current)"
 echo "Sign-in emulator: $emulator"
 echo "Staff portal:     $portal"
