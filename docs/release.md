@@ -71,7 +71,7 @@ Rules:
 - **No more than 5 previews run at once.** When a sixth starts, the oldest one is stopped.
 - **A nightly clean-up** deletes sandboxes whose PR is closed, has lost the label, or has slept for more than 7 days. It touches only names that start with `flowfokus-pr-`.
 
-`scripts/preview` holds the logic. The workflow only chooses the command. Built so far: the label, the push, the delete, and the `/preview` comment. GitHub runs a comment from the workflow on `master`, so a change to the wake cannot be tried from its own PR. The limit of 5 and the nightly clean-up are tracked in [#52](https://github.com/kennedywee/flowfokus/issues/52).
+`scripts/preview` holds the logic. The workflow only chooses the command. A PR whose branch does not hold the script uses the copy on `master`. GitHub keeps only the newest queued run for a PR, so each run checks the sandbox it finds: a new label or a reopen deletes any old sandbox first, and `/preview` on a PR without the label deletes it. Built so far: the label, the push, the delete, and the `/preview` comment. GitHub runs a comment from the workflow on `master`, so a change to the wake cannot be tried from its own PR. The limit of 5 and the nightly clean-up are tracked in [#52](https://github.com/kennedywee/flowfokus/issues/52).
 
 ## Versions
 

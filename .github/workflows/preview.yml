@@ -13,11 +13,6 @@ permissions:
   contents: read
   pull-requests: write
 
-# One run per pull request at a time, in order.
-concurrency:
-  group: preview-${{ github.event.pull_request.number || github.event.issue.number }}
-  cancel-in-progress: false
-
 defaults:
   run:
     shell: bash
@@ -39,6 +34,12 @@ jobs:
        github.event.issue.pull_request &&
        startsWith(github.event.comment.body, '/preview') &&
        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
+    # One run per pull request at a time, in order. GitHub keeps only the
+    # newest queued run, so the script checks the state it finds. The group
+    # is on the job, so a skipped run cannot replace a queued one.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -49,12 +50,22 @@ jobs:
       ACTION: ${{ github.event.action }}
       PR: ${{ github.event.pull_request.number || github.event.issue.number }}
       SHA: ${{ github.event.pull_request.head.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       # A pull request event runs the script of the pull request. A comment
       # runs the script of the default branch.
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+
+      # A pull request from before the preview helper does not hold it.
+      - name: Take the helper from the default branch if it is missing
+        run: |
+          if [[ ! -f scripts/preview ]]; then
+            git fetch -q --depth 1 origin "$DEFAULT_BRANCH"
+            git show FETCH_HEAD:scripts/preview >scripts/preview
+            chmod +x scripts/preview
+          fi
 
       - name: Install the Boat CLI
         run: |
@@ -72,7 +83,7 @@ jobs:
       - name: Deploy, wake, or delete the preview
         run: |
           case "$EVENT/$ACTION" in
-            pull_request/labeled | pull_request/reopened) scripts/preview deploy "$PR" "$SHA" --wake ;;
+            pull_request/labeled | pull_request/reopened) scripts/preview deploy "$PR" "$SHA" --fresh ;;
             pull_request/synchronize) scripts/preview deploy "$PR" "$SHA" ;;
             pull_request/unlabeled | pull_request/closed) scripts/preview teardown "$PR" ;;
             issue_comment/created) scripts/preview wake "$PR" ;;

@@ -4,6 +4,7 @@
 #
 # On the CI runner, or by hand with a Boat login:
 #   scripts/preview deploy <pr> <sha> [--wake]   create or update the preview
+#   scripts/preview deploy <pr> <sha> --fresh    replace it with a new one
 #   scripts/preview wake <pr>                    the /preview comment: wake it
 #   scripts/preview teardown <pr>                delete the preview
 # Inside the sandbox, started by deploy:
@@ -11,6 +12,7 @@
 set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:-kennedywee/flowfokus}"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
 ENVIRONMENT="${PREVIEW_ENVIRONMENT:-preview}"
 SIZE="${PREVIEW_SIZE:-small}"
 TTL="${PREVIEW_TTL:-1800}"
@@ -67,6 +69,15 @@ comment() {
   fi
 }
 
+# Deletes the sandbox in $ID. Boat cannot delete a sandbox while it stops.
+delete_sandbox() {
+  if [[ "${1:-}" == "stopping" ]]; then
+    retry 180 is_stopped || die "$NAME did not stop"
+  fi
+  boat delete "$ID" --yes --json >/dev/null
+  echo "Deleted $ID ($NAME)"
+}
+
 run_link() {
   [[ -n "${GITHUB_RUN_ID:-}" ]] || return 0
   echo " [Run log](${GITHUB_SERVER_URL:-https://github.com}/$REPO/actions/runs/$GITHUB_RUN_ID)."
@@ -74,11 +85,19 @@ run_link() {
 
 deploy() {
   PR="${1:?pull request number}"
-  local sha="${2:?commit}" wake="${3:-}" state="" short portal sleeps
+  local sha="${2:?commit}" mode="${3:-}" state="" short portal sleeps
   NAME="flowfokus-pr-$PR"
   ID=""
   short="${sha:0:7}"
   read -r ID state < <(find_sandbox) || true
+
+  # A new label or a reopen promises fresh data. A queued teardown can be
+  # lost to this run, so delete what is left here.
+  if [[ "$mode" == "--fresh" && -n "$ID" ]]; then
+    delete_sandbox "$state"
+    ID=""
+    state=""
+  fi
 
   if [[ "$state" == "stopping" ]]; then
     retry 180 is_stopped || die "$NAME did not stop"
@@ -93,7 +112,7 @@ deploy() {
       [[ -n "$ID" ]] || die "Boat did not create a sandbox"
       ;;
     stopped)
-      if [[ "$wake" != "--wake" ]]; then
+      if [[ "$mode" != "--wake" ]]; then
         echo "$NAME sleeps. A push does not wake it."
         comment "**Preview is asleep.** It does not have \`$short\` yet.
 
@@ -112,14 +131,19 @@ To wake it, comment \`/preview\`."
     die "$1"
   }
 
+  # A pull request from before this helper does not hold it. It then uses
+  # the helper of the default branch.
   sbx 300 "set -e
     [ -d flowfokus/.git ] || git clone -q https://github.com/$REPO.git flowfokus
     cd flowfokus
-    git fetch -q origin pull/$PR/head
-    git checkout -q -f --detach $sha" || failed "$NAME could not check out $short"
+    git fetch -q origin pull/$PR/head +$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH
+    git checkout -q -f --detach $sha
+    if [ -f scripts/preview ]; then cp scripts/preview ~/preview-helper
+    else git show origin/$DEFAULT_BRANCH:scripts/preview >~/preview-helper; fi" ||
+    failed "$NAME could not check out $short"
 
   # Without a terminal, Boat streams the output as JSON frames.
-  boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash scripts/preview up $sha" |
+  boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash ~/preview-helper up $sha" |
     jq -Rrj 'fromjson? | .data? // empty' || failed "the stack did not start in $NAME"
 
   portal="$(sbx 30 'cat ~/preview-links.txt' | awk '/^Staff portal:/ { print $3 }')"
@@ -143,6 +167,8 @@ wake() {
     die "pull request $PR is closed or comes from a fork"
   fi
   if ! jq -e '.labels | any(.name == "preview")' <<<"$info" >/dev/null; then
+    # A queued teardown can be lost to this run. Finish its work.
+    teardown "$PR"
     gh pr comment "$PR" --repo "$REPO" --body "Add the \`preview\` label first. The label creates the preview, and \`/preview\` wakes it."
     return 0
   fi
@@ -158,11 +184,7 @@ teardown() {
   if [[ -z "$ID" ]]; then
     echo "No sandbox named $NAME."
   else
-    if [[ "$state" == "stopping" ]]; then
-      retry 180 is_stopped || die "$NAME did not stop"
-    fi
-    boat delete "$ID" --yes --json >/dev/null
-    echo "Deleted $ID ($NAME)"
+    delete_sandbox "$state"
   fi
   comment "**Preview deleted.** Add the \`preview\` label to build a new one." --only-existing
 }
@@ -183,7 +205,8 @@ needs_build() {
 
 up() {
   local sha="${1:?commit}" old="" built=""
-  cd "$(dirname "$0")/.."
+  # The caller starts this from the checkout. The helper can be a copy.
+  cd "$(git rev-parse --show-toplevel)"
   [[ -f "$HOME/.preview-sha" ]] && old="$(cat "$HOME/.preview-sha")"
 
   # Docker publishes the sign-in emulator on every address. On loopback it
@@ -216,5 +239,5 @@ up() {
 
 case "${1:-}" in
   deploy | wake | teardown | up) "$@" ;;
-  *) die "usage: scripts/preview deploy <pr> <sha> [--wake] | wake <pr> | teardown <pr> | up <sha>" ;;
+  *) die "usage: scripts/preview deploy <pr> <sha> [--wake | --fresh] | wake <pr> | teardown <pr> | up <sha>" ;;
 esac
