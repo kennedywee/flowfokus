@@ -109,7 +109,9 @@ deploy() {
     git fetch -q origin pull/$PR/head
     git checkout -q -f --detach $sha"
 
-  if ! boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash scripts/preview up $sha"; then
+  # Without a terminal, Boat streams the output as JSON frames.
+  if ! boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash scripts/preview up $sha" |
+    jq -Rrj 'fromjson? | .data? // empty'; then
     comment "**Preview failed** for \`$short\`.$(run_link)"
     die "the stack did not start in $NAME"
   fi
