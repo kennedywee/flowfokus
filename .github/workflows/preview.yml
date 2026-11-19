@@ -1,0 +1,90 @@
+name: Preview
+
+# A pull request with the `preview` label gets a Boat sandbox that runs the
+# full stack from that pull request. The rules are in docs/release.md.
+on:
+  pull_request:
+    types: [labeled, unlabeled, synchronize, reopened, closed]
+  # GitHub runs this event from the default branch only.
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  preview:
+    # A pull request from a fork gets no secrets, so it gets no preview.
+    # `labeled` and `unlabeled` count only for the `preview` label. The other
+    # pull request events count only while the pull request has it.
+    # A `/preview` comment counts only from someone who can write to the
+    # repository. Anyone can comment on a public repository.
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.label.name == 'preview' ||
+        (github.event.action != 'labeled' && github.event.action != 'unlabeled' &&
+         contains(github.event.pull_request.labels.*.name, 'preview')))) ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/preview') &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
+    # One run per pull request at a time, in order. GitHub keeps only the
+    # newest queued run, so the script checks the state it finds. The group
+    # is on the job, so a skipped run cannot replace a queued one.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number || github.event.issue.number }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
+      BOAT_NO_UPDATE: "1"
+      GH_TOKEN: ${{ github.token }}
+      EVENT: ${{ github.event_name }}
+      ACTION: ${{ github.event.action }}
+      PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      # A pull request event runs the script of the pull request. A comment
+      # runs the script of the default branch.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # A pull request from before the preview helper does not hold it.
+      - name: Take the helper from the default branch if it is missing
+        run: |
+          if [[ ! -f scripts/preview ]]; then
+            git fetch -q --depth 1 origin "$DEFAULT_BRANCH"
+            git show FETCH_HEAD:scripts/preview >scripts/preview
+            chmod +x scripts/preview
+          fi
+
+      - name: Install the Boat CLI
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://boat.dev/api/boat/cli/download?platform=linux-x64&channel=prod" \
+            -o "$HOME/.local/bin/boat"
+          chmod +x "$HOME/.local/bin/boat"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Sign in to Boat
+        run: |
+          printf '%s' "$BOAT_API_KEY" | boat login --key-stdin --json >/dev/null
+          boat list --json >/dev/null || { echo "::error::Boat refused BOAT_API_KEY. Rotate the key and set the secret again."; exit 1; }
+
+      - name: Deploy, wake, or delete the preview
+        run: |
+          case "$EVENT/$ACTION" in
+            pull_request/labeled | pull_request/reopened) scripts/preview deploy "$PR" "$SHA" --fresh ;;
+            pull_request/synchronize) scripts/preview deploy "$PR" "$SHA" ;;
+            pull_request/unlabeled | pull_request/closed) scripts/preview teardown "$PR" ;;
+            issue_comment/created) scripts/preview wake "$PR" ;;
+          esac

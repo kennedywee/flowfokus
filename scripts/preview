@@ -1,0 +1,243 @@
+#!/usr/bin/env bash
+# Pull request previews on Boat. One sandbox per pull request runs the full
+# stack from that pull request. The rules are in docs/release.md.
+#
+# On the CI runner, or by hand with a Boat login:
+#   scripts/preview deploy <pr> <sha> [--wake]   create or update the preview
+#   scripts/preview deploy <pr> <sha> --fresh    replace it with a new one
+#   scripts/preview wake <pr>                    the /preview comment: wake it
+#   scripts/preview teardown <pr>                delete the preview
+# Inside the sandbox, started by deploy:
+#   scripts/preview up <sha>                     build and start the stack
+set -euo pipefail
+
+REPO="${GITHUB_REPOSITORY:-kennedywee/flowfokus}"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
+ENVIRONMENT="${PREVIEW_ENVIRONMENT:-preview}"
+SIZE="${PREVIEW_SIZE:-small}"
+TTL="${PREVIEW_TTL:-1800}"
+MARKER="<!-- flowfokus-preview -->"
+IMAGES=(flowfokus-server:development flowfokus-portal:development flowfokus-site:development)
+
+die() { echo "preview: $*" >&2; exit 1; }
+
+retry() { # retry <seconds> <command...>
+  local end=$((SECONDS + $1)); shift
+  until "$@"; do
+    ((SECONDS < end)) || return 1
+    sleep 5
+  done
+}
+
+# --- On the runner -----------------------------------------------------------
+
+# Prints "<id> <state>" for the sandbox of this pull request, or nothing.
+find_sandbox() {
+  boat list --all --json |
+    jq -r --arg name "$NAME" '.sandboxes[] | select(.name == $name) | "\(.id) \(.state)"' |
+    head -n 1
+}
+
+is_stopped() { [[ "$(boat info "$ID" --json | jq -r '.sandbox.state // .state')" == "stopped" ]]; }
+
+# Runs one short command in the sandbox and prints its output.
+sbx() { # sbx <timeout seconds> <command>
+  local out code=0
+  out="$(boat exec "$ID" --timeout "$1" -- bash -lc "$2")" || code=$?
+  if jq -e 'type == "object" and has("stdout")' <<<"$out" >/dev/null 2>&1; then
+    jq -r '.stdout' <<<"$out"
+    code="$(jq -r '.exitCode // 1' <<<"$out")"
+  else
+    printf '%s\n' "$out"
+  fi
+  return "$code"
+}
+
+# Creates the pull request comment of the preview, or replaces its text.
+comment() {
+  local body="$MARKER"$'\n'"$1" existing
+  if [[ -n "${PREVIEW_NO_COMMENT:-}" ]]; then
+    printf -- '--- comment ---\n%s\n---------------\n' "$1"
+    return
+  fi
+  existing="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+    --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -n 1)"
+  if [[ -n "$existing" ]]; then
+    gh api -X PATCH "repos/$REPO/issues/comments/$existing" -f body="$body" >/dev/null
+  elif [[ "${2:-}" != "--only-existing" ]]; then
+    gh api "repos/$REPO/issues/$PR/comments" -f body="$body" >/dev/null
+  fi
+}
+
+# Deletes the sandbox in $ID. Boat cannot delete a sandbox while it stops.
+delete_sandbox() {
+  if [[ "${1:-}" == "stopping" ]]; then
+    retry 180 is_stopped || die "$NAME did not stop"
+  fi
+  boat delete "$ID" --yes --json >/dev/null
+  echo "Deleted $ID ($NAME)"
+}
+
+run_link() {
+  [[ -n "${GITHUB_RUN_ID:-}" ]] || return 0
+  echo " [Run log](${GITHUB_SERVER_URL:-https://github.com}/$REPO/actions/runs/$GITHUB_RUN_ID)."
+}
+
+deploy() {
+  PR="${1:?pull request number}"
+  local sha="${2:?commit}" mode="${3:-}" state="" short portal sleeps
+  NAME="flowfokus-pr-$PR"
+  ID=""
+  short="${sha:0:7}"
+  read -r ID state < <(find_sandbox) || true
+
+  # A new label or a reopen promises fresh data. A queued teardown can be
+  # lost to this run, so delete what is left here.
+  if [[ "$mode" == "--fresh" && -n "$ID" ]]; then
+    delete_sandbox "$state"
+    ID=""
+    state=""
+  fi
+
+  if [[ "$state" == "stopping" ]]; then
+    retry 180 is_stopped || die "$NAME did not stop"
+    state="stopped"
+  fi
+
+  case "$state" in
+    "")
+      comment "**Preview is building** for \`$short\`. A new preview takes about 4 minutes.$(run_link)"
+      ID="$(boat new --type "$SIZE" --environment "$ENVIRONMENT" --name "$NAME" --ttl "$TTL" --json |
+        jq -r 'select(.event == "ready") | .id')"
+      [[ -n "$ID" ]] || die "Boat did not create a sandbox"
+      ;;
+    stopped)
+      if [[ "$mode" != "--wake" ]]; then
+        echo "$NAME sleeps. A push does not wake it."
+        comment "**Preview is asleep.** It does not have \`$short\` yet.
+
+To wake it, comment \`/preview\`."
+        return 0
+      fi
+      boat resume "$ID" --ttl "$TTL" --json >/dev/null
+      ;;
+    ready | idle | running) ;;
+    *) die "$NAME is in state '$state'" ;;
+  esac
+  echo "Sandbox $ID ($NAME), was '${state:-new}'"
+
+  failed() {
+    comment "**Preview failed** for \`$short\`.$(run_link)"
+    die "$1"
+  }
+
+  # A pull request from before this helper does not hold it. It then uses
+  # the helper of the default branch.
+  sbx 300 "set -e
+    [ -d flowfokus/.git ] || git clone -q https://github.com/$REPO.git flowfokus
+    cd flowfokus
+    git fetch -q origin pull/$PR/head +$DEFAULT_BRANCH:refs/remotes/origin/$DEFAULT_BRANCH
+    git checkout -q -f --detach $sha
+    if [ -f scripts/preview ]; then cp scripts/preview ~/preview-helper
+    else git show origin/$DEFAULT_BRANCH:scripts/preview >~/preview-helper; fi" ||
+    failed "$NAME could not check out $short"
+
+  # Without a terminal, Boat streams the output as JSON frames.
+  boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash ~/preview-helper up $sha" |
+    jq -Rrj 'fromjson? | .data? // empty' || failed "the stack did not start in $NAME"
+
+  portal="$(sbx 30 'cat ~/preview-links.txt' | awk '/^Staff portal:/ { print $3 }')"
+  [[ -n "$portal" ]] || failed "no portal link from scripts/links"
+  boat extend "$ID" --ttl "$TTL" --json >/dev/null
+  sleeps="$(date -u -d "+$TTL seconds" '+%H:%M UTC') ($(TZ=Asia/Kuala_Lumpur date -d "+$TTL seconds" '+%H:%M MYT'))"
+
+  comment "**Preview is up** for \`$short\`.
+
+[Open the staff portal]($portal)
+
+It sleeps at $sleeps. To wake it, comment \`/preview\`."
+}
+
+# The /preview comment. It takes the latest commit of the pull request.
+wake() {
+  PR="${1:?pull request number}"
+  local info
+  info="$(gh pr view "$PR" --repo "$REPO" --json headRefOid,labels,isCrossRepository,state)"
+  if [[ "$(jq -r '.state' <<<"$info")" != "OPEN" || "$(jq -r '.isCrossRepository' <<<"$info")" == "true" ]]; then
+    die "pull request $PR is closed or comes from a fork"
+  fi
+  if ! jq -e '.labels | any(.name == "preview")' <<<"$info" >/dev/null; then
+    # A queued teardown can be lost to this run. Finish its work.
+    teardown "$PR"
+    gh pr comment "$PR" --repo "$REPO" --body "Add the \`preview\` label first. The label creates the preview, and \`/preview\` wakes it."
+    return 0
+  fi
+  deploy "$PR" "$(jq -r '.headRefOid' <<<"$info")" --wake
+}
+
+teardown() {
+  PR="${1:?pull request number}"
+  local state=""
+  NAME="flowfokus-pr-$PR"
+  ID=""
+  read -r ID state < <(find_sandbox) || true
+  if [[ -z "$ID" ]]; then
+    echo "No sandbox named $NAME."
+  else
+    delete_sandbox "$state"
+  fi
+  comment "**Preview deleted.** Add the \`preview\` label to build a new one." --only-existing
+}
+
+# --- In the sandbox ----------------------------------------------------------
+
+images_present() { docker image inspect "${IMAGES[@]}" >/dev/null 2>&1; }
+
+# True when a change between two commits is in a file that an image holds.
+# Compose mounts the other source folders, so they need no rebuild.
+needs_build() {
+  local files
+  files="$(git diff --name-only "$1" "$2")" || return 0
+  grep -qE '^apps/server/(Gemfile|Gemfile\.lock|Dockerfile.*|\.ruby-version)$' <<<"$files" && return 0
+  grep -vE '^(apps/server/|apps/portal/src/|apps/site/src/|packages/api/src/|docs/|\.github/|scripts/)|^compose\.yaml$|\.md$' \
+    <<<"$files" | grep -q .
+}
+
+up() {
+  local sha="${1:?commit}" old="" built=""
+  # The caller starts this from the checkout. The helper can be a copy.
+  cd "$(git rev-parse --show-toplevel)"
+  [[ -f "$HOME/.preview-sha" ]] && old="$(cat "$HOME/.preview-sha")"
+
+  # Docker publishes the sign-in emulator on every address. On loopback it
+  # needs Boat's relay, and the sandbox firewall blocks that relay.
+  echo "FLOWFOKUS_WORKOS_BIND_IP=0.0.0.0" >.env
+
+  retry 120 docker info >/dev/null 2>&1 || die "Docker did not start"
+  # After a resume, Boat loads the images in the background. A build that
+  # starts before they arrive builds them again.
+  [[ -z "$old" ]] || retry 120 images_present || echo "The images did not come back. Building."
+
+  if [[ -z "$old" ]] || ! images_present || needs_build "$old" "$sha"; then
+    docker compose build
+    built=yes
+  fi
+  # Boat may still create the containers after a resume, so these can collide.
+  retry 90 docker compose run --rm -T server bin/rails db:prepare
+  retry 90 docker compose up -d --wait
+  # Rails does not reload every file. A rebuild already replaced the containers.
+  if [[ -z "$built" && -n "$old" && "$old" != "$sha" ]]; then
+    docker compose restart server jobs
+  fi
+
+  # Vite compiles on the first request. Do that before anyone opens the link.
+  curl -s -o /dev/null --max-time 120 http://127.0.0.1:4001/ || true
+
+  bash scripts/links >"$HOME/preview-links.txt"
+  echo "$sha" >"$HOME/.preview-sha"
+}
+
+case "${1:-}" in
+  deploy | wake | teardown | up) "$@" ;;
+  *) die "usage: scripts/preview deploy <pr> <sha> [--wake | --fresh] | wake <pr> | teardown <pr> | up <sha>" ;;
+esac
