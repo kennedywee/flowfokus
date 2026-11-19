@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Run one self-contained Playwright script without adding Playwright to the
+# project. Installs a pinned Playwright in a temporary folder, installs
+# Chromium into ~/.cache/ms-playwright if it is missing, and removes the
+# folder on exit. The working directory stays the same, so relative evidence
+# paths still land in the repository.
+#
+#   .agents/skills/verify-flowfokus/scripts/run-playwright <script.mjs> [args...]
+set -euo pipefail
+
+PLAYWRIGHT_VERSION=1.63.0
+
+if [[ $# -lt 1 || ! -f $1 ]]; then
+  echo "Usage: run-playwright <script.mjs> [script arguments...]" >&2
+  exit 1
+fi
+
+SCRIPT=$1
+shift
+WORK=$(mktemp -d "${TMPDIR:-/tmp}/verify-flowfokus-playwright.XXXXXXXX")
+trap 'rm -rf -- "$WORK"' EXIT
+
+# ESM resolves imports beside the script, so the script sits next to node_modules.
+cp -- "$SCRIPT" "$WORK/script.mjs"
+(cd -- "$WORK" && npm init -y >/dev/null && npm install --no-audit --no-fund --ignore-scripts --save-exact "playwright@$PLAYWRIGHT_VERSION") >&2
+"$WORK/node_modules/.bin/playwright" install chromium >&2
+node "$WORK/script.mjs" "$@"

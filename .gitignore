@@ -27,3 +27,4 @@ apps/server/storage/*
 /release/
 **/config/master.key
 **/config/credentials/*.key
+.artifacts/

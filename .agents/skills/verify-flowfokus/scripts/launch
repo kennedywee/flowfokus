@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Build and start the Flowfokus Docker stack, prepare the database, and wait
+# until the apps can serve real pages. Writes a marker so cleanup stops only
+# what this run started.
+#
+#   launch           keep the existing database volume (seeds fill gaps only)
+#   launch --fresh   delete the local database volume first. Destroys local data.
+set -euo pipefail
+
+REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.." && pwd)
+cd "$REPO"
+# shellcheck source=ownership.sh
+source "$REPO/.agents/skills/verify-flowfokus/scripts/ownership.sh"
+
+running=false
+docker ps -q --filter name='^flowfokus-' | grep -q . && running=true
+if owns_stack; then
+  echo "This run started the stack. Rebuilding and preparing it again."
+  [[ ${1:-} == --fresh ]] && { echo "Run cleanup before --fresh." >&2; exit 1; }
+  mode=$(marker_mode)
+elif [[ $running == true ]]; then
+  # Someone else's stack. Do not rebuild or reseed it; only check it.
+  rm -f -- "$MARKER" # A stale marker from an earlier run no longer applies.
+  echo "The stack already runs, and this run did not start it. Cleanup will leave it running."
+  [[ ${1:-} == --fresh ]] && { echo "Refusing --fresh on a stack this run did not start." >&2; exit 1; }
+  exec bash "$REPO/.agents/skills/verify-flowfokus/scripts/doctor"
+elif [[ ${1:-} == --fresh ]]; then
+  docker compose down -v
+  mode=fresh
+else
+  mode=kept
+fi
+# Record the containers this run created, also when a later step fails, so
+# cleanup can still stop them.
+trap 'record_ownership "$mode"' EXIT
+
+docker compose build
+docker compose up -d --wait db workos
+# Explicit, as the project requires. A new database also receives the seeds.
+docker compose run --rm server bin/rails db:prepare
+docker compose run --rm server bin/rails db:seed
+docker compose up -d --wait
+
+# Ready means usable. Rails /up passes before Vite has compiled the portal, so
+# wait for real pages. The first request compiles the app and is slow.
+wait_for() {
+  local label=$1 url=$2 text=$3
+  for _ in $(seq 1 90); do
+    if curl -s --max-time 30 "$url" | grep -q "$text"; then echo "ready: $label"; return 0; fi
+    sleep 2
+  done
+  echo "not ready after 3 minutes: $label ($url)" >&2
+  return 1
+}
+wait_for "Rails" http://127.0.0.1:4000/ready '"ok"'
+wait_for "portal" http://localhost:4001/ 'href="/sign-in'
+wait_for "gym site" http://chainsaw.localhost:4002/ 'Chainsaw Gym'
+
+record_ownership "$mode"
+trap - EXIT
+exec bash "$REPO/.agents/skills/verify-flowfokus/scripts/doctor"

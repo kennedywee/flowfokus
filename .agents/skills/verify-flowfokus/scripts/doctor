@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Read-only check: is the running Flowfokus stack worth driving?
+# Exits 0 when every check passes. Prints one line for each check.
+set -uo pipefail
+
+REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.." && pwd)
+FAIL=0
+ok() { printf 'ok    %s\n' "$1"; }
+bad() { printf 'FAIL  %s\n' "$1"; FAIL=1; }
+warn() { printf 'warn  %s\n' "$1"; }
+
+# 1. Every container runs.
+for name in db workos server jobs portal site; do
+  state=$(docker inspect -f '{{.State.Status}}' "flowfokus-$name" 2>/dev/null || echo missing)
+  [[ $state == running ]] && ok "flowfokus-$name is running" || bad "flowfokus-$name is $state"
+done
+
+# 2. The containers serve this checkout. Compose mounts the source, so the
+#    commit under test is whatever this working tree holds.
+for pair in server:/app portal:/app/apps/portal/src site:/app/apps/site/src; do
+  name=${pair%%:*}; dest=${pair#*:}
+  src=$(docker inspect -f "{{range .Mounts}}{{if eq .Destination \"$dest\"}}{{.Source}}{{end}}{{end}}" "flowfokus-$name" 2>/dev/null)
+  case $name in server) want="$REPO/apps/server" ;; *) want="$REPO/apps/$name/src" ;; esac
+  [[ $src == "$want" ]] && ok "flowfokus-$name mounts this checkout" || bad "flowfokus-$name mounts '${src:-nothing}', not $want"
+done
+commit=$(git -C "$REPO" rev-parse --short HEAD)
+dirty=$(git -C "$REPO" status --porcelain | wc -l | tr -d ' ')
+ok "commit under test: $commit ($(git -C "$REPO" branch --show-current)), $dirty uncommitted paths"
+ok "online test payments: $(docker exec flowfokus-server printenv FLOWFOKUS_TEST_PAYMENTS 2>/dev/null || echo unknown)"
+
+# Dependency or Dockerfile edits need a rebuild. Source edits do not.
+# Each service is compared with the image its running container uses. Node
+# does the date and file-time math, so this works with GNU and BSD tools alike.
+for pair in "server:apps/server/Gemfile.lock apps/server/Dockerfile.dev" \
+            "jobs:apps/server/Gemfile.lock apps/server/Dockerfile.dev" \
+            "portal:bun.lock apps/portal/package.json apps/portal/Dockerfile" \
+            "site:bun.lock apps/site/package.json apps/site/Dockerfile"; do
+  name=${pair%%:*}; files=${pair#*:}
+  image=$(docker inspect -f '{{.Image}}' "flowfokus-$name" 2>/dev/null) || continue
+  created=$(docker image inspect -f '{{.Created}}' "$image" 2>/dev/null) || { bad "cannot read the image of flowfokus-$name"; continue; }
+  # shellcheck disable=SC2086 # $files is a space-separated list of paths.
+  stale=$(cd "$REPO" && node -e '
+    const fs = require("node:fs")
+    const built = Date.parse(process.argv[1])
+    if (Number.isNaN(built)) { console.log("?"); process.exit() }
+    console.log(process.argv.slice(2).filter(file => fs.statSync(file).mtimeMs > built).join(" "))
+  ' "$created" $files) || { bad "cannot compare files with the image of flowfokus-$name"; continue; }
+  if [[ $stale == "?" ]]; then bad "cannot read the build time of the flowfokus-$name image"
+  elif [[ -n $stale ]]; then warn "flowfokus-$name: $stale changed after its image was built. Run: docker compose up -d --build --wait"
+  fi
+done
+
+# 3. The published ports belong to these containers, and each app answers.
+for pair in server:4000 portal:4001 site:4002 workos:4100; do
+  name=${pair%%:*}; port=${pair#*:}
+  docker port "flowfokus-$name" "$port/tcp" >/dev/null 2>&1 && ok "flowfokus-$name publishes port $port" || bad "flowfokus-$name does not publish port $port"
+done
+code() { curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$@"; }
+[[ $(code http://127.0.0.1:4000/ready) == 200 ]] && ok "Rails /ready is 200" || bad "Rails /ready is not 200"
+[[ $(code http://127.0.0.1:4100/health) == 200 ]] && ok "WorkOS emulator /health is 200" || bad "WorkOS emulator /health is not 200"
+curl -s --max-time 60 http://localhost:4001/ | grep -q 'href="/sign-in' && ok "portal / renders the sign-in link" || bad "portal / does not render the sign-in link"
+curl -s --max-time 60 http://chainsaw.localhost:4002/ | grep -q 'Chainsaw Gym' && ok "gym site renders Chainsaw Gym" || bad "gym site does not render Chainsaw Gym"
+
+# 4. Login works: an emulator password sign-in gives a token that Rails accepts.
+#    The session is revoked at once. Tokens never leave this process.
+node --input-type=module -e '
+const post = (path, body) => fetch("http://127.0.0.1:4100" + path, { method: "POST",
+  headers: { "Content-Type": "application/json", Authorization: "Bearer sk_test_default" },
+  body: JSON.stringify(body), signal: AbortSignal.timeout(10_000) })
+const auth = await post("/user_management/authenticate", { client_id: "client_flowfokus_local",
+  client_secret: "sk_test_default", grant_type: "password", email: "demo.owner@flowfokus.test",
+  password: "local-password", organization_id: "org_demo_chainsaw" })
+if (auth.status !== 200) { console.log("FAIL  emulator sign-in returned " + auth.status); process.exit(1) }
+const { access_token } = await auth.json()
+const rails = await fetch("http://127.0.0.1:4000/staff/organization", { signal: AbortSignal.timeout(10_000),
+  headers: { Authorization: "Bearer " + access_token, "Flowfokus-Organization": "chainsaw" } })
+const body = rails.status === 200 ? await rails.json() : {}
+const { sid } = JSON.parse(Buffer.from(access_token.split(".")[1], "base64url").toString())
+await post("/user_management/sessions/revoke", { session_id: sid })
+if (rails.status !== 200) { console.log("FAIL  Rails /staff/organization returned " + rails.status); process.exit(1) }
+console.log("ok    demo.owner signs in, and Rails returns " + JSON.stringify(body.data?.name ?? body.name))
+' || FAIL=1
+
+[[ $FAIL == 0 ]] && echo "READY: drive http://localhost:4001 and http://chainsaw.localhost:4002" || echo "NOT READY: fix the FAIL lines first"
+exit $FAIL
