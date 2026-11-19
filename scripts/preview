@@ -94,6 +94,9 @@ deploy() {
     stopped)
       if [[ "$wake" != "--wake" ]]; then
         echo "$NAME sleeps. A push does not wake it."
+        comment "**Preview is asleep.** It does not have \`$short\` yet.
+
+To start it again, remove the \`preview\` label and add it back. That builds a new preview with fresh data."
         return 0
       fi
       boat resume "$ID" --ttl "$TTL" --json >/dev/null
