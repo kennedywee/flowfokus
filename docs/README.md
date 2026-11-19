@@ -25,7 +25,7 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 | [Benefit Delivery Cycle](benefit-delivery-cycle.md) | The four stages of the business domain. |
 | [Models](models.md) | Domain records and their rules. |
 | [Workflows](workflows.md) | Purchase, renewal, check-in, refund, and adjustment flows. |
-| [Decisions](decisions.md) | Decision status: accepted, proposed, open, deferred. |
+| [Decisions](decisions.md) | Accepted decisions and deferred scope. |
 
 ## First release
 
@@ -43,5 +43,5 @@ Standalone passes, classes, events, reservations, waitlists, recurring billing, 
 ## Rules for these documents
 
 - Each topic has one home document. Other documents link to it. They do not repeat it.
-- Topic documents state agreed rules only. Proposed and open items live in [Decisions](decisions.md). A full proposed design gets its own document, marked **Status: proposed** at the top.
-- When a decision changes, update its home document and `decisions.md` together.
+- Documents state agreed rules and what is built. Questions that are not decided, and work to do, are GitHub issues. A full proposed design gets its own document, marked **Status: proposed** at the top.
+- When a decision is made or changes, update its home document and `decisions.md` together, and close its issue.
