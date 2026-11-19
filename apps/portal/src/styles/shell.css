@@ -239,12 +239,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.account__role {
-  flex: none;
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
 .account__chevron {
   flex: none;
   width: 14px;
@@ -1044,7 +1038,6 @@
   .shell .sidebar__name,
   .shell .nav-item__label,
   .shell .account__name,
-  .shell .account__role,
   .shell .account__chevron {
     position: absolute;
     width: 1px;
@@ -1102,7 +1095,6 @@
   .shell[data-collapsed="true"] .sidebar__name,
   .shell[data-collapsed="true"] .nav-item__label,
   .shell[data-collapsed="true"] .account__name,
-  .shell[data-collapsed="true"] .account__role,
   .shell[data-collapsed="true"] .account__chevron {
     position: absolute;
     width: 1px;

@@ -228,7 +228,9 @@ Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
 only where the shortcut works (`lib/shortcuts.ts`).
 
 Shell. The sidebar (236px, no fill or edge) holds the logo, the collapse
-button, one list of pages, and the account menu at the foot. The account menu
+button, one list of pages, and the account menu at the foot. The account
+button shows the avatar and name only; the role shows in the organization
+switcher. The account menu
 holds Settings, Theme, What's new, and Sign out. The 48px top bar holds the
 breadcrumb: organization, location, section, and page, then Search and the
 page's actions on the right. A detail route names
