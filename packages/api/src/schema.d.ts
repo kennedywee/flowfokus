@@ -1145,9 +1145,8 @@ export interface components {
          *     - `rate_limited` (429)
          *     - `internal_error` (500)
          *     - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable`, `payments_unavailable` (503)
-         * @enum {string}
          */
-        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "schedule_invalid" | "occurrence_full" | "occurrence_unavailable" | "occurrence_required" | "booking_not_allowed" | "checkout_closed" | "attendees_invalid" | "payments_unavailable" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable" | "payments_unavailable";
+        ErrorCode: "bad_request" | "organization_required" | "idempotency_key_required" | "unauthenticated" | "invalid_token" | "forbidden" | "organization_mismatch" | "not_found" | "idempotency_key_reused" | "validation_failed" | "price_unavailable" | "renewal_unavailable" | "overpayment" | "sale_not_paid" | "sale_voided" | "sale_not_voidable" | "sale_not_delivered" | "refund_exceeds_payment" | "staff_change_refused" | "workos_rejected" | "link_code_invalid" | "member_already_linked" | "member_not_linked" | "schedule_invalid" | "occurrence_full" | "occurrence_unavailable" | "occurrence_required" | "booking_not_allowed" | "checkout_closed" | "attendees_invalid" | "payments_unavailable" | "rate_limited" | "internal_error" | "auth_not_configured" | "auth_unavailable" | "database_unavailable" | "workos_unavailable";
         /** @description A WorkOS event, as WorkOS sends it. Other fields are allowed and kept. */
         WorkosWebhookEvent: {
             /** @description WorkOS event ID. Unique; redeliveries repeat it. */

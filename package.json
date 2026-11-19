@@ -18,7 +18,7 @@
     "smoke:workflows": "node scripts/smoke-workflows.mjs",
     "workos:webhook": "node scripts/configure-workos-webhook.mjs",
     "smoke:session": "bun run --cwd apps/portal smoke:session",
-    "contract:types": "openapi-typescript apps/server/openapi.yaml -o packages/api/src/schema.d.ts",
+    "contract:types": "node scripts/contract-types.mjs",
     "contract:check": "bash scripts/contract-check",
     "typecheck": "bun run --cwd packages/api typecheck && bun run --cwd apps/portal typecheck && bun run --cwd apps/site typecheck",
     "test:web": "bun run --cwd apps/portal test && bun run --cwd apps/site test",

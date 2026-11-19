@@ -22,6 +22,7 @@ module ApiHelpers
 
     public_send(method, path, params: body, headers: request_headers.merge(headers))
     assert_response_schema_confirm(response.status)
+    assert_documented_error_code unless path.start_with?("/webhooks/")
     ContractCoverage.record(method, path, response.status)
     response
   end
@@ -29,6 +30,14 @@ module ApiHelpers
   def json = response.parsed_body
   def data = json.fetch("data")
   def error_code = json.dig("error", "code")
+
+  # Committee does not check `x-extensible-enum`, so error codes are checked here.
+  # Webhooks use their own `enum`, which Committee checks.
+  def assert_documented_error_code
+    body = response.media_type == "application/json" && response.parsed_body
+    code = body.is_a?(Hash) && body.dig("error", "code")
+    expect(ContractCoverage.error_codes).to include(code) if code
+  end
 end
 
 # Fails the full run when an operation or a documented status has no checked response.
@@ -41,6 +50,8 @@ module ContractCoverage
     end
 
     def document = @document ||= YAML.load_file(SPEC_PATH)
+
+    def error_codes = @error_codes ||= document.dig("components", "schemas", "ErrorCode", "x-extensible-enum")
 
     def hits = @hits ||= Set.new
 
