@@ -19,6 +19,7 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | `openapi.yaml` is the single source of API types. CI blocks breaking changes. | [Monorepo](monorepo.md#api-contract) |
 | One tag releases every app. Candidates, then stable on the same commit. | [Release](release.md#flow) |
 | Build once, promote the artifact. Deploys are manual with approval. | [Release](release.md#rules) |
+| PR previews run on Boat: one sandbox per PR with the full local stack. Sign-in uses WorkOS Emulate, so a preview needs no redirect URI. | [Release](release.md#pull-request-previews) |
 | Migrations stay backward compatible. No migration on boot. | [Release](release.md#server-deployment) |
 | PostgreSQL. | [Architecture](architecture.md#technology) |
 | Rails API on a VPS. Staff portal and gym sites are TanStack Start apps on Cloudflare Workers. | [Release](release.md#hosting) |

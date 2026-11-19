@@ -31,7 +31,7 @@ There is no staging environment yet. Production is the only deployed environment
 | Workflow | Trigger | Does |
 | --- | --- | --- |
 | `ci.yml` | Pull request, push to `master`. Skipped when only `docs/**` or `*.md` files change. | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
-| `preview.yml` | PR with the `preview` label | Builds every app from the PR. Uploads portal and site Worker preview versions. No secrets in the build job. |
+| `preview.yml` | PR with the `preview` label: label added or removed, push, reopen, close | Creates, updates, or deletes the [preview](#pull-request-previews) of the PR on Boat. The job holds one secret, a Boat API key that reaches preview sandboxes only. |
 | `release.yml` | Push of a `v*` tag | Runs CI, builds each app once, publishes the server image, writes the release manifest, creates one GitHub Release. Deploys nothing. |
 | `deploy.yml` | Manual: tag, apps | Approval, database backup, migration, server start, smoke test, then web sites. |
 | `mobile.yml` | Manual: tag | Sends an EAS Update or submits a store build. |
@@ -45,6 +45,33 @@ The **release manifest** records the tag, commit, channel, and each app's build 
 - **Build once, promote the artifact.** Server image and web builds are reused across environments. Only runtime configuration changes. Mobile is the exception: it needs one build per environment.
 - **Candidates never reach production.** Deploy and Mobile refuse candidate tags for production.
 - **Deploy only what changed.** Choose apps in the Deploy workflow. A change in `packages/api` affects every client. When unsure, deploy all.
+
+## Pull request previews
+
+A PR with the `preview` label gets a preview: one [Boat](https://boat.dev) sandbox that runs the full local stack from that PR. The stack is the one in `compose.yaml`: Rails, the jobs process, the portal, the gym site, PostgreSQL, and WorkOS Emulate.
+
+Each preview is a virtual machine of its own, named `flowfokus-pr-<number>`. It holds demo data and fake users only. It needs no production secret and no WorkOS redirect URI.
+
+| Event | Result |
+| --- | --- |
+| The `preview` label is added, or the PR is reopened with it | A new sandbox. Build, prepare the database, start the stack. About 4 minutes. |
+| A push while the preview runs | The sandbox takes the new commit. Images are rebuilt only when a file inside an image changed. |
+| A push while the preview sleeps | Nothing. |
+| 30 minutes after the last deploy | Boat stops the sandbox. It costs nothing while it sleeps. The disk and the database stay. |
+| A `/preview` comment | Wakes the sandbox and takes the latest commit. |
+| The label is removed, or the PR is closed | The sandbox is deleted. |
+
+The workflow keeps one comment on the PR with the state and the portal link. The link is a Boat link with an access token, see [Access through a Boat link](local-auth.md#access-through-a-boat-link). On a public repository, anyone who reads the comment can open a running preview.
+
+Rules:
+
+- **Staff portal only.** The gym site selects the gym from its host name, and a Boat link has no place for one.
+- **The label is the switch.** GitHub lets only people with triage access set it. A PR from a fork gets no preview.
+- **Sleep is on a timer.** Boat counts from the last deploy or wake, not from the last request.
+- **No more than 5 previews run at once.** When a sixth starts, the oldest one is stopped.
+- **A nightly clean-up** deletes sandboxes whose PR is closed, has lost the label, or has slept for more than 7 days. It touches only names that start with `flowfokus-pr-`.
+
+`scripts/preview` holds the logic. The workflow only chooses the command. Built so far: the label, the push, and the delete. The `/preview` comment, the limit of 5, and the nightly clean-up are tracked in [#52](https://github.com/kennedywee/flowfokus/issues/52).
 
 ## Versions
 
