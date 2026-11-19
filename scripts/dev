@@ -35,4 +35,5 @@ pids+=("$!")
 bun run --cwd apps/site dev &
 pids+=("$!")
 echo "Portal: http://localhost:4001 | Gym: http://chainsaw.localhost:4002"
+echo "On a Boat machine, run scripts/links for HTTPS links that open on any device."
 wait -n "${pids[@]}"

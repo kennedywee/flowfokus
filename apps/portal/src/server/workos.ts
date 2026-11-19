@@ -19,6 +19,7 @@ import {
   resolveStaffAccess,
   safeReturnPath,
   toBrowserUrl,
+  toLinkUrl,
   workosBrowserOrigin,
   workosSetting,
   type AuthOrigins,
@@ -42,6 +43,17 @@ export function currentStaffAccess(): StaffAccess {
 /** The callback, start page, and emulator address for this request. See `resolveAuthOrigins`. */
 function authOrigins(request: Request): AuthOrigins {
   return resolveAuthOrigins(request, { dev, env: portalEnv() });
+}
+
+/** Keeps a redirect to this request's Boat link on HTTPS. See `toLinkUrl`. */
+export function linkRedirect(response: Response, request: Request): Response {
+  const location = response.headers.get("Location");
+  if (!location) return response;
+  const fixed = toLinkUrl(location, request, { dev, env: portalEnv() });
+  if (fixed === location) return response;
+  const headers = new Headers(response.headers);
+  headers.set("Location", fixed);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 /** Extra CSP `form-action` origins: the WorkOS sign-out page, when WorkOS sign-in is on. */

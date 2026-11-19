@@ -29,7 +29,8 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       # Gym sites sign members in on <slug>.localhost.
-      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1},*.localhost"
+      # The last entry is for Boat links (scripts/links): any sandbox, so no machine is listed.
+      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1},*.localhost,*.on.boat.dev"
     volumes:
       - ./workos-emulate.config.yaml:/app/workos-emulate.config.yaml:ro
     ports:

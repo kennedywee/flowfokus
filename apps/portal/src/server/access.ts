@@ -182,6 +182,8 @@ export function toBrowserUrl(url: string, { dev, env }: AccessInput, browserUrl 
   const browser = new URL(browserUrl);
   target.protocol = browser.protocol;
   target.host = browser.host;
+  // Setting `host` keeps the old port when the new host has none.
+  target.port = browser.port;
   return target.toString();
 }
 
@@ -256,6 +258,34 @@ export function devAuthHosts(env: PortalEnv): Set<string> {
   return hosts;
 }
 
+/** The domain of Boat links. */
+const DEV_LINK_DOMAIN = "on.boat.dev";
+
+/** One port of a development machine on its Boat link. */
+export interface DevLinkHost {
+  sandbox: string;
+  port: string;
+}
+
+/**
+ * Reads a Boat link host. Boat gives each port of a sandbox an HTTPS address of
+ * its own, `<sandbox>-<port>.on.boat.dev`, so the port is part of the name and
+ * every service has a different host. Returns `null` for any other host.
+ *
+ * The rule names a domain, never a machine: every sandbox, new or old, matches
+ * it, so nothing is registered per machine. A link exists only after
+ * `scripts/links` asks Boat for it.
+ *
+ * A link is a public name, which `FLOWFOKUS_DEV_AUTH_HOSTS` refuses. It is
+ * allowed here because the callback can only be the same sandbox's own link:
+ * no host name can send a sign-in to another host.
+ */
+export function devLinkHost(hostname: string): DevLinkHost | null {
+  if (!hostname.endsWith(`.${DEV_LINK_DOMAIN}`)) return null;
+  const link = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{1,5})$/.exec(hostname.slice(0, -DEV_LINK_DOMAIN.length - 1));
+  return link ? { sandbox: link[1]!, port: link[2]! } : null;
+}
+
 /** Where sign-in, the callback, and sign-out lead for one request. */
 export interface AuthOrigins {
   /** False in development when the request host may not sign in. Always true in production. */
@@ -281,6 +311,11 @@ export interface AuthOrigins {
  * scheme and port of `WORKOS_BROWSER_URL` and takes the request host. Any other
  * host gets the configured addresses and `allowed: false`. Only the request URL is read;
  * `X-Forwarded-Host` and similar headers are ignored.
+ *
+ * A Boat link (see `devLinkHost`) keeps its sandbox and changes the port inside
+ * the name: the callback is the link of the `WORKOS_REDIRECT_URI` port, the
+ * emulator the link of the `WORKOS_BROWSER_URL` port. Both are HTTPS, which is
+ * how Boat serves a link, whatever scheme the forwarded request has.
  */
 export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput): AuthOrigins {
   const configured = new URL(env.WORKOS_REDIRECT_URI ?? "");
@@ -293,6 +328,18 @@ export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput):
   if (!dev) return fallback;
 
   const current = new URL(request.url);
+  const link = devLinkHost(current.hostname);
+  if (link) {
+    if (current.port !== "" || link.port !== configured.port) return fallback;
+    const origin = (port: string) => `https://${link.sandbox}-${port}.${DEV_LINK_DOMAIN}`;
+    const browserPort = isUrl(env.WORKOS_BROWSER_URL) ? new URL(env.WORKOS_BROWSER_URL ?? "").port : "";
+    return {
+      allowed: true,
+      redirectUri: `${origin(link.port)}${configured.pathname}`,
+      home: `${origin(link.port)}/`,
+      browserUrl: browserPort ? origin(browserPort) : env.WORKOS_BROWSER_URL,
+    };
+  }
   if (current.protocol !== configured.protocol || current.port !== configured.port) return fallback;
   if (current.hostname !== configured.hostname && !devAuthHosts(env).has(current.hostname)) return fallback;
 
@@ -305,6 +352,25 @@ export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput):
     browserUrl = browser.origin;
   }
   return { allowed: true, redirectUri: redirect.toString(), home: new URL("/", redirect).toString(), browserUrl };
+}
+
+/**
+ * Boat serves a link over HTTPS and passes the request on over plain HTTP, so
+ * a redirect built from the request URL would leave HTTPS. Moves a redirect to
+ * the request's own link host back to HTTPS. Anything else passes unchanged.
+ */
+export function toLinkUrl(location: string, request: Request, { dev, env }: AccessInput): string {
+  if (!dev) return location;
+  const current = new URL(request.url);
+  if (!devLinkHost(current.hostname)) return location;
+  try {
+    const target = new URL(location);
+    if (target.protocol !== "http:" || target.host !== current.host) return location;
+    target.protocol = "https:";
+    return target.toString();
+  } catch {
+    return location;
+  }
 }
 
 /**

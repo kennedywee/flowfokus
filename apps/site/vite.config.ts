@@ -31,8 +31,8 @@ function localVars(): Record<string, string> {
 }
 
 export default defineConfig(({ command }) => ({
-  // Gym sites run on <slug>.localhost in development.
-  server: { port: 4002, strictPort: true, allowedHosts: [".localhost"] },
+  // Gym sites run on <slug>.localhost in development. `.on.boat.dev` is for Boat links.
+  server: { port: 4002, strictPort: true, allowedHosts: [".localhost", ".on.boat.dev"] },
   preview: { port: 4002, strictPort: true },
   plugins: [
     cloudflare({

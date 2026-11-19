@@ -35,7 +35,8 @@ function localVars(): Record<string, string> {
 }
 
 export default defineConfig(({ command }) => ({
-  server: { port: 4001, strictPort: true },
+  // `.on.boat.dev`: Boat links (scripts/links). Vite refuses a host name it was not told about.
+  server: { port: 4001, strictPort: true, allowedHosts: [".on.boat.dev"] },
   preview: { port: 4001, strictPort: true },
   // `@/` is the portal `src` folder, as shadcn components expect.
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },

@@ -51,6 +51,35 @@ on localhost does not also sign in on the Tailscale address.
 Recreating the emulator clears its in-memory sessions. Restart Rails with it
 to clear cached signing keys, then sign in again.
 
+### Access through a Boat link
+
+On a [Boat](https://boat.dev) machine, each port can have an HTTPS address of
+its own, `https://<sandbox>-<port>.on.boat.dev`. It opens on any device and
+needs no Tailscale and no setting. Once the stack is up, run:
+
+```sh
+scripts/links
+```
+
+It prints the staff portal's link and the sign-in emulator's link. Open the
+portal's link and sign in. Sign-in opens the same sandbox's emulator link, and
+the callback returns to its portal link.
+
+A link exists only after you run the script. `scripts/dev` does not make one.
+
+No machine is registered anywhere. The portal and the emulator accept every
+name of the shape `<sandbox>-<port>.on.boat.dev`, and the callback is always
+the same sandbox, so no name can send a sign-in elsewhere. A new machine works
+as soon as its stack runs. There is no setting.
+
+The portal's link is private: its `_token` is the access, so treat the link
+like a password. The emulator's link is public, because sign-in must send any
+browser there. It holds fake users only. A link stays the same across the
+machine's sleeps.
+
+localhost and the hosts in `FLOWFOKUS_DEV_AUTH_HOSTS` work as before. Member
+sign-in on a gym site still needs `<slug>.localhost`.
+
 ### Fake staff accounts
 
 Each fake user has the password `local-password`:
