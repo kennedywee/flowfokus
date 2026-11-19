@@ -207,6 +207,9 @@ up() {
     docker compose restart server jobs
   fi
 
+  # Vite compiles on the first request. Do that before anyone opens the link.
+  curl -s -o /dev/null --max-time 120 http://127.0.0.1:4001/ || true
+
   bash scripts/links >"$HOME/preview-links.txt"
   echo "$sha" >"$HOME/.preview-sha"
 }
