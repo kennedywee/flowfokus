@@ -20,9 +20,11 @@ link() {
     echo "Nothing listens on port $port yet. Start the stack first." >&2
     return 1
   fi
-  # A service on loopback only needs Boat's relay. One on every address must
-  # not get it: the relay would hold its port.
-  if grep -qvE '^(127\.|\[::1\])' <<<"$addresses"; then
+  # A service on every address (0.0.0.0, [::], or *) gets a direct link. One
+  # on loopback only needs Boat's relay. The relay listens on the machine's
+  # other addresses one by one, never on a wildcard, so a second run still
+  # sees a loopback service and keeps the relay.
+  if grep -qE '^(0\.0\.0\.0|\[::\]|\*):' <<<"$addresses"; then
     "$boat_host" url "$port" "$access"
   else
     "$boat_host" url "$port" "$access" --localhost
