@@ -50,7 +50,7 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
 | `staff:manage` | See the team, invite staff, revoke invitations, change roles, and remove access |
 
-Which roles ship by default is still open. See [Decisions](decisions.md#identity-and-access).
+Three roles ship by default: Owner, Manager, and Receptionist.
 
 ## Enforcement
 

@@ -1,12 +1,12 @@
 # Working agreement
 
-Start with `docs/README.md`. It lists every design document and its topic. Read `docs/architecture.md` and `docs/monorepo.md` before implementation. Then read the home document for the topic you change. Check `docs/decisions.md` before you build on an open or proposed decision. Keep the agreed stack and domain terms.
+Start with `docs/README.md`. It lists every design document and its topic. Read `docs/architecture.md` and `docs/monorepo.md` before implementation. Then read the home document for the topic you change. Before you build on a question that is not decided, check the open GitHub issues with the `decision` label. `docs/decisions.md` lists the accepted decisions. Keep the agreed stack and domain terms.
 
 ## Writing
 
 - Use short sentences and familiar words. Prefer active voice.
 - Each topic has one home document. Link to it instead of repeating it.
-- When a decision changes, update its home document and `docs/decisions.md` together.
+- When a decision is made or changes, update its home document and `docs/decisions.md` together, and close its issue.
 - Track work to do in GitHub issues. Do not add task lists to the docs. Docs hold agreed rules, decisions, and verification records.
 
 ## Git
