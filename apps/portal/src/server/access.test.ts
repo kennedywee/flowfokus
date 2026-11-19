@@ -12,6 +12,7 @@ import {
   resolveStaffAccess,
   safeReturnPath,
   toBrowserUrl,
+  toLinkUrl,
   toPublicAccess,
   workosBrowserOrigin,
   workosSetting,
@@ -223,7 +224,8 @@ describe("resolveAuthOrigins in development", () => {
 });
 
 const LINK = "box-node-caf79c034da33549";
-const linkEnv: PortalEnv = { ...emulatorEnv, FLOWFOKUS_DEV_LINK_HOSTS: "*.on.boat.dev" };
+// Links are on unless the setting is empty.
+const linkEnv: PortalEnv = emulatorEnv;
 
 describe("resolveAuthOrigins on a Boat link", () => {
   test("the callback and the emulator are the same sandbox's links, over HTTPS", () => {
@@ -246,11 +248,34 @@ describe("resolveAuthOrigins on a Boat link", () => {
     });
   });
 
-  test("a link is refused until its domain is listed", () => {
-    expect(resolveAuthOrigins(get(`http://${LINK}-4001.on.boat.dev/sign-in`), { dev: true, env: emulatorEnv })).toMatchObject({
+  test("any sandbox works: no machine is listed anywhere", () => {
+    for (const sandbox of ["box-node-0000000000000001", "box-node-ffffffffffffffff", "acme-staging"]) {
+      expect(resolveAuthOrigins(get(`http://${sandbox}-4001.on.boat.dev/sign-in`), { dev: true, env: linkEnv })).toMatchObject({
+        allowed: true,
+        redirectUri: `https://${sandbox}-4001.on.boat.dev/callback`,
+        browserUrl: `https://${sandbox}-4100.on.boat.dev`,
+      });
+    }
+  });
+
+  test("an empty setting turns links off", () => {
+    const off = { ...emulatorEnv, FLOWFOKUS_DEV_LINK_HOSTS: "" };
+    expect(resolveAuthOrigins(get(`http://${LINK}-4001.on.boat.dev/sign-in`), { dev: true, env: off })).toMatchObject({
       allowed: false,
       redirectUri: "http://localhost:4001/callback",
     });
+  });
+
+  test("a redirect to the link stays on HTTPS", () => {
+    const request = get(`http://${LINK}-4001.on.boat.dev/callback?code=x`);
+    const dev = { dev: true, env: linkEnv };
+    expect(toLinkUrl(`http://${LINK}-4001.on.boat.dev/chainsaw`, request, dev)).toBe(`https://${LINK}-4001.on.boat.dev/chainsaw`);
+    // Relative paths, other hosts, and requests that are not on a link pass unchanged.
+    for (const location of ["/chainsaw", "http://evil.example/", `http://${LINK}-4100.on.boat.dev/`]) {
+      expect(toLinkUrl(location, request, dev)).toBe(location);
+    }
+    expect(toLinkUrl("http://localhost:4001/", get("http://localhost:4001/callback"), dev)).toBe("http://localhost:4001/");
+    expect(toLinkUrl(`http://${LINK}-4001.on.boat.dev/`, request, { dev: false, env: linkEnv })).toBe(`http://${LINK}-4001.on.boat.dev/`);
   });
 
   test("another port's link, or a port after the name, is refused", () => {

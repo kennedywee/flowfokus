@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# On a Boat machine: gives the staff portal and the sign-in emulator their Boat
+# links and prints them. A link is an HTTPS address that opens on any device.
+# Run it once the stack is up. Safe to run again: a link keeps its address.
+#
+# The portal's link is private: its _token is the access. The emulator's is
+# public, so that sign-in can send any browser there. It holds fake users only.
+set -euo pipefail
+
+boat_host="$HOME/.ascii/host"
+if [[ ! -x "$boat_host" ]]; then
+  echo "Not a Boat machine: no links. Use http://localhost:4001." >&2
+  exit 0
+fi
+
+link() {
+  local port="$1" access="$2" addresses
+  addresses="$(ss -ltnH "sport = :$port" | awk '{print $4}')"
+  if [[ -z "$addresses" ]]; then
+    echo "Nothing listens on port $port yet. Start the stack first." >&2
+    return 1
+  fi
+  # A service on loopback only needs Boat's relay. One on every address must
+  # not get it: the relay would hold its port.
+  if grep -qvE '^(127\.|\[::1\])' <<<"$addresses"; then
+    "$boat_host" url "$port" "$access"
+  else
+    "$boat_host" url "$port" "$access" --localhost
+  fi
+}
+
+emulator="$(link 4100 --public)"
+portal="$(link 4001 --private)"
+echo "Sign-in emulator: $emulator"
+echo "Staff portal:     $portal"

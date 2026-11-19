@@ -36,11 +36,11 @@ function localVars(): Record<string, string> {
 }
 
 /**
- * Boat link domains from `FLOWFOKUS_DEV_LINK_HOSTS` (`*.on.boat.dev`), as Vite
- * names them (`.on.boat.dev`). Vite refuses a host name it was not told about.
+ * Boat link domains from `FLOWFOKUS_DEV_LINK_HOSTS` (default `*.on.boat.dev`), as
+ * Vite names them (`.on.boat.dev`). Vite refuses a host name it was not told about.
  */
 function linkHosts(): string[] {
-  return (process.env.FLOWFOKUS_DEV_LINK_HOSTS ?? "")
+  return (process.env.FLOWFOKUS_DEV_LINK_HOSTS ?? "*.on.boat.dev")
     .split(",")
     .map((entry) => entry.trim())
     .filter((entry) => entry.startsWith("*."))

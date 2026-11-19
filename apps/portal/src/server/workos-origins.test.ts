@@ -97,15 +97,16 @@ describe("development sign-in through the SDK", () => {
 
 describe("development sign-in on a Boat link through the SDK", () => {
   const link = "box-node-caf79c034da33549";
-  const dev: AccessInput = { dev: true, env: { ...emulatorEnv, FLOWFOKUS_DEV_LINK_HOSTS: "*.on.boat.dev" } };
+  const dev: AccessInput = { dev: true, env: emulatorEnv };
 
   test("AuthKit opens on the emulator's link and returns to the portal's", async () => {
     const { location, cookies } = await signIn(dev, `http://${link}-4001.on.boat.dev/sign-in`);
     expect(location.origin).toBe(`https://${link}-4100.on.boat.dev`);
     expect(location.pathname).toBe("/user_management/authorize");
     expect(location.searchParams.get("redirect_uri")).toBe(`https://${link}-4001.on.boat.dev/callback`);
-    // Not Secure: the configured callback stays plain HTTP, and HTTPS pages accept the cookie.
+    // Secure, as the callback is HTTPS: the browser is on the link, which is HTTPS too.
     expect(cookies[0]).toStartWith("wos-auth-verifier");
+    expect(cookies[0]).toContain("Secure");
     expect(cookies[0]).not.toContain("Domain");
   });
 

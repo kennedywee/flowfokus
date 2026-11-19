@@ -35,4 +35,6 @@ pids+=("$!")
 bun run --cwd apps/site dev &
 pids+=("$!")
 echo "Portal: http://localhost:4001 | Gym: http://chainsaw.localhost:4002"
+# On a Boat machine, also on its links. Retries while the servers start.
+(for _ in 1 2 3 4 5 6; do sleep 5; scripts/links 2>/dev/null && break; done) &
 wait -n "${pids[@]}"

@@ -10,10 +10,11 @@ export const Route = createFileRoute("/callback")({
   server: {
     handlers: {
       GET: async (context) => {
-        const { currentStaffAccess } = await import("../server/workos");
+        const { currentStaffAccess, linkRedirect } = await import("../server/workos");
         if (currentStaffAccess().kind !== "workos") return redirectTo("/");
         const { handleCallbackRoute } = await import("@workos/authkit-tanstack-react-start");
-        return handleCallbackRoute({ onError: () => redirectTo("/?sign_in=failed") })(context);
+        const response = await handleCallbackRoute({ onError: () => redirectTo("/?sign_in=failed") })(context);
+        return linkRedirect(response, context.request);
       },
     },
   },

@@ -39,8 +39,9 @@ export interface PortalEnv {
    */
   FLOWFOKUS_DEV_AUTH_HOSTS?: string;
   /**
-   * Development only: domains of Boat links the browser may use for sign-in,
-   * for example `*.on.boat.dev`. See `devLinkHost`. Production builds ignore it.
+   * Development only: domains of Boat links the browser may use for sign-in.
+   * Unset means `*.on.boat.dev`; empty turns links off. See `devLinkHost`.
+   * Production builds ignore it.
    */
   FLOWFOKUS_DEV_LINK_HOSTS?: string;
 }
@@ -263,6 +264,9 @@ export function devAuthHosts(env: PortalEnv): Set<string> {
   return hosts;
 }
 
+/** Link domains allowed for development sign-in when `FLOWFOKUS_DEV_LINK_HOSTS` is unset. */
+export const DEFAULT_DEV_LINK_HOSTS = "*.on.boat.dev";
+
 /** One port of a development machine on its Boat link. */
 export interface DevLinkHost {
   sandbox: string;
@@ -276,12 +280,15 @@ export interface DevLinkHost {
  * every service has a different host. Returns `null` unless the host has that
  * shape and its domain is listed in `FLOWFOKUS_DEV_LINK_HOSTS` as `*.<domain>`.
  *
+ * The rule names a domain, never a machine: every sandbox, new or old, matches
+ * it, so nothing is registered per machine.
+ *
  * A link is a public name, which `FLOWFOKUS_DEV_AUTH_HOSTS` refuses. It is
  * allowed here because the callback can only be the same sandbox's own link:
  * no entry in the list can send a sign-in to another host.
  */
 export function devLinkHost(hostname: string, env: PortalEnv): DevLinkHost | null {
-  for (const entry of (env.FLOWFOKUS_DEV_LINK_HOSTS ?? "").split(",")) {
+  for (const entry of (env.FLOWFOKUS_DEV_LINK_HOSTS ?? DEFAULT_DEV_LINK_HOSTS).split(",")) {
     const pattern = entry.trim().toLowerCase();
     if (!/^\*\.[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(pattern)) continue;
     const domain = pattern.slice(2);
@@ -358,6 +365,25 @@ export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput):
     browserUrl = browser.origin;
   }
   return { allowed: true, redirectUri: redirect.toString(), home: new URL("/", redirect).toString(), browserUrl };
+}
+
+/**
+ * Boat serves a link over HTTPS and passes the request on over plain HTTP, so
+ * a redirect built from the request URL would leave HTTPS. Moves a redirect to
+ * the request's own link host back to HTTPS. Anything else passes unchanged.
+ */
+export function toLinkUrl(location: string, request: Request, { dev, env }: AccessInput): string {
+  if (!dev) return location;
+  const current = new URL(request.url);
+  if (!devLinkHost(current.hostname, env)) return location;
+  try {
+    const target = new URL(location);
+    if (target.protocol !== "http:" || target.host !== current.host) return location;
+    target.protocol = "https:";
+    return target.toString();
+  } catch {
+    return location;
+  }
 }
 
 /**
