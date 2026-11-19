@@ -4,6 +4,7 @@
 #
 # On the CI runner, or by hand with a Boat login:
 #   scripts/preview deploy <pr> <sha> [--wake]   create or update the preview
+#   scripts/preview wake <pr>                    the /preview comment: wake it
 #   scripts/preview teardown <pr>                delete the preview
 # Inside the sandbox, started by deploy:
 #   scripts/preview up <sha>                     build and start the stack
@@ -96,7 +97,7 @@ deploy() {
         echo "$NAME sleeps. A push does not wake it."
         comment "**Preview is asleep.** It does not have \`$short\` yet.
 
-To start it again, remove the \`preview\` label and add it back. That builds a new preview with fresh data."
+To wake it, comment \`/preview\`."
         return 0
       fi
       boat resume "$ID" --ttl "$TTL" --json >/dev/null
@@ -130,7 +131,22 @@ To start it again, remove the \`preview\` label and add it back. That builds a n
 
 [Open the staff portal]($portal)
 
-It sleeps at $sleeps. To start it again, remove the \`preview\` label and add it back. That builds a new preview with fresh data."
+It sleeps at $sleeps. To wake it, comment \`/preview\`."
+}
+
+# The /preview comment. It takes the latest commit of the pull request.
+wake() {
+  PR="${1:?pull request number}"
+  local info
+  info="$(gh pr view "$PR" --repo "$REPO" --json headRefOid,labels,isCrossRepository,state)"
+  if [[ "$(jq -r '.state' <<<"$info")" != "OPEN" || "$(jq -r '.isCrossRepository' <<<"$info")" == "true" ]]; then
+    die "pull request $PR is closed or comes from a fork"
+  fi
+  if ! jq -e '.labels | any(.name == "preview")' <<<"$info" >/dev/null; then
+    gh pr comment "$PR" --repo "$REPO" --body "Add the \`preview\` label first. The label creates the preview, and \`/preview\` wakes it."
+    return 0
+  fi
+  deploy "$PR" "$(jq -r '.headRefOid' <<<"$info")" --wake
 }
 
 teardown() {
@@ -196,6 +212,6 @@ up() {
 }
 
 case "${1:-}" in
-  deploy | teardown | up) "$@" ;;
-  *) die "usage: scripts/preview deploy <pr> <sha> [--wake] | teardown <pr> | up <sha>" ;;
+  deploy | wake | teardown | up) "$@" ;;
+  *) die "usage: scripts/preview deploy <pr> <sha> [--wake] | wake <pr> | teardown <pr> | up <sha>" ;;
 esac

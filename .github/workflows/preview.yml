@@ -5,6 +5,9 @@ name: Preview
 on:
   pull_request:
     types: [labeled, unlabeled, synchronize, reopened, closed]
+  # GitHub runs this event from the default branch only.
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: read
@@ -12,7 +15,7 @@ permissions:
 
 # One run per pull request at a time, in order.
 concurrency:
-  group: preview-${{ github.event.pull_request.number }}
+  group: preview-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: false
 
 defaults:
@@ -23,22 +26,32 @@ jobs:
   preview:
     # A pull request from a fork gets no secrets, so it gets no preview.
     # `labeled` and `unlabeled` count only for the `preview` label. The other
-    # events count only while the pull request has it.
+    # pull request events count only while the pull request has it.
+    # A `/preview` comment counts only from someone who can write to the
+    # repository. Anyone can comment on a public repository.
     if: >-
-      github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.label.name == 'preview' ||
-       (github.event.action != 'labeled' && github.event.action != 'unlabeled' &&
-        contains(github.event.pull_request.labels.*.name, 'preview')))
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       (github.event.label.name == 'preview' ||
+        (github.event.action != 'labeled' && github.event.action != 'unlabeled' &&
+         contains(github.event.pull_request.labels.*.name, 'preview')))) ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/preview') &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       BOAT_API_KEY: ${{ secrets.BOAT_API_KEY }}
       BOAT_NO_UPDATE: "1"
       GH_TOKEN: ${{ github.token }}
+      EVENT: ${{ github.event_name }}
       ACTION: ${{ github.event.action }}
-      PR: ${{ github.event.pull_request.number }}
+      PR: ${{ github.event.pull_request.number || github.event.issue.number }}
       SHA: ${{ github.event.pull_request.head.sha }}
     steps:
+      # A pull request event runs the script of the pull request. A comment
+      # runs the script of the default branch.
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -56,10 +69,11 @@ jobs:
           printf '%s' "$BOAT_API_KEY" | boat login --key-stdin --json >/dev/null
           boat list --json >/dev/null || { echo "::error::Boat refused BOAT_API_KEY. Rotate the key and set the secret again."; exit 1; }
 
-      - name: Deploy or delete the preview
+      - name: Deploy, wake, or delete the preview
         run: |
-          case "$ACTION" in
-            labeled | reopened) scripts/preview deploy "$PR" "$SHA" --wake ;;
-            synchronize) scripts/preview deploy "$PR" "$SHA" ;;
-            unlabeled | closed) scripts/preview teardown "$PR" ;;
+          case "$EVENT/$ACTION" in
+            pull_request/labeled | pull_request/reopened) scripts/preview deploy "$PR" "$SHA" --wake ;;
+            pull_request/synchronize) scripts/preview deploy "$PR" "$SHA" ;;
+            pull_request/unlabeled | pull_request/closed) scripts/preview teardown "$PR" ;;
+            issue_comment/created) scripts/preview wake "$PR" ;;
           esac
