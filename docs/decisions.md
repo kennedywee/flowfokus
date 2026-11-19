@@ -1,12 +1,14 @@
 # Decisions
 
-Status of each design decision. The rules themselves live in the linked documents.
+The accepted design decisions. The rules themselves live in the linked documents.
+
+Questions that are not decided are GitHub issues with the [`decision` label](https://github.com/kennedywee/flowfokus/issues?q=is%3Aissue+is%3Aopen+label%3Adecision). When one is decided, record the rule in its home document, add a row here, and close the issue.
 
 ## Accepted
 
 | Decision | Home |
 | --- | --- |
-| `master` is the integration branch. Sprint 1 uses direct commits, as requested. | [Sprint 1](sprint-1.md#worker-ownership) |
+| `master` is the integration branch. Changes arrive by pull request. | [Working agreement](../AGENTS.md#git) |
 | Use Rails `db/schema.rb`, including a verified fresh schema load. | [Architecture](architecture.md#data-conventions) |
 | Rails 8, WorkOS AuthKit, RSpec. | [Architecture](architecture.md#technology) |
 | The staff portal uses shadcn/ui on Base UI with Tailwind CSS v4. Components keep the portal look through its own CSS and tokens. | [Portal README](../apps/portal/README.md#ui-components) |
@@ -48,72 +50,19 @@ Status of each design decision. The rules themselves live in the linked document
 | A booking always uses one entitlement. Program benefits cover every program, one kind, or selected programs. | [Workflows](workflows.md#book) |
 | Members book and pay on the gym site. Online checkout holds the spot; the sale is created when payment succeeds. | [Workflows](workflows.md#buy-online) |
 | One ticket purchase can book up to ten spots. The buyer holds the right; attendees are members or guests by name. Online buyers name only themselves and guests. | [Workflows](workflows.md#book) |
-
-## Proposed
-
-Not yet confirmed.
-
-| Topic | Proposal |
-| --- | --- |
-| Access authority | Authorize check-ins through entitlements only. Membership status alone does not grant access. |
-| Purchased terms | Save them when the sale is confirmed. |
-| Revocation | Affect only delivery from the refunded purchase. Implemented as revoking one sale's delivery. See [Workflows](workflows.md#refund-or-revoke). |
-
-## Open
-
-### Identity and access
-
-| Topic | Question |
-| --- | --- |
-| Staff locations | Can staff access be limited to some locations? WorkOS roles cover the whole organization. |
-| Permission set | Which permissions does each workflow need? Which default roles ship? |
-| Stale sessions | How fast must role changes and revoked access take effect? |
-| Member linking | Which verification flow links a member to a user? Self-service or staff invite? The current implementation uses a staff-issued one-time code. See [Identity](identity.md#member-customer). |
-| Access overrides | Can staff grant access without an entitlement? Which permission controls it? The current implementation allows a one-visit override with `check_ins:override` and a reason. Manual grants of new rights are not built. |
-
-### Monorepo and release
-
-| Topic | Question |
-| --- | --- |
-| Signed-in previews | Do PR previews need sign-in? If yes, which preview host names? |
-| Sign-in branding | Can the AuthKit page show the gym's brand on its gym site, or only Flowfokus's? |
-| Member sign-up | Can a new customer create their own member record from the gym site? |
-| Sign-out scope | Does signing out on one host end the WorkOS session everywhere? |
-| SDK on Workers | Does `@workos/authkit-tanstack-react-start` run on Cloudflare Workers with `nodejs_compat`? |
-| Astro | Which pages, if any, use Astro? A Flowfokus marketing site, or gym site public pages? |
-| Database host | Does PostgreSQL run on the VPS or as a managed service? |
-| Mobile scope | In which release does the mobile app become part of the plan? |
-
-### Catalog and purchase
-
-| Topic | Question |
-| --- | --- |
-| Launch business | Which membership workflow defines the first release? |
-| Price terms | Which terms belong to Price, and which to the offer? |
-| Duration | Where is duration configured, and how does it relate to benefit validity? |
-| Purchased terms storage | Immutable benefit versions or sale snapshots? |
-| Agreed price | How is it stored, with discounts? How are changes recorded? |
-| Buyer and recipient | Can someone buy for another person? |
-| Quantity | Is each membership line limited to quantity one? |
-| Early fulfillment | Is a reason required? How is payment allocated across line items? |
-| Refunds and voids | Partial refunds? Default revocation? When can a sale be voided? |
-
-### Memberships and access
-
-| Topic | Question |
-| --- | --- |
-| Activation | Which modes exist, where are they set, and what defines purchase time? |
-| Renewal dates | How does expired renewal work? How are short months handled? |
-| Membership limit | Does the limit apply to active or all memberships? Configurable? Product changes? |
-| Unlimited access | How is it represented? |
-| Usage accounting | Audited allocation states or an append-only ledger? How are adjustments stored? |
-| Location scope | Are benefits valid at all locations by default? |
-| Timezone | Which timezone sets period boundaries, especially across locations? |
+| Entitlements authorize check-ins. Membership status alone grants no access. | [Models](models.md#entitlement-stage) |
+| A right with no usage limit is unlimited. A right with no location is valid at every location. | [Models](models.md#entitlement-stage) |
+| A sale line saves its purchased terms. Later catalog edits never change it. | [Models](models.md#purchase-stage) |
+| A refund never changes access. Revocation is a separate action and ends only one sale's delivery. | [Workflows](workflows.md#refund-or-revoke) |
+| A sale can be voided only before delivery, when it keeps no money. | [Workflows](workflows.md#refund-or-revoke) |
+| Staff with `check_ins:override` can let a denied member in once, with a reason. It uses no right. | [Workflows](workflows.md#check-in) |
+| A member links a sign-in with a one-time code that staff issue. A matching email is not enough. | [Identity](identity.md#member-customer) |
+| Three default roles: Owner, Manager, Receptionist. | [Authorization](authorization.md#implemented-permissions) |
 
 ## Deferred
 
-Waitlists, courses, cancellation deadlines and fees, staff calendars for appointments, a real payment provider, recurring billing, a native mobile app, and a Flowfokus staging environment.
+Waitlists, courses, staff calendars for appointments, recurring billing, a native mobile app, and a Flowfokus staging environment are not built.
 
-Custom gym site domains are deferred. The BFF design already supports them. When they arrive, add `OrganizationDomain`, domain verification, Cloudflare custom hostnames, a WorkOS redirect URI per domain (or a central callback with a handoff code), and a domain lookup in the host resolver. See [Authentication](authentication.md#custom-domains-deferred). Decide then how a gym verifies its domain and who pays for custom hostnames.
+Only the local test payment provider exists. A real provider waits on [#9](https://github.com/kennedywee/flowfokus/issues/9).
 
-Classes, events, and appointments share the Program model. Open: whether a pass can book other people (shareable passes), which payment provider (Stripe, or a Malaysian provider such as Billplz or FPX), cancellation deadlines, no-show rules, and refunds for cancelled times.
+Custom gym site domains are not built. The BFF design already supports them. They need `OrganizationDomain`, domain verification, Cloudflare custom hostnames, a WorkOS redirect URI per domain (or a central callback with a handoff code), and a domain lookup in the host resolver. See [Authentication](authentication.md#custom-domains-deferred).

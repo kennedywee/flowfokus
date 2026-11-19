@@ -170,7 +170,7 @@ A browser action, such as a purchase, sends JSON to `/api/…` on the same host.
 
 Register the return URLs as sign-out redirects in WorkOS: `https://portal.flowfokus.com/`, `https://*.flowfokus.com/`, and the local URLs. Confirm that WorkOS accepts a wildcard here, as it does for redirect URIs.
 
-Whether signing out on one host also ends the user's session on other hosts is an open question. See [Decisions](decisions.md#monorepo-and-release).
+Whether signing out on one host also ends the user's session on other hosts is not decided. See [#33](https://github.com/kennedywee/flowfokus/issues/33).
 
 ## Role changes
 
@@ -185,7 +185,7 @@ sequenceDiagram
   W-->>P: Token with new permissions
 ```
 
-Rails uses the permissions in the access token. A changed role takes effect when the Worker next refreshes the session. Until then, the old token stays valid. See the stale sessions question in [Decisions](decisions.md#identity-and-access).
+Rails uses the permissions in the access token. A changed role takes effect when the Worker next refreshes the session. Until then, the old token stays valid. How fast a change must take effect is not decided. See [#33](https://github.com/kennedywee/flowfokus/issues/33).
 
 ## API areas
 
@@ -298,7 +298,7 @@ Mobile is the member area as an app. Rails checks the `Member` record as on the 
 - **Secrets:** `WORKOS_API_KEY` and `WORKOS_COOKIE_PASSWORD` are Worker secrets. A leaked cookie password lets an attacker forge sessions. Plan how to rotate it.
 - **Caching:** Never cache signed-in pages or API responses. Send `Cache-Control: private, no-store`.
 - **Refresh races:** WorkOS refresh tokens are single-use. Parallel requests can try to refresh the same token. Refresh before expiry, and retry once with the newest cookie when a refresh fails.
-- **Sign-out:** Ends the WorkOS session and deletes the cookie. See [Sign-out](#sign-out). An access token stays valid until it expires. See the stale sessions question in [Decisions](decisions.md#identity-and-access).
+- **Sign-out:** Ends the WorkOS session and deletes the cookie. See [Sign-out](#sign-out). An access token stays valid until it expires. See [#33](https://github.com/kennedywee/flowfokus/issues/33).
 - **Reserved slugs:** `api`, `portal`, `www`, `admin`, `auth`, `login`, and similar names cannot be gym slugs.
 - **Rate limits:** Cloudflare rate limits on sign-in and on expensive routes.
 

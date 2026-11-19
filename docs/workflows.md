@@ -23,7 +23,7 @@ Early delivery sends an `early_reason` and needs `purchases:fulfill_unpaid`. The
 
 If fulfillment fails, keep the payment and retry the same fulfillment. A partial write must never look complete.
 
-Activation is configurable. The default start is the purchase date.
+Activation is configurable. The default start is the purchase date. Only the default is built. Other modes wait on [#38](https://github.com/kennedywee/flowfokus/issues/38).
 
 ## Renew
 
@@ -84,7 +84,7 @@ The gym site sells published passes, memberships, and tickets to linked members.
 
 A refund can keep benefits. A revocation can happen without a refund. Voids are separate from refunds.
 
-Current implementation limits, chosen where [Decisions](decisions.md#catalog-and-purchase) is still open:
+Current rules:
 
 - A refund belongs to one payment. Partial refunds are allowed. The total refunded on a payment cannot exceed it. `paid_minor` stays the total received; `refunded_minor` is separate, so a refund never reopens the balance.
 - A refund never changes access. Revoke access as its own action.
