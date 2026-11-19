@@ -164,19 +164,6 @@ class Organization < ApplicationRecord
     summary
   end
 
-  def overview(at: Time.current)
-    day_start = at.in_time_zone(time_zone).beginning_of_day
-    today = check_ins.where(checked_in_at: day_start..at).group(:result).count
-
-    {
-      member_count: members.count,
-      active_membership_count: membership_periods.covering(at).distinct.count(:membership_id),
-      unpaid_sale_count: sales.open.where("sales.paid_minor < sales.total_minor").count,
-      awaiting_fulfillment_count: sales.open.where("sales.paid_minor = sales.total_minor").where.missing(:fulfillment).count,
-      check_ins_today: { granted: today.fetch("granted", 0), denied: today.fetch("denied", 0) }
-    }
-  end
-
   def as_public_api
     {
       slug:, name:, timezone:, currency:, online_payments: Flowfokus::Payments.enabled?,

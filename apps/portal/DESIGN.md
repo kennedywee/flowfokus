@@ -432,18 +432,28 @@ Home is the next redesigned screen (`features/home/Home.tsx`, facts in
 - Needs attention: "4 sales with a balance due" and "1 paid sale
   unfulfilled" from the overview counts. Each opens the filtered sales list
   for roles with purchases:read. Rails counts only paid sales as awaiting
-  fulfillment, so the row says "paid".
-- Today: Check-ins (total and denied) and Bookings (booked of capacity in
-  today's sessions that run).
+  fulfillment, so the row says "paid". A second line gives the total due
+  with the oldest sale's age ("RM 640.00 · oldest 34 days"), and up to three
+  member names for unfulfilled sales. "3 memberships end in the next 7
+  days" counts access that ends with no later period; it opens nothing,
+  because the members list has no such filter.
+- Today: Sales (total and count), Collected, New members, Check-ins (total
+  and denied), and Bookings (booked of capacity in today's sessions that
+  run). Payments today lists each payment method Rails knows: Cash, Bank
+  transfer, and Online.
+- Money shows only when Rails sends it, which needs purchases:read: the
+  second lines in Needs attention, Sales, Collected, and Payments today.
+- Set up: the first-run steps (Add a location, Add a product, Add a member,
+  Record a sale) with "3 of 4 done". A finished step has a green check. An
+  open step links to its form for roles that can do it. The section goes
+  once every step is done.
 - Quiet day: "No more sessions today." with Open schedule, and "Nothing
   needs attention." Loading keeps the title and bands. Did not load shows
   one row per section with Try again, and "Counts did not load".
 - Phones: the check-in count under the title, no properties, no actions in
   the page (Check in is a tab), and two-line rows.
-- Not shown, because Rails has no data for them: sales, collected, new
-  members, and payments today; the total due and the oldest sale; names of
-  unfulfilled sales; memberships ending this week; sale and member numbers;
-  waiting lists; and first-run setup progress.
+- Not shown, because Rails has no data for them: sale and member numbers,
+  and waiting lists.
 
 Programs, Program details, and New program are the next redesigned screens
 (`features/programs/ProgramsList.tsx`, `ProgramDetails.tsx`,

@@ -489,7 +489,7 @@ paths:
     get:
       tags: [staff]
       operationId: getStaffOverview
-      summary: Counts for the staff dashboard.
+      summary: Figures for the staff Home screen.
       security:
         - bearerAuth: []
           organizationHeader: []
@@ -2764,6 +2764,96 @@ components:
               type: integer
             denied:
               type: integer
+        currency:
+          type: string
+          description: The organization's currency, for the amounts in `money`.
+        new_members_today:
+          type: integer
+          description: Members added since midnight in the organization's time zone.
+        memberships_ending_count:
+          type: integer
+          description: Memberships whose access ends within seven days, with no later period.
+        setup:
+          type: object
+          additionalProperties: false
+          required: [location, product, member, sale]
+          description: First-run progress. Each fact is true once the organization has at least one such record.
+          properties:
+            location:
+              type: boolean
+            product:
+              type: boolean
+            member:
+              type: boolean
+            sale:
+              type: boolean
+        money:
+          $ref: "#/components/schemas/StaffOverviewMoney"
+
+    StaffOverviewMoney:
+      type: object
+      additionalProperties: false
+      required: [sales_today, collected_today_minor, payments_today, due, awaiting_fulfillment]
+      description: Money facts. Left out for staff without `purchases:read`. "Today" starts at midnight in the organization's time zone.
+      properties:
+        sales_today:
+          type: object
+          additionalProperties: false
+          required: [count, total_minor]
+          description: Sales recorded today, at their total. Void sales are left out.
+          properties:
+            count:
+              type: integer
+            total_minor:
+              type: integer
+        collected_today_minor:
+          type: integer
+          description: Payments recorded today. Refunds are not taken off.
+        payments_today:
+          type: array
+          description: Payments recorded today, one entry per payment method.
+          items:
+            type: object
+            additionalProperties: false
+            required: [method, amount_minor]
+            properties:
+              method:
+                $ref: "#/components/schemas/PaymentMethod"
+              amount_minor:
+                type: integer
+        due:
+          type: object
+          additionalProperties: false
+          required: [total_minor, oldest_sale]
+          description: The balance on open sales that are not fully paid.
+          properties:
+            total_minor:
+              type: integer
+            oldest_sale:
+              type: [object, "null"]
+              additionalProperties: false
+              required: [id, purchased_at]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                purchased_at:
+                  type: string
+                  format: date-time
+        awaiting_fulfillment:
+          type: array
+          maxItems: 3
+          description: The oldest fully paid sales that are not fulfilled. `awaiting_fulfillment_count` has the full count.
+          items:
+            type: object
+            additionalProperties: false
+            required: [sale_id, member_name]
+            properties:
+              sale_id:
+                type: string
+                format: uuid
+              member_name:
+                type: string
 
     MemberInput:
       type: object
