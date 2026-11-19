@@ -51,6 +51,37 @@ on localhost does not also sign in on the Tailscale address.
 Recreating the emulator clears its in-memory sessions. Restart Rails with it
 to clear cached signing keys, then sign in again.
 
+### Access through a Boat link
+
+A development machine on [Boat](https://boat.dev) can give each port an HTTPS
+address of its own, `https://<sandbox>-<port>.on.boat.dev`. It opens on any
+device and needs no Tailscale. Turn it on in the root `.env`:
+
+```dotenv
+FLOWFOKUS_DEV_LINK_HOSTS=*.on.boat.dev
+FLOWFOKUS_WORKOS_BIND_IP=0.0.0.0
+```
+
+The setting reaches Vite's configuration, which is part of the images. Build
+them again, then recreate the containers:
+
+```sh
+docker compose build portal site
+docker compose up -d --wait --force-recreate workos portal site
+```
+
+Give ports 4001 and 4100 a link each: the "Link" button in t3boat, or
+`boat host <sandbox> 4001` and `boat host <sandbox> 4100`. A link is private:
+its `_token` is the access. Open both links once in the browser, so that Boat
+remembers the browser for both names. Then use the 4001 link. Sign-in opens the
+same sandbox's 4100 link, and the callback returns to its 4001 link.
+
+Only names of the shape `<sandbox>-<port>` under a listed domain count, and the
+callback is always the same sandbox, so no entry can send a sign-in elsewhere.
+localhost and the hosts in `FLOWFOKUS_DEV_AUTH_HOSTS` work as before. The gym
+site loads on its 4002 link, but member sign-in there still needs
+`<slug>.localhost`.
+
 ### Fake staff accounts
 
 Each fake user has the password `local-password`:

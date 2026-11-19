@@ -4,6 +4,7 @@ import {
   LOCAL_SESSION_COOKIE,
   SESSION_COOKIE,
   devAuthHosts,
+  devLinkHost,
   isPrivateDevHost,
   resolveApiBaseUrl,
   resolveAuthOrigins,
@@ -218,6 +219,65 @@ describe("resolveAuthOrigins in development", () => {
     for (const url of [`http://${TAILSCALE_IP}:4002/sign-in`, `https://${TAILSCALE_IP}:4001/sign-in`, `http://${TAILSCALE_IP}/sign-in`]) {
       expect(resolveAuthOrigins(get(url), { dev: true, env: tailnetEnv }).allowed).toBe(false);
     }
+  });
+});
+
+const LINK = "box-node-caf79c034da33549";
+const linkEnv: PortalEnv = { ...emulatorEnv, FLOWFOKUS_DEV_LINK_HOSTS: "*.on.boat.dev" };
+
+describe("resolveAuthOrigins on a Boat link", () => {
+  test("the callback and the emulator are the same sandbox's links, over HTTPS", () => {
+    // Boat serves the link over HTTPS and passes the request on as plain HTTP.
+    for (const scheme of ["http", "https"]) {
+      expect(resolveAuthOrigins(get(`${scheme}://${LINK}-4001.on.boat.dev/sign-in?returnTo=%2Fchainsaw`), { dev: true, env: linkEnv })).toEqual({
+        allowed: true,
+        redirectUri: `https://${LINK}-4001.on.boat.dev/callback`,
+        home: `https://${LINK}-4001.on.boat.dev/`,
+        browserUrl: `https://${LINK}-4100.on.boat.dev`,
+      });
+    }
+  });
+
+  test("localhost works as before with links on", () => {
+    expect(resolveAuthOrigins(get("http://localhost:4001/sign-in"), { dev: true, env: linkEnv })).toMatchObject({
+      allowed: true,
+      redirectUri: "http://localhost:4001/callback",
+      browserUrl: "http://localhost:4100",
+    });
+  });
+
+  test("a link is refused until its domain is listed", () => {
+    expect(resolveAuthOrigins(get(`http://${LINK}-4001.on.boat.dev/sign-in`), { dev: true, env: emulatorEnv })).toMatchObject({
+      allowed: false,
+      redirectUri: "http://localhost:4001/callback",
+    });
+  });
+
+  test("another port's link, or a port after the name, is refused", () => {
+    for (const url of [`http://${LINK}-4002.on.boat.dev/sign-in`, `http://${LINK}-4001.on.boat.dev:4001/sign-in`]) {
+      expect(resolveAuthOrigins(get(url), { dev: true, env: linkEnv }).allowed).toBe(false);
+    }
+  });
+
+  test("only names of the link shape under a listed domain count", () => {
+    expect(devLinkHost(`${LINK}-4001.on.boat.dev`, linkEnv)).toEqual({ sandbox: LINK, port: "4001", domain: "on.boat.dev" });
+    for (const host of ["on.boat.dev", "portal.on.boat.dev", `evil.${LINK}-4001.on.boat.dev`, `${LINK}-4001.on.boat.dev.evil.example`, `${LINK}-4001.evil.example`]) {
+      expect(devLinkHost(host, linkEnv)).toBeNull();
+    }
+    // An entry must be `*.<domain>`: a bare domain or a catch-all turns nothing on.
+    for (const entry of ["on.boat.dev", "*", "*.dev", "*.", "https://*.on.boat.dev"]) {
+      expect(devLinkHost(`${LINK}-4001.on.boat.dev`, { ...emulatorEnv, FLOWFOKUS_DEV_LINK_HOSTS: entry })).toBeNull();
+    }
+  });
+
+  test("the sign-out form may end at the emulator's link", () => {
+    const { browserUrl } = resolveAuthOrigins(get(`http://${LINK}-4001.on.boat.dev/`), { dev: true, env: linkEnv });
+    expect(workosBrowserOrigin({ dev: true, env: linkEnv }, browserUrl)).toBe(`https://${LINK}-4100.on.boat.dev`);
+  });
+
+  test("production ignores links", () => {
+    const env = { ...productionEnv, FLOWFOKUS_DEV_LINK_HOSTS: "*.on.boat.dev" };
+    expect(resolveAuthOrigins(get(`https://${LINK}-4001.on.boat.dev/sign-in`), { dev: false, env }).redirectUri).toBe("https://portal.flowfokus.com/callback");
   });
 });
 

@@ -23,6 +23,7 @@ const LOCAL_VARS = [
   "WORKOS_API_HTTPS",
   "WORKOS_BROWSER_URL",
   "FLOWFOKUS_DEV_AUTH_HOSTS",
+  "FLOWFOKUS_DEV_LINK_HOSTS",
 ] as const;
 
 function localVars(): Record<string, string> {
@@ -34,8 +35,20 @@ function localVars(): Record<string, string> {
   return vars;
 }
 
+/**
+ * Boat link domains from `FLOWFOKUS_DEV_LINK_HOSTS` (`*.on.boat.dev`), as Vite
+ * names them (`.on.boat.dev`). Vite refuses a host name it was not told about.
+ */
+function linkHosts(): string[] {
+  return (process.env.FLOWFOKUS_DEV_LINK_HOSTS ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.startsWith("*."))
+    .map((entry) => entry.slice(1));
+}
+
 export default defineConfig(({ command }) => ({
-  server: { port: 4001, strictPort: true },
+  server: { port: 4001, strictPort: true, allowedHosts: linkHosts() },
   preview: { port: 4001, strictPort: true },
   // `@/` is the portal `src` folder, as shadcn components expect.
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
