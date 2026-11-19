@@ -2,8 +2,8 @@
 // Copy this file as the start of a proof for another feature: keep signIn,
 // shot, assert, and sql, and replace the steps.
 //
-// Run from the repository root (the helper keeps the working directory):
-//   bash ~/.claude/skills/evidence-driven-testing/scripts/run-playwright.sh \
+// Run from the repository root (the runner keeps the working directory):
+//   .agents/skills/verify-flowfokus/scripts/run-playwright \
 //     .agents/skills/verify-flowfokus/scripts/proof-create-member.mjs
 //
 // Writes screenshots, a video, assertions.md, db.txt, and capture.mjs to

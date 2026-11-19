@@ -8,28 +8,31 @@
 set -euo pipefail
 
 REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.." && pwd)
-STATE="$REPO/.artifacts/verify-flowfokus"
 cd "$REPO"
-mkdir -p "$STATE"
+# shellcheck source=ownership.sh
+source "$REPO/.agents/skills/verify-flowfokus/scripts/ownership.sh"
 
 running=false
-docker inspect -f '{{.State.Running}}' flowfokus-portal 2>/dev/null | grep -q true && running=true
-if [[ $running == true && ! -f $STATE/started-by-run ]]; then
+docker ps -q --filter name='^flowfokus-' | grep -q . && running=true
+if owns_stack; then
+  echo "This run started the stack. Rebuilding and preparing it again."
+  [[ ${1:-} == --fresh ]] && { echo "Run cleanup before --fresh." >&2; exit 1; }
+  mode=$(marker_mode)
+elif [[ $running == true ]]; then
   # Someone else's stack. Do not rebuild or reseed it; only check it.
+  rm -f -- "$MARKER" # A stale marker from an earlier run no longer applies.
   echo "The stack already runs, and this run did not start it. Cleanup will leave it running."
   [[ ${1:-} == --fresh ]] && { echo "Refusing --fresh on a stack this run did not start." >&2; exit 1; }
   exec bash "$REPO/.agents/skills/verify-flowfokus/scripts/doctor"
-elif [[ $running == true ]]; then
-  echo "This run started the stack. Rebuilding and preparing it again."
-  [[ ${1:-} == --fresh ]] && { echo "Run cleanup before --fresh." >&2; exit 1; }
+elif [[ ${1:-} == --fresh ]]; then
+  docker compose down -v
+  mode=fresh
 else
-  if [[ ${1:-} == --fresh ]]; then
-    docker compose down -v
-    echo fresh > "$STATE/started-by-run"
-  else
-    echo kept > "$STATE/started-by-run"
-  fi
+  mode=kept
 fi
+# Record the containers this run created, also when a later step fails, so
+# cleanup can still stop them.
+trap 'record_ownership "$mode"' EXIT
 
 docker compose build
 docker compose up -d --wait db workos
@@ -53,4 +56,6 @@ wait_for "Rails" http://127.0.0.1:4000/ready '"ok"'
 wait_for "portal" http://localhost:4001/ 'href="/sign-in'
 wait_for "gym site" http://chainsaw.localhost:4002/ 'Chainsaw Gym'
 
+record_ownership "$mode"
+trap - EXIT
 exec bash "$REPO/.agents/skills/verify-flowfokus/scripts/doctor"

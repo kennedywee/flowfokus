@@ -28,10 +28,11 @@ FLOWFOKUS_TEST_PAYMENTS=true .agents/skills/verify-flowfokus/scripts/launch   # 
 
 `launch` does this:
 
-1. It writes `.artifacts/verify-flowfokus/started-by-run` if the stack was not already running.
-   Cleanup uses this marker. If the stack already runs without the marker, another run owns it:
-   `launch` only runs the doctor, and refuses `--fresh`. With the marker, `launch` rebuilds and
-   prepares the stack again.
+1. It decides who owns the stack. If Flowfokus containers already run and this run did not create
+   them, another run owns them: `launch` only runs the doctor, and refuses `--fresh`. If they are
+   the containers this run created, `launch` rebuilds and prepares them again. Otherwise it starts
+   a new stack. It records the mode and the ID of each container it created in
+   `.artifacts/verify-flowfokus/started-by-run`, also when a later step fails.
 2. `docker compose build`, then `docker compose up -d --wait db workos`.
 3. `docker compose run --rm server bin/rails db:prepare`, then `bin/rails db:seed`. The project keeps
    database preparation explicit. Seeds are idempotent.
@@ -69,20 +70,21 @@ It exits non-zero and prints `FAIL` lines when the instance is not worth driving
 
 ## Drive
 
-Use Playwright through the `evidence-driven-testing` helper. It installs Playwright outside the
-project:
+Use Playwright through the skill's runner. It installs a pinned Playwright in a temporary folder
+outside the project, and Chromium in `~/.cache/ms-playwright` if it is missing. It needs Node and
+npm, which `mise.toml` pins:
 
 ```sh
-bash ~/.claude/skills/evidence-driven-testing/scripts/run-playwright.sh <script.mjs>
+.agents/skills/verify-flowfokus/scripts/run-playwright <script.mjs>
 ```
 
-The helper copies only the one script file, so keep each script self-contained. The working
+The runner copies only the one script file, so keep each script self-contained. The working
 directory stays the repository root, so relative evidence paths land in `.artifacts/`.
 
 Start from the working example. It signs in, creates a member, and saves proof:
 
 ```sh
-bash ~/.claude/skills/evidence-driven-testing/scripts/run-playwright.sh \
+.agents/skills/verify-flowfokus/scripts/run-playwright \
   .agents/skills/verify-flowfokus/scripts/proof-create-member.mjs
 ```
 
@@ -164,6 +166,9 @@ to a PR.
 ```
 
 - If the marker is missing, this run did not start the stack, and cleanup changes nothing.
+- If any container ID differs from the marker, someone recreated or replaced the stack after
+  launch. It may belong to another run or checkout, so cleanup stops nothing, prints both lists,
+  and exits non-zero.
 - If `launch --fresh` started it, cleanup runs `docker compose down -v`. The run's database and its
   test records go with it.
 - If plain `launch` started it, cleanup runs `docker compose down` and keeps the database volume.
@@ -171,7 +176,7 @@ to a PR.
   are easy to recognize.
 
 Cleanup never touches `.artifacts/verify-flowfokus/runs/`. The evidence stays there. The Playwright
-helper removes its own temporary folder on exit. Stop any other process you started by its PID.
+runner removes its own temporary folder on exit. Stop any other process you started by its PID.
 
 ## Gotchas
 

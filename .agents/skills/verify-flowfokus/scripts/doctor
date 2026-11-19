@@ -29,13 +29,26 @@ ok "commit under test: $commit ($(git -C "$REPO" branch --show-current)), $dirty
 ok "online test payments: $(docker exec flowfokus-server printenv FLOWFOKUS_TEST_PAYMENTS 2>/dev/null || echo unknown)"
 
 # Dependency or Dockerfile edits need a rebuild. Source edits do not.
-created=$(docker inspect -f '{{.Created}}' flowfokus-portal:development 2>/dev/null)
-if [[ -n $created ]]; then
-  stamp=$(date -d "$created" +%s)
-  for file in bun.lock apps/server/Gemfile.lock apps/server/Dockerfile.dev apps/portal/Dockerfile apps/site/Dockerfile; do
-    [[ $(stat -c %Y "$REPO/$file") -gt $stamp ]] && warn "$file changed after the images were built. Run: docker compose up -d --build --wait"
-  done
-fi
+# Each service is compared with the image its running container uses. Node
+# does the date and file-time math, so this works with GNU and BSD tools alike.
+for pair in "server:apps/server/Gemfile.lock apps/server/Dockerfile.dev" \
+            "jobs:apps/server/Gemfile.lock apps/server/Dockerfile.dev" \
+            "portal:bun.lock apps/portal/package.json apps/portal/Dockerfile" \
+            "site:bun.lock apps/site/package.json apps/site/Dockerfile"; do
+  name=${pair%%:*}; files=${pair#*:}
+  image=$(docker inspect -f '{{.Image}}' "flowfokus-$name" 2>/dev/null) || continue
+  created=$(docker image inspect -f '{{.Created}}' "$image" 2>/dev/null) || { bad "cannot read the image of flowfokus-$name"; continue; }
+  # shellcheck disable=SC2086 # $files is a space-separated list of paths.
+  stale=$(cd "$REPO" && node -e '
+    const fs = require("node:fs")
+    const built = Date.parse(process.argv[1])
+    if (Number.isNaN(built)) { console.log("?"); process.exit() }
+    console.log(process.argv.slice(2).filter(file => fs.statSync(file).mtimeMs > built).join(" "))
+  ' "$created" $files) || { bad "cannot compare files with the image of flowfokus-$name"; continue; }
+  if [[ $stale == "?" ]]; then bad "cannot read the build time of the flowfokus-$name image"
+  elif [[ -n $stale ]]; then warn "flowfokus-$name: $stale changed after its image was built. Run: docker compose up -d --build --wait"
+  fi
+done
 
 # 3. The published ports belong to these containers, and each app answers.
 for pair in server:4000 portal:4001 site:4002 workos:4100; do
