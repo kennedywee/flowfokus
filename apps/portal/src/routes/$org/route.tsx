@@ -259,7 +259,6 @@ function Shell({
     : inSettings ? { label: "Settings" }
     : null;
 
-  const role = organizations?.find((choice) => choice.slug === data.slug)?.role;
   const pages: CommandPage[] = [
     ...NAV_ITEMS.map((item) => ({
       label: item.label,
@@ -275,7 +274,7 @@ function Shell({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <AppSidebar data={data} role={role ? roleLabel(role) : null} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
+      <AppSidebar data={data} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
       <SidebarInset>
         <header className="topbar">
           <div className="topbar__start">
@@ -436,14 +435,12 @@ function Shell({
  */
 function AppSidebar({
   data,
-  role,
   canSignOut,
   activeTo,
   onShortcuts,
 }: {
   data: OrganizationData;
   onShortcuts: () => void;
-  role: string | null;
   canSignOut: boolean;
   /** The section that owns this page, when it is not the section in the path. */
   activeTo?: RoutedPath;
@@ -516,7 +513,6 @@ function AppSidebar({
       <SidebarFooter>
         <AccountMenu
           actor={data.actor}
-          role={role}
           slug={data.slug}
           canSignOut={canSignOut}
           onNavigate={closeDrawer}
@@ -550,14 +546,12 @@ function applyTheme(theme: Theme) {
  */
 function AccountMenu({
   actor,
-  role,
   slug,
   canSignOut,
   onNavigate,
   onShortcuts,
 }: {
   actor: OrganizationData["actor"];
-  role: string | null;
   slug: string;
   canSignOut: boolean;
   onNavigate: () => void;
@@ -603,7 +597,6 @@ function AccountMenu({
           {initials(actor.name).slice(0, 1)}
         </span>
         <span className="account__name">{actor.name}</span>
-        {role ? <span className="account__role">· {role}</span> : null}
         <ChevronDown className="account__chevron" {...icon} />
         <span className="visually-hidden">, account menu</span>
       </DropdownMenuTrigger>
