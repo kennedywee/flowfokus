@@ -30,21 +30,9 @@ function localVars(): Record<string, string> {
   return vars;
 }
 
-/**
- * Boat link domains from `FLOWFOKUS_DEV_LINK_HOSTS` (default `*.on.boat.dev`), as
- * Vite names them (`.on.boat.dev`). Vite refuses a host name it was not told about.
- */
-function linkHosts(): string[] {
-  return (process.env.FLOWFOKUS_DEV_LINK_HOSTS ?? "*.on.boat.dev")
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.startsWith("*."))
-    .map((entry) => entry.slice(1));
-}
-
 export default defineConfig(({ command }) => ({
-  // Gym sites run on <slug>.localhost in development.
-  server: { port: 4002, strictPort: true, allowedHosts: [".localhost", ...linkHosts()] },
+  // Gym sites run on <slug>.localhost in development. `.on.boat.dev` is for Boat links.
+  server: { port: 4002, strictPort: true, allowedHosts: [".localhost", ".on.boat.dev"] },
   preview: { port: 4002, strictPort: true },
   plugins: [
     cloudflare({

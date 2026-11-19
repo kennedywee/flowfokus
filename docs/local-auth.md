@@ -63,13 +63,14 @@ scripts/links
 
 It prints the staff portal's link and the sign-in emulator's link. Open the
 portal's link and sign in. Sign-in opens the same sandbox's emulator link, and
-the callback returns to its portal link. `scripts/dev` runs the script for you.
+the callback returns to its portal link.
+
+A link exists only after you run the script. `scripts/dev` does not make one.
 
 No machine is registered anywhere. The portal and the emulator accept every
 name of the shape `<sandbox>-<port>.on.boat.dev`, and the callback is always
 the same sandbox, so no name can send a sign-in elsewhere. A new machine works
-as soon as its stack runs. `FLOWFOKUS_DEV_LINK_HOSTS` holds the rule
-(`*.on.boat.dev`); set it to empty in the root `.env` to turn links off.
+as soon as its stack runs. There is no setting.
 
 The portal's link is private: its `_token` is the access, so treat the link
 like a password. The emulator's link is public, because sign-in must send any

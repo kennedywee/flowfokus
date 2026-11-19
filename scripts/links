@@ -6,14 +6,6 @@
 # The portal's link is private: its _token is the access. The emulator's is
 # public, so that sign-in can send any browser there. It holds fake users only.
 set -euo pipefail
-cd "$(dirname "$0")/.."
-source scripts/env.sh
-
-# Set but empty turns links off. Unset means the default, *.on.boat.dev.
-if [[ -z "${FLOWFOKUS_DEV_LINK_HOSTS-unset}" ]]; then
-  echo "Boat links are off: FLOWFOKUS_DEV_LINK_HOSTS is empty. Use http://localhost:4001." >&2
-  exit 0
-fi
 
 boat_host="$HOME/.ascii/host"
 if [[ ! -x "$boat_host" ]]; then

@@ -29,8 +29,8 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       # Gym sites sign members in on <slug>.localhost.
-      # The last entry is for Boat links: any sandbox, so no machine is listed.
-      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1},*.localhost,${FLOWFOKUS_DEV_LINK_HOSTS:-*.on.boat.dev}"
+      # The last entry is for Boat links (scripts/links): any sandbox, so no machine is listed.
+      WORKOS_EMULATE_REDIRECT_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1},*.localhost,*.on.boat.dev"
     volumes:
       - ./workos-emulate.config.yaml:/app/workos-emulate.config.yaml:ro
     ports:
@@ -99,7 +99,6 @@ services:
       WORKOS_API_HTTPS: "false"
       WORKOS_BROWSER_URL: http://localhost:4100
       FLOWFOKUS_DEV_AUTH_HOSTS: "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1}"
-      FLOWFOKUS_DEV_LINK_HOSTS: "${FLOWFOKUS_DEV_LINK_HOSTS-*.on.boat.dev}"
       WORKER_SECRET: local-docker-worker-secret-not-for-production
     volumes:
       - ./apps/portal/src:/app/apps/portal/src
@@ -132,7 +131,6 @@ services:
       WORKOS_API_PORT: "4100"
       WORKOS_API_HTTPS: "false"
       WORKOS_BROWSER_URL: http://localhost:4100
-      FLOWFOKUS_DEV_LINK_HOSTS: "${FLOWFOKUS_DEV_LINK_HOSTS-*.on.boat.dev}"
     volumes:
       - ./apps/site/src:/app/apps/site/src
       - ./packages/api/src:/app/packages/api/src:ro

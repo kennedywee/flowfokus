@@ -16,6 +16,5 @@ umask 077
   printf 'WORKOS_API_HTTPS=%s\n' "${WORKOS_API_HTTPS:-false}"
   printf 'WORKOS_BROWSER_URL=%s\n' "${WORKOS_BROWSER_URL:-http://localhost:4100}"
   printf 'FLOWFOKUS_DEV_AUTH_HOSTS=%s\n' "${FLOWFOKUS_DEV_AUTH_HOSTS:-localhost,127.0.0.1,::1}"
-  printf 'FLOWFOKUS_DEV_LINK_HOSTS=%s\n' "${FLOWFOKUS_DEV_LINK_HOSTS-*.on.boat.dev}"
 } > /app/apps/portal/.dev.vars
 exec "$@"

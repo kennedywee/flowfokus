@@ -38,12 +38,6 @@ export interface PortalEnv {
    * and Tailscale hosts count. Production builds ignore it.
    */
   FLOWFOKUS_DEV_AUTH_HOSTS?: string;
-  /**
-   * Development only: domains of Boat links the browser may use for sign-in.
-   * Unset means `*.on.boat.dev`; empty turns links off. See `devLinkHost`.
-   * Production builds ignore it.
-   */
-  FLOWFOKUS_DEV_LINK_HOSTS?: string;
 }
 
 /** Why protected actions are not available. Safe to show in the browser. */
@@ -264,39 +258,32 @@ export function devAuthHosts(env: PortalEnv): Set<string> {
   return hosts;
 }
 
-/** Link domains allowed for development sign-in when `FLOWFOKUS_DEV_LINK_HOSTS` is unset. */
-export const DEFAULT_DEV_LINK_HOSTS = "*.on.boat.dev";
+/** The domain of Boat links. */
+const DEV_LINK_DOMAIN = "on.boat.dev";
 
 /** One port of a development machine on its Boat link. */
 export interface DevLinkHost {
   sandbox: string;
   port: string;
-  domain: string;
 }
 
 /**
  * Reads a Boat link host. Boat gives each port of a sandbox an HTTPS address of
  * its own, `<sandbox>-<port>.on.boat.dev`, so the port is part of the name and
- * every service has a different host. Returns `null` unless the host has that
- * shape and its domain is listed in `FLOWFOKUS_DEV_LINK_HOSTS` as `*.<domain>`.
+ * every service has a different host. Returns `null` for any other host.
  *
  * The rule names a domain, never a machine: every sandbox, new or old, matches
- * it, so nothing is registered per machine.
+ * it, so nothing is registered per machine. A link exists only after
+ * `scripts/links` asks Boat for it.
  *
  * A link is a public name, which `FLOWFOKUS_DEV_AUTH_HOSTS` refuses. It is
  * allowed here because the callback can only be the same sandbox's own link:
- * no entry in the list can send a sign-in to another host.
+ * no host name can send a sign-in to another host.
  */
-export function devLinkHost(hostname: string, env: PortalEnv): DevLinkHost | null {
-  for (const entry of (env.FLOWFOKUS_DEV_LINK_HOSTS ?? DEFAULT_DEV_LINK_HOSTS).split(",")) {
-    const pattern = entry.trim().toLowerCase();
-    if (!/^\*\.[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(pattern)) continue;
-    const domain = pattern.slice(2);
-    if (!hostname.endsWith(`.${domain}`)) continue;
-    const link = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{1,5})$/.exec(hostname.slice(0, -domain.length - 1));
-    if (link) return { sandbox: link[1]!, port: link[2]!, domain };
-  }
-  return null;
+export function devLinkHost(hostname: string): DevLinkHost | null {
+  if (!hostname.endsWith(`.${DEV_LINK_DOMAIN}`)) return null;
+  const link = /^([a-z0-9]+(?:-[a-z0-9]+)*)-(\d{1,5})$/.exec(hostname.slice(0, -DEV_LINK_DOMAIN.length - 1));
+  return link ? { sandbox: link[1]!, port: link[2]! } : null;
 }
 
 /** Where sign-in, the callback, and sign-out lead for one request. */
@@ -341,10 +328,10 @@ export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput):
   if (!dev) return fallback;
 
   const current = new URL(request.url);
-  const link = devLinkHost(current.hostname, env);
+  const link = devLinkHost(current.hostname);
   if (link) {
     if (current.port !== "" || link.port !== configured.port) return fallback;
-    const origin = (port: string) => `https://${link.sandbox}-${port}.${link.domain}`;
+    const origin = (port: string) => `https://${link.sandbox}-${port}.${DEV_LINK_DOMAIN}`;
     const browserPort = isUrl(env.WORKOS_BROWSER_URL) ? new URL(env.WORKOS_BROWSER_URL ?? "").port : "";
     return {
       allowed: true,
@@ -375,7 +362,7 @@ export function resolveAuthOrigins(request: Request, { dev, env }: AccessInput):
 export function toLinkUrl(location: string, request: Request, { dev, env }: AccessInput): string {
   if (!dev) return location;
   const current = new URL(request.url);
-  if (!devLinkHost(current.hostname, env)) return location;
+  if (!devLinkHost(current.hostname)) return location;
   try {
     const target = new URL(location);
     if (target.protocol !== "http:" || target.host !== current.host) return location;
