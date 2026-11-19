@@ -68,7 +68,9 @@ To change the API:
 3. Run `bun run contract:types`. This regenerates `packages/api`. Commit the result.
 4. Run `bun run typecheck`. This checks portal, site, and mobile against the new types.
 
-CI repeats these checks. It also compares the contract with the last stable release. A breaking change, such as removing a field or a path, fails CI. Adding an optional field passes.
+CI repeats these checks. It also compares the contract with the last stable release tag. Without a tag, it compares with the pull request's base, or with the commit before a push. A breaking change, such as removing a field or a path, fails CI. Adding an optional field passes.
+
+A new value in a response `enum` also fails CI, because an old client may not handle it. A value list that is meant to grow uses `x-extensible-enum` instead of `enum`. `ErrorCode` is such a list: clients must handle a code they do not know. Request specs check that every error code Rails returns is in the list. The generated types keep the known values, so the apps still catch typos. Keep `enum` for lists that requests send or that the apps map one by one.
 
 What these checks cannot catch:
 

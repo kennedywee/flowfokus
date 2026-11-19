@@ -2469,7 +2469,7 @@ components:
         - `rate_limited` (429)
         - `internal_error` (500)
         - `auth_not_configured`, `auth_unavailable`, `database_unavailable`, `workos_unavailable`, `payments_unavailable` (503)
-      enum:
+      x-extensible-enum:
         - bad_request
         - organization_required
         - idempotency_key_required
@@ -2507,7 +2507,6 @@ components:
         - auth_unavailable
         - database_unavailable
         - workos_unavailable
-        - payments_unavailable
 
     WorkosWebhookEvent:
       type: object
