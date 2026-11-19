@@ -103,21 +103,23 @@ deploy() {
   esac
   echo "Sandbox $ID ($NAME), was '${state:-new}'"
 
+  failed() {
+    comment "**Preview failed** for \`$short\`.$(run_link)"
+    die "$1"
+  }
+
   sbx 300 "set -e
     [ -d flowfokus/.git ] || git clone -q https://github.com/$REPO.git flowfokus
     cd flowfokus
     git fetch -q origin pull/$PR/head
-    git checkout -q -f --detach $sha"
+    git checkout -q -f --detach $sha" || failed "$NAME could not check out $short"
 
   # Without a terminal, Boat streams the output as JSON frames.
-  if ! boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash scripts/preview up $sha" |
-    jq -Rrj 'fromjson? | .data? // empty'; then
-    comment "**Preview failed** for \`$short\`.$(run_link)"
-    die "the stack did not start in $NAME"
-  fi
+  boat exec "$ID" --timeout 0 --stream -- bash -lc "cd flowfokus && bash scripts/preview up $sha" |
+    jq -Rrj 'fromjson? | .data? // empty' || failed "the stack did not start in $NAME"
 
   portal="$(sbx 30 'cat ~/preview-links.txt' | awk '/^Staff portal:/ { print $3 }')"
-  [[ -n "$portal" ]] || die "no portal link from scripts/links"
+  [[ -n "$portal" ]] || failed "no portal link from scripts/links"
   boat extend "$ID" --ttl "$TTL" --json >/dev/null
   sleeps="$(date -u -d "+$TTL seconds" '+%H:%M UTC')"
 
@@ -163,7 +165,7 @@ needs_build() {
 }
 
 up() {
-  local sha="${1:?commit}" old=""
+  local sha="${1:?commit}" old="" built=""
   cd "$(dirname "$0")/.."
   [[ -f "$HOME/.preview-sha" ]] && old="$(cat "$HOME/.preview-sha")"
 
@@ -178,11 +180,13 @@ up() {
 
   if [[ -z "$old" ]] || ! images_present || needs_build "$old" "$sha"; then
     docker compose build
+    built=yes
   fi
   # Boat may still create the containers after a resume, so these can collide.
   retry 90 docker compose run --rm -T server bin/rails db:prepare
   retry 90 docker compose up -d --wait
-  if [[ -n "$old" && "$old" != "$sha" ]]; then
+  # Rails does not reload every file. A rebuild already replaced the containers.
+  if [[ -z "$built" && -n "$old" && "$old" != "$sha" ]]; then
     docker compose restart server jobs
   fi
 
