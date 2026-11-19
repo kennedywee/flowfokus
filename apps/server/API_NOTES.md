@@ -21,7 +21,7 @@
 | `FLOWFOKUS_DEMO_MODE` | `true` | Turns on the demo actor. Development and test only. Rails refuses to boot with it in production. |
 | `FLOWFOKUS_DEMO_TOKEN` | `flowfokus-local-demo-token` | The Bearer value the portal server sends. At least 16 characters. |
 
-- The demo token maps to fixed claims: seeded user `Demo Owner <demo.owner@flowfokus.test>`, organization `chainsaw`, all Sprint 1 permissions.
+- The demo token maps to fixed claims: seeded user `Kennedy Wee <kennedy@flowfokus.com>`, organization `chainsaw`, all Sprint 1 permissions.
 - The browser cannot choose the claims. The portal server keeps the token.
 - The demo token works only for `Flowfokus-Organization: chainsaw`. Other slugs give `403 organization_mismatch`.
 - The demo actor is staff only. `/member/*` gives `403`.
@@ -34,9 +34,8 @@ Run `bin/rails db:seed`. It is idempotent.
 
 | Slug | Name | Published | Locations | Currency |
 | --- | --- | --- | --- | --- |
-| `chainsaw` | Chainsaw Gym | yes | Bangsar, Mont Kiara | MYR |
-| `ironworks` | Ironworks Fitness | yes | Penang | MYR |
-| `hidden` | Hidden Gym | no | one | MYR |
+| `chainsaw` | Chainsaw | yes | Bangsar, Mont Kiara | MYR |
+| `irongate` | Irongate | yes | George Town | MYR |
 
 Chainsaw products:
 
@@ -44,11 +43,11 @@ Chainsaw products:
 | --- | --- | --- | --- |
 | Monthly Unlimited | RM120.00 (12000) | 30 days | Unlimited gym access, all locations |
 | Monthly 8 Visits | RM80.00 (8000) | 30 days | 8 visits per period, all locations |
-| Bangsar Weekly | RM35.00 (3500) | 7 days | Unlimited, Bangsar only |
 | Monthly Unlimited (old) | RM100.00, archived | 30 days | Kept for history |
+| 10-Class Pass | RM200.00 (20000) | 60 days | 10 group classes |
 | Staff Trial | RM0, unpublished product | 7 days | Staff list only |
 
-Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim. Ironworks has its own members and products.
+Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, Patrick Ng. Irongate has its own members and products.
 
 ## Endpoints
 

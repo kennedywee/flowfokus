@@ -24,7 +24,7 @@ async function workosCall(path, body, expected = 200) {
 async function authenticate(email, organizationId, selectOrganization = false) {
   const result = await workosCall('/user_management/authenticate', {
     client_id: clientId, client_secret: apiKey, grant_type: 'password',
-    email, password: 'local-password', organization_id: organizationId,
+    email, password: '123123qwe', organization_id: organizationId,
   }, selectOrganization ? 403 : 200)
   if (!selectOrganization) return result
   assert.equal(result.code, 'organization_selection_required')
@@ -58,20 +58,21 @@ async function checkRails(path, token, organization, status, body) {
   return response.json()
 }
 
-const owner = await authenticate('demo.owner@flowfokus.test', 'org_demo_chainsaw')
-const receptionist = await authenticate('receptionist@example.com', 'org_demo_chainsaw')
-const otherOwner = await authenticate('ironworks.owner@example.com', 'org_demo_ironworks')
-const manager = await authenticate('manager@example.com', 'org_demo_chainsaw', true)
+// Kennedy and Aiman work at Chainsaw only. Rachel owns Irongate and manages Chainsaw.
+const owner = await authenticate('kennedy@flowfokus.com', 'org_chainsaw')
+const receptionist = await authenticate('aiman@flowfokus.com', 'org_chainsaw')
+const rachel = await authenticate('rachel@flowfokus.com', 'org_irongate', true)
 const ownerMemberships = await checkRails('/staff/memberships', owner.access_token, undefined, 200)
 assert.deepEqual(ownerMemberships.data.map(item => item.slug), ['chainsaw'])
-const managerMemberships = await checkRails('/staff/memberships', manager.access_token, undefined, 200)
-assert.deepEqual(managerMemberships.data.map(item => item.slug).sort(), ['chainsaw', 'ironworks'])
+const rachelMemberships = await checkRails('/staff/memberships', rachel.access_token, undefined, 200)
+assert.deepEqual(rachelMemberships.data.map(item => item.slug).sort(), ['chainsaw', 'irongate'])
 await checkRails('/staff/organization', undefined, 'chainsaw', 401)
 await checkRails('/staff/organization', 'invalid-token', 'chainsaw', 401)
 await checkRails('/staff/organization', owner.access_token, 'chainsaw', 200)
-await checkRails('/staff/organization', owner.access_token, 'ironworks', 403)
-await checkRails('/staff/organization', otherOwner.access_token, 'ironworks', 200)
-await checkRails('/staff/organization', otherOwner.access_token, 'chainsaw', 403)
+await checkRails('/staff/organization', owner.access_token, 'irongate', 403)
+await checkRails('/staff/organization', receptionist.access_token, 'irongate', 403)
+await checkRails('/staff/organization', rachel.access_token, 'irongate', 200)
+await checkRails('/staff/organization', rachel.access_token, 'chainsaw', 403)
 await checkRails('/staff/members', receptionist.access_token, 'chainsaw', 200)
 await checkRails('/staff/members', receptionist.access_token, 'chainsaw', 403, { name: 'Must not be created' })
 
@@ -81,17 +82,18 @@ assert.notEqual(renewed.refresh_token, owner.refresh_token, 'Refresh must rotate
 const replay = await refresh(owner.refresh_token)
 assert.equal(replay.refresh_token, renewed.refresh_token, 'Concurrent refresh must reuse the successor')
 await checkRails('/staff/organization', renewed.access_token, 'chainsaw', 200)
-const switched = await refresh(manager.refresh_token, 200, 'org_demo_ironworks')
-await checkRails('/staff/organization', switched.access_token, 'ironworks', 200)
-await checkRails('/staff/organization', switched.access_token, 'chainsaw', 403)
-await checkRails('/staff/members', switched.access_token, 'ironworks', 403, { name: 'Must not be created' })
+// Rachel switches from Irongate, where she is owner, to Chainsaw, where she is manager.
+const switched = await refresh(rachel.refresh_token, 200, 'org_chainsaw')
+await checkRails('/staff/organization', switched.access_token, 'chainsaw', 200)
+await checkRails('/staff/organization', switched.access_token, 'irongate', 403)
+await checkRails('/staff/locations', switched.access_token, 'chainsaw', 403, { name: 'Must not be created' })
 
 // Exercise the full membership workflow with a genuine emulator-issued token.
 process.env.FLOWFOKUS_ACCESS_TOKEN = renewed.access_token
 await import('./smoke.mjs')
 delete process.env.FLOWFOKUS_ACCESS_TOKEN
 
-for (const session of [renewed, receptionist, otherOwner, switched]) {
+for (const session of [renewed, receptionist, switched]) {
   // Reading sid is only for cleanup. Rails performs the cryptographic verification.
   const { sid } = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64url').toString())
   await workosCall('/user_management/sessions/revoke', { session_id: sid })

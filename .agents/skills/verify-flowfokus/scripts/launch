@@ -54,7 +54,7 @@ wait_for() {
 }
 wait_for "Rails" http://127.0.0.1:4000/ready '"ok"'
 wait_for "portal" http://localhost:4001/ 'href="/sign-in'
-wait_for "gym site" http://chainsaw.localhost:4002/ 'Chainsaw Gym'
+wait_for "gym site" http://chainsaw.localhost:4002/ 'Chainsaw'
 
 record_ownership "$mode"
 trap - EXIT

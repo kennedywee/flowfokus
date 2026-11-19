@@ -23,7 +23,7 @@ are separate facts.
 Preconditions:
 
 - The doctor prints `READY`.
-- Signed in as `demo.owner@flowfokus.test`.
+- Signed in as `kennedy@flowfokus.com`.
 - The member has no active Monthly Unlimited membership, or you accept a renewal. Chloe Lim fits on a
   fresh database.
 

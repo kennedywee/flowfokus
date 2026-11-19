@@ -30,20 +30,20 @@ Steps:
 - **Signed-out start.** Open `/`. The heading reads `Sign in to Flowfokus`. Run:
   `page.getByRole('link', { name: 'Sign in' }).click()`.
 - **Email page.** The URL starts with `http://localhost:4100/user_management/authorize`, and the
-  heading reads `Sign In`. Run `page.getByRole('textbox', { name: 'Email' }).fill('demo.owner@flowfokus.test')`
+  heading reads `Sign In`. Run `page.getByRole('textbox', { name: 'Email' }).fill('kennedy@flowfokus.com')`
   and `page.getByRole('button', { name: 'Continue' }).click()`.
 - **Password page.** The heading reads `Enter your password`. Run
-  `page.getByRole('textbox', { name: 'Password' }).fill('local-password')` and
+  `page.getByRole('textbox', { name: 'Password' }).fill('123123qwe')` and
   `page.getByRole('button', { name: 'Continue' }).click()`.
 - **Home.** The URL becomes `http://localhost:4001/chainsaw`. The heading reads `Today`. The banner has
-  `combobox "Organization: Chainsaw Gym. Change organization"`, and the sidebar has the account
-  button `Demo Owner · Owner , account menu`.
-- **Choose a gym.** Sign in as `manager@example.com`. AuthKit or the portal asks for an organization.
-  Choose `Ironworks Fitness`. The URL becomes `/ironworks`. Members lists `Dinesh Kumar` and no
+  `combobox "Organization: Chainsaw. Change organization"`, and the sidebar has the account
+  button `Kennedy Wee · Owner , account menu`.
+- **Choose a gym.** Sign in as `rachel@flowfokus.com`. AuthKit or the portal asks for an organization.
+  Choose `Irongate`. The URL becomes `/irongate`. Members lists `Dinesh Kumar` and no
   Chainsaw member.
-- **Switch.** Open the organization combobox in the banner and choose Chainsaw Gym. The URL becomes
+- **Switch.** Open the organization combobox in the banner and choose Chainsaw. The URL becomes
   `/chainsaw`.
-- **Role.** Sign in as `receptionist@example.com`. On `/chainsaw/members` there is no `New member`
+- **Role.** Sign in as `aiman@flowfokus.com`. On `/chainsaw/members` there is no `New member`
   link. On Home the banner has `Check in` but no `Sell` link.
 - **Sign out.** Open the account menu in the sidebar and choose the sign-out item. The start page
   shows `Sign in to Flowfokus` again. Opening `/chainsaw/members` asks you to sign in.
@@ -59,5 +59,5 @@ Steps:
 - Restarting `flowfokus-workos` ends every session. Restart `flowfokus-server` with it.
 - `scripts/doctor` and `bun run smoke:auth` prove tokens and Rails access only. They do not prove the
   browser sign-in.
-- Only the `demo.owner` path was driven when this map was written. The manager, receptionist, switch,
+- Only the Kennedy path was driven when this map was written. The manager, receptionist, switch,
   and sign-out steps follow the docs and the code, not a run.

@@ -21,7 +21,7 @@ docker compose run --rm server bin/rails db:prepare
 docker compose up
 ```
 
-Open the staff portal at `http://localhost:4001` and the gym site at `http://chainsaw.localhost:4002`. The API uses `http://127.0.0.1:4000`. Local staff sign-in uses WorkOS Emulate in Docker and needs no external credentials. Sign in as `demo.owner@flowfokus.test` with password `local-password`. Run `docker compose run --rm server bin/rails db:seed` once when updating an existing database. See [Local staff authentication](docs/local-auth.md) for other fake users and roles. Manual payment records do not collect money.
+Open the staff portal at `http://localhost:4001` and the gym site at `http://chainsaw.localhost:4002`. The API uses `http://127.0.0.1:4000`. Local staff sign-in uses WorkOS Emulate in Docker and needs no external credentials. Sign in as `kennedy@flowfokus.com` with password `123123qwe`. Run `docker compose run --rm server bin/rails db:seed` once when updating an existing database. See [Local staff authentication](docs/local-auth.md) for other fake users and roles. Manual payment records do not collect money.
 
 Portal screens with existing APIs use Rails records, including member creation,
 sales, payments, delivery, and check-in. New sections without APIs use clearly

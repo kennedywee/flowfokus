@@ -39,7 +39,7 @@ FLOWFOKUS_TEST_PAYMENTS=true .agents/skills/verify-flowfokus/scripts/launch   # 
 4. `docker compose up -d --wait` for all six containers: `flowfokus-db`, `flowfokus-workos`,
    `flowfokus-server`, `flowfokus-jobs`, `flowfokus-portal`, and `flowfokus-site`.
 5. It waits until the apps serve real pages: Rails `/ready` returns `ok`, the portal start page has
-   the sign-in link, and the gym site shows `Chainsaw Gym`. Then it runs the doctor.
+   the sign-in link, and the gym site shows `Chainsaw`. Then it runs the doctor.
 
 Ready means the doctor prints `READY`. On a machine with built images and an empty database this
 takes about 30 seconds. The first image build takes several minutes.
@@ -63,7 +63,7 @@ Read-only. Run it first, and again when anything looks wrong. It checks that:
 - the online test payment setting, and a warning if dependency files changed after the image build;
 - each container publishes its port: 4000, 4001, 4002, 4100;
 - Rails `/ready`, emulator `/health`, the portal sign-in link, and the gym site home page answer;
-- `demo.owner@flowfokus.test` signs in at the emulator, and Rails accepts the token for Chainsaw
+- `kennedy@flowfokus.com` signs in at the emulator, and Rails accepts the token for Chainsaw
   Gym. The doctor revokes that session at once.
 
 It exits non-zero and prints `FAIL` lines when the instance is not worth driving.
@@ -93,19 +93,19 @@ from the feature file. Keep its `signIn`, `shot`, `assert`, and `sql` functions.
 
 ### Accounts
 
-Every password is `local-password`. The emulator seed is `workos-emulate.config.yaml`.
+Every password is `123123qwe`. The emulator seed is `workos-emulate.config.yaml`.
 
 | Email | Where | Role |
 | --- | --- | --- |
-| `demo.owner@flowfokus.test` | Chainsaw Gym | Owner. Can do the full sale, payment, fulfillment, and check-in flow. |
-| `receptionist@example.com` | Chainsaw Gym | Receptionist. Reads, and checks members in. Cannot create members or sales. |
-| `ironworks.owner@example.com` | Ironworks Fitness | Owner. No access to Chainsaw Gym. |
-| `manager@example.com` | Both | Owner at Chainsaw, Receptionist at Ironworks. Must pick an organization. |
-| `member@example.com` | Gym site | No staff access. Matches the seeded member Mei Lim after a link code. |
+| `kennedy@flowfokus.com` | Chainsaw | Owner. Can do the full sale, payment, fulfillment, and check-in flow. |
+| `rachel@flowfokus.com` | Both | Owner at Irongate, Manager at Chainsaw. Must pick an organization. |
+| `aiman@flowfokus.com` | Chainsaw | Receptionist. Reads, and checks members in. Cannot create members or sales. |
+| `patrick@example.com` | Gym site | No staff access. Matches the seeded member Patrick Ng after a link code. |
 
-Seeded Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, and Mei Lim. Seeded products include
-Monthly Unlimited (RM 120.00), Monthly 8 Visits, Bangsar Weekly, Staff Trial, 10-Class Pass, and
-PT 5-Pack. Locations: Bangsar and Mont Kiara.
+Seeded Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, and Patrick Ng. Seeded products:
+Monthly Unlimited (RM 120.00), Monthly 8 Visits, 10-Class Pass, and the unpublished Staff Trial.
+Locations: Bangsar and Mont Kiara. Irongate has the location George Town and the members Dinesh
+Kumar and Sofia Wong.
 
 ### Stable handles
 

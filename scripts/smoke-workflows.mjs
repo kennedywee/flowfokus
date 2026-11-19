@@ -19,7 +19,7 @@ async function authenticate(email, organizationId) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      client_id: clientId, client_secret: apiKey, grant_type: 'password', email, password: 'local-password',
+      client_id: clientId, client_secret: apiKey, grant_type: 'password', email, password: '123123qwe',
       ...(organizationId ? { organization_id: organizationId } : {}),
     }),
     signal: AbortSignal.timeout(10_000),
@@ -52,9 +52,9 @@ function step(name) {
   console.log(`ok  ${name}`)
 }
 
-const owner = await authenticate('demo.owner@flowfokus.test', 'org_demo_chainsaw')
-const receptionist = await authenticate('receptionist@example.com', 'org_demo_chainsaw')
-const member = await authenticate('member@example.com')
+const owner = await authenticate('kennedy@flowfokus.com', 'org_chainsaw')
+const receptionist = await authenticate('aiman@flowfokus.com', 'org_chainsaw')
+const member = await authenticate('patrick@example.com')
 const as = (token) => ({ token })
 
 // Catalog
@@ -153,7 +153,7 @@ step('settings: add and edit a location, keep names unique, refuse a receptionis
 
 // Team through WorkOS
 let team = (await call('GET', '/staff/team', as(owner))).data
-const desk = team.members.find((person) => person.email === 'receptionist@example.com')
+const desk = team.members.find((person) => person.email === 'aiman@flowfokus.com')
 assert.ok(desk?.manageable, 'The owner may manage the receptionist')
 team = (await call('POST', '/staff/team/invitations', { ...as(owner), status: 201,
   body: { email: `invite.${run}@example.com`, role: 'receptionist' } })).data
@@ -170,17 +170,17 @@ await call('GET', '/staff/team', { ...as(receptionist), status: 403 })
 step('team: invite and revoke, change a role and back through WorkOS, refuse self-removal')
 
 // Member linking and the member area
-const mei = (await call('GET', `/staff/members?q=member@example.com`, as(owner))).data.find((item) => item.email === 'member@example.com')
-assert.ok(mei, 'Seeded member Mei Lim is missing. Run bin/rails db:seed.')
-await call('DELETE', `/staff/members/${mei.id}/link`, as(owner))
+const patrick = (await call('GET', `/staff/members?q=patrick@example.com`, as(owner))).data.find((item) => item.email === 'patrick@example.com')
+assert.ok(patrick, 'Seeded member Patrick Ng is missing. Run bin/rails db:seed.')
+await call('DELETE', `/staff/members/${patrick.id}/link`, as(owner))
 await call('GET', '/member/account', { token: member, status: 403 })
-const code = (await call('POST', `/staff/members/${mei.id}/link`, { ...as(owner), status: 201 })).data.code
+const code = (await call('POST', `/staff/members/${patrick.id}/link`, { ...as(owner), status: 201 })).data.code
 await call('POST', '/member/link', { token: member, status: 422, body: { code: 'AAAA-BBBB-CCCC' } })
 const account = (await call('POST', '/member/link', { token: member, status: 201, body: { code: code.toLowerCase() } })).data
-assert.equal(account.email, 'member@example.com')
+assert.equal(account.email, 'patrick@example.com')
 await call('POST', '/member/link', { token: member, status: 422, body: { code } })
 await call('GET', '/member/account', { token: member })
-await call('GET', '/member/account', { token: member, organization: 'ironworks', status: 403 })
+await call('GET', '/member/account', { token: member, organization: 'irongate', status: 403 })
 await call('GET', '/staff/members', { token: member, status: 403 })
 await call('GET', '/member/account', { token: owner, status: 403 })
 step('member: one-time code links the sign-in, the account loads, staff and member access stay apart')

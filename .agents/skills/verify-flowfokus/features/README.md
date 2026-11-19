@@ -7,11 +7,11 @@ this index before you drive the app. Then use the matching feature file as the r
 
 - Launch with `.agents/skills/verify-flowfokus/scripts/launch`. The portal is at
   `http://localhost:4001`, and the gym site is at `http://chainsaw.localhost:4002`.
-- The seeds create Chainsaw Gym (`chainsaw`) with the locations Bangsar and Mont Kiara, the members
-  Aisyah Rahman, Ben Tan, Chloe Lim, and Mei Lim, and the products listed in the skill. A second gym,
-  Ironworks Fitness (`ironworks`), exists for tenant isolation.
+- The seeds create Chainsaw (`chainsaw`) with the locations Bangsar and Mont Kiara, the members
+  Aisyah Rahman, Ben Tan, Chloe Lim, and Patrick Ng, and the products listed in the skill. A second gym,
+  Irongate (`irongate`), exists for tenant isolation.
 - Staff accounts and the member account are in the skill's Accounts table. The password is
-  `local-password` for all of them.
+  `123123qwe` for all of them.
 - Run the doctor. It must print `READY`, the commit under test, and a working sign-in.
 - Never drive a stack that the doctor says mounts another checkout.
 
@@ -62,8 +62,8 @@ commands, and observable proof.
 ## Driven on 19 November 2026
 
 - Members: driven end to end with `scripts/proof-create-member.mjs`.
-- Staff sign-in as `demo.owner`, desk sale with cash and fulfillment, check-in from Home, the gym
+- Staff sign-in as Kennedy, desk sale with cash and fulfillment, check-in from Home, the gym
   site catalog, and member sign-in up to the link-code form: driven while writing the recipes, without
   saved evidence.
-- Not driven yet: organization choice for `manager@example.com`, receptionist limits, sign-out,
+- Not driven yet: organization choice for `rachel@flowfokus.com`, receptionist limits, sign-out,
   refused check-in, link codes, and online checkout.
