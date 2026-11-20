@@ -1226,7 +1226,10 @@ export interface components {
             name: string;
             address: string | null;
         };
-        /** @enum {string} */
+        /**
+         * @description A permission the API checks. The list grows when an action gets its own
+         *     permission, so clients must ignore a value they do not know.
+         */
         Permission: "members:read" | "members:create" | "members:update" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */

@@ -2687,7 +2687,10 @@ components:
 
     Permission:
       type: string
-      enum:
+      description: |
+        A permission the API checks. The list grows when an action gets its own
+        permission, so clients must ignore a value they do not know.
+      x-extensible-enum:
         - members:read
         - members:create
         - members:update
