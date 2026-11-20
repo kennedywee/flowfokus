@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_20_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -223,6 +223,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_000001) do
     t.string "email", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "phone"
+    t.date "date_of_birth"
+    t.string "emergency_contact_name"
+    t.string "emergency_contact_phone"
+    t.text "note"
     t.index "organization_id, lower((email)::text)", name: "index_members_on_organization_id_and_lower_email", unique: true
     t.index ["id", "organization_id"], name: "index_members_on_id_and_organization_id", unique: true
     t.index ["organization_id", "created_at"], name: "index_members_on_organization_id_and_created_at"

@@ -663,6 +663,44 @@ paths:
           $ref: "#/components/responses/NotFound"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+    patch:
+      tags: [staff]
+      operationId: updateStaffMember
+      summary: Change a member's name, email, and details. Needs members:update.
+      description: |
+        Changes only the fields in the body. An empty or null optional field is cleared.
+        The email stays unique in the organization; a duplicate returns 422 with
+        `details.email`. A linked sign-in keeps its own email.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdateInput"
+      responses:
+        "200":
+          description: The changed member.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDetailResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /staff/members/{id}/renewals:
     post:
@@ -2649,9 +2687,13 @@ components:
 
     Permission:
       type: string
-      enum:
+      description: |
+        A permission the API checks. The list grows when an action gets its own
+        permission, so clients must ignore a value they do not know.
+      x-extensible-enum:
         - members:read
         - members:create
+        - members:update
         - members:link
         - products:read
         - products:create
@@ -2868,6 +2910,66 @@ components:
           type: string
           format: email
           maxLength: 320
+        phone:
+          type: string
+          nullable: true
+          maxLength: 32
+          description: Digits, spaces, and + ( ) . - only. Empty or null clears it.
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: Not in the future. Null clears it.
+        emergency_contact_name:
+          type: string
+          nullable: true
+          maxLength: 200
+        emergency_contact_phone:
+          type: string
+          nullable: true
+          maxLength: 32
+        note:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: For staff only. The member area never returns it.
+
+    MemberUpdateInput:
+      type: object
+      additionalProperties: false
+      description: Send only the fields to change. A field left out keeps its value.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: string
+          format: email
+          maxLength: 320
+        phone:
+          type: string
+          nullable: true
+          maxLength: 32
+          description: Digits, spaces, and + ( ) . - only. Empty or null clears it.
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+          description: Not in the future. Null clears it.
+        emergency_contact_name:
+          type: string
+          nullable: true
+          maxLength: 200
+        emergency_contact_phone:
+          type: string
+          nullable: true
+          maxLength: 32
+        note:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: For staff only. The member area never returns it.
 
     MemberSummary:
       type: object
@@ -2901,7 +3003,7 @@ components:
     MemberDetail:
       type: object
       additionalProperties: false
-      required: [id, name, email, created_at, linked_email, membership, current_period, renewal, entitlements, bookings]
+      required: [id, name, email, created_at, linked_email, phone, date_of_birth, emergency_contact_name, emergency_contact_phone, note, membership, current_period, renewal, entitlements, bookings]
       properties:
         id:
           type: string
@@ -2930,6 +3032,23 @@ components:
           type: string
           nullable: true
           description: The email of the sign-in linked to this member, if any.
+        phone:
+          type: string
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        emergency_contact_name:
+          type: string
+          nullable: true
+        emergency_contact_phone:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+          description: A staff note about the member.
         entitlements:
           type: array
           description: Rights that are active now or start later. Expired rights are left out.

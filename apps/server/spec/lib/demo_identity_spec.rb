@@ -38,4 +38,11 @@ RSpec.describe Flowfokus::DemoIdentity do
     expect(described_class.claims_for("#{token}x", env: enabled_env, rails_env: "test")).to be_nil
     expect(described_class.claims_for(token, env: {}, rails_env: "test")).to be_nil
   end
+
+  # Committee does not check `x-extensible-enum`, so the permission list is checked here.
+  it "holds exactly the permissions in the contract" do
+    contract = YAML.load_file(Rails.root.join("openapi.yaml")).dig("components", "schemas", "Permission", "x-extensible-enum")
+
+    expect(described_class::PERMISSIONS).to match_array(contract)
+  end
 end

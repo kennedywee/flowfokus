@@ -48,9 +48,11 @@ WorkOS is the authority. Rails keeps a synced copy for reporting, associations, 
 
 A customer of one organization. Belongs to an organization, and optionally to a user.
 
-Columns: `organization_id`, `user_id` (nullable), `name`, `email`.
+Columns: `organization_id`, `user_id` (nullable), `name`, `email`, and the optional `phone`, `date_of_birth`, `emergency_contact_name`, `emergency_contact_phone`, and `note`.
 
 - Staff can create a member without a login.
+- Staff with `members:update` change a member's name, email, phone, date of birth, emergency contact, and note. Only the name and email are required. The note is for staff: the member area never returns it, or the other optional details.
+- Changing a member's email does not change a linked sign-in. The sign-in keeps its own WorkOS email.
 - Link a member to a user only after verified ownership. A matching email is not enough.
 - Ownership is proven with a one-time link code. Staff with `members:link` create it for one member. The person signs in on the gym site and enters it. Rails stores only an HMAC digest. A code works once, expires after seven days, and a new code replaces older open ones. One user links to at most one member per organization. Staff can unlink; the record and its history stay.
 - Creating a member never creates a WorkOS membership.

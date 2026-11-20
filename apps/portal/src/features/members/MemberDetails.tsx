@@ -5,9 +5,13 @@ import {
   CalendarDays,
   ChevronDown,
   ChevronRight,
+  Cake,
   IdCard,
+  LifeBuoy,
   Mail,
   MoreHorizontal,
+  Phone,
+  SquarePen,
   Receipt,
   RefreshCw,
   Ticket,
@@ -34,6 +38,8 @@ import { useAction, useIdempotencyKey } from "../../lib/hooks";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
 import { useShortDate } from "./dates";
+import { EditMemberDialog } from "./EditMember";
+import { emergencyContact, formatBirthDate, type MemberField } from "./list";
 import type { MemberRecord } from "../../lib/staff.functions";
 import { createLinkCode, renewMembership, unlinkMember } from "../../lib/staff.functions";
 import {
@@ -75,13 +81,18 @@ const RECENT = 5;
 export function MemberDetails({ record }: { record: MemberRecord }) {
   const { member, sales, checkIns } = record;
   const now = Date.now();
+  const can = useCan();
+  // The field staff clicked. The edit dialog opens on it.
+  const [editing, setEditing] = useState<MemberField | null>(null);
+  const edit = can("members:update") ? setEditing : undefined;
   return (
     <div className="page member-page member-details">
-      <MemberHeader record={record} />
+      <MemberHeader record={record} onEdit={edit} />
       <div className="member-details__membership">
         <MembershipSection member={member} sales={sales} now={now} />
       </div>
-      <Properties record={record} />
+      <Properties record={record} onEdit={edit} />
+      {editing ? <EditMemberDialog member={member} focus={editing} onClose={() => setEditing(null)} /> : null}
       <div className="member-details__rest">
         <AccessSection member={member} />
         <BookingsSection bookings={member.bookings} now={now} />
@@ -94,7 +105,10 @@ export function MemberDetails({ record }: { record: MemberRecord }) {
 
 /* ---------- Header and actions ---------- */
 
-function MemberHeader({ record }: { record: MemberRecord }) {
+/** Opens the edit dialog on a field. Missing for roles without members:update. */
+type EditMember = ((field: MemberField) => void) | undefined;
+
+function MemberHeader({ record, onEdit }: { record: MemberRecord; onEdit: EditMember }) {
   const { member, sales, checkIns } = record;
   const organization = useOrganization();
   const can = useCan();
@@ -162,16 +176,24 @@ function MemberHeader({ record }: { record: MemberRecord }) {
           Sell
           <Kbd>S</Kbd>
         </Link>
-        {canRenew ? (
+        {canRenew || onEdit ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="More actions">
               <MoreHorizontal {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setRenewing(true)}>
-                <RefreshCw {...statusIcon} />
-                Renew membership…
-              </DropdownMenuItem>
+              {onEdit ? (
+                <DropdownMenuItem onClick={() => onEdit("name")}>
+                  <SquarePen {...statusIcon} />
+                  Edit member…
+                </DropdownMenuItem>
+              ) : null}
+              {canRenew ? (
+                <DropdownMenuItem onClick={() => setRenewing(true)}>
+                  <RefreshCw {...statusIcon} />
+                  Renew membership…
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
@@ -561,7 +583,56 @@ function Property({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Properties({ record }: { record: MemberRecord }) {
+/**
+ * One stored fact about the member. Staff with members:update click the value
+ * to change it; an empty one reads "Add phone". Other roles see the value, or
+ * a dash when Rails has none.
+ */
+function EditableValue({
+  field,
+  label,
+  icon: Icon,
+  value,
+  onEdit,
+  children,
+}: {
+  field: MemberField;
+  label: string;
+  icon: LucideIcon;
+  value: string | null;
+  onEdit: EditMember;
+  /** What a role that cannot edit sees, when it differs from the plain value. */
+  children?: ReactNode;
+}) {
+  if (!onEdit) {
+    return (
+      <span className="mx-value" data-empty={value === null || undefined}>
+        {value === null ? (
+          "—"
+        ) : (
+          <>
+            <Icon {...statusIcon} />
+            {children ?? <span className="mx-value__text">{value}</span>}
+          </>
+        )}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className="mx-value mx-value--edit"
+      data-empty={value === null || undefined}
+      aria-label={value === null ? `Add ${label.toLowerCase()}` : `${label}: ${value}. Change`}
+      onClick={() => onEdit(field)}
+    >
+      <Icon {...statusIcon} />
+      <span className="mx-value__text">{value ?? `Add ${label.toLowerCase()}`}</span>
+    </button>
+  );
+}
+
+function Properties({ record, onEdit }: { record: MemberRecord; onEdit: EditMember }) {
   const { member, sales } = record;
   const organization = useOrganization();
   const paid = totalPaid(sales);
@@ -571,16 +642,61 @@ function Properties({ record }: { record: MemberRecord }) {
         <h2 id="props-contact">Contact</h2>
         <dl>
           <Property label="Email">
-            <span className="mx-value">
-              <Mail {...statusIcon} />
+            <EditableValue field="email" label="Email" icon={Mail} value={member.email} onEdit={onEdit}>
               <a href={`mailto:${member.email}`}>{member.email}</a>
-            </span>
+            </EditableValue>
+          </Property>
+          <Property label="Phone">
+            <EditableValue field="phone" label="Phone" icon={Phone} value={member.phone} onEdit={onEdit}>
+              <a href={`tel:${member.phone?.replace(/[^+0-9]/g, "")}`}>{member.phone}</a>
+            </EditableValue>
           </Property>
           <Property label="Gym site">
             <SignInValue member={member} />
           </Property>
         </dl>
       </section>
+      <section className="mx-props__group" aria-labelledby="props-details">
+        <h2 id="props-details">Details</h2>
+        <dl>
+          <Property label="Date of birth">
+            <EditableValue
+              field="date_of_birth"
+              label="Date of birth"
+              icon={Cake}
+              value={member.date_of_birth ? formatBirthDate(member.date_of_birth) : null}
+              onEdit={onEdit}
+            />
+          </Property>
+          <Property label="Emergency">
+            <EditableValue
+              field="emergency_contact_name"
+              label="Emergency contact"
+              icon={LifeBuoy}
+              value={emergencyContact(member)}
+              onEdit={onEdit}
+            />
+          </Property>
+        </dl>
+      </section>
+      {member.note || onEdit ? (
+        <section className="mx-props__group" aria-labelledby="props-note">
+          <h2 id="props-note">Note</h2>
+          {onEdit ? (
+            <button
+              type="button"
+              className="mx-note mx-note--edit"
+              data-empty={member.note === null || undefined}
+              aria-label={member.note ? `Note: ${member.note}. Change` : "Add note"}
+              onClick={() => onEdit("note")}
+            >
+              {member.note ?? "Add note"}
+            </button>
+          ) : (
+            <p className="mx-note">{member.note}</p>
+          )}
+        </section>
+      ) : null}
       <section className="mx-props__group" aria-labelledby="props-lifetime">
         <h2 id="props-lifetime">Lifetime</h2>
         <dl>

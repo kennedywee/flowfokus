@@ -10,6 +10,11 @@ and the record belongs to that gym only.
 - `member-save`: stores a name and an email, then opens the member page.
 - `member-list`: lists the new member on the Members page.
 - `member-permission`: a Receptionist sees no way to create a member.
+- `member-edit`: on the member page, a click on a property value opens `Edit member` on that
+  field. `More actions` in the top bar holds `Edit member…`. Save with `Save changes`. Value
+  buttons are named `Phone: <value>. Change`, or `Add phone` when empty. A Receptionist sees the
+  values and no buttons in the `Member properties` region. Stored columns: `phone`,
+  `date_of_birth`, `emergency_contact_name`, `emergency_contact_phone`, `note`.
 
 ## How to reach it
 

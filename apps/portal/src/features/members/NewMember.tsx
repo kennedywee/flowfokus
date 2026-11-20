@@ -24,8 +24,8 @@ function focusField(id: string) {
 }
 
 /**
- * The new member page. Rails stores a name and an email. Create member
- * (⌘↵) saves and opens the member. Leaving with typed details asks first.
+ * The new member page: a name, an email, and an optional phone. Staff add the
+ * other details on the member page. Create member (⌘↵) saves and opens the member. Leaving with typed details asks first.
  */
 export function NewMember() {
   const can = useCan();
@@ -64,9 +64,10 @@ function NewMemberForm() {
   const saved = useRef(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [local, setLocal] = useState<NewMemberErrors>({});
 
-  const dirty = name.trim() !== "" || email.trim() !== "";
+  const dirty = name.trim() !== "" || email.trim() !== "" || phone.trim() !== "";
   const blocker = useBlocker({
     shouldBlockFn: () => dirty && !saved.current,
     enableBeforeUnload: () => dirty && !saved.current,
@@ -81,22 +82,24 @@ function NewMemberForm() {
   const server = action.error?.code === "validation_failed" ? action.error.details : undefined;
   const nameError = local.name ?? fieldMessage("Name", server?.name);
   const emailError = local.email ?? fieldMessage("Email", server?.email);
+  const phoneError = local.phone ?? fieldMessage("Phone", server?.phone);
   const fieldErrors = [
     nameError ? { id: "member-name", label: "Full name" } : null,
     emailError ? { id: "member-email", label: "Email" } : null,
+    phoneError ? { id: "member-phone", label: "Phone" } : null,
   ].filter((item) => item !== null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (action.pending) return;
-    const errors = checkNewMember(name, email);
+    const errors = checkNewMember(name, email, phone);
     setLocal(errors);
-    if (errors.name || errors.email) {
-      focusField(errors.name ? "member-name" : "member-email");
+    if (errors.name || errors.email || errors.phone) {
+      focusField(errors.name ? "member-name" : errors.email ? "member-email" : "member-phone");
       return;
     }
 
-    const result = await action.run({ slug: organization.slug, name: name.trim(), email: email.trim() });
+    const result = await action.run({ slug: organization.slug, name: name.trim(), email: email.trim(), phone: phone.trim() || null });
     if (result.ok) {
       saved.current = true;
       toast.show({ tone: "success", title: "Member created", body: result.data.name });
@@ -107,7 +110,8 @@ function NewMemberForm() {
         replace: true,
       });
     } else if (result.error.code === "validation_failed") {
-      focusField(result.error.details?.name ? "member-name" : "member-email");
+      const details = result.error.details;
+      focusField(details?.name ? "member-name" : details?.phone && !details.email ? "member-phone" : "member-email");
     }
   }
 
@@ -193,6 +197,20 @@ function NewMemberForm() {
                 onChange={(event) => setEmail(event.target.value)}
                 aria-invalid={emailError ? true : undefined}
                 aria-describedby={describedBy("member-email", undefined, emailError)}
+              />
+            </Field>
+            <Field id="member-phone" label="Phone" hint="Optional" error={phoneError}>
+              <Input
+                id="member-phone"
+                className="input--compact"
+                name="phone"
+                type="tel"
+                autoComplete="off"
+                maxLength={32}
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                aria-invalid={phoneError ? true : undefined}
+                aria-describedby={describedBy("member-phone", "Optional", phoneError)}
               />
             </Field>
           </div>

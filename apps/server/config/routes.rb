@@ -20,7 +20,7 @@ Rails.application.routes.draw do
     resources :memberships, only: :index
     resource :overview, only: :show
     resource :report, only: :show
-    resources :members, only: %i[index show create] do
+    resources :members, only: %i[index show create update] do
       resources :renewals, only: :create
       resource :link, only: %i[create destroy], controller: "member_links"
     end

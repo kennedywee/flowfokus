@@ -271,8 +271,15 @@ only Rails data:
 - Activity merges check-ins, sales, payments, fulfillments, refunds, voids,
   bookings, and the join date. It has no comment box or filters, because
   Rails has no member comments.
-- Properties: email, gym site sign-in (click the value to create a link code
-  or unlink, with members:link), member since, and total paid.
+- Properties: Contact (email, phone, gym site sign-in), Details (date of
+  birth, emergency contact), the staff Note, and Lifetime (member since, total
+  paid). With members:update, a click on a stored value opens Edit member
+  (`EditMember.tsx`) on that field; an empty value reads "Add phone". The more
+  menu holds Edit member…, which is how staff reach the name. The dialog uses
+  the sale dialog frame, saves with ⌘↵, and shows Rails' field errors, such as
+  an email another member uses. Other roles see the values, a dash for an
+  empty one, and the email and phone as links. The gym site value creates a
+  link code or unlinks, with members:link.
 
 The members list and New member are the next redesigned screens
 (`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
@@ -287,8 +294,9 @@ The members list and New member are the next redesigned screens
   member status, filters, or bulk endpoints.
 - No results: one line and Clear search. No members: one line and New member.
 - New member: a page, not a dialog. An icon tile and the title, Create member
-  (⌘↵) in the top bar, then the Profile band with Full name and Email.
-  Email is required because Rails requires it. Errors show on the fields, with
+  (⌘↵) in the top bar, then the Profile band with Full name, Email, and an optional Phone.
+  Email is required because Rails requires it. Staff add the date of birth,
+  emergency contact, and note on the member page. Errors show on the fields, with
   a summary above. Leaving with typed details asks "Discard this member?".
   After a create, the member page opens with a "Member created" toast. The
   toast has no New sale action; Sell (S) is on the member page.
