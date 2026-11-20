@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Plus, Search } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
+import { ListToolbar, ListToolbarLoading, SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { TableState } from "../../components/TableState";
-import { FailureNotice, Kbd, initials } from "../../components/ui";
+import { FailureNotice, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
-import { useShortcut } from "../../lib/shortcuts";
 import { buttonVariants } from "@/components/ui/button";
 import { useShortDate } from "./dates";
 import { PAGE_SIZE } from "../../lib/paging";
@@ -24,9 +24,7 @@ export function MembersList({ members, q }: { members: Result<Schemas["Member"][
   return (
     <div className="page members-list">
       <ListHead />
-      <div className="members-toolbar">
-        <SearchField q={q ?? ""} />
-      </div>
+      <Toolbar q={q ?? ""} />
       {members.ok ? (
         members.data.length ? (
           <MemberRows key={q ?? ""} members={members.data} />
@@ -65,71 +63,21 @@ function NewMemberLink({ variant = "default" }: { variant?: "default" | "seconda
   );
 }
 
-/**
- * Searches as staff type, after a short pause, and at once on Enter. "/"
- * focuses it. The URL holds the search, so Back and reload keep it.
- */
-function SearchField({ q }: { q: string }) {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  const input = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState(q);
-  useShortcut("/", () => input.current?.focus());
-
-  // A search from elsewhere, such as "Clear search", replaces the typed text.
-  useEffect(() => {
-    setValue((current) => (current.trim() === q ? current : q));
-  }, [q]);
-
-  function search(next: string) {
-    const trimmed = next.trim();
-    if (trimmed === q) return;
-    void navigate({
-      to: "/$org/members",
-      params: { org: organization.slug },
-      search: trimmed ? { q: trimmed } : {},
-      replace: true,
-    });
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => search(value), 300);
-    return () => window.clearTimeout(timer);
-    // `search` reads the latest q and value; only typing restarts the pause.
-  }, [value]);
-
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    search(value);
-  }
-
+function Toolbar({ q }: { q: string }) {
+  const setSearch = useSetListSearch("/$org/members", { q }, ["q"]);
   return (
-    <form role="search" className="list-search" onSubmit={onSubmit}>
-      <label htmlFor="member-search" className="visually-hidden">
-        Search members by name or email
-      </label>
-      <Search className="list-search__icon" {...icon} />
-      <input
-        ref={input}
-        id="member-search"
-        className="list-search__input"
-        type="search"
-        placeholder="Search name or email"
-        autoComplete="off"
-        maxLength={200}
-        aria-keyshortcuts="/"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && value) {
-            event.preventDefault();
-            setValue("");
-            search("");
-          }
-        }}
-      />
-      <Kbd>/</Kbd>
-    </form>
+    <ListToolbar
+      search={
+        <SearchField
+          id="member-search"
+          label="Search members by name or email"
+          placeholder="Search name or email"
+          q={q}
+          onSearch={(next) => setSearch({ q: next || undefined })}
+          delay={300}
+        />
+      }
+    />
   );
 }
 
@@ -229,9 +177,7 @@ export function MembersListLoading() {
   return (
     <div className="page members-list" role="status" aria-busy="true" aria-label="Loading members">
       <ListHead />
-      <div className="members-toolbar">
-        <span className="list-search skeleton-block" />
-      </div>
+      <ListToolbarLoading filter={false} />
       <div className="members-table">
         <div className="members-table__head" />
         <div className="members-rows">
