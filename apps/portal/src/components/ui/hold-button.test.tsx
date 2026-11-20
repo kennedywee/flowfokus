@@ -135,6 +135,18 @@ describe("HoldButton", () => {
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 
+  test("a second finger leaving the button does not cancel the first finger's hold", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm);
+
+    await act(async () => pointer(button, "pointerdown", { pointerType: "touch", clientX: 50, clientY: 20 }));
+    await act(async () => pointer(button, "pointerleave", { pointerType: "touch", pointerId: 2, isPrimary: false, bubbles: false }));
+    expect(button.hasAttribute("data-holding")).toBe(true);
+    await wait(HOLD_MS + 50);
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
   test("holding Space confirms after the same time, and a key repeat does not restart it", async () => {
     const onConfirm = mock(() => {});
     const button = await renderButton(onConfirm);
@@ -237,6 +249,20 @@ describe("HoldButton shortcut", () => {
     expect(hint()?.hasAttribute("data-open")).toBe(true);
   });
 
+  test("Escape cancels a shortcut hold", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm, { shortcut: "c" });
+
+    await act(async () => key(document.body, "keydown", { key: "c" }));
+    await wait(200);
+    await act(async () => key(document.body, "keydown", { key: "Escape" }));
+    expect(button.hasAttribute("data-holding")).toBe(false);
+    await wait(HOLD_MS);
+    await act(async () => key(document.body, "keyup", { key: "c" }));
+
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
   test("typing the key in a field does not hold the button", async () => {
     const onConfirm = mock(() => {});
     const button = await renderButton(onConfirm, { shortcut: "c" });
@@ -292,6 +318,19 @@ describe("SwipeConfirm", () => {
     await frame();
     expect(progress(track)).toBeGreaterThan(0.9);
     await act(async () => pointer(document, "pointerup", { clientX: 10 + 160, clientY: 10, buttons: 0 }));
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  test("decides from where the finger lifts, not from the last move", async () => {
+    const onConfirm = mock(() => {});
+    const { knob } = await renderSwipe(onConfirm);
+
+    await act(async () => pointer(knob, "pointerdown", { clientX: 10, clientY: 10 }));
+    await act(async () => pointer(document, "pointermove", { clientX: 10 + 80, clientY: 10 }));
+    await frame();
+    // The finger lifts at the end without a last move there.
+    await act(async () => pointer(document, "pointerup", { clientX: 10 + 166, clientY: 10, buttons: 0 }));
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });

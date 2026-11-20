@@ -24,7 +24,7 @@ const HOVER_HINT_DELAY_MS = 400
 
 const POINTER_TYPES = ["mouse", "touch", "pen"]
 
-type HoldButtonProps = Omit<React.ComponentProps<typeof Button>, "variant" | "onClick" | "children"> & {
+type HoldButtonProps = Omit<React.ComponentProps<typeof Button>, "variant" | "onClick" | "children" | "ref"> & {
   /** The action, such as "Check in". It stays the button's accessible name. */
   children: React.ReactNode
   /** Runs once the hold completes. Return a Promise to keep the confirmed state until it settles. */
@@ -166,7 +166,9 @@ function HoldButton({
       const { clientX: x, clientY: y } = event
       if (x < box.left || x > box.right || y < box.top || y > box.bottom) onLeave()
     }
-    el.addEventListener("pointerleave", onLeave)
+    // Only the primary pointer holds; a second finger leaving does not count.
+    const onPointerLeave = (event: PointerEvent) => event.isPrimary && onLeave()
+    el.addEventListener("pointerleave", onPointerLeave)
     el.addEventListener("pointermove", onMove)
 
     // The shortcut holds the button from anywhere, with the single-key rules of lib/shortcuts.ts.
@@ -174,6 +176,8 @@ function HoldButton({
     let keyHolding = false
     const isShortcut = (event: KeyboardEvent) => Boolean(shortcut) && event.key.toLowerCase() === shortcut!.toLowerCase()
     const onKeyDown = (event: KeyboardEvent) => {
+      // Escape cancels a shortcut hold, as it cancels a pointer or Space hold.
+      if (event.key === "Escape" && keyTimer) return releaseKey()
       if (!isShortcut(event) || event.repeat || event.defaultPrevented) return
       if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
       if (isEditable(event.target) || overlayOpen() || el.hasAttribute("data-holding")) return
@@ -206,7 +210,7 @@ function HoldButton({
       window.addEventListener("blur", releaseKey)
     }
     return () => {
-      el.removeEventListener("pointerleave", onLeave)
+      el.removeEventListener("pointerleave", onPointerLeave)
       el.removeEventListener("pointermove", onMove)
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("keyup", onKeyUp)

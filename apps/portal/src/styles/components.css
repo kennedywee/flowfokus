@@ -593,8 +593,9 @@
   color: var(--color-on-ink);
   opacity: 1;
 }
+/* Opacity, not visibility: the knob keeps keyboard focus while the request runs. */
 .swipe[data-confirmed] .swipe__trail {
-  visibility: hidden;
+  opacity: 0;
 }
 
 /* ---------- Forms ---------- */

@@ -88,19 +88,19 @@ function SwipeConfirm({ label, slideLabel, confirmedLabel, onConfirm, disabled, 
   const onPointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
     const el = knob.current
     const track = el?.closest<HTMLElement>(".swipe")
-    if (!el || !track || event.button !== 0 || state.current.confirmed || state.current.disabled) return
+    // One finger drags; a second one does not start its own drag.
+    if (!el || !track || event.button !== 0 || !event.isPrimary) return
+    if (state.current.confirmed || state.current.disabled) return
     // The knob travels the track's inner width, less its own width.
     const travel = track.clientWidth - el.offsetWidth - 6
     const startX = event.clientX
-    let reached = 0
+    const reach = (x: number) => Math.min(1, Math.max(0, (x - startX) / travel))
     setMode("drag")
     bindDrag(el, event.nativeEvent, {
-      onMove: ({ x }) => {
-        reached = Math.min(1, Math.max(0, (x - startX) / travel))
-        setProgress(reached)
-      },
-      onEnd: (_event, canceled) => {
-        if (!canceled && reached >= SWIPE_THRESHOLD) {
+      onMove: ({ x }) => setProgress(reach(x)),
+      // Decide from where the finger lifted, not from the last move.
+      onEnd: (up, canceled) => {
+        if (!canceled && reach(up.clientX) >= SWIPE_THRESHOLD) {
           void confirm()
         } else {
           setMode("release")
