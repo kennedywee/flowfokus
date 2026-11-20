@@ -31,7 +31,7 @@ There is no staging environment yet. Production is the only deployed environment
 | Workflow | Trigger | Does |
 | --- | --- | --- |
 | `ci.yml` | Pull request, push to `master`. Skipped when only `docs/**` or `*.md` files change. | Rails specs with contract checks, generated types current, type checks, all app builds, breaking-contract check on PRs. |
-| `preview.yml` | PR with the `preview` label: label added or removed, push, reopen, close, `/preview` comment | Creates, updates, or deletes the [preview](#pull-request-previews) of the PR on Boat. The job holds one secret, a Boat API key that reaches preview sandboxes only. |
+| `preview.yml` | PR with the `preview` label: label added or removed, push, reopen, close, `/preview` comment. Nightly, or manual, for the clean-up. | Creates, updates, or deletes the [preview](#pull-request-previews) of the PR on Boat. The job holds one secret, a Boat API key that reaches preview sandboxes only. |
 | `release.yml` | Push of a `v*` tag | Runs CI, builds each app once, publishes the server image, writes the release manifest, creates one GitHub Release. Deploys nothing. |
 | `deploy.yml` | Manual: tag, apps | Approval, database backup, migration, server start, smoke test, then web sites. |
 | `mobile.yml` | Manual: tag | Sends an EAS Update or submits a store build. |
@@ -68,10 +68,10 @@ Rules:
 - **Staff portal only.** The gym site selects the gym from its host name, and a Boat link has no place for one.
 - **The label is the switch.** GitHub lets only people with triage access set it. A PR from a fork gets no preview.
 - **Sleep is on a timer.** Boat counts from the last deploy or wake, not from the last request.
-- **No more than 5 previews run at once.** When a sixth starts, the oldest one is stopped.
-- **A nightly clean-up** deletes sandboxes whose PR is closed, has lost the label, or has slept for more than 7 days. It touches only names that start with `flowfokus-pr-`.
+- **No more than 5 previews run at once.** When a sixth starts, the one that ran longest is stopped. Its comment says so, and `/preview` wakes it. Two previews that start at the same moment can pass the limit by one.
+- **A nightly clean-up** deletes sandboxes whose PR is closed, has lost the label, or has slept for more than 7 days. It touches only sandboxes named `flowfokus-pr-<number>`. After 7 days asleep, `/preview` builds a new preview with fresh data.
 
-`scripts/preview` holds the logic. The workflow only chooses the command. A PR whose branch does not hold the script uses the copy on `master`. GitHub keeps only the newest queued run for a PR, so each run checks the sandbox it finds: a new label or a reopen deletes any old sandbox first, and `/preview` on a PR without the label deletes it. Built so far: the label, the push, the delete, and the `/preview` comment. GitHub runs a comment from the workflow on `master`, so a change to the wake cannot be tried from its own PR. The limit of 5 and the nightly clean-up are tracked in [#52](https://github.com/kennedywee/flowfokus/issues/52).
+`scripts/preview` holds the logic. The workflow only chooses the command. A PR whose branch does not hold the script uses the copy on `master`. GitHub keeps only the newest queued run for a PR, so each run checks the sandbox it finds: a new label or a reopen deletes any old sandbox first, and `/preview` on a PR without the label deletes it. GitHub runs a comment and the nightly clean-up from the workflow on `master`, so a change to either cannot be tried from its own PR.
 
 ## Versions
 
