@@ -13,8 +13,8 @@ import { Field, describedBy as fieldDescribedBy } from "./ui";
 
 /*
  * A combobox: a text box that filters a list and picks one item, built on the
- * shadcn combobox (Base UI). Base UI follows the ARIA 1.2 combobox pattern:
- * focus stays in the input, and the highlighted option is announced.
+ * ui-sdk combobox. It follows the ARIA 1.2 combobox pattern: focus stays in
+ * the input, and the highlighted option is announced.
  *
  *   <Combobox
  *     id="member"
@@ -73,9 +73,9 @@ export function Combobox({
   disabled?: boolean;
   required?: boolean;
 }) {
-  const selected = useMemo(() => options.find((option) => option.value === value) ?? null, [options, value]);
-  // What the person has typed. Base UI puts the picked label in the box after a pick.
-  const [query, setQuery] = useState("");
+  const labels = useMemo(() => new Map(options.map((option) => [option.value, option.label])), [options]);
+  // What the person has typed. A pick puts the picked label in the box.
+  const [query, setQuery] = useState(() => (value === null ? "" : (labels.get(value) ?? "")));
   const [open, setOpen] = useState(false);
 
   const needle = query.trim().toLowerCase();
@@ -84,21 +84,19 @@ export function Combobox({
 
   return (
     <Field id={id} label={label} hint={hint} error={error}>
-      <ComboboxRoot<ComboboxOption>
-        items={options}
-        value={selected}
-        onValueChange={(next) => onChange(next?.value ?? null)}
+      <ComboboxRoot
+        value={value}
+        onValueChange={(next) => onChange(typeof next === "string" ? next : null)}
         // Typing highlights the first match, so Enter picks it.
         autoHighlight
-        itemToStringLabel={(option) => option.label}
-        itemToStringValue={(option) => option.value}
-        isItemEqualToValue={(item, current) => item.value === current.value}
-        filter={(option, search) => matchesOption(option, search.trim().toLowerCase())}
-        limit={MAX_VISIBLE}
-        onInputValueChange={(next, details) => {
+        itemToLabel={(option) => labels.get(String(option)) ?? String(option)}
+        // The list below is already filtered and capped.
+        filter={false}
+        query={query}
+        onQueryChange={(next, details) => {
           setQuery(next);
           // Emptying the box clears the pick, so the form cannot submit a stale member.
-          if (next === "" && value !== null && (details.reason === "input-change" || details.reason === "input-clear")) {
+          if (next === "" && value !== null && (details.reason === "input-change" || details.reason === "clear-press")) {
             onChange(null);
           }
         }}
@@ -111,15 +109,20 @@ export function Combobox({
           <div className="combobox__field">
             <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
             <ComboboxInput
-              id={id}
               className="input combobox__input"
               autoComplete="off"
               autoCapitalize="none"
               spellCheck={false}
               placeholder={placeholder}
-              aria-invalid={invalid || error ? true : undefined}
-              aria-describedby={[fieldDescribedBy(id, hint, error), describedBy].filter(Boolean).join(" ") || undefined}
-              aria-required={required || undefined}
+              // The part keeps its own references; props on the rendered element replace them.
+              render={
+                <input
+                  id={id}
+                  aria-invalid={invalid || error ? true : undefined}
+                  aria-describedby={[fieldDescribedBy(id, hint, error), describedBy].filter(Boolean).join(" ") || undefined}
+                  aria-required={required || undefined}
+                />
+              }
             />
             {open ? (
               <span className="combobox__count" aria-hidden="true">
@@ -134,8 +137,8 @@ export function Combobox({
         <ComboboxContent aria-label={label}>
           <ComboboxEmpty>{emptyText}</ComboboxEmpty>
           <ComboboxList>
-            {(option: ComboboxOption) => (
-              <ComboboxItem key={option.value} value={option}>
+            {matches.slice(0, MAX_VISIBLE).map((option) => (
+              <ComboboxItem key={option.value} value={option.value} label={option.label}>
                 <span className="combobox__option-text">
                   <span className="combobox__label">
                     <Highlight text={option.label} needle={needle} />
@@ -144,7 +147,7 @@ export function Combobox({
                 </span>
                 <ComboboxItemIndicator />
               </ComboboxItem>
-            )}
+            ))}
           </ComboboxList>
           {matches.length > MAX_VISIBLE ? (
             <p className="combobox__empty">

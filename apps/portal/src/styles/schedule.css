@@ -579,7 +579,7 @@ a.session-row__name:hover {
 }
 .session-row:hover .session-row__more,
 .session-row:focus-within .session-row__more,
-.session-row__more[data-popup-open] {
+.session-row__more[data-open] {
   opacity: 1;
 }
 .session-row__more:hover {
