@@ -73,7 +73,9 @@ Do not replace the radius scale with Tailwind's default values.
 ## Components
 
 Import primitives from `src/components/ui/`. Domain wrappers and blocks live
-in `src/components/ui.tsx` and named files under `src/components/`.
+in `src/components/ui.tsx` and named files under `src/components/`. See them
+live, with code, at `localhost:4001/components` (local development only; see
+[the gallery](../../docs/design-system.md#component-gallery)).
 
 | Need | Existing API and default | State contract |
 | --- | --- | --- |
