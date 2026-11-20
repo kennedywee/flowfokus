@@ -25,23 +25,6 @@
   min-width: 0;
 }
 
-.checkins-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-.checkins-toolbar__filters {
-  display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.checkins-toolbar__search {
-  margin-left: auto;
-}
 
 /* Paper's result marks: a filled circle with a tick or a cross. */
 .granted-mark,
@@ -62,8 +45,8 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.sales-filter-menu .granted-mark,
-.sales-filter-menu .denied-mark {
+.filter-menu .granted-mark,
+.filter-menu .denied-mark {
   width: 14px;
   height: 14px;
 }
@@ -262,12 +245,12 @@ a.checkins-row:focus-visible {
   }
   /* Phone lists have no column titles, as in Paper. */
   .checkins-head__check-in,
-  .checkins-toolbar__search,
+  .checkins-page .list-toolbar__search,
   .checkins-table__head {
     display: none;
   }
   /* While the phone search shows members, today's list steps aside. */
-  .checkins-page:has(.find-member--inline .find-member__list:not([hidden])) :is(.checkins-toolbar, .checkins-table, .checkins-foot, .list-state, .table-state) {
+  .checkins-page:has(.find-member--inline .find-member__list:not([hidden])) :is(.list-toolbar, .checkins-table, .checkins-foot, .list-state, .table-state) {
     display: none;
   }
 }
