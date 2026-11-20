@@ -53,7 +53,7 @@ Lamps stay small and round. Do not apply the portal's radius system here.
 ## Components
 
 This app uses CSS compositions in route components. It does not use the
-portal's shadcn library. Keep that boundary until both apps need the same code.
+portal's ui-sdk component wrappers. Keep that boundary until both apps need the same code.
 
 | Need | Existing pattern | States |
 | --- | --- | --- |

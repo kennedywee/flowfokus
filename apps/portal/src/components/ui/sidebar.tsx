@@ -8,8 +8,8 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 /*
- * The app sidebar, after the shadcn sidebar. It keeps the shadcn parts and
- * state model, and the portal look and motion in styles/shell.css.
+ * The app sidebar: its parts and state, with the portal look and motion in
+ * styles/shell.css.
  *
  * Three layouts, by width:
  *  - Desk (1181px and up): the full sidebar. Staff can collapse it to the icon

@@ -4,9 +4,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /*
- * Flowfokus keeps its own look for this shadcn component. The variants map to
- * the button classes in styles/components.css, and ui-sdk gives the
- * behaviour. Use `buttonVariants` on a router `Link` that looks like a button.
+ * The portal button. The variants map to the button classes in
+ * styles/components.css, and ui-sdk gives the behaviour. Use `buttonVariants` on a router `Link` that looks like a button.
  */
 const buttonVariants = cva("button", {
   variants: {

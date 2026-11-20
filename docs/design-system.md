@@ -77,7 +77,7 @@ applied to production screens.
 
 The apps have distinct visual identities and spacing scales. Each app imports
 its palette before semantic tokens, then its screen CSS. Portal CSS retains its
-Tailwind layers and the shadcn bridge. Theme choice stays in the portal's current
+Tailwind layers and the theme variable bridge. Theme choice stays in the portal's current
 server/cookie mechanism. The site stays light. No new shared package is needed.
 
 A new color starts in primitives and gets a semantic role before screen use.

@@ -10,7 +10,7 @@ Use a title, clear controls, and direct actions. Cut taglines, routine helper
 text, and repeated labels. Keep facts and action consequences. The current
 palette has dark and light surfaces, thin borders, and restrained status color.
 The live source is `src/styles/tokens.css`, not the older gym-site style or a
-new shadcn preset. Read [the system guide](../../docs/design-system.md) first.
+component library's default theme. Read [the system guide](../../docs/design-system.md) first.
 
 ## Colors
 
@@ -28,8 +28,8 @@ value, not its purpose. Components use semantic roles in `tokens.css`:
 Each status has matching wash and line roles. Show a label and an icon with
 status color. Chart series colors identify data series; they do not imply status.
 `light-dark()` owns both theme values. Root `.light` or `.dark` overrides the
-system choice. The shadcn variables in `src/styles.css` bridge these roles;
-shadcn's `--accent` means neutral hover, not the portal's blue accent.
+system choice. The theme variables in `src/styles.css` bridge these roles;
+`--accent` there means neutral hover, not the portal's blue accent.
 
 ## Typography
 
@@ -211,7 +211,7 @@ Tokens. `tokens.css` maps the Paper tokens to the existing roles:
 | `--subtle-foreground` | `--color-ink-4` (marks only) | #8A8A8A | #5C5C63 |
 | `--success` / `--warning` / `--destructive` | `--color-good` / `--color-warning` / `--color-critical` | #0D6B4E / #9A5B00 / #B3261E | earlier dark values |
 
-Decision on muted text: the shadcn `--muted-foreground` now maps to `ink-2`,
+Decision on muted text: the theme variable `--muted-foreground` now maps to `ink-2`,
 which is Paper's #616161. It used to map to `ink-3`. Paper's subtle grey
 (#8A8A8A) has 3.4:1 contrast on white, so it is `ink-4` and only colours
 chevrons, slashes, and idle icons. Subtle text, such as a key hint or an ID,

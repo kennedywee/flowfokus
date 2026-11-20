@@ -16,7 +16,7 @@ and action flow; static appearance alone cannot establish correctness.
    Check `src/styles.css` import order when tokens change.
 3. Match each section to an existing block or component. Keep a new abstraction
    only when repeated uses share intent. Check defaults and interactive states
-   against the source, not a generic shadcn example.
+   against the source, not a generic ui-sdk example.
 4. Check loading, no records, load failure, mutation pending, mutation failure,
    and success at the request owner. Identify states that cannot apply. Do not
    show Empty while a request has failed or is still loading.
