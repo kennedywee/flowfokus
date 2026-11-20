@@ -350,7 +350,7 @@ a.checkins-row:focus-visible {
   font-weight: var(--font-weight-medium);
   line-height: 16px;
 }
-.find-member__item[data-selected="true"] .find-member__avatar {
+.find-member__item[data-highlighted] .find-member__avatar {
   background: var(--color-line);
 }
 .find-member__text {
@@ -384,7 +384,7 @@ a.checkins-row:focus-visible {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
 }
-.find-member__item[data-selected="true"] .find-member__enter {
+.find-member__item[data-highlighted] .find-member__enter {
   display: inline-flex;
 }
 .find-member__action {
@@ -399,7 +399,7 @@ a.checkins-row:focus-visible {
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
 }
-.find-member__item[data-selected="true"] .find-member__action {
+.find-member__item[data-highlighted] .find-member__action {
   border-color: var(--color-ink);
   background: var(--color-ink);
   color: var(--color-on-ink);

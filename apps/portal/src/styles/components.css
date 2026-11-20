@@ -1816,9 +1816,74 @@ section.table-state {
 
 /* ---------- Toasts ---------- */
 
-/* Sonner positions and stacks the items; each holds one `.toast` card. */
-.toaster__item {
+/*
+ * components/Toast.tsx. ui-sdk keeps the queue and gives each toast its place
+ * in custom properties; this lays out an always-expanded stack with 8px gaps,
+ * newest nearest the edge.
+ */
+.toaster {
+  --toast-gap: 8px;
+  position: fixed;
+  inset: auto;
+  z-index: 100;
+  overflow: visible;
   width: min(380px, calc(100vw - 32px));
+  height: calc(var(--toast-stack-height, 0px) + (var(--toast-count, 1) - 1) * var(--toast-gap));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  list-style: none;
+  pointer-events: none;
+}
+.toaster[data-side="bottom"] {
+  right: 24px;
+  bottom: 24px;
+}
+.toaster[data-side="top"] {
+  top: 64px;
+  left: 50%;
+  translate: -50% 0;
+}
+.toaster > * {
+  pointer-events: auto;
+}
+.toaster .toast {
+  --y: calc(var(--toast-offset) + var(--toast-index) * var(--toast-gap));
+  position: absolute;
+  inset-inline: 0;
+  height: var(--toast-height);
+  translate: var(--toast-swipe-x, 0px) var(--toast-swipe-y, 0px);
+  transition:
+    translate 300ms var(--ease-out),
+    opacity 200ms var(--ease-out),
+    top 300ms var(--ease-out),
+    bottom 300ms var(--ease-out);
+  user-select: none;
+}
+.toaster[data-side="bottom"] .toast {
+  bottom: var(--y);
+}
+.toaster[data-side="top"] .toast {
+  top: var(--y);
+}
+.toaster .toast[data-starting-style],
+.toaster .toast[data-ending-style] {
+  opacity: 0;
+}
+.toaster[data-side="bottom"] .toast[data-starting-style] {
+  translate: 0 16px;
+}
+.toaster[data-side="top"] .toast[data-starting-style] {
+  translate: 0 -16px;
+}
+.toaster .toast[data-swiping] {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toaster .toast {
+    transition-property: opacity;
+  }
 }
 .toast {
   --toast-color: var(--color-accent);
@@ -2029,7 +2094,7 @@ section.table-state {
 
 /* ---------- Command ---------- */
 
-/* components/ui/command.tsx, from cmdk. cmdk marks the highlighted item data-selected="true". */
+/* components/ui/command.tsx, from ui-sdk. It marks the highlighted item data-highlighted. */
 .command {
   display: flex;
   flex-direction: column;
@@ -2068,7 +2133,7 @@ section.table-state {
   padding: 6px;
   outline: none;
 }
-.command__group [cmdk-group-heading] {
+.command__group-label {
   padding: 6px 10px 4px;
   color: var(--color-ink-3);
   font-size: var(--text-xs);
@@ -2091,11 +2156,11 @@ section.table-state {
   width: 16px;
   height: 16px;
 }
-.command__item[data-selected="true"] {
+.command__item[data-highlighted] {
   background: var(--color-hover);
   color: var(--color-ink);
 }
-.command__item[data-disabled="true"] {
+.command__item[data-disabled] {
   color: var(--color-ink-4);
   cursor: not-allowed;
 }
