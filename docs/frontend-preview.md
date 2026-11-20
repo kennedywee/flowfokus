@@ -22,8 +22,9 @@ live in [the design system](design-system.md) and `apps/portal/DESIGN.md`.
   Settings.
 - Home: today's sessions, what comes next, items that need attention, and
   check-in.
-- Members: search, create, and view member records. Staff create gym site
-  link codes and unlink members from their sign-in.
+- Members: search, create, view, and edit member records: name, email,
+  phone, date of birth, emergency contact, and a staff note. Staff create gym
+  site link codes and unlink members from their sign-in.
 - Sales: list and create sales, record payments, deliver access, renew,
   refund, void, and end access.
 - Check-ins: the same member and visit endpoints used by Home, with filters

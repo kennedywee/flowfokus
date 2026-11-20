@@ -199,25 +199,45 @@ a.members-row:focus-visible {
   max-width: 756px;
   padding-block: var(--space-3);
 }
-.new-member .field {
+.new-member .field,
+.member-edit .field {
   gap: 6px;
   align-content: start;
 }
-.new-member .field label {
+.new-member .field label,
+.member-edit .field label {
   color: var(--color-ink);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
 }
 /* The 32px redesign field. Coarse pointers keep a 40px target. */
-.new-member .input--compact {
+.new-member .input--compact,
+.member-edit .input--compact {
   min-height: 32px;
   padding-inline: 10px;
   border-radius: var(--radius-compact);
   font-size: var(--text-sm);
 }
 @media (pointer: coarse) {
-  .new-member .input--compact {
+  .new-member .input--compact,
+  .member-edit .input--compact {
     min-height: 40px;
+  }
+}
+
+/* Edit member: the dialog's fields, two short ones to a row. */
+.member-edit__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.member-edit textarea.member-edit__note {
+  min-height: 72px;
+  padding-block: var(--space-2);
+}
+@media (max-width: 479.98px) {
+  .member-edit__pair {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -766,6 +786,36 @@ a.mx-row__title:hover {
 .mx-value--edit:hover,
 .mx-value--edit[aria-expanded="true"] {
   background: var(--color-hover);
+}
+/* No value yet: "Add phone" for staff who can change it, a dash for others. */
+.mx-value[data-empty],
+.mx-value[data-empty] svg {
+  color: var(--color-ink-3);
+}
+/* The staff note: plain text that keeps its line breaks. */
+.mx-note {
+  margin: 0;
+  padding: 6px var(--space-2);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.mx-note--edit {
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+.mx-note--edit:hover {
+  background: var(--color-hover);
+}
+.mx-note[data-empty] {
+  color: var(--color-ink-3);
 }
 .mx-code {
   margin: var(--space-1) 0 0 var(--space-2);

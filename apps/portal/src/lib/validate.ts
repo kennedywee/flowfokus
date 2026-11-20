@@ -119,7 +119,13 @@ function idempotencyKeyField(input: Record<string, unknown>): string {
   return uuidField(input, "idempotencyKey");
 }
 
-export type CreateMemberInput = SlugInput & Schemas["MemberInput"];
+/** An optional text field. Empty, null, and missing all mean "no value". */
+function optionalTextField(input: Record<string, unknown>, name: string, max: number): string | null {
+  const value = input[name];
+  return value === undefined || value === null || value === "" ? null : textField(input, name, max);
+}
+
+export type CreateMemberInput = SlugInput & Pick<Schemas["MemberInput"], "name" | "email" | "phone">;
 
 export function createMemberInput(value: unknown): CreateMemberInput {
   const input = record(value);
@@ -128,6 +134,27 @@ export function createMemberInput(value: unknown): CreateMemberInput {
     slug: slugField(input),
     name: textField(input, "name", 200),
     email: textField(input, "email", 320),
+    phone: optionalTextField(input, "phone", 32),
+  };
+}
+
+/** Every field staff can change on a member. The edit form always sends them all. */
+export type UpdateMemberInput = SlugInput & { id: string } & Required<Schemas["MemberUpdateInput"]>;
+
+export function updateMemberInput(value: unknown): UpdateMemberInput {
+  const input = record(value);
+  const born = optionalTextField(input, "date_of_birth", 10);
+  if (born !== null && !/^\d{4}-\d{2}-\d{2}$/.test(born)) throw new InputError("Invalid date_of_birth");
+  return {
+    slug: slugField(input),
+    id: uuidField(input, "id"),
+    name: textField(input, "name", 200),
+    email: textField(input, "email", 320),
+    phone: optionalTextField(input, "phone", 32),
+    date_of_birth: born,
+    emergency_contact_name: optionalTextField(input, "emergency_contact_name", 200),
+    emergency_contact_phone: optionalTextField(input, "emergency_contact_phone", 32),
+    note: optionalTextField(input, "note", 2000),
   };
 }
 

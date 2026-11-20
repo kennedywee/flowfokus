@@ -57,6 +57,7 @@ import {
   type UpdateProductInput,
   createCheckInInput,
   createMemberInput,
+  updateMemberInput,
   createSaleInput,
   fulfillInput,
   idInput,
@@ -66,6 +67,7 @@ import {
   slugInput,
   type CreateCheckInInput,
   type CreateMemberInput,
+  type UpdateMemberInput,
   type CreateSaleInput,
   type FulfillInput,
   type IdInput,
@@ -143,9 +145,16 @@ export const createMember = createServerFn({ method: "POST" })
   .handler(
     async ({ data }): Promise<Result<Schemas["Member"]>> =>
       callStaff(data.slug, (api) =>
-        api.POST("/staff/members", { body: { name: data.name, email: data.email } }),
+        api.POST("/staff/members", { body: { name: data.name, email: data.email, phone: data.phone } }),
       ),
   );
+
+export const updateMember = createServerFn({ method: "POST" })
+  .validator((input: UpdateMemberInput) => updateMemberInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["MemberDetail"]>> => {
+    const { slug, id, ...body } = data;
+    return callStaff(slug, (api) => api.PATCH("/staff/members/{id}", { params: { path: { id } }, body }));
+  });
 
 export interface MemberRecord {
   member: Schemas["MemberDetail"];

@@ -18,6 +18,7 @@ export const ABILITIES: readonly Ability[] = [
   { label: "Check in members", permissions: ["check_ins:create"] },
   { label: "Let members in after a denial", permissions: ["check_ins:override"] },
   { label: "Add members", permissions: ["members:create"] },
+  { label: "Change member details", permissions: ["members:update"] },
   { label: "Create sales and record payments", permissions: ["purchases:create", "payments:create"] },
   { label: "Fulfill sales", permissions: ["purchases:fulfill"] },
   { label: "Refund and void sales", permissions: ["purchases:refund", "purchases:void"] },

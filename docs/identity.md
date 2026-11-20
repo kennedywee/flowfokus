@@ -48,7 +48,7 @@ WorkOS is the authority. Rails keeps a synced copy for reporting, associations, 
 
 A customer of one organization. Belongs to an organization, and optionally to a user.
 
-Columns: `organization_id`, `user_id` (nullable), `name`, `email`.
+Columns: `organization_id`, `user_id` (nullable), `name`, `email`, and the optional `phone`, `date_of_birth`, `emergency_contact_name`, `emergency_contact_phone`, and `note`.
 
 - Staff can create a member without a login.
 - Staff with `members:update` change a member's name, email, phone, date of birth, emergency contact, and note. Only the name and email are required. The note is for staff: the member area never returns it, or the other optional details.
