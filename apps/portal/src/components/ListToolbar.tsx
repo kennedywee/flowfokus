@@ -41,8 +41,12 @@ export interface FilterGroup<K extends string = string> {
 export function ListToolbar({ filter, chips, search }: { filter?: ReactNode; chips?: ReactNode; search?: ReactNode }) {
   return (
     <div className="list-toolbar">
-      {filter ? <div className="list-toolbar__filter">{filter}</div> : null}
-      {chips ? <div className="list-toolbar__chips">{chips}</div> : null}
+      {filter || chips ? (
+        <div className="list-toolbar__filters">
+          {filter ? <div className="list-toolbar__filter">{filter}</div> : null}
+          {chips ? <div className="list-toolbar__chips">{chips}</div> : null}
+        </div>
+      ) : null}
       {search ? <div className="list-toolbar__search">{search}</div> : null}
     </div>
   );

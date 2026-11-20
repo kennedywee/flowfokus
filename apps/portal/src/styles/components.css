@@ -1476,16 +1476,17 @@ a.counter:hover .counter__label {
   align-items: center;
   gap: var(--space-2);
 }
-.list-toolbar__filter {
-  flex: none;
-}
-.list-toolbar__chips {
+/* Filter and chips wrap together, so search keeps its row beside them. */
+.list-toolbar__filters {
   display: flex;
   flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+}
+.list-toolbar__chips {
+  display: contents;
 }
 .list-toolbar__chips:empty {
   display: none;
@@ -1504,6 +1505,16 @@ a.counter:hover .counter__label {
 }
 @media (max-width: 767.98px) {
   /* Paper phone lists: a full-width Filter, search on its own row, chips below. */
+  .list-toolbar__filters {
+    display: contents;
+  }
+  .list-toolbar__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+  }
   .list-toolbar__filter,
   .list-toolbar__search,
   .list-toolbar__chips {

@@ -31,6 +31,6 @@ describe("FilterChip", () => {
   test("shows nothing when no value is chosen", () => {
     const groups = [{ key: "kind", title: "Kind", options: [{ value: "event", label: "Event", count: 2 }], chosen: [] }];
     const html = renderToStaticMarkup(<ListToolbar chips={<FilterChips groups={groups} onClear={() => {}} />} />);
-    expect(html).toBe('<div class="list-toolbar"><div class="list-toolbar__chips"></div></div>');
+    expect(html).toBe('<div class="list-toolbar"><div class="list-toolbar__filters"><div class="list-toolbar__chips"></div></div></div>');
   });
 });
