@@ -1,26 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowDown, ChevronRight, ListFilter, Plus, Search, X } from "lucide-react";
+import { ArrowDown, ChevronRight, Plus } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
+import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { TableState } from "../../components/TableState";
-import { Kbd } from "../../components/ui";
 import { PRODUCT_KIND_LABEL, failureMessage, formatMoney } from "../../lib/format";
 import { useCan, useOrganization } from "../../lib/organization";
 import { PAGE_SIZE } from "../../lib/paging";
 import type { Failure, Result } from "../../lib/result";
-import { useShortcut } from "../../lib/shortcuts";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   SALE_STATE_LABEL,
   STATUS_FILTERS,
@@ -96,146 +85,27 @@ function ListHead() {
   );
 }
 
-function useSetSearch(current: ProductsSearch) {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  return (next: Partial<ProductsSearch>) => {
-    const merged = { ...current, ...next };
-    const clean: ProductsSearch = {};
-    if (merged.type) clean.type = merged.type;
-    if (merged.status) clean.status = merged.status;
-    if (merged.q) clean.q = merged.q;
-    void navigate({ to: "/$org/products", params: { org: organization.slug }, search: clean, replace: true });
-  };
-}
-
 function Toolbar({ products, filter, search }: { products: Product[]; filter: ProductsFilter; search: ProductsSearch }) {
-  const setSearch = useSetSearch(search);
+  const setSearch = useSetListSearch("/$org/products", search, ["type", "status", "q"]);
   const counts = productCounts(products);
-  const toggle = (key: "type" | "status", value: string, on: boolean) => {
-    const values = new Set<string>(filter[key]);
-    if (on) values.add(value);
-    else values.delete(value);
-    const allowed = (key === "type" ? TYPE_FILTERS : STATUS_FILTERS).map((item) => item.value as string);
-    setSearch({ [key]: allowed.filter((item) => values.has(item)).join(",") || undefined });
-  };
   const groups = [
-    { key: "type" as const, title: "Type", items: TYPE_FILTERS, chosen: filter.type as string[] },
-    { key: "status" as const, title: "Status", items: STATUS_FILTERS, chosen: filter.status as string[] },
+    { key: "type" as const, title: "Type", options: withCounts(TYPE_FILTERS, counts), chosen: filter.type },
+    { key: "status" as const, title: "Status", options: withCounts(STATUS_FILTERS, counts), chosen: filter.status },
   ];
-
   return (
-    <div className="programs-toolbar">
-      <div className="programs-toolbar__filters">
-        <DropdownMenu>
-          <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <ListFilter {...icon} />
-            Filter
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="sales-filter-menu">
-            {groups.map((group) => (
-              <DropdownMenuSub key={group.key}>
-                <DropdownMenuSubTrigger>
-                  {group.title}
-                  <DropdownMenuShortcut>
-                    <ChevronRight {...icon} />
-                  </DropdownMenuShortcut>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="sales-filter-menu">
-                  {group.items.map((item) => (
-                    <DropdownMenuCheckboxItem
-                      key={item.value}
-                      checked={group.chosen.includes(item.value)}
-                      onCheckedChange={(on) => toggle(group.key, item.value, on)}
-                    >
-                      {item.label}
-                      <DropdownMenuShortcut className="sales-filter-menu__count">{counts[item.value]}</DropdownMenuShortcut>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {groups.map((group) => {
-          const values = group.items.filter((item) => group.chosen.includes(item.value)).map((item) => item.label);
-          if (!values.length) return null;
-          return (
-            <span key={group.key} className="filter-chip">
-              <span className="filter-chip__part filter-chip__name">{group.title}</span>
-              <span className="filter-chip__part filter-chip__op">{values.length > 1 ? "is any of" : "is"}</span>
-              <span className="filter-chip__part filter-chip__values">{values.join(", ")}</span>
-              <button
-                type="button"
-                className="filter-chip__clear"
-                aria-label={`Clear the ${group.title.toLowerCase()} filter`}
-                onClick={() => setSearch({ [group.key]: undefined })}
-              >
-                <X {...icon} />
-              </button>
-            </span>
-          );
-        })}
-      </div>
-      <SearchField q={search.q ?? ""} onSearch={(q) => setSearch({ q: q || undefined })} />
-    </div>
-  );
-}
-
-/** Filters as staff type, after a short pause, and at once on Enter. "/" focuses it; Escape clears it. */
-function SearchField({ q, onSearch }: { q: string; onSearch: (q: string) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState(q);
-  useShortcut("/", () => input.current?.focus());
-
-  useEffect(() => {
-    setValue((current) => (current.trim() === q ? current : q));
-  }, [q]);
-
-  const search = (next: string) => {
-    if (next.trim() !== q) onSearch(next.trim());
-  };
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => search(value), 250);
-    return () => window.clearTimeout(timer);
-    // Only typing restarts the pause.
-  }, [value]);
-
-  return (
-    <form
-      role="search"
-      className="list-search programs-toolbar__search"
-      onSubmit={(event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        search(value);
-      }}
-    >
-      <label htmlFor="product-search" className="visually-hidden">
-        Search products by name
-      </label>
-      <Search className="list-search__icon" {...icon} />
-      <input
-        ref={input}
-        id="product-search"
-        className="list-search__input"
-        type="search"
-        placeholder="Search products"
-        autoComplete="off"
-        maxLength={200}
-        aria-keyshortcuts="/"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && value) {
-            event.preventDefault();
-            setValue("");
-            search("");
-          }
-        }}
-      />
-      <Kbd>/</Kbd>
-    </form>
+    <ListToolbar
+      filter={<FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />}
+      chips={<FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />}
+      search={
+        <SearchField
+          id="product-search"
+          label="Search products by name"
+          placeholder="Search products"
+          q={search.q ?? ""}
+          onSearch={(q) => setSearch({ q: q || undefined })}
+        />
+      }
+    />
   );
 }
 
@@ -388,12 +258,7 @@ export function ProductsLoading() {
   return (
     <div className="page programs-list products-list" role="status" aria-busy="true" aria-label="Loading products">
       <ListHead />
-      <div className="programs-toolbar" aria-hidden="true">
-        <span className="programs-toolbar__filters">
-          <span className="skeleton-block programs-skeleton__button" />
-        </span>
-        <span className="list-search programs-toolbar__search skeleton-block" />
-      </div>
+      <ListToolbarLoading />
       <div className="programs-table products-table" aria-hidden="true">
         <div className="programs-table__head products-grid">
           <span>Product</span>

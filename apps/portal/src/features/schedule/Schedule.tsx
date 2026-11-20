@@ -1,23 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, ListFilter, X } from "lucide-react";
+import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { FilterChips, FilterMenu, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
 import { clockTime } from "../check-ins/facts";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   DAYS,
   atLocation,
@@ -105,13 +96,6 @@ function ScheduleHead() {
   );
 }
 
-/** Replaces the URL search, so Back and reload keep the range and the filter. */
-function useSetSearch() {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  return (next: ScheduleSearch) => void navigate({ to: "/$org/schedule", params: { org: organization.slug }, search: next, replace: true });
-}
-
 function Toolbar({
   from,
   today,
@@ -155,51 +139,19 @@ function Toolbar({
 
 /** Filter, as on Check-ins: a Program submenu with a count per program, then a chip. */
 function ProgramFilter({ search, counts, programs }: { search: ScheduleSearch; counts: ProgramCount[]; programs: string[] }) {
-  const setSearch = useSetSearch();
-  const set = (ids: string[]) => {
-    const next: ScheduleSearch = search.from ? { from: search.from } : {};
-    if (ids.length) next.program = ids.join(",");
-    setSearch(next);
-  };
-  const toggle = (id: string, on: boolean) => set(on ? [...programs, id] : programs.filter((item) => item !== id));
-  const chosen = counts.filter((item) => programs.includes(item.id)).map((item) => item.name);
-
+  const setSearch = useSetListSearch("/$org/schedule", search, ["from", "program"]);
+  const groups = [
+    {
+      key: "program" as const,
+      title: "Program",
+      options: counts.map((item) => ({ value: item.id, label: item.name, count: item.count })),
+      chosen: programs,
+    },
+  ];
   return (
     <div className="schedule-toolbar__filters">
-      <DropdownMenu>
-        <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
-          <ListFilter {...icon} />
-          Filter
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="sales-filter-menu">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              Program
-              <DropdownMenuShortcut>
-                <ChevronRight {...icon} />
-              </DropdownMenuShortcut>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="sales-filter-menu">
-              {counts.map((item) => (
-                <DropdownMenuCheckboxItem key={item.id} checked={programs.includes(item.id)} onCheckedChange={(on) => toggle(item.id, on)}>
-                  {item.name}
-                  <DropdownMenuShortcut className="sales-filter-menu__count">{item.count}</DropdownMenuShortcut>
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {chosen.length ? (
-        <span className="filter-chip">
-          <span className="filter-chip__part filter-chip__name">Program</span>
-          <span className="filter-chip__part filter-chip__op">{chosen.length > 1 ? "is any of" : "is"}</span>
-          <span className="filter-chip__part filter-chip__values">{chosen.join(", ")}</span>
-          <button type="button" className="filter-chip__clear" aria-label="Clear the program filter" onClick={() => set([])}>
-            <X {...icon} />
-          </button>
-        </span>
-      ) : null}
+      <FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />
+      <FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />
     </div>
   );
 }
@@ -259,11 +211,11 @@ function SessionRow({ entry }: { entry: Entry }) {
 }
 
 function NoMatch({ search }: { search: ScheduleSearch }) {
-  const setSearch = useSetSearch();
+  const setSearch = useSetListSearch("/$org/schedule", search, ["from", "program"]);
   return (
     <div className="list-state" role="status">
       <p className="list-state__title">No sessions match.</p>
-      <Button type="button" variant="secondary" size="compact" onClick={() => setSearch(search.from ? { from: search.from } : {})}>
+      <Button type="button" variant="secondary" size="compact" onClick={() => setSearch({ program: undefined })}>
         Clear filters
       </Button>
     </div>

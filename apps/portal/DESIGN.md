@@ -102,6 +102,12 @@ Existing blocks to compose before adding another abstraction:
 - `PageActions`: a page's actions, placed in the top bar from 768px.
 - `Plate`: named section with body and optional action/footer.
 - `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
+- `ListToolbar` (`components/ListToolbar.tsx`): Paper "Table toolbar" on every
+  list. Filter (`FilterMenu`) and the active chips (`FilterChips`, "Payment · is
+  any of · Unpaid, Part paid" with a clear button) on the left, `SearchField`
+  (28px, "/" hint) on the right. Phones put a full-width Filter, then search,
+  then the chips on their own rows. `useSetListSearch` keeps filters and search
+  in the URL. Each screen keeps its own filter groups and query params.
 - `ListPager`: the range and page buttons under a redesigned list.
 - `TableState`: a list with no rows. Paper "Table · Empty" keeps the header band
   and fills a grey panel with generic skeleton lines that fade in an oval toward
@@ -288,8 +294,8 @@ The members list and New member are the next redesigned screens
 The sales list and sale details are the next redesigned screens
 (`features/sales/SalesList.tsx`, `SaleDetails.tsx`, and `SaleDialogs.tsx`;
 facts, filters, and action rules in `features/sales/facts.ts`). They share the
-list pieces in `components.css` (`.list-search`, `.list-pager`, `.list-state`)
-and `ListPager` with the members list. They show only Rails data:
+list pieces in `components.css` (`.list-toolbar`, `.list-search`, `.list-pager`,
+`.list-state`), `ListToolbar`, and `ListPager` with the members list. They show only Rails data:
 
 - Sales list: the title, New sale (purchases:create only) in the top bar. Filter
   opens Payment and Fulfillment submenus with a count per value; each active fact

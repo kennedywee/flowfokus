@@ -1,25 +1,20 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Download, ListFilter, MoreHorizontal, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Download, MoreHorizontal, Plus } from "lucide-react";
+import { FilterChips, FilterMenu, ListToolbar, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { TableState } from "../../components/TableState";
-import { Kbd, initials } from "../../components/ui";
+import { initials } from "../../components/ui";
 import { downloadCsv } from "../../lib/export";
 import { failureMessage } from "../../lib/format";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
-import { useShortcut } from "../../lib/shortcuts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DeniedMark, GrantedMark, useCheckIn } from "./CheckInFlow";
@@ -168,137 +163,27 @@ function Today({
   );
 }
 
-/** Updates the list URL, so Back and reload keep the filter and the search. */
-function useSetSearch(current: CheckInsSearch) {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  return (next: Partial<CheckInsSearch>) => {
-    const merged = { ...current, ...next };
-    const clean: CheckInsSearch = {};
-    if (merged.result) clean.result = merged.result;
-    if (merged.q) clean.q = merged.q;
-    void navigate({ to: "/$org/check-in", params: { org: organization.slug }, search: clean, replace: true });
-  };
-}
-
 function Toolbar({ today, results, search }: { today: Schemas["CheckIn"][]; results: CheckInResult[]; search: CheckInsSearch }) {
-  const setSearch = useSetSearch(search);
-  const counts = resultCounts(today);
-  const toggle = (value: CheckInResult, on: boolean) => {
-    const next = new Set(results);
-    if (on) next.add(value);
-    else next.delete(value);
-    setSearch({ result: RESULT_FILTERS.map((item) => item.value).filter((item) => next.has(item)).join(",") || undefined });
-  };
-  const chosen = RESULT_FILTERS.filter((item) => results.includes(item.value)).map((item) => item.label);
-
+  const setSearch = useSetListSearch("/$org/check-in", search, ["result", "q"]);
+  const options = RESULT_FILTERS.map((item) => ({
+    ...item,
+    icon: item.value === "granted" ? <GrantedMark /> : <DeniedMark size={14} />,
+  }));
+  const groups = [{ key: "result" as const, title: "Result", options: withCounts(options, resultCounts(today)), chosen: results }];
   return (
-    <div className="checkins-toolbar">
-      <div className="checkins-toolbar__filters">
-        <DropdownMenu>
-          <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <ListFilter {...icon} />
-            Filter
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="sales-filter-menu">
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                Result
-                <DropdownMenuShortcut>
-                  <ChevronRight {...icon} />
-                </DropdownMenuShortcut>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="sales-filter-menu">
-                {RESULT_FILTERS.map((item) => (
-                  <DropdownMenuCheckboxItem
-                    key={item.value}
-                    checked={results.includes(item.value)}
-                    onCheckedChange={(on) => toggle(item.value, on)}
-                  >
-                    {item.value === "granted" ? <GrantedMark /> : <DeniedMark size={14} />}
-                    {item.label}
-                    <DropdownMenuShortcut className="sales-filter-menu__count">{counts[item.value]}</DropdownMenuShortcut>
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {chosen.length ? (
-          <span className="filter-chip">
-            <span className="filter-chip__part filter-chip__name">Result</span>
-            <span className="filter-chip__part filter-chip__op">{chosen.length > 1 ? "is any of" : "is"}</span>
-            <span className="filter-chip__part filter-chip__values">{chosen.join(", ")}</span>
-            <button
-              type="button"
-              className="filter-chip__clear"
-              aria-label="Clear the result filter"
-              onClick={() => setSearch({ result: undefined })}
-            >
-              <X {...icon} />
-            </button>
-          </span>
-        ) : null}
-      </div>
-      <SearchField q={search.q ?? ""} onSearch={(q) => setSearch({ q: q || undefined })} />
-    </div>
-  );
-}
-
-/** Filters as staff type, after a short pause. "/" focuses it; Escape clears it. */
-function SearchField({ q, onSearch }: { q: string; onSearch: (q: string) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState(q);
-  useShortcut("/", () => input.current?.focus());
-
-  useEffect(() => {
-    setValue((current) => (current.trim() === q ? current : q));
-  }, [q]);
-
-  const search = (next: string) => {
-    if (next.trim() !== q) onSearch(next.trim());
-  };
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => search(value), 250);
-    return () => window.clearTimeout(timer);
-    // Only typing restarts the pause.
-  }, [value]);
-
-  return (
-    <form
-      role="search"
-      className="list-search checkins-toolbar__search"
-      onSubmit={(event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        search(value);
-      }}
-    >
-      <label htmlFor="check-in-search" className="visually-hidden">
-        Search today's check-ins by member
-      </label>
-      <Search className="list-search__icon" {...icon} />
-      <input
-        ref={input}
-        id="check-in-search"
-        className="list-search__input"
-        type="search"
-        placeholder="Search members"
-        autoComplete="off"
-        maxLength={200}
-        aria-keyshortcuts="/"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && value) {
-            event.preventDefault();
-            setValue("");
-            search("");
-          }
-        }}
-      />
-      <Kbd>/</Kbd>
-    </form>
+    <ListToolbar
+      filter={<FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />}
+      chips={<FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />}
+      search={
+        <SearchField
+          id="check-in-search"
+          label="Search today's check-ins by member"
+          placeholder="Search members"
+          q={search.q ?? ""}
+          onSearch={(q) => setSearch({ q: q || undefined })}
+        />
+      }
+    />
   );
 }
 
