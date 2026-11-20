@@ -2,16 +2,20 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FilterChip, FilterChips, ListToolbar, nextListSearch } from "./ListToolbar";
 
+type SalesLike = { payment?: string; fulfillment?: string; q?: string; view?: string };
+const SALES_KEYS = ["payment", "fulfillment", "q"] as const;
+
 describe("nextListSearch", () => {
   test("applies the change and drops empty values", () => {
-    expect(nextListSearch({ payment: "unpaid", q: "ana" }, { q: undefined }, ["payment", "fulfillment", "q"])).toEqual({
+    const current: SalesLike = { payment: "unpaid", q: "ana" };
+    expect(nextListSearch(current, { q: undefined }, SALES_KEYS)).toEqual({
       payment: "unpaid",
     });
   });
 
   test("drops old link params that are not list keys", () => {
-    const current = { view: "due", payment: "unpaid,partial" };
-    expect(nextListSearch(current, { payment: undefined }, ["payment", "fulfillment", "q"])).toEqual({});
+    const current: SalesLike = { view: "due", payment: "unpaid,partial" };
+    expect(nextListSearch(current, { payment: undefined }, SALES_KEYS)).toEqual({});
   });
 });
 
