@@ -1989,14 +1989,6 @@ a.counter:hover .counter__label {
     display: none;
   }
 }
-@container checkins-table (max-width: 640px) {
-  .table-state__ghosts > .table-state__ghost {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .table-state__cell:not(:first-child) {
-    display: none;
-  }
-}
 
 @media (max-width: 767.98px) {
   .list-search {
