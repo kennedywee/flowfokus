@@ -1850,11 +1850,11 @@ a.counter:hover .counter__label {
 }
 
 /*
- * Paper "Table · Empty" and "No results": a grey panel under the header band.
- * An empty list shows white ghost rows in the table's columns, fading into the
- * message. The panel bleeds 12px like the band, so cell text keeps its lane.
+ * Paper "Table · Empty" and "No results": a grey panel 8px under the header
+ * band. An empty list shows white ghost rows in the table's columns, fading
+ * into the message. Band, panel and rows start on the content edge.
  */
-.table-state {
+section.table-state {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-2);
@@ -1865,7 +1865,6 @@ a.counter:hover .counter__label {
   --table-state-bar: color-mix(in srgb, var(--color-line) 55%, var(--color-surface));
   position: relative;
   display: grid;
-  margin-inline: calc(-1 * var(--space-3));
   padding: var(--space-2);
   overflow: hidden;
   border: 1px solid var(--color-line);
