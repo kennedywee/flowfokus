@@ -302,12 +302,32 @@ export const GALLERY: readonly GalleryEntry[] = [
     examples: [
       { file: "hold-button-variants", title: "Variants", note: "Secondary for row and card actions; primary for a top-bar action that commits a record." },
       { file: "hold-button-request", title: "Confirmed until the request settles" },
+      { file: "hold-button-ring", title: "Ring", note: "A row action with no room for a label. Name it with aria-label." },
+      { file: "hold-button-dots", title: "Dotted fill", note: "Same jobs as the sweep, where the page already uses dotted bars." },
+      { file: "hold-button-shortcut", title: "Shortcut hold", note: "Hold C anywhere on the page. A tap does nothing." },
     ],
     props: [
       { name: "onConfirm", type: "() => unknown", note: "Runs once the hold completes. Return a Promise to keep the success state until it settles." },
       { name: "holdLabel", type: "string", note: "The hint, such as \"Hold to check in\". It is also the accessible description." },
       { name: "confirmedLabel", type: "ReactNode", note: "Shown while the request runs, such as \"Checked in\"." },
       { name: "variant", type: '"secondary" | "default"', default: '"secondary"', note: '"default" is the primary fill.' },
+      { name: "fill", type: '"sweep" | "dots" | "line" | "ring"', default: '"sweep"', note: "How the hold shows progress. A ring takes an icon and an aria-label." },
+      { name: "shortcut", type: "string", note: "A single key. Holding it anywhere on the page holds the button." },
+    ],
+  },
+  {
+    slug: "swipe-confirm",
+    name: "Swipe to confirm",
+    group: "Complex",
+    summary: "Drag the knob to the end to confirm. Distance, not time: for phone and tablet check-in.",
+    source: ["components/ui/swipe-confirm.tsx"],
+    paper: { page: "Experimental — Hold to confirm", board: "B · Variants" },
+    examples: [{ file: "swipe-confirm-basic", title: "Swipe to check in", note: "Let go before 90% and the knob springs back." }],
+    props: [
+      { name: "label", type: "string", note: "The action. It names the knob." },
+      { name: "slideLabel", type: "string", note: "The track's text. It is also the knob's description." },
+      { name: "confirmedLabel", type: "ReactNode", note: "Shown while the request runs." },
+      { name: "onConfirm", type: "() => unknown", note: "Return a Promise to keep the success state until it settles." },
     ],
   },
   {

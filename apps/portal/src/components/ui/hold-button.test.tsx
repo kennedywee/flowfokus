@@ -7,6 +7,7 @@ GlobalRegistrator.register();
 const { act } = await import("react");
 const { createRoot } = await import("react-dom/client");
 const { HOLD_MS, HoldButton, isAssistiveClick } = await import("./hold-button");
+const { SwipeConfirm } = await import("./swipe-confirm");
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -15,18 +16,21 @@ const wait = (ms: number) => act(() => new Promise<void>((resolve) => setTimeout
 let root: ReturnType<typeof createRoot> | undefined;
 let host: HTMLElement | undefined;
 
-async function renderButton(onConfirm: () => unknown) {
+async function render(node: React.ReactNode) {
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
-  await act(async () => {
-    root!.render(
-      <HoldButton onConfirm={onConfirm} holdLabel="Hold to check in" confirmedLabel="Checked in">
-        Check in
-      </HoldButton>,
-    );
-  });
-  const button = host.querySelector<HTMLButtonElement>("button.hold-button");
+  await act(async () => root!.render(node));
+  return host;
+}
+
+async function renderButton(onConfirm: () => unknown, props: Partial<React.ComponentProps<typeof HoldButton>> = {}) {
+  await render(
+    <HoldButton onConfirm={onConfirm} holdLabel="Hold to check in" confirmedLabel="Checked in" {...props}>
+      {props.children ?? "Check in"}
+    </HoldButton>,
+  );
+  const button = host!.querySelector<HTMLButtonElement>("button.hold-button");
   if (!button) throw new Error("HoldButton did not render a button");
   return button;
 }
@@ -201,6 +205,135 @@ describe("HoldButton", () => {
     expect(button.querySelector(".visually-hidden")?.textContent).toBe("Check in");
     expect(button.querySelector(".hold-button__label")?.getAttribute("aria-hidden")).toBe("true");
     expect(button.querySelector(".hold-button__label")?.textContent).toBe("Checked in");
+  });
+});
+
+describe("HoldButton shortcut", () => {
+  test("holding the key anywhere on the page confirms after 600 ms", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm, { shortcut: "c", fill: "line" });
+    expect(button.getAttribute("aria-keyshortcuts")).toBe("C");
+    expect(button.querySelector(".kbd")?.textContent).toBe("Hold C");
+
+    await act(async () => key(document.body, "keydown", { key: "c" }));
+    expect(button.hasAttribute("data-holding")).toBe(true);
+    await wait(HOLD_MS + 50);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    await act(async () => key(document.body, "keyup", { key: "c" }));
+    expect(button.hasAttribute("data-holding")).toBe(false);
+  });
+
+  test("a tap of the key does nothing and shows the hint", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm, { shortcut: "c" });
+
+    await act(async () => key(document.body, "keydown", { key: "c" }));
+    await wait(150);
+    await act(async () => key(document.body, "keyup", { key: "c" }));
+    await wait(HOLD_MS);
+
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(button.hasAttribute("data-holding")).toBe(false);
+    expect(hint()?.hasAttribute("data-open")).toBe(true);
+  });
+
+  test("typing the key in a field does not hold the button", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm, { shortcut: "c" });
+    const field = document.createElement("input");
+    document.body.append(field);
+
+    await act(async () => key(field, "keydown", { key: "c" }));
+    await wait(HOLD_MS + 50);
+
+    expect(button.hasAttribute("data-holding")).toBe(false);
+    expect(onConfirm).not.toHaveBeenCalled();
+    field.remove();
+  });
+});
+
+describe("HoldButton ring", () => {
+  test("is an icon button named by aria-label, and shows only a check when confirmed", async () => {
+    const button = await renderButton(() => new Promise(() => {}), { fill: "ring", "aria-label": "Check in", children: <svg /> });
+    expect(button.getAttribute("aria-label")).toBe("Check in");
+    expect(button.querySelector("circle.hold-button__fill")).not.toBeNull();
+
+    await act(async () => button.click());
+    expect(button.hasAttribute("data-confirmed")).toBe(true);
+    expect(button.querySelector(".hold-button__label")?.textContent).toBe("");
+  });
+});
+
+describe("SwipeConfirm", () => {
+  async function renderSwipe(onConfirm: () => unknown) {
+    await render(<SwipeConfirm label="Check in" slideLabel="Slide to check in" confirmedLabel="Checked in" onConfirm={onConfirm} />);
+    const track = host!.querySelector<HTMLElement>(".swipe")!;
+    const knob = host!.querySelector<HTMLButtonElement>(".swipe__knob")!;
+    // happy-dom has no layout: a 200 px track with a 28 px knob travels 166 px.
+    Object.defineProperty(track, "clientWidth", { value: 200 });
+    Object.defineProperty(knob, "offsetWidth", { value: 28 });
+    return { track, knob };
+  }
+  const progress = (track: HTMLElement) => Number(track.style.getPropertyValue("--swipe-progress"));
+  const frame = () => wait(40);
+
+  test("names the knob with the action and describes it with the slide label", async () => {
+    const { knob } = await renderSwipe(() => {});
+    expect(knob.getAttribute("aria-label")).toBe("Check in");
+    expect(document.getElementById(knob.getAttribute("aria-describedby")!)?.textContent).toBe("Slide to check in");
+  });
+
+  test("dragging the knob past 90% confirms", async () => {
+    const onConfirm = mock(() => {});
+    const { track, knob } = await renderSwipe(onConfirm);
+
+    await act(async () => pointer(knob, "pointerdown", { clientX: 10, clientY: 10 }));
+    await act(async () => pointer(document, "pointermove", { clientX: 10 + 160, clientY: 10 }));
+    await frame();
+    expect(progress(track)).toBeGreaterThan(0.9);
+    await act(async () => pointer(document, "pointerup", { clientX: 10 + 160, clientY: 10, buttons: 0 }));
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  test("letting go before 90% springs the knob back", async () => {
+    const onConfirm = mock(() => {});
+    const { track, knob } = await renderSwipe(onConfirm);
+
+    await act(async () => pointer(knob, "pointerdown", { clientX: 10, clientY: 10 }));
+    await act(async () => pointer(document, "pointermove", { clientX: 10 + 120, clientY: 10 }));
+    await frame();
+    expect(progress(track)).toBeCloseTo(120 / 166, 2);
+    await act(async () => pointer(document, "pointerup", { clientX: 10 + 120, clientY: 10, buttons: 0 }));
+
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(progress(track)).toBe(0);
+    expect(track.getAttribute("data-mode")).toBe("release");
+  });
+
+  test("holding Space on the knob confirms after 600 ms; a short press does nothing", async () => {
+    const onConfirm = mock(() => {});
+    const { knob } = await renderSwipe(onConfirm);
+
+    await act(async () => key(knob, "keydown"));
+    await wait(100);
+    await act(async () => key(knob, "keyup"));
+    await wait(HOLD_MS);
+    expect(onConfirm).not.toHaveBeenCalled();
+
+    await act(async () => key(knob, "keydown"));
+    await wait(HOLD_MS + 50);
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    await act(async () => key(knob, "keyup"));
+  });
+
+  test("a click from assistive tech confirms at once", async () => {
+    const onConfirm = mock(() => {});
+    const { knob } = await renderSwipe(onConfirm);
+
+    await act(async () => knob.click());
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
   });
 });
 

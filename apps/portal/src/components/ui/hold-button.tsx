@@ -3,6 +3,7 @@ import { bindHold } from "@ui-sdk/core"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { isEditable, overlayOpen } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
 
 /*
@@ -33,6 +34,19 @@ type HoldButtonProps = Omit<React.ComponentProps<typeof Button>, "variant" | "on
   /** The label while the request runs, such as "Checked in". */
   confirmedLabel: React.ReactNode
   variant?: "secondary" | "default"
+  /**
+   * How the hold shows progress: a fill across the button (`sweep`), dither
+   * dots (`dots`), a 2px line under it (`line`), or a ring around an icon
+   * (`ring`). A ring button takes an icon as children and an `aria-label`.
+   */
+  fill?: "sweep" | "dots" | "line" | "ring"
+  /** A single key, such as "c". Holding it anywhere on the page holds the button. */
+  shortcut?: string
+}
+
+/** A matrix cannot blend into scaleX(0), so both ends of a drain use scaleX. */
+function scaleX(transform: string) {
+  return transform === "none" ? "none" : `scaleX(${new DOMMatrix(transform).a})`
 }
 
 /**
@@ -46,19 +60,19 @@ function drain(button: HTMLElement) {
   const style = getComputedStyle(button)
   const duration = parseFloat(style.getPropertyValue("--duration-drain")) || 200
   const easing = style.getPropertyValue("--ease-out").trim() || "ease-out"
+  const now = getComputedStyle(fill)
   // Copy the values now: the computed style is live, and cancelling below changes it.
-  const { transform, opacity } = getComputedStyle(fill)
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches
+  const read = () => ({
+    transform: scaleX(now.transform),
+    opacity: now.opacity,
+    right: now.right,
+    strokeDashoffset: now.strokeDashoffset,
+  })
+  const from = read()
   // A running transition outranks an animation in the cascade, so stop it first.
+  // The fill then computes its resting values, which are where the drain ends.
   for (const running of fill.getAnimations()) running.cancel()
-  fill.animate(
-    [
-      // A matrix cannot blend into scaleX(0), so start from the same function.
-      { transform: transform === "none" ? "none" : `scaleX(${new DOMMatrix(transform).a})`, opacity },
-      reduced ? { transform: "none", opacity: "0" } : { transform: "scaleX(0)", opacity: "1" },
-    ],
-    { duration, easing },
-  )
+  fill.animate([from, read()], { duration, easing })
 }
 
 /** A click from assistive tech: a keyboard-free activation with no pointer behind it. */
@@ -72,6 +86,8 @@ function HoldButton({
   holdLabel,
   confirmedLabel,
   variant = "secondary",
+  fill = "sweep",
+  shortcut,
   className,
   children,
   disabled,
@@ -152,13 +168,54 @@ function HoldButton({
     }
     el.addEventListener("pointerleave", onLeave)
     el.addEventListener("pointermove", onMove)
+
+    // The shortcut holds the button from anywhere, with the single-key rules of lib/shortcuts.ts.
+    let keyTimer: ReturnType<typeof setTimeout> | undefined
+    let keyHolding = false
+    const isShortcut = (event: KeyboardEvent) => Boolean(shortcut) && event.key.toLowerCase() === shortcut!.toLowerCase()
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isShortcut(event) || event.repeat || event.defaultPrevented) return
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return
+      if (isEditable(event.target) || overlayOpen() || el.hasAttribute("data-holding")) return
+      if (state.current.confirmed || state.current.disabled) return
+      event.preventDefault()
+      clearTimeout(hintTimer.current)
+      setHint(false)
+      keyHolding = true
+      el.setAttribute("data-holding", "")
+      keyTimer = setTimeout(() => {
+        keyTimer = undefined
+        void confirm()
+      }, HOLD_MS)
+    }
+    // Letting go before the timer fires cancels; after it, the hold has confirmed.
+    const releaseKey = () => {
+      if (!keyHolding) return
+      keyHolding = false
+      el.removeAttribute("data-holding")
+      if (!keyTimer) return
+      clearTimeout(keyTimer)
+      keyTimer = undefined
+      drain(el)
+      showHint()
+    }
+    const onKeyUp = (event: KeyboardEvent) => isShortcut(event) && releaseKey()
+    if (shortcut) {
+      window.addEventListener("keydown", onKeyDown)
+      window.addEventListener("keyup", onKeyUp)
+      window.addEventListener("blur", releaseKey)
+    }
     return () => {
       el.removeEventListener("pointerleave", onLeave)
       el.removeEventListener("pointermove", onMove)
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("keyup", onKeyUp)
+      window.removeEventListener("blur", releaseKey)
+      clearTimeout(keyTimer)
       unbind()
       clearTimeout(hintTimer.current)
     }
-  }, [confirm, showHint])
+  }, [confirm, showHint, shortcut])
 
   const onClick = (event: React.MouseEvent<HTMLElement>) => {
     if (skipClick.current) {
@@ -182,7 +239,9 @@ function HoldButton({
           <Button
             ref={ref}
             variant={variant}
-            className={cn("hold-button", className)}
+            size={fill === "ring" ? "icon-sm" : undefined}
+            className={cn("hold-button", fill !== "sweep" && `hold-button--${fill}`, className)}
+            aria-keyshortcuts={shortcut?.toUpperCase()}
             disabled={disabled}
             data-confirmed={confirmed ? "" : undefined}
             aria-busy={confirmed || undefined}
@@ -191,18 +250,31 @@ function HoldButton({
           />
         }
       >
-        <span className="hold-button__fill" aria-hidden="true" />
+        {fill === "ring" ? (
+          <svg className="hold-button__ring" viewBox="0 0 32 32" aria-hidden="true">
+            <circle className="hold-button__fill" cx="16" cy="16" r="15" pathLength={100} />
+          </svg>
+        ) : (
+          <span className="hold-button__fill" aria-hidden="true" />
+        )}
         {confirmed ? (
           <>
             {/* The action stays the accessible name; the success label is for sight. */}
             <span className="visually-hidden">{children}</span>
             <span className="hold-button__label" aria-hidden="true">
               <Check />
-              {confirmedLabel}
+              {fill === "ring" ? null : confirmedLabel}
             </span>
           </>
         ) : (
-          <span className="hold-button__label">{children}</span>
+          <span className="hold-button__label">
+            {children}
+            {shortcut ? (
+              <span className="kbd" aria-hidden="true">
+                Hold {shortcut.toUpperCase()}
+              </span>
+            ) : null}
+          </span>
         )}
       </TooltipTrigger>
       <TooltipContent>{holdLabel}</TooltipContent>
