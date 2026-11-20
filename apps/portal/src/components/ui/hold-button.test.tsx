@@ -63,7 +63,7 @@ describe("HoldButton", () => {
 
     expect(onConfirm).toHaveBeenCalledTimes(1);
     expect(button.hasAttribute("data-confirmed")).toBe(true);
-    expect(button.textContent).toBe("Checked in");
+    expect(button.querySelector(".hold-button__label")?.textContent).toBe("Checked in");
 
     await act(async () => pointer(document, "pointerup", { buttons: 0 }));
     await act(async () => settle());
@@ -131,6 +131,22 @@ describe("HoldButton", () => {
     expect(hint()?.hasAttribute("data-open")).toBe(true);
   });
 
+  test("a failed request hands the button back and reports the error", async () => {
+    const reported: unknown[] = [];
+    const original = globalThis.reportError;
+    globalThis.reportError = (error) => reported.push(error);
+    try {
+      const button = await renderButton(() => Promise.reject(new Error("Rails said no")));
+      await act(async () => button.click());
+
+      expect(button.hasAttribute("data-confirmed")).toBe(false);
+      expect(button.textContent).toBe("Check in");
+      expect(reported).toEqual([new Error("Rails said no")]);
+    } finally {
+      globalThis.reportError = original;
+    }
+  });
+
   test("a click from assistive tech confirms at once", async () => {
     const onConfirm = mock(() => {});
     const button = await renderButton(onConfirm);
@@ -148,6 +164,16 @@ describe("HoldButton", () => {
     expect(button.getAttribute("aria-label")).toBeNull();
     expect(button.textContent).toBe("Check in");
     expect(describedBy && document.getElementById(describedBy)?.textContent).toBe("Hold to check in");
+  });
+
+  test("keeps the action as the name while the request runs", async () => {
+    const button = await renderButton(() => new Promise(() => {}));
+    await act(async () => button.click());
+
+    expect(button.hasAttribute("data-confirmed")).toBe(true);
+    expect(button.querySelector(".visually-hidden")?.textContent).toBe("Check in");
+    expect(button.querySelector(".hold-button__label")?.getAttribute("aria-hidden")).toBe("true");
+    expect(button.querySelector(".hold-button__label")?.textContent).toBe("Checked in");
   });
 });
 

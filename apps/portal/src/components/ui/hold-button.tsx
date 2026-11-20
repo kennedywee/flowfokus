@@ -35,6 +35,32 @@ type HoldButtonProps = Omit<React.ComponentProps<typeof Button>, "variant" | "on
   variant?: "secondary" | "default"
 }
 
+/**
+ * Drains the fill from where it is over --duration-drain. Without this, the
+ * browser reverses the running CSS transition and shortens it by how far the
+ * fill got, so an early release snaps back instead of draining.
+ */
+function drain(button: HTMLElement) {
+  const fill = button.querySelector<HTMLElement>(".hold-button__fill")
+  if (!fill || typeof fill.animate !== "function" || typeof fill.getAnimations !== "function") return
+  const style = getComputedStyle(button)
+  const duration = parseFloat(style.getPropertyValue("--duration-drain")) || 200
+  const easing = style.getPropertyValue("--ease-out").trim() || "ease-out"
+  // Copy the values now: the computed style is live, and cancelling below changes it.
+  const { transform, opacity } = getComputedStyle(fill)
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches
+  // A running transition outranks an animation in the cascade, so stop it first.
+  for (const running of fill.getAnimations()) running.cancel()
+  fill.animate(
+    [
+      // A matrix cannot blend into scaleX(0), so start from the same function.
+      { transform: transform === "none" ? "none" : `scaleX(${new DOMMatrix(transform).a})`, opacity },
+      reduced ? { transform: "none", opacity: "0" } : { transform: "scaleX(0)", opacity: "1" },
+    ],
+    { duration, easing },
+  )
+}
+
 /** A click from assistive tech: a keyboard-free activation with no pointer behind it. */
 export function isAssistiveClick(event: Pick<MouseEvent, "detail"> & { pointerType?: string }) {
   if (event.detail === 0) return true
@@ -69,6 +95,9 @@ function HoldButton({
     state.current.confirmed = true
     try {
       await state.current.onConfirm()
+    } catch (error) {
+      // onConfirm owns its error feedback. Report what escapes it without an unhandled rejection.
+      reportError(error)
     } finally {
       state.current.confirmed = false
       setConfirmed(false)
@@ -99,6 +128,7 @@ function HoldButton({
         onEnd: ({ held, canceled, input }) => {
           if (held) return
           if (input === "keyboard" && !canceled) skipClick.current = true
+          drain(el)
           showHint()
         },
       })
@@ -109,6 +139,7 @@ function HoldButton({
       // The cleanup stops the press without `onEnd`; bind again for the next press.
       unbind()
       unbind = bind()
+      drain(el)
       showHint()
     }
     el.addEventListener("pointerleave", onLeave)
@@ -151,16 +182,18 @@ function HoldButton({
         }
       >
         <span className="hold-button__fill" aria-hidden="true" />
-        <span className="hold-button__label">
-          {confirmed ? (
-            <>
-              <Check aria-hidden="true" />
+        {confirmed ? (
+          <>
+            {/* The action stays the accessible name; the success label is for sight. */}
+            <span className="visually-hidden">{children}</span>
+            <span className="hold-button__label" aria-hidden="true">
+              <Check />
               {confirmedLabel}
-            </>
-          ) : (
-            children
-          )}
-        </span>
+            </span>
+          </>
+        ) : (
+          <span className="hold-button__label">{children}</span>
+        )}
       </TooltipTrigger>
       <TooltipContent>{holdLabel}</TooltipContent>
     </Tooltip>
