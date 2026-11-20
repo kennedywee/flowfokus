@@ -14,6 +14,7 @@ import {
   MEMBER_FIELDS,
   MEMBER_FIELD_LABEL,
   checkMember,
+  memberChanges,
   fieldMessage,
   memberFields,
   todayIn,
@@ -75,17 +76,13 @@ export function EditMemberDialog({
       document.getElementById(inputId(first))?.focus();
       return;
     }
-    const result = await action.run({
-      slug: organization.slug,
-      id: member.id,
-      name: fields.name.trim(),
-      email: fields.email.trim(),
-      phone: fields.phone.trim() || null,
-      date_of_birth: fields.date_of_birth || null,
-      emergency_contact_name: fields.emergency_contact_name.trim() || null,
-      emergency_contact_phone: fields.emergency_contact_phone.trim() || null,
-      note: fields.note.trim() || null,
-    });
+    // Only the changed fields go to Rails, so this save keeps what others saved since the dialog opened.
+    const changes = memberChanges(memberFields(member), fields);
+    if (Object.keys(changes).length === 0) {
+      onClose();
+      return;
+    }
+    const result = await action.run({ slug: organization.slug, id: member.id, ...changes });
     if (result.ok) {
       toast.show({ tone: "success", title: "Member saved", body: result.data.name });
       onClose();

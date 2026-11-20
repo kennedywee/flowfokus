@@ -138,24 +138,27 @@ export function createMemberInput(value: unknown): CreateMemberInput {
   };
 }
 
-/** Every field staff can change on a member. The edit form always sends them all. */
-export type UpdateMemberInput = SlugInput & { id: string } & Required<Schemas["MemberUpdateInput"]>;
+/**
+ * The fields staff changed on a member. The edit form sends only those, so a
+ * save does not undo what another staff member saved in the meantime.
+ */
+export type UpdateMemberInput = SlugInput & { id: string } & Schemas["MemberUpdateInput"];
 
 export function updateMemberInput(value: unknown): UpdateMemberInput {
   const input = record(value);
-  const born = optionalTextField(input, "date_of_birth", 10);
-  if (born !== null && !/^\d{4}-\d{2}-\d{2}$/.test(born)) throw new InputError("Invalid date_of_birth");
-  return {
-    slug: slugField(input),
-    id: uuidField(input, "id"),
-    name: textField(input, "name", 200),
-    email: textField(input, "email", 320),
-    phone: optionalTextField(input, "phone", 32),
-    date_of_birth: born,
-    emergency_contact_name: optionalTextField(input, "emergency_contact_name", 200),
-    emergency_contact_phone: optionalTextField(input, "emergency_contact_phone", 32),
-    note: optionalTextField(input, "note", 2000),
-  };
+  const output: UpdateMemberInput = { slug: slugField(input), id: uuidField(input, "id") };
+  if (input.name !== undefined) output.name = textField(input, "name", 200);
+  if (input.email !== undefined) output.email = textField(input, "email", 320);
+  if (input.phone !== undefined) output.phone = optionalTextField(input, "phone", 32);
+  if (input.date_of_birth !== undefined) {
+    const born = optionalTextField(input, "date_of_birth", 10);
+    if (born !== null && !/^\d{4}-\d{2}-\d{2}$/.test(born)) throw new InputError("Invalid date_of_birth");
+    output.date_of_birth = born;
+  }
+  if (input.emergency_contact_name !== undefined) output.emergency_contact_name = optionalTextField(input, "emergency_contact_name", 200);
+  if (input.emergency_contact_phone !== undefined) output.emergency_contact_phone = optionalTextField(input, "emergency_contact_phone", 32);
+  if (input.note !== undefined) output.note = optionalTextField(input, "note", 2000);
+  return output;
 }
 
 export type CreateSaleInput = IdempotentInput & Omit<Schemas["SaleInput"], "quantity"> & { quantity?: number };

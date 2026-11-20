@@ -85,6 +85,24 @@ export function memberFields(member: {
   };
 }
 
+/** What the edit form sends: only changed fields, trimmed, with null for an emptied optional field. */
+export type MemberChanges = Partial<Pick<MemberFields, "name" | "email"> & Record<Exclude<MemberField, "name" | "email">, string | null>>;
+
+/**
+ * The fields that differ from the values the form opened with. Sending only
+ * these keeps a save from undoing another staff member's newer change.
+ */
+export function memberChanges(start: MemberFields, fields: MemberFields): MemberChanges {
+  const changes: MemberChanges = {};
+  for (const field of MEMBER_FIELDS) {
+    const value = fields[field].trim();
+    if (value === start[field].trim()) continue;
+    if (field === "name" || field === "email") changes[field] = value;
+    else changes[field] = value || null;
+  }
+  return changes;
+}
+
 /** "Rahman Ali · 012 555 0101", one part, or null when Rails has neither. */
 export function emergencyContact(member: { emergency_contact_name: string | null; emergency_contact_phone: string | null }): string | null {
   const parts = [member.emergency_contact_name, member.emergency_contact_phone].filter(Boolean);

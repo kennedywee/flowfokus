@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { pageItems } from "../../lib/paging";
-import { checkMember, checkNewMember, emergencyContact, fieldMessage, formatBirthDate, memberFields, rangeLabel, todayIn } from "./list";
+import { checkMember, checkNewMember, emergencyContact, fieldMessage, formatBirthDate, memberChanges, memberFields, rangeLabel, todayIn } from "./list";
 
 describe("rangeLabel", () => {
   test("counts all members when they fit on one page", () => {
@@ -84,6 +84,14 @@ describe("member details", () => {
 
   test("turns missing values into empty form text", () => {
     expect(memberFields(empty)).toEqual({ name: "Aisyah", email: "a@example.com", phone: "", date_of_birth: "", emergency_contact_name: "", emergency_contact_phone: "", note: "" });
+  });
+
+  test("sends only the fields staff changed", () => {
+    const start = memberFields({ ...empty, phone: "012 555 0101", note: "Knee injury" });
+    expect(memberChanges(start, start)).toEqual({});
+    expect(memberChanges(start, { ...start, name: " Aisyah " })).toEqual({});
+    expect(memberChanges(start, { ...start, phone: " 012 555 0202 " })).toEqual({ phone: "012 555 0202" });
+    expect(memberChanges(start, { ...start, name: "Aisyah Rahman", note: " " })).toEqual({ name: "Aisyah Rahman", note: null });
   });
 
   test("joins the emergency contact's name and phone", () => {
