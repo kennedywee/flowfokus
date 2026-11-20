@@ -149,8 +149,6 @@ function Today({
       <TableState
         className={showLocation ? "checkins-table checkins-table--locations" : "checkins-table"}
         head={<CheckInsHead showLocation={showLocation} />}
-        grid="checkins-grid"
-        cells={showLocation ? ["text", "avatar", "text", "text", "blank"] : ["text", "avatar", "text", "blank"]}
         title="No check-ins yet today"
         text="Members who check in today show up here."
       />

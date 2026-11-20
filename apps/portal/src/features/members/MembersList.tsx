@@ -217,8 +217,6 @@ function NoMembers() {
     <TableState
       className="members-table"
       head={<MembersHead />}
-      grid="members-table__ghost"
-      cells={["avatar", "text", "blank"]}
       title="No members yet"
       text="Members you add or who join online show up here."
       action={<NewMemberLink variant="secondary" />}

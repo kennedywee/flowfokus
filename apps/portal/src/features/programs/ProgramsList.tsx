@@ -346,8 +346,6 @@ function NoPrograms() {
     <TableState
       className="programs-table"
       head={<ProgramsHead />}
-      grid="programs-grid"
-      cells={["avatar", "text", "num", "blank"]}
       title="No programs yet"
       text={manage ? "Classes and open-gym sessions you add show up here." : "A manager adds programs."}
       action={

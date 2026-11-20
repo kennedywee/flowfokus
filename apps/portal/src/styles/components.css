@@ -1851,8 +1851,8 @@ a.counter:hover .counter__label {
 
 /*
  * Paper "Table · Empty" and "No results": a grey panel 8px under the header
- * band. An empty list shows white ghost rows in the table's columns, fading
- * into the message. Band, panel and rows start on the content edge.
+ * band. An empty list fills the panel with generic skeleton lines that fade
+ * in an oval toward the message. Band, panel and rows start on the content edge.
  */
 section.table-state {
   display: grid;
@@ -1861,8 +1861,11 @@ section.table-state {
   min-width: 0;
 }
 .table-state__panel {
-  /* Paper bar grey (#EDEDED in light): between the hover and line tokens. */
-  --table-state-bar: color-mix(in srgb, var(--color-line) 55%, var(--color-surface));
+  /* Paper skeleton greys (#EAEAEA, #EFEFEF, #F0F0F0 in light), mixed from tokens. */
+  --table-state-strong: color-mix(in srgb, var(--color-line) 70%, var(--color-surface));
+  --table-state-soft: color-mix(in srgb, var(--color-line) 45%, var(--color-surface));
+  --table-state-faint: color-mix(in srgb, var(--color-line) 40%, var(--color-surface));
+  container: table-state / inline-size;
   position: relative;
   display: grid;
   padding: var(--space-2);
@@ -1871,69 +1874,76 @@ section.table-state {
   border-radius: 12px;
   background: var(--color-well);
 }
-.table-state__panel[data-ghosts] {
-  height: 380px;
+.table-state__panel[data-skeleton] {
+  height: 360px;
   align-content: start;
+  padding: 6px var(--space-3);
 }
-.table-state__ghosts {
-  display: grid;
-  gap: var(--space-2);
-}
-.table-state__ghosts > .table-state__ghost {
-  min-height: 48px;
-  /* 12px from the panel edge to the cell text, as in the header band. */
-  padding-inline: calc(var(--space-3) - var(--space-2) - 2px);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-control);
-}
-.table-state__ghost:nth-child(2) {
-  opacity: 0.75;
-}
-.table-state__ghost:nth-child(3) {
-  opacity: 0.5;
-}
-.table-state__ghost:nth-child(4) {
-  opacity: 0.3;
-}
-.table-state__ghost:nth-child(n + 5) {
-  opacity: 0.15;
-}
-.table-state__cell {
+.table-state__line {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
+  gap: var(--space-3);
+  height: 50px;
+  border-bottom: 1px solid var(--table-state-soft);
 }
-.table-state__cell[data-cell="num"] {
-  justify-content: flex-end;
+.table-state__line:last-child {
+  border-bottom: 0;
 }
-.table-state__dot {
+.table-state__line i {
+  display: block;
   flex: none;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
-  background: var(--table-state-bar);
-}
-/* Fixed bar widths, as in Paper: names 84px, other text 96px, figures 56px. */
-.table-state__bar {
-  flex: none;
-  width: 96px;
-  max-width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: var(--table-state-bar);
+  background: var(--table-state-strong);
 }
-.table-state__cell[data-cell="avatar"] .table-state__bar {
-  width: 84px;
+.table-state__line i.table-state__dot {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
 }
-.table-state__cell[data-cell="num"] .table-state__bar {
-  width: 56px;
+.table-state__name {
+  display: grid;
+  gap: 7px;
 }
-/* Every other row has a longer item line, so the rows do not look stamped. */
-.table-state__ghost:nth-child(even) .table-state__cell[data-cell="avatar"] + .table-state__cell[data-cell="text"] .table-state__bar {
+.table-state__name i:first-child {
+  width: 148px;
+}
+.table-state__name i:last-child {
+  width: 92px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--table-state-faint);
+}
+.table-state__line i.table-state__middle {
+  width: 220px;
+  margin-left: auto;
+  margin-right: 120px;
+  background: var(--table-state-soft);
+}
+.table-state__line i.table-state__end {
+  width: 64px;
+}
+/* Paper's width pattern, so the lines do not look stamped. */
+.table-state__line:nth-child(3n + 2) .table-state__name i:first-child {
+  width: 112px;
+}
+.table-state__line:nth-child(3n + 2) .table-state__name i:last-child {
+  width: 120px;
+}
+.table-state__line:nth-child(3n + 3) .table-state__name i:first-child {
   width: 176px;
+}
+.table-state__line:nth-child(3n + 3) .table-state__name i:last-child {
+  width: 72px;
+}
+.table-state__line:nth-child(even) i.table-state__middle {
+  width: 160px;
+}
+.table-state__line:nth-child(4n + 3) i.table-state__middle {
+  width: 260px;
+}
+.table-state__line:nth-child(even) i.table-state__end {
+  width: 52px;
 }
 .table-state__message {
   display: grid;
@@ -1942,16 +1952,17 @@ section.table-state {
   padding-block: 72px;
   text-align: center;
 }
-.table-state__panel[data-ghosts] .table-state__message {
+.table-state__panel[data-skeleton] .table-state__message {
   position: absolute;
   inset: 0;
-  align-content: end;
-  padding-block: 0 48px;
-  background: linear-gradient(
-    to bottom,
-    transparent 30%,
-    color-mix(in srgb, var(--color-well) 92%, transparent) 55%,
-    var(--color-well) 72%
+  align-content: center;
+  padding-block: 0;
+  background: radial-gradient(
+    ellipse 46% 62% at 50% 50%,
+    var(--color-well) 42%,
+    color-mix(in srgb, var(--color-well) 85%, transparent) 62%,
+    color-mix(in srgb, var(--color-well) 35%, transparent) 82%,
+    transparent 100%
   );
 }
 .table-state__title {
@@ -1970,32 +1981,13 @@ section.table-state {
 .table-state__action {
   margin-top: var(--space-3);
 }
-/*
- * Where a list collapses its columns, its ghost rows keep one lane: the first
- * cell. Each list collapses at its own container width.
- */
-@container sales-table (max-width: 720px) {
-  .table-state__ghosts > .table-state__ghost {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .table-state__cell:not(:first-child) {
+/* Narrow panels drop the middle line; the name and the end figure stay. */
+@container table-state (max-width: 640px) {
+  .table-state__line i.table-state__middle {
     display: none;
   }
-}
-@container programs-table (max-width: 640px) {
-  .table-state__ghosts > .table-state__ghost {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .table-state__cell:not(:first-child) {
-    display: none;
-  }
-}
-@container programs-table (max-width: 720px) {
-  .products-table .table-state__ghosts > .table-state__ghost {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .products-table .table-state__cell:not(:first-child) {
-    display: none;
+  .table-state__line i.table-state__end {
+    margin-left: auto;
   }
 }
 

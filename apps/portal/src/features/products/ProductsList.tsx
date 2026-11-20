@@ -344,8 +344,6 @@ function NoProducts() {
     <TableState
       className="programs-table products-table"
       head={<ProductsHead />}
-      grid="products-grid"
-      cells={["avatar", "text", "text", "text", "num", "blank"]}
       title="No products yet"
       text={create ? "Memberships and passes you add show up here." : "A manager adds products."}
       action={

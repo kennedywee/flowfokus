@@ -104,8 +104,9 @@ Existing blocks to compose before adding another abstraction:
 - `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListPager`: the range and page buttons under a redesigned list.
 - `TableState`: a list with no rows. Paper "Table · Empty" keeps the header band
-  and fades white ghost rows into the message on a grey panel; "No results"
-  shows the panel alone, with Clear search or Clear filters.
+  and fills a grey panel with generic skeleton lines that fade in an oval toward
+  the message; "No results" shows the panel alone, with Clear search or Clear
+  filters. List header bands and rows start on the content edge.
 - `FormNotice`: a form's failed request in one bordered line (red icon, title,
   staff sentence). The fields keep their values.
 - `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and

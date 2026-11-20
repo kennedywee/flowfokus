@@ -349,8 +349,6 @@ function NoSales() {
     <TableState
       className="sales-table"
       head={<SalesHead />}
-      grid="sales-grid"
-      cells={["avatar", "text", "text", "text", "num", "num", "blank"]}
       title="No sales yet"
       text="Desk sales and online purchases show up here."
       action={<NewSaleLink variant="secondary" />}

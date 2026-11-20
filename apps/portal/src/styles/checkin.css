@@ -208,13 +208,6 @@ a.checkins-row:focus-visible {
 
 /* Narrow lists (tablet with several locations, phones): time, then member and result in two lines. */
 @container checkins-table (max-width: 640px) {
-  /* After the Location rule above, so the empty list's ghost rows keep one lane. */
-  .checkins-table .table-state__ghosts > .table-state__ghost {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .checkins-table .table-state__cell:not(:first-child) {
-    display: none;
-  }
   .checkins-table__head {
     display: flex;
     gap: var(--space-4);
