@@ -15,11 +15,19 @@ class Member < ApplicationRecord
 
   normalizes :name, with: ->(name) { name.squish }
   normalizes :email, with: ->(email) { email.strip.downcase }
+  # A blank optional field is stored as nothing, so staff clear it by emptying it.
+  normalizes :phone, :emergency_contact_name, :emergency_contact_phone, with: ->(text) { text.squish.presence }
+  normalizes :note, with: ->(note) { note.strip.presence }
 
   validates :name, presence: true, length: { maximum: 200 }
   validates :email, presence: true, length: { maximum: 320 },
     format: { with: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/, message: "is not a valid email address" }
   validates :email, uniqueness: { scope: :organization_id, case_sensitive: false, message: "is already used by another member" }
+  validates :phone, :emergency_contact_phone, length: { maximum: 32 }, allow_nil: true,
+    format: { with: /\A\+?[0-9][0-9 ().-]{4,}\z/, message: "is not a valid phone number" }
+  validates :emergency_contact_name, length: { maximum: 200 }
+  validates :note, length: { maximum: 2000 }
+  validate :date_of_birth_is_a_past_date
 
   scope :newest_first, -> { order(created_at: :desc, id: :desc) }
   scope :matching, ->(query) {
@@ -66,6 +74,11 @@ class Member < ApplicationRecord
   def as_summary_api = { id:, name:, email: }
   def as_api = { id:, name:, email:, created_at: api_time(created_at) }
 
+  # What staff record about the person. The member area does not return it.
+  def as_profile_api
+    { phone:, date_of_birth: date_of_birth&.iso8601, emergency_contact_name:, emergency_contact_phone:, note: }
+  end
+
   # Removes the link to a sign-in. The member record and its history stay.
   def unlink!
     transaction do
@@ -77,7 +90,7 @@ class Member < ApplicationRecord
 
   # The member's own view: membership, rights, visits, and purchases.
   def as_account_api(at: Time.current)
-    as_detail_api(at:).except(:renewal, :linked_email).merge(
+    as_detail_api(at:).except(:renewal, :linked_email, *as_profile_api.keys).merge(
       check_ins: check_ins.newest_first.limit(20).map { |check_in| check_in.as_member_api },
       sales: sales.open.newest_first.includes(:line_item).limit(20).map(&:as_member_api),
       bookings: recent_bookings(at:).map { _1.as_member_api(at:) }
@@ -85,7 +98,7 @@ class Member < ApplicationRecord
   end
 
   def as_detail_api(at: Time.current)
-    as_api.merge(
+    as_api.merge(as_profile_api).merge(
       linked_email: user&.email,
       membership: membership&.as_api,
       current_period: current_period(at:)&.as_api,
@@ -94,4 +107,17 @@ class Member < ApplicationRecord
       bookings: recent_bookings(at:).map { _1.as_api(at:) }
     )
   end
+
+  private
+    # Rails casts text that is not a date to nothing. Without this check, a
+    # mistyped date would clear the stored one.
+    def date_of_birth_is_a_past_date
+      if date_of_birth.nil?
+        errors.add(:date_of_birth, "is not a valid date") if date_of_birth_before_type_cast.present?
+      elsif date_of_birth > Time.current.in_time_zone(organization.time_zone).to_date
+        errors.add(:date_of_birth, "cannot be in the future")
+      elsif date_of_birth.year < 1900
+        errors.add(:date_of_birth, "cannot be before 1900")
+      end
+    end
 end

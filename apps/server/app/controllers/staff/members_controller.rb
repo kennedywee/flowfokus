@@ -19,7 +19,16 @@ module Staff
       render_data member.as_api, status: :created
     end
 
+    def update
+      require_permission! "members:update"
+      member = current_organization.members.find(params[:id])
+      member.update!(member_params)
+      render_data member.as_detail_api
+    end
+
     private
-      def member_params = params.permit(:name, :email)
+      def member_params
+        params.permit(:name, :email, :phone, :date_of_birth, :emergency_contact_name, :emergency_contact_phone, :note)
+      end
   end
 end

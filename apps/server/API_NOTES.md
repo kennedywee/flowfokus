@@ -60,8 +60,9 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, Patrick Ng. Irongate has it
 | GET | `/staff/organization` | staff | 200 `StaffOrganization` (locations, actor permissions) | |
 | GET | `/staff/overview` | staff | 200 `StaffOverview` | |
 | GET | `/staff/members?q=` | `members:read` | 200 `Member[]` | |
-| POST | `/staff/members` | `members:create` | 201 `Member` | `{ name, email }` |
+| POST | `/staff/members` | `members:create` | 201 `Member` | `{ name, email, phone?, date_of_birth?, emergency_contact_name?, emergency_contact_phone?, note? }` |
 | GET | `/staff/members/:id` | `members:read` | 200 `MemberDetail` | |
+| PATCH | `/staff/members/:id` | `members:update` | 200 `MemberDetail` | any of `{ name, email, phone, date_of_birth, emergency_contact_name, emergency_contact_phone, note }` |
 | GET | `/staff/products` | `products:read` | 200 `StaffProduct[]` | |
 | GET | `/staff/sales?member_id=` | `purchases:read` | 200 `Sale[]` | |
 | POST | `/staff/sales` | `purchases:create` | 201 `Sale` (200 on replay) | `{ member_id, price_id, location_id }` |

@@ -68,6 +68,7 @@ roles:
     permissions:
       - members:read
       - members:create
+      - members:update
       - members:link
       - products:read
       - products:create
@@ -94,6 +95,7 @@ roles:
     permissions:
       - members:read
       - members:create
+      - members:update
       - members:link
       - products:read
       - purchases:read
@@ -123,6 +125,8 @@ permissions:
     name: Read members
   - slug: members:create
     name: Create members
+  - slug: members:update
+    name: Change member details
   - slug: members:link
     name: Give members a sign-in link code, and unlink them
   - slug: products:read

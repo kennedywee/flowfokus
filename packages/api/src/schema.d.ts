@@ -332,7 +332,13 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Change a member's name, email, and details. Needs members:update.
+         * @description Changes only the fields in the body. An empty or null optional field is cleared.
+         *     The email stays unique in the organization; a duplicate returns 422 with
+         *     `details.email`. A linked sign-in keeps its own email.
+         */
+        patch: operations["updateStaffMember"];
         trace?: never;
     };
     "/staff/members/{id}/renewals": {
@@ -1221,7 +1227,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
+        Permission: "members:read" | "members:create" | "members:update" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -1312,6 +1318,34 @@ export interface components {
             name: string;
             /** Format: email */
             email: string;
+            /** @description Digits, spaces, and + ( ) . - only. Empty or null clears it. */
+            phone?: string | null;
+            /**
+             * Format: date
+             * @description Not in the future. Null clears it.
+             */
+            date_of_birth?: string | null;
+            emergency_contact_name?: string | null;
+            emergency_contact_phone?: string | null;
+            /** @description For staff only. The member area never returns it. */
+            note?: string | null;
+        };
+        /** @description Send only the fields to change. A field left out keeps its value. */
+        MemberUpdateInput: {
+            name?: string;
+            /** Format: email */
+            email?: string;
+            /** @description Digits, spaces, and + ( ) . - only. Empty or null clears it. */
+            phone?: string | null;
+            /**
+             * Format: date
+             * @description Not in the future. Null clears it.
+             */
+            date_of_birth?: string | null;
+            emergency_contact_name?: string | null;
+            emergency_contact_phone?: string | null;
+            /** @description For staff only. The member area never returns it. */
+            note?: string | null;
         };
         MemberSummary: {
             /** Format: uuid */
@@ -1340,6 +1374,13 @@ export interface components {
             renewal: components["schemas"]["RenewalTerms"] | null;
             /** @description The email of the sign-in linked to this member, if any. */
             linked_email: string | null;
+            phone: string | null;
+            /** Format: date */
+            date_of_birth: string | null;
+            emergency_contact_name: string | null;
+            emergency_contact_phone: string | null;
+            /** @description A staff note about the member. */
+            note: string | null;
             /** @description Rights that are active now or start later. Expired rights are left out. */
             entitlements: components["schemas"]["Entitlement"][];
             /** @description Coming bookings, then the 10 latest earlier ones. */
@@ -2973,6 +3014,38 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberUpdateInput"];
+            };
+        };
+        responses: {
+            /** @description The changed member. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDetailResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };
