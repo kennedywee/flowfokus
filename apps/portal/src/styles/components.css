@@ -341,6 +341,87 @@
   }
 }
 
+/*
+ * Hold to confirm (components/ui/hold-button.tsx). ui-sdk's bindHold sets
+ * `data-holding` while pressed. The fill sweeps in over --duration-hold with
+ * an ease-in, and drains over --duration-drain when the press ends early.
+ */
+.hold-button {
+  --hold-fill: var(--color-line-strong);
+  position: relative;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.hold-button:not(.button--secondary) {
+  --hold-fill: var(--color-ink-2);
+}
+.hold-button__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--hold-fill);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--duration-drain) var(--ease-out);
+  pointer-events: none;
+}
+.hold-button__label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.button.hold-button[data-holding] {
+  transform: scale(0.97);
+}
+.button--secondary.hold-button[data-holding] {
+  border-color: var(--color-ink-4);
+}
+.hold-button[data-holding] .hold-button__fill {
+  transform: scaleX(1);
+  transition: transform var(--duration-hold) var(--ease-in);
+}
+/* Confirmed: success until the request settles. */
+.hold-button[data-confirmed] .hold-button__fill {
+  transform: scaleX(0);
+  transition: none;
+}
+.button.hold-button[data-confirmed],
+.button.hold-button[data-confirmed]:hover {
+  background: var(--color-good);
+  border-color: transparent;
+  color: var(--color-on-ink);
+  transform: none;
+}
+.button--secondary.hold-button[data-confirmed],
+.button--secondary.hold-button[data-confirmed]:hover {
+  background: var(--color-good-wash);
+  border-color: var(--color-good-line);
+  color: var(--color-good);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* No scale and no sweep: the fill fades in over the same time. */
+  .button.hold-button[data-holding] {
+    transform: none;
+  }
+  .hold-button__fill,
+  .hold-button[data-holding] .hold-button__fill {
+    transform: none;
+  }
+  .hold-button__fill {
+    opacity: 0;
+    transition: opacity var(--duration-drain) var(--ease-out);
+  }
+  .hold-button[data-holding] .hold-button__fill {
+    opacity: 1;
+    transition: opacity var(--duration-hold) var(--ease-in);
+  }
+  .hold-button[data-confirmed] .hold-button__fill {
+    opacity: 0;
+  }
+}
+
 /* ---------- Forms ---------- */
 
 .form {
