@@ -1861,13 +1861,15 @@ a.counter:hover .counter__label {
   min-width: 0;
 }
 .table-state__panel {
+  /* Paper bar grey (#EDEDED in light): between the hover and line tokens. */
+  --table-state-bar: color-mix(in srgb, var(--color-line) 55%, var(--color-surface));
   position: relative;
   display: grid;
   margin-inline: calc(-1 * var(--space-3));
   padding: var(--space-2);
   overflow: hidden;
   border: 1px solid var(--color-line);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   background: var(--color-well);
 }
 .table-state__panel[data-ghosts] {
@@ -1879,7 +1881,7 @@ a.counter:hover .counter__label {
   gap: var(--space-2);
 }
 .table-state__ghosts > .table-state__ghost {
-  min-height: 52px;
+  min-height: 48px;
   /* 12px from the panel edge to the cell text, as in the header band. */
   padding-inline: calc(var(--space-3) - var(--space-2) - 2px);
   border: 1px solid var(--color-line);
@@ -1910,26 +1912,29 @@ a.counter:hover .counter__label {
 }
 .table-state__dot {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--radius-full);
-  background: var(--color-hover);
+  background: var(--table-state-bar);
 }
+/* Fixed bar widths, as in Paper: names 84px, other text 96px, figures 56px. */
 .table-state__bar {
-  width: 60%;
-  max-width: 140px;
+  flex: none;
+  width: 96px;
+  max-width: 100%;
   height: 8px;
-  border-radius: var(--radius-full);
-  background: var(--color-hover);
+  border-radius: 4px;
+  background: var(--table-state-bar);
+}
+.table-state__cell[data-cell="avatar"] .table-state__bar {
+  width: 84px;
 }
 .table-state__cell[data-cell="num"] .table-state__bar {
   width: 56px;
 }
-.table-state__ghost:nth-child(even) .table-state__bar {
-  width: 42%;
-}
-.table-state__ghost:nth-child(3n) .table-state__cell[data-cell="text"] .table-state__bar {
-  width: 72%;
+/* Every other row has a longer item line, so the rows do not look stamped. */
+.table-state__ghost:nth-child(even) .table-state__cell[data-cell="avatar"] + .table-state__cell[data-cell="text"] .table-state__bar {
+  width: 176px;
 }
 .table-state__message {
   display: grid;
@@ -1943,7 +1948,12 @@ a.counter:hover .counter__label {
   inset: 0;
   align-content: end;
   padding-block: 0 48px;
-  background: linear-gradient(to bottom, transparent 28%, var(--color-well) 62%);
+  background: linear-gradient(
+    to bottom,
+    transparent 30%,
+    color-mix(in srgb, var(--color-well) 92%, transparent) 55%,
+    var(--color-well) 72%
+  );
 }
 .table-state__title {
   max-width: 100%;
