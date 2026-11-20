@@ -142,9 +142,17 @@ function HoldButton({
       drain(el)
       showHint()
     }
+    // A touch or pen keeps sending moves to the button after it leaves, so check the bounds too.
+    const onMove = (event: PointerEvent) => {
+      const box = el.getBoundingClientRect()
+      const { clientX: x, clientY: y } = event
+      if (x < box.left || x > box.right || y < box.top || y > box.bottom) onLeave()
+    }
     el.addEventListener("pointerleave", onLeave)
+    el.addEventListener("pointermove", onMove)
     return () => {
       el.removeEventListener("pointerleave", onLeave)
+      el.removeEventListener("pointermove", onMove)
       unbind()
       clearTimeout(hintTimer.current)
     }

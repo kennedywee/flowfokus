@@ -384,6 +384,8 @@
 }
 /* Confirmed: success until the request settles. */
 .hold-button[data-confirmed] .hold-button__fill {
+  /* Hidden, so a drain still running cannot cover the success state. */
+  visibility: hidden;
   transform: scaleX(0);
   transition: none;
 }

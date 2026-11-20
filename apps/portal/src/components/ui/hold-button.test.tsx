@@ -104,6 +104,21 @@ describe("HoldButton", () => {
     expect(hint()?.hasAttribute("data-open")).toBe(true);
   });
 
+  test("a finger that slides off the button cancels, even by a few pixels", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm);
+    button.getBoundingClientRect = () => new DOMRect(0, 0, 100, 40);
+
+    await act(async () => pointer(button, "pointerdown", { pointerType: "touch", clientX: 98, clientY: 20 }));
+    await wait(200);
+    // The finger is captured, so the move still reaches the button: 4 px, under the 10 px tolerance.
+    await act(async () => pointer(button, "pointermove", { pointerType: "touch", clientX: 102, clientY: 20 }));
+    expect(button.hasAttribute("data-holding")).toBe(false);
+    await wait(HOLD_MS);
+
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
   test("holding Space confirms after the same time, and a key repeat does not restart it", async () => {
     const onConfirm = mock(() => {});
     const button = await renderButton(onConfirm);
