@@ -276,7 +276,7 @@ a.checkins-row:focus-visible {
     display: none;
   }
   /* While the phone search shows members, today's list steps aside. */
-  .checkins-page:has(.find-member--inline .find-member__list) :is(.checkins-toolbar, .checkins-table, .checkins-foot, .list-state) {
+  .checkins-page:has(.find-member--inline .find-member__list) :is(.checkins-toolbar, .checkins-table, .checkins-foot, .list-state, .table-state) {
     display: none;
   }
 }
