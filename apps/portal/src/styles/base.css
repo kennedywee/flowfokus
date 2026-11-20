@@ -156,7 +156,8 @@ fieldset {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
+  /* The hold button's fill keeps its fade: it is the hold's only progress cue. */
+  *:not(.hold-button__fill),
   *::before,
   *::after {
     animation-duration: 1ms !important;

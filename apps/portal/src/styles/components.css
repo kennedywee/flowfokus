@@ -341,6 +341,263 @@
   }
 }
 
+/*
+ * Hold to confirm (components/ui/hold-button.tsx). ui-sdk's bindHold sets
+ * `data-holding` while pressed. The fill sweeps in over --duration-hold with
+ * an ease-in, and drains over --duration-drain when the press ends early.
+ */
+.hold-button {
+  --hold-fill: var(--color-line-strong);
+  position: relative;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+.hold-button:not(.button--secondary) {
+  --hold-fill: var(--color-ink-2);
+}
+.hold-button__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--hold-fill);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--duration-drain) var(--ease-out);
+  pointer-events: none;
+}
+.hold-button__label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.button.hold-button[data-holding] {
+  transform: scale(0.97);
+}
+.button--secondary.hold-button[data-holding] {
+  border-color: var(--color-ink-4);
+}
+.hold-button[data-holding] .hold-button__fill {
+  transform: scaleX(1);
+  transition: transform var(--duration-hold) var(--ease-in);
+}
+/* Confirmed: success until the request settles. */
+.hold-button[data-confirmed] .hold-button__fill {
+  /* Hidden, so a drain still running cannot cover the success state. */
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: none;
+}
+.button.hold-button[data-confirmed],
+.button.hold-button[data-confirmed]:hover {
+  background: var(--color-good);
+  border-color: transparent;
+  color: var(--color-on-ink);
+  transform: none;
+}
+.button--secondary.hold-button[data-confirmed],
+.button--secondary.hold-button[data-confirmed]:hover {
+  background: var(--color-good-wash);
+  border-color: var(--color-good-line);
+  color: var(--color-good);
+}
+/* Dotted fill (B3): dither dots, thinning out at the leading edge. */
+.hold-button--dots .hold-button__fill {
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-ink-4) 60%, transparent) 0.75px, transparent 1px) 0 0 /
+    3px 3px;
+  mask-image: linear-gradient(to right, black 70%, transparent);
+}
+/* The dots grow in width instead of scaling, so they keep their shape. */
+.hold-button--dots .hold-button__fill,
+.hold-button--dots[data-holding] .hold-button__fill {
+  transform: none;
+}
+.hold-button--dots .hold-button__fill {
+  right: 100%;
+  transition: right var(--duration-drain) var(--ease-out);
+}
+.hold-button--dots[data-holding] .hold-button__fill {
+  right: 0;
+  transition: right var(--duration-hold) var(--ease-in);
+}
+/* Line (B4): a 2px line runs under the label, for the shortcut hold. */
+.hold-button--line .hold-button__fill {
+  inset: auto 0 1px;
+  height: 2px;
+  background: var(--color-ink);
+}
+/* Ring (B2): a round icon button; a ring closes around the icon. */
+.button.hold-button--ring {
+  border-radius: 50%;
+  overflow: visible;
+}
+/* `.button` sizes its icons; the ring covers the whole button instead. */
+.button .hold-button__ring {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  rotate: -90deg;
+  pointer-events: none;
+}
+.hold-button--ring .hold-button__fill,
+.hold-button--ring[data-holding] .hold-button__fill {
+  fill: none;
+  stroke: var(--color-ink);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  transform: none;
+}
+.hold-button--ring .hold-button__fill {
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset var(--duration-drain) var(--ease-out);
+}
+.hold-button--ring[data-holding] .hold-button__fill {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--duration-hold) var(--ease-in);
+}
+.button--secondary.hold-button--ring[data-confirmed],
+.button--secondary.hold-button--ring[data-confirmed]:hover {
+  background: var(--color-good);
+  border-color: transparent;
+  color: var(--color-on-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No scale and no sweep: the fill fades in over the same time. */
+  .hold-button--ring .hold-button__fill,
+  .hold-button--ring[data-holding] .hold-button__fill {
+    stroke-dashoffset: 0;
+  }
+  .hold-button--dots .hold-button__fill,
+  .hold-button--dots[data-holding] .hold-button__fill {
+    right: 0;
+  }
+  .button.hold-button[data-holding] {
+    transform: none;
+  }
+  .hold-button__fill,
+  .hold-button[data-holding] .hold-button__fill {
+    transform: none;
+  }
+  /* As specific as each fill's own rules, and later, so the fade wins. */
+  .hold-button .hold-button__fill {
+    opacity: 0;
+    transition: opacity var(--duration-drain) var(--ease-out);
+  }
+  .hold-button[data-holding] .hold-button__fill {
+    opacity: 1;
+    transition: opacity var(--duration-hold) var(--ease-in);
+  }
+  .hold-button[data-confirmed] .hold-button__fill {
+    opacity: 0;
+  }
+}
+
+/*
+ * Swipe to confirm (components/ui/swipe-confirm.tsx). The trail grows with
+ * --swipe-progress (0 to 1) and carries the knob at its end.
+ */
+.swipe {
+  --knob: 28px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 18px;
+  background: var(--color-control);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.swipe__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline-start: calc(var(--knob) + 6px);
+  color: var(--color-ink-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  opacity: calc(1 - var(--swipe-progress) * 1.25);
+}
+.swipe__text svg {
+  width: 14px;
+  height: 14px;
+}
+.swipe__trail {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  width: calc(var(--knob) + var(--swipe-progress) * (100% - var(--knob)));
+  height: var(--knob);
+  border-radius: calc(var(--knob) / 2);
+  background: var(--color-line);
+  transition: width var(--duration-spring) var(--ease-out);
+}
+.swipe[data-mode="drag"] .swipe__trail {
+  transition: none;
+}
+.swipe[data-mode="hold"] .swipe__trail {
+  transition: width var(--duration-hold) var(--ease-in);
+}
+.swipe__knob {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--knob);
+  height: var(--knob);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  cursor: grab;
+  touch-action: none;
+}
+.swipe__knob svg {
+  width: 14px;
+  height: 14px;
+}
+.swipe[data-mode="drag"] .swipe__knob {
+  cursor: grabbing;
+}
+/* The track clips the knob, so the focus ring goes around the track. */
+.swipe__knob:focus-visible {
+  outline: none;
+}
+.swipe:has(.swipe__knob:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.swipe__knob:disabled {
+  cursor: not-allowed;
+  background: var(--color-ink-4);
+}
+/* Confirmed: success until the request settles. */
+.swipe[data-confirmed] {
+  border-color: transparent;
+  background: var(--color-good);
+}
+.swipe[data-confirmed] .swipe__text {
+  padding: 0;
+  color: var(--color-on-ink);
+  opacity: 1;
+}
+/* Opacity, not visibility: the knob keeps keyboard focus while the request runs. */
+.swipe[data-confirmed] .swipe__trail {
+  opacity: 0;
+}
+
 /* ---------- Forms ---------- */
 
 .form {

@@ -1,0 +1,17 @@
+import { HoldButton } from "@/components/ui/hold-button";
+
+// Stands in for the request. The success state lasts until it settles.
+const request = () => new Promise((resolve) => setTimeout(resolve, 1200));
+
+export default function Example() {
+  return (
+    <>
+      <HoldButton holdLabel="Hold to check in" confirmedLabel="Checked in" onConfirm={request}>
+        Check in
+      </HoldButton>
+      <HoldButton variant="default" holdLabel="Hold to publish" confirmedLabel="Published" onConfirm={request}>
+        Publish program
+      </HoldButton>
+    </>
+  );
+}

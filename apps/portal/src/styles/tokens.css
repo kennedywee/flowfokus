@@ -156,8 +156,15 @@
 
   --duration-press: 120ms;
   --duration-hover: 150ms;
+  /* HoldButton: how long a press must last, and how fast an early release drains. */
+  --duration-hold: 600ms;
+  --duration-drain: 200ms;
+  /* SwipeConfirm: a knob let go before the end springs back over this time. */
+  --duration-spring: 250ms;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Slow start, fast finish: a hold that feels decisive at the end. */
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
 }
 
 :root {

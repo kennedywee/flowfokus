@@ -14,7 +14,7 @@ export function isEditable(target: EventTarget | null): boolean {
 }
 
 /** True when a dialog, menu, or list box is open and owns the keyboard. */
-function overlayOpen(): boolean {
+export function overlayOpen(): boolean {
   return document.querySelector("[role='dialog'], [role='alertdialog'], [role='menu'], [role='listbox']") !== null;
 }
 
