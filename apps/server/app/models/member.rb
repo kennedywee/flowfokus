@@ -24,7 +24,7 @@ class Member < ApplicationRecord
     format: { with: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/, message: "is not a valid email address" }
   validates :email, uniqueness: { scope: :organization_id, case_sensitive: false, message: "is already used by another member" }
   validates :phone, :emergency_contact_phone, length: { maximum: 32 }, allow_nil: true,
-    format: { with: /\A\+?[0-9][0-9 ().-]{4,}\z/, message: "is not a valid phone number" }
+    format: { with: /\A\+?[0-9(][0-9 ().-]{4,}\z/, message: "is not a valid phone number" }
   validates :emergency_contact_name, length: { maximum: 200 }
   validates :note, length: { maximum: 2000 }
   validate :date_of_birth_is_a_past_date

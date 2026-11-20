@@ -86,7 +86,7 @@ RSpec.describe "Members" do
     let(:member) { create_member(chainsaw, name: "Aisyah Rahman", email: "aisyah@example.com") }
     let(:profile) do
       { "phone" => "+60 12-345 6789", "date_of_birth" => "1994-03-09", "emergency_contact_name" => "Rahman Ali",
-        "emergency_contact_phone" => "012 555 0101", "note" => "Knee injury. Prefers morning sessions." }
+        "emergency_contact_phone" => "(03) 5555.0101", "note" => "Knee injury. Prefers morning sessions." }
     end
 
     it "changes the name, email, and optional details" do
