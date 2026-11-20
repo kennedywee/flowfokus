@@ -1870,7 +1870,7 @@ section.table-state {
   display: grid;
   padding: var(--space-2);
   overflow: hidden;
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-well);
   border-radius: 12px;
   background: var(--color-well);
 }
