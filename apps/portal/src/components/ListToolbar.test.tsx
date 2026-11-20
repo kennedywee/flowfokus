@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { FilterChip, FilterChips, ListToolbar, nextListSearch } from "./ListToolbar";
+import { FilterChip, FilterChips, ListToolbar, nextListSearch, toggledValues } from "./ListToolbar";
 
 type SalesLike = { payment?: string; fulfillment?: string; q?: string; view?: string };
 const SALES_KEYS = ["payment", "fulfillment", "q"] as const;
@@ -16,6 +16,27 @@ describe("nextListSearch", () => {
   test("drops old link params that are not list keys", () => {
     const current: SalesLike = { view: "due", payment: "unpaid,partial" };
     expect(nextListSearch(current, { payment: undefined }, SALES_KEYS)).toEqual({});
+  });
+});
+
+describe("toggledValues", () => {
+  const group = {
+    key: "payment",
+    title: "Payment",
+    options: [
+      { value: "unpaid", label: "Unpaid", count: 1 },
+      { value: "paid", label: "Paid", count: 2 },
+    ],
+    chosen: ["paid"],
+  };
+
+  test("adds a value in menu order", () => {
+    expect(toggledValues(group, "unpaid", true)).toEqual(["unpaid", "paid"]);
+  });
+
+  test("keeps chosen values that the menu does not show", () => {
+    const schedule = { ...group, chosen: ["hidden-program", "paid"] };
+    expect(toggledValues(schedule, "paid", false)).toEqual(["hidden-program"]);
   });
 });
 

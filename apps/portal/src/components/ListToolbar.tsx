@@ -60,16 +60,6 @@ export function FilterMenu<K extends string>({
   groups: readonly FilterGroup<K>[];
   onChange: (key: K, values: string[]) => void;
 }) {
-  const toggle = (group: FilterGroup<K>, value: string, on: boolean) => {
-    const next = new Set(group.chosen);
-    if (on) next.add(value);
-    else next.delete(value);
-    onChange(
-      group.key,
-      group.options.map((option) => option.value).filter((item) => next.has(item)),
-    );
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
@@ -90,7 +80,7 @@ export function FilterMenu<K extends string>({
                 <DropdownMenuCheckboxItem
                   key={option.value}
                   checked={group.chosen.includes(option.value)}
-                  onCheckedChange={(on) => toggle(group, option.value, on)}
+                  onCheckedChange={(on) => onChange(group.key, toggledValues(group, option.value, on))}
                 >
                   {option.icon}
                   {option.label}
@@ -108,6 +98,19 @@ export function FilterMenu<K extends string>({
 /** Adds the row count to each filter value. */
 export function withCounts(items: readonly { value: string; label: string; icon?: ReactNode }[], counts: Record<string, number>): FilterOption[] {
   return items.map((item) => ({ ...item, count: counts[item.value] ?? 0 }));
+}
+
+/**
+ * The chosen values after one value is checked or unchecked, in menu order.
+ * Chosen values missing from the menu stay, such as a Schedule program with
+ * no sessions in the weeks shown.
+ */
+export function toggledValues(group: FilterGroup, value: string, on: boolean): string[] {
+  const next = new Set(group.chosen);
+  if (on) next.add(value);
+  else next.delete(value);
+  const shown = group.options.map((option) => option.value);
+  return [...shown.filter((item) => next.has(item)), ...group.chosen.filter((item) => !shown.includes(item) && next.has(item))];
 }
 
 /** A chip for each group with chosen values. */
