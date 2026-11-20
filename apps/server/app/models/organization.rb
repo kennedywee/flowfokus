@@ -2,8 +2,8 @@ class Organization < ApplicationRecord
   include WorkosSynced
 
   RESERVED_SLUGS = %w[
-    admin api app auth billing blog dashboard docs help login logout mail portal
-    signin signout signup sso static status support www
+    admin api app auth billing blog components dashboard docs help login logout
+    mail portal signin signout signup sso static status support www
   ].freeze
   SLUG_FORMAT = /\A[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\z/
 
