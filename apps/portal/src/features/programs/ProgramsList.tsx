@@ -4,6 +4,7 @@ import type { Schemas } from "@flowfokus/api";
 import { ArrowDown, ChevronRight, Clock, ListFilter, Plus, Search, X } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { Kbd, initials } from "../../components/ui";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
@@ -232,20 +233,19 @@ function Results({ programs, filter, q }: { programs: Program[]; filter: Program
   if (!shown.length) {
     const onlySearch = q && !filter.kind.length && !filter.visibility.length;
     return (
-      <div className="list-state" role="status">
-        <span className="programs-state__tile" aria-hidden="true">
-          <Search {...icon} />
-        </span>
-        <p>{q ? `No programs match “${q}”` : "No programs match these filters"}</p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="compact"
-          onClick={() => void navigate({ to: "/$org/programs", params: { org: organization.slug }, search: {}, replace: true })}
-        >
-          {onlySearch ? "Clear search" : "Clear filters"}
-        </Button>
-      </div>
+      <TableState
+        title={q ? `No programs match “${q}”` : "No programs match these filters"}
+        action={
+          <Button
+            type="button"
+            variant="secondary"
+            size="compact"
+            onClick={() => void navigate({ to: "/$org/programs", params: { org: organization.slug }, search: {}, replace: true })}
+          >
+            {onlySearch ? "Clear search" : "Clear filters"}
+          </Button>
+        }
+      />
     );
   }
   // A new filter starts again at page 1.
@@ -264,16 +264,7 @@ function ProgramRows({ programs }: { programs: Program[] }) {
 
   return (
     <section className="programs-table" aria-label="Programs">
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="programs-table__head programs-grid" aria-hidden="true">
-        <span className="programs-table__sort">
-          Program
-          <ArrowDown {...icon} />
-        </span>
-        <span className="programs-col--host">Host</span>
-        <span className="programs-col--num">Upcoming</span>
-        <span />
-      </div>
+      <ProgramsHead />
       <ul className="programs-rows">
         {rows.map((program) => (
           <li key={program.id}>
@@ -332,13 +323,42 @@ function ProgramRows({ programs }: { programs: Program[] }) {
   );
 }
 
-function NoPrograms() {
-  const can = useCan();
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function ProgramsHead() {
   return (
-    <div className="list-state" role="status">
-      <p className="list-state__title">No programs yet</p>
-      {can("programs:manage") ? null : <p className="list-state__text">A manager adds programs.</p>}
+    <div className="programs-table__head programs-grid" aria-hidden="true">
+      <span className="programs-table__sort">
+        Program
+        <ArrowDown {...icon} />
+      </span>
+      <span className="programs-col--host">Host</span>
+      <span className="programs-col--num">Upcoming</span>
+      <span />
     </div>
+  );
+}
+
+function NoPrograms() {
+  const organization = useOrganization();
+  const can = useCan();
+  const manage = can("programs:manage");
+  return (
+    <TableState
+      className="programs-table"
+      head={<ProgramsHead />}
+      grid="programs-grid"
+      cells={["avatar", "text", "num", "blank"]}
+      title="No programs yet"
+      text={manage ? "Classes and open-gym sessions you add show up here." : "A manager adds programs."}
+      action={
+        manage ? (
+          <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
+            <Plus {...icon} />
+            New program
+          </Link>
+        ) : null
+      }
+    />
   );
 }
 

@@ -67,6 +67,13 @@
   flex: none;
   width: 16px;
 }
+/* Ghost rows of the empty list use the header's lanes. */
+.members-table__ghost {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 16px;
+  align-items: center;
+  column-gap: var(--space-3);
+}
 
 .members-rows {
   display: grid;

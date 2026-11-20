@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Download, ListFilter, LogIn, MoreHorizontal, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Download, ListFilter, MoreHorizontal, Plus, Search, X } from "lucide-react";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { Kbd, initials } from "../../components/ui";
 import { downloadCsv } from "../../lib/export";
 import { failureMessage } from "../../lib/format";
@@ -144,12 +145,14 @@ function Today({
 
   if (!today.length) {
     return (
-      <div className="list-state checkins-state" role="status">
-        <span className="checkins-state__tile" aria-hidden="true">
-          <LogIn {...icon} />
-        </span>
-        <p>No check-ins yet today</p>
-      </div>
+      <TableState
+        className="checkins-table"
+        head={<CheckInsHead />}
+        grid="checkins-grid"
+        cells={["text", "avatar", "text", "blank"]}
+        title="No check-ins yet today"
+        text="Members who check in today show up here."
+      />
     );
   }
 
@@ -349,16 +352,30 @@ function NoMatch({ results, q }: { results: CheckInResult[]; q: string }) {
   const organization = useOrganization();
   const navigate = useNavigate();
   return (
-    <div className="list-state" role="status">
-      <p>{noMatchText(results, q)}</p>
-      <Button
-        type="button"
-        variant="secondary"
-        size="compact"
-        onClick={() => void navigate({ to: "/$org/check-in", params: { org: organization.slug }, search: {}, replace: true })}
-      >
-        {q && !results.length ? "Clear search" : "Clear filters"}
-      </Button>
+    <TableState
+      title={noMatchText(results, q)}
+      action={
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          onClick={() => void navigate({ to: "/$org/check-in", params: { org: organization.slug }, search: {}, replace: true })}
+        >
+          {q && !results.length ? "Clear search" : "Clear filters"}
+        </Button>
+      }
+    />
+  );
+}
+
+/** Column titles without Location: the empty list and the failed load. */
+function CheckInsHead() {
+  return (
+    <div className="checkins-table__head checkins-grid" aria-hidden="true">
+      <span>Time</span>
+      <span>Member</span>
+      <span>Result</span>
+      <span />
     </div>
   );
 }
@@ -370,12 +387,7 @@ function DidNotLoad({ error }: { error: Failure }) {
   return (
     <>
       <div className="checkins-table">
-        <div className="checkins-table__head checkins-grid" aria-hidden="true">
-          <span>Time</span>
-          <span>Member</span>
-          <span>Result</span>
-          <span />
-        </div>
+        <CheckInsHead />
       </div>
       <div className="list-state checkins-state" role="alert">
         <p>Check-ins didn't load</p>

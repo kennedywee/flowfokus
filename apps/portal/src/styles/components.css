@@ -1839,7 +1839,7 @@ a.counter:hover .counter__label {
   }
 }
 
-/* Empty list and no results: one line and one action, centred. */
+/* Failed loads and blocked lists: one line and one action, centred. */
 .list-state {
   display: grid;
   justify-items: center;
@@ -1848,10 +1848,127 @@ a.counter:hover .counter__label {
   color: var(--color-ink);
   text-align: center;
 }
-.list-state__icon {
-  width: 20px;
-  height: 20px;
-  color: var(--color-ink-4);
+
+/*
+ * Paper "Table · Empty" and "No results": a grey panel under the header band.
+ * An empty list shows white ghost rows in the table's columns, fading into the
+ * message. The panel bleeds 12px like the band, so cell text keeps its lane.
+ */
+.table-state {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  min-width: 0;
+}
+.table-state__panel {
+  container: table-state / inline-size;
+  position: relative;
+  display: grid;
+  margin-inline: calc(-1 * var(--space-3));
+  padding: var(--space-2);
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-well);
+}
+.table-state__panel[data-ghosts] {
+  height: 380px;
+  align-content: start;
+}
+.table-state__ghosts {
+  display: grid;
+  gap: var(--space-2);
+}
+.table-state__ghosts > .table-state__ghost {
+  min-height: 52px;
+  /* 12px from the panel edge to the cell text, as in the header band. */
+  padding-inline: calc(var(--space-3) - var(--space-2) - 2px);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-control);
+}
+.table-state__ghost:nth-child(2) {
+  opacity: 0.75;
+}
+.table-state__ghost:nth-child(3) {
+  opacity: 0.5;
+}
+.table-state__ghost:nth-child(4) {
+  opacity: 0.3;
+}
+.table-state__ghost:nth-child(n + 5) {
+  opacity: 0.15;
+}
+.table-state__cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.table-state__cell[data-cell="num"] {
+  justify-content: flex-end;
+}
+.table-state__dot {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-hover);
+}
+.table-state__bar {
+  width: 60%;
+  max-width: 140px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-hover);
+}
+.table-state__cell[data-cell="num"] .table-state__bar {
+  width: 56px;
+}
+.table-state__ghost:nth-child(even) .table-state__bar {
+  width: 42%;
+}
+.table-state__ghost:nth-child(3n) .table-state__cell[data-cell="text"] .table-state__bar {
+  width: 72%;
+}
+.table-state__message {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding-block: 72px;
+  text-align: center;
+}
+.table-state__panel[data-ghosts] .table-state__message {
+  position: absolute;
+  inset: 0;
+  align-content: end;
+  padding-block: 0 48px;
+  background: linear-gradient(to bottom, transparent 28%, var(--color-well) 62%);
+}
+.table-state__title {
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  line-height: 20px;
+}
+.table-state__text {
+  color: var(--color-ink-2);
+  font-size: var(--text-sm);
+  line-height: 20px;
+}
+.table-state__action {
+  margin-top: var(--space-3);
+}
+/* Narrow panels: one cell per ghost row, as the list's own rows collapse. */
+@container table-state (max-width: 640px) {
+  .table-state__ghosts > .table-state__ghost {
+    display: flex;
+    align-items: center;
+  }
+  .table-state__cell:not(:first-child) {
+    display: none;
+  }
 }
 
 @media (max-width: 767.98px) {

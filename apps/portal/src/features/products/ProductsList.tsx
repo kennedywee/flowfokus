@@ -3,6 +3,7 @@ import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { ArrowDown, ChevronRight, ListFilter, Plus, Search, X } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { Kbd } from "../../components/ui";
 import { PRODUCT_KIND_LABEL, failureMessage, formatMoney } from "../../lib/format";
 import { useCan, useOrganization } from "../../lib/organization";
@@ -245,20 +246,19 @@ function Results({ products, filter, q }: { products: Product[]; filter: Product
   if (!shown.length) {
     const onlySearch = q && !filter.type.length && !filter.status.length;
     return (
-      <div className="list-state" role="status">
-        <span className="programs-state__tile" aria-hidden="true">
-          <Search {...icon} />
-        </span>
-        <p>{q ? `No products match “${q}”` : "No products match these filters"}</p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="compact"
-          onClick={() => void navigate({ to: "/$org/products", params: { org: organization.slug }, search: {}, replace: true })}
-        >
-          {onlySearch ? "Clear search" : "Clear filters"}
-        </Button>
-      </div>
+      <TableState
+        title={q ? `No products match “${q}”` : "No products match these filters"}
+        action={
+          <Button
+            type="button"
+            variant="secondary"
+            size="compact"
+            onClick={() => void navigate({ to: "/$org/products", params: { org: organization.slug }, search: {}, replace: true })}
+          >
+            {onlySearch ? "Clear search" : "Clear filters"}
+          </Button>
+        }
+      />
     );
   }
   // A new filter starts again at page 1.
@@ -275,18 +275,7 @@ function ProductRows({ products }: { products: Product[] }) {
 
   return (
     <section className="programs-table products-table" aria-label="Products">
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="programs-table__head products-grid" aria-hidden="true">
-        <span className="programs-table__sort">
-          Product
-          <ArrowDown {...icon} />
-        </span>
-        <span className="products-col--wide">Type</span>
-        <span className="products-col--wide">Terms</span>
-        <span className="products-col--wide">Status</span>
-        <span className="products-col--num">Price</span>
-        <span />
-      </div>
+      <ProductsHead />
       <ul className="programs-rows">
         {rows.map((product) => {
           const price = mainPrice(product);
@@ -329,13 +318,44 @@ function ProductIcon({ kind }: { kind: Product["kind"] }) {
   return <Icon className="products-row__icon" {...icon} />;
 }
 
-function NoProducts() {
-  const can = useCan();
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function ProductsHead() {
   return (
-    <div className="list-state" role="status">
-      <p className="list-state__title">No products yet</p>
-      {can("products:create") ? null : <p className="list-state__text">A manager adds products.</p>}
+    <div className="programs-table__head products-grid" aria-hidden="true">
+      <span className="programs-table__sort">
+        Product
+        <ArrowDown {...icon} />
+      </span>
+      <span className="products-col--wide">Type</span>
+      <span className="products-col--wide">Terms</span>
+      <span className="products-col--wide">Status</span>
+      <span className="products-col--num">Price</span>
+      <span />
     </div>
+  );
+}
+
+function NoProducts() {
+  const organization = useOrganization();
+  const can = useCan();
+  const create = can("products:create");
+  return (
+    <TableState
+      className="programs-table products-table"
+      head={<ProductsHead />}
+      grid="products-grid"
+      cells={["avatar", "text", "text", "text", "num", "blank"]}
+      title="No products yet"
+      text={create ? "Memberships and passes you add show up here." : "A manager adds products."}
+      action={
+        create ? (
+          <Link to="/$org/products/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
+            <Plus {...icon} />
+            New product
+          </Link>
+        ) : null
+      }
+    />
   );
 }
 

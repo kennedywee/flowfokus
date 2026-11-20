@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, ListFilter, Plus, Receipt, Search, X } from "lucide-react";
+import { ChevronRight, ListFilter, Plus, Search, X } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import { formatMoney } from "../../lib/format";
 import { useCan, useOrganization } from "../../lib/organization";
@@ -253,17 +254,19 @@ function Results({ sales, filter, q }: { sales: Schemas["Sale"][]; filter: Sales
   if (!sales.length) return <NoSales />;
   if (!shown.length) {
     return (
-      <div className="list-state" role="status">
-        <p>{q ? `No sales match “${q}”` : "No sales match these filters"}</p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="compact"
-          onClick={() => void navigate({ to: "/$org/sales", params: { org: organization.slug }, search: {}, replace: true })}
-        >
-          {q && !filter.payment.length && !filter.fulfillment.length ? "Clear search" : "Clear filters"}
-        </Button>
-      </div>
+      <TableState
+        title={q ? `No sales match “${q}”` : "No sales match these filters"}
+        action={
+          <Button
+            type="button"
+            variant="secondary"
+            size="compact"
+            onClick={() => void navigate({ to: "/$org/sales", params: { org: organization.slug }, search: {}, replace: true })}
+          >
+            {q && !filter.payment.length && !filter.fulfillment.length ? "Clear search" : "Clear filters"}
+          </Button>
+        }
+      />
     );
   }
   // A new filter starts again at page 1.
@@ -281,16 +284,7 @@ function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
 
   return (
     <section className="sales-table" aria-label="Sales">
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="sales-table__head sales-grid" aria-hidden="true">
-        <span>Member</span>
-        <span className="sales-col--wide">Item</span>
-        <span className="sales-col--wide">Payment</span>
-        <span className="sales-col--wide">Fulfillment</span>
-        <span className="sales-col--num">Total</span>
-        <span className="sales-col--num sales-col--wide">Date</span>
-        <span />
-      </div>
+      <SalesHead />
       <ul className="sales-rows">
         {rows.map((sale) => (
           <li key={sale.id}>
@@ -335,13 +329,32 @@ function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
   );
 }
 
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function SalesHead() {
+  return (
+    <div className="sales-table__head sales-grid" aria-hidden="true">
+      <span>Member</span>
+      <span className="sales-col--wide">Item</span>
+      <span className="sales-col--wide">Payment</span>
+      <span className="sales-col--wide">Fulfillment</span>
+      <span className="sales-col--num">Total</span>
+      <span className="sales-col--num sales-col--wide">Date</span>
+      <span />
+    </div>
+  );
+}
+
 function NoSales() {
   return (
-    <div className="list-state">
-      <Receipt className="list-state__icon" {...icon} />
-      <p>No sales yet</p>
-      <NewSaleLink variant="secondary" />
-    </div>
+    <TableState
+      className="sales-table"
+      head={<SalesHead />}
+      grid="sales-grid"
+      cells={["avatar", "text", "text", "text", "num", "num", "blank"]}
+      title="No sales yet"
+      text="Desk sales and online purchases show up here."
+      action={<NewSaleLink variant="secondary" />}
+    />
   );
 }
 
