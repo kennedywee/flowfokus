@@ -376,8 +376,8 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
           autoFocus
         />
       </div>
-      {search.state === "idle" ? null : (
-        <div className="book-search__list">
+      {/* The listbox stays in the page so the input's aria-controls always points at it. */}
+      <div className="book-search__list" hidden={search.state === "idle"}>
         <CommandList className="command__items">
           {members.map((member) => (
             <CommandItem key={member.id} value={member.id} className="book-search__item" onSelect={() => onPick(member)}>
@@ -397,13 +397,12 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
             <p className="book-search__status" role="alert">
               Search didn't load. Check the connection, then try again.
             </p>
-          ) : !members.length ? (
+          ) : search.state === "done" && !members.length ? (
             <p className="book-search__status" role="status">
               No members match “{search.q}”
             </p>
           ) : null}
-        </div>
-      )}
+      </div>
     </Command>
   );
 }

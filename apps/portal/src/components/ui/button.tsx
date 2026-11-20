@@ -36,6 +36,7 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  onClick,
   ...props
 }: Omit<React.ComponentProps<typeof ButtonPrimitive>, "className"> & {
   className?: string
@@ -44,6 +45,8 @@ function Button({
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      // Callers track their own pending state, so a returned Promise must not make ui-sdk's button pending.
+      onClick={onClick ? (event, details) => void onClick(event, details) : undefined}
       {...props}
     />
   )

@@ -105,8 +105,9 @@ function FindMemberSearch({
             </Link>
           ) : null}
         </div>
-      ) : search.state === "idle" ? null : (
-        <div className="find-member__list">
+      ) : null}
+      {/* The listbox stays in the page so the input's aria-controls always points at it. */}
+      <div className="find-member__list" hidden={!hasLocation || search.state === "idle"}>
         <CommandList className="command__items">
           {members.map((member) => (
             <CommandItem key={member.id} value={member.id} className="find-member__item" onSelect={() => pick(member)}>
@@ -141,7 +142,7 @@ function FindMemberSearch({
               </p>
               <p className="find-member__state-text">Check the connection, then try again.</p>
             </div>
-          ) : !members.length ? (
+          ) : search.state === "done" && !members.length ? (
             <div className="find-member__state" role="status">
               <p className="find-member__state-title">No members match “{search.q}”</p>
               {can("members:create") ? (
@@ -152,8 +153,7 @@ function FindMemberSearch({
               ) : null}
             </div>
           ) : null}
-        </div>
-      )}
+      </div>
     </Command>
   );
 }
