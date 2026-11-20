@@ -1989,6 +1989,15 @@ section.table-state {
   .table-state__line i.table-state__end {
     margin-left: auto;
   }
+  .table-state__panel[data-skeleton] .table-state__message {
+    background: radial-gradient(
+      ellipse 85% 46% at 50% 50%,
+      var(--color-well) 50%,
+      color-mix(in srgb, var(--color-well) 85%, transparent) 68%,
+      color-mix(in srgb, var(--color-well) 35%, transparent) 86%,
+      transparent 100%
+    );
+  }
 }
 
 @media (max-width: 767.98px) {
