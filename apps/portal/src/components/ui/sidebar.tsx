@@ -1,16 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { mergeProps } from "@base-ui/react/merge-props"
-import { useRender } from "@base-ui/react/use-render"
+import { mergeProps, renderElement, type RenderProp } from "@ui-sdk/react/primitive"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 /*
- * The app sidebar, after the shadcn sidebar. It keeps the shadcn parts and
- * state model, and the portal look and motion in styles/shell.css.
+ * The app sidebar: its parts and state, with the portal look and motion in
+ * styles/shell.css.
  *
  * Three layouts, by width:
  *  - Desk (1181px and up): the full sidebar. Staff can collapse it to the icon
@@ -126,11 +125,9 @@ function SidebarProvider({
 
   return (
     <SidebarContext.Provider value={context}>
-      <TooltipProvider>
-        <div data-slot="sidebar-wrapper" data-collapsed={!open} className={cn("shell", className)} {...props}>
-          {children}
-        </div>
-      </TooltipProvider>
+      <div data-slot="sidebar-wrapper" data-collapsed={!open} className={cn("shell", className)} {...props}>
+        {children}
+      </div>
     </SidebarContext.Provider>
   )
 }
@@ -221,18 +218,13 @@ function SidebarMenuButton({
   tooltip,
   className,
   ...props
-}: useRender.ComponentProps<"button"> & React.ComponentProps<"button"> & { tooltip?: string }) {
+}: React.ComponentProps<"button"> & { render?: RenderProp; tooltip?: string }) {
   const { isRail } = useSidebar()
-  const element = useRender({
-    defaultTagName: "button",
-    props: mergeProps<"button">({ className: cn("nav-item", className) }, props),
-    render: tooltip ? <TooltipTrigger render={render} /> : render,
-    state: { slot: "sidebar-menu-button" },
-  })
-  if (!tooltip) return element
+  const merged = mergeProps({ "data-slot": "sidebar-menu-button", className: cn("nav-item", className) }, props)
+  if (!tooltip) return renderElement("button", merged, render)
   return (
     <Tooltip disabled={!isRail}>
-      {element}
+      <TooltipTrigger render={render} {...merged} />
       <TooltipContent side="right" sideOffset={12}>
         {tooltip}
       </TooltipContent>

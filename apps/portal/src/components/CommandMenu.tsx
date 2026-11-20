@@ -104,15 +104,14 @@ export function CommandMenu({
       title="Search"
       description="Find a member or open a page."
     >
-      {/* Rails filters members, and the pages are filtered here, so cmdk shows items as they are. */}
-      <Command shouldFilter={false} label="Search">
+      {/* Rails filters members, and the pages are filtered here, so the list shows items as they are. */}
+      <Command filter={false} query={query} onQueryChange={setQuery}>
       <CommandInput
-        value={query}
-        onValueChange={setQuery}
         placeholder={canSearchMembers ? "Search members and pages…" : "Search pages…"}
         aria-label="Search"
       />
-      <CommandList>
+      <div className="command__list">
+      <CommandList className="command__items">
         {members.length ? (
           <CommandGroup heading="Members">
             {members.map((member) => (
@@ -179,6 +178,7 @@ export function CommandMenu({
             ))}
           </CommandGroup>
         ) : null}
+      </CommandList>
         <p className="command__status" role="status">
           {search.state === "loading"
             ? "Searching members…"
@@ -188,7 +188,7 @@ export function CommandMenu({
                 ? `Nothing matches “${q}”.`
                 : ""}
         </p>
-      </CommandList>
+      </div>
       </Command>
     </CommandDialog>
   );

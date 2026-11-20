@@ -6,9 +6,8 @@ import { Kbd, initials } from "../../components/ui";
 import { useCan, useOrganization } from "../../lib/organization";
 import { listMembers } from "../../lib/staff.functions";
 import { buttonVariants } from "@/components/ui/button";
-import { Command, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandInputPrimitive, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { Command as CommandPrimitive } from "cmdk";
 
 export type MemberSearch =
   | { state: "idle" }
@@ -73,13 +72,16 @@ function FindMemberSearch({
   };
 
   return (
-    <Command shouldFilter={false} label="Find member" className={inline ? "find-member find-member--inline" : "find-member"}>
+    <Command
+      filter={false}
+      query={query}
+      onQueryChange={setQuery}
+      className={inline ? "find-member find-member--inline" : "find-member"}
+    >
       <div className="find-member__search">
         <Search className="find-member__icon" {...icon} />
-        <CommandPrimitive.Input
+        <CommandInputPrimitive
           className="find-member__input"
-          value={query}
-          onValueChange={setQuery}
           placeholder="Find member by name or email"
           aria-label="Find member by name or email"
           autoFocus={!inline}
@@ -103,8 +105,10 @@ function FindMemberSearch({
             </Link>
           ) : null}
         </div>
-      ) : search.state === "idle" ? null : (
-        <CommandList className="find-member__list">
+      ) : null}
+      {/* The listbox stays in the page so the input's aria-controls always points at it. */}
+      <div className="find-member__list" hidden={!hasLocation || search.state === "idle"}>
+        <CommandList className="command__items">
           {members.map((member) => (
             <CommandItem key={member.id} value={member.id} className="find-member__item" onSelect={() => pick(member)}>
               <span className="find-member__avatar" aria-hidden="true">
@@ -125,6 +129,7 @@ function FindMemberSearch({
               )}
             </CommandItem>
           ))}
+        </CommandList>
           {search.state === "loading" ? (
             <p className="find-member__status" role="status">
               Searching members…
@@ -137,7 +142,7 @@ function FindMemberSearch({
               </p>
               <p className="find-member__state-text">Check the connection, then try again.</p>
             </div>
-          ) : !members.length ? (
+          ) : search.state === "done" && !members.length ? (
             <div className="find-member__state" role="status">
               <p className="find-member__state-title">No members match “{search.q}”</p>
               {can("members:create") ? (
@@ -148,8 +153,7 @@ function FindMemberSearch({
               ) : null}
             </div>
           ) : null}
-        </CommandList>
-      )}
+      </div>
     </Command>
   );
 }

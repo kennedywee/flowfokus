@@ -1,16 +1,19 @@
 /*
  * Flowfokus staff portal styles. Order matters.
  *
- * Tailwind comes first and declares its layers: theme, base, components,
- * utilities. Our own files go into the base and components layers, so they
- * still style every screen, while Tailwind utilities on a shadcn component can
+ * The `ui-sdk` layer comes first, so every other layer wins over the little
+ * CSS ui-sdk adds for its behaviour. Tailwind then declares its layers: theme,
+ * base, components, utilities. Our own files go into the base and components
+ * layers, so they still style every screen, while Tailwind utilities can
  * override them. Unlayered CSS would beat every utility, so add no rules
- * outside a layer. The one exception is the shadcn variable block below: it only
- * names custom properties, and the shadcn CLI expects to find it at the top level.
+ * outside a layer. The one exception is the variable block below: it only
+ * names custom properties.
  *
  * tokens: custom properties. base: reset and type. shell: sidebar, top bar, page.
  * components: shared parts. The rest are one file per screen area.
  */
+@layer ui-sdk;
+
 @import "tailwindcss";
 
 @import "./styles/primitives.css" layer(base);
@@ -27,11 +30,9 @@
 @import "./styles/schedule.css" layer(components);
 @import "./styles/settings.css" layer(components);
 @import "./styles/features.css" layer(components);
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 /*
- * shadcn's `dark:` utilities follow the same choice as tokens.css: the `dark`
+ * Tailwind's `dark:` utilities follow the same choice as tokens.css: the `dark`
  * class on <html>, or the operating system when <html> has no theme class.
  */
 @custom-variant dark {
@@ -87,10 +88,10 @@
 }
 
 /*
- * shadcn theme variables, mapped to our tokens in tokens.css. shadcn components
- * read these names; change a colour in tokens.css, not here. The tokens carry
- * both themes, so this block serves light and dark. `--accent` is the
- * neutral hover surface in shadcn, not our blue accent.
+ * Tailwind theme variables, mapped to our tokens in tokens.css. Tailwind
+ * utilities read these names; change a colour in tokens.css, not here. The
+ * tokens carry both themes, so this block serves light and dark. `--accent` is
+ * the neutral hover surface, not our blue accent.
  */
 :root {
     --background: var(--color-page);

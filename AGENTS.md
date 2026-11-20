@@ -61,6 +61,7 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 - Keep status labels tied to Rails responses. Payment, fulfillment, and access are separate facts.
 - For screen reviews, use `.agents/skills/flowfokus-review-screen/SKILL.md`. It checks the app's real states and conventions.
 - Run `bun run design:check` after styling changes. It catches color values added outside the token layers.
+- Portal components are built on ui-sdk. Before you use ui-sdk, follow the `ui-sdk` skill if it is installed, and read `node_modules/@ui-sdk/react/docs/llms.txt`. Pages import the wrappers in `apps/portal/src/components/ui/`.
 
 ## Simplicity
 

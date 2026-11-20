@@ -13,9 +13,9 @@ import {
 
 /*
  * A top bar switcher: a button that opens a panel with a search box, a list to
- * pick one item from, and optional footer actions. It is the shadcn combobox
- * (Base UI) with the search box inside the popup. Base UI handles the ARIA
- * pattern, arrow keys, Enter, Escape, and focus return to the button.
+ * pick one item from, and optional footer actions. It is the ui-sdk combobox
+ * with the search box inside the popup. ui-sdk handles the ARIA pattern, arrow
+ * keys, Enter, and Escape. Focus returns to the button after it closes.
  */
 
 export type SwitcherOption = {
@@ -58,34 +58,45 @@ export function ContextSwitcher({
   strong?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const selected = useMemo(() => options.find((option) => option.value === value) ?? null, [options, value]);
-
-  return (
-    <Combobox<SwitcherOption>
-      items={options}
-      value={selected}
-      open={open}
-      onOpenChange={setOpen}
-      onValueChange={(next) => {
-        if (next && next.value !== value) onSelect(next.value);
-      }}
-      // Typing highlights the first match, so Enter picks it.
-      autoHighlight
-      itemToStringLabel={(option) => option.label}
-      isItemEqualToValue={(item, chosen) => item.value === chosen.value}
-      filter={(option, search) => {
-        const needle = search.trim().toLowerCase();
-        return (
+  const [query, setQuery] = useState("");
+  const [button, setButton] = useState<HTMLButtonElement | null>(null);
+  const needle = query.trim().toLowerCase();
+  const matches = useMemo(
+    () =>
+      options.filter(
+        (option) =>
           !needle ||
           option.label.toLowerCase().includes(needle) ||
           (option.aside?.toLowerCase().includes(needle) ?? false) ||
-          (option.detail?.toLowerCase().includes(needle) ?? false)
-        );
+          (option.detail?.toLowerCase().includes(needle) ?? false),
+      ),
+    [options, needle],
+  );
+
+  return (
+    <Combobox
+      value={value}
+      open={open}
+      onOpenChange={(next) => {
+        if (next) setQuery("");
+        setOpen(next);
       }}
+      onOpenChangeComplete={(next) => {
+        if (!next) button?.focus();
+      }}
+      onValueChange={(next) => {
+        if (typeof next === "string" && next !== value) onSelect(next);
+      }}
+      // Opening highlights the current item; typing highlights the first match, so Enter picks it.
+      autoHighlight="always"
+      itemToLabel={(option) => options.find((item) => item.value === option)?.label ?? String(option)}
+      filter={false}
+      query={query}
+      onQueryChange={setQuery}
     >
       <div className="switcher">
-        {/* Base UI gives the trigger the combobox role, which takes its name from aria-label, not its text. */}
         <ComboboxTrigger
+          ref={setButton}
           className="switcher__button"
           data-strong={strong}
           aria-label={`${label}: ${current}. Change ${label.toLowerCase()}`}
@@ -95,10 +106,11 @@ export function ContextSwitcher({
           <ChevronsUpDown className="switcher__chevron" strokeWidth={1.75} aria-hidden="true" focusable="false" />
         </ComboboxTrigger>
       </div>
-      <ComboboxContent className="switcher__panel" aria-label={label}>
+      <ComboboxContent className="switcher__panel" aria-label={label} anchor={button}>
         <div className="switcher__search">
           <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
           <ComboboxInput
+            autoFocus
             className="switcher__input"
             aria-label={searchLabel}
             placeholder={searchLabel}
@@ -109,8 +121,8 @@ export function ContextSwitcher({
         </div>
         <ComboboxEmpty className="switcher__empty">{emptyText}</ComboboxEmpty>
         <ComboboxList className="switcher__list" aria-label={label}>
-          {(option: SwitcherOption) => (
-            <ComboboxItem key={option.value} value={option} className="switcher__option">
+          {matches.map((option) => (
+            <ComboboxItem key={option.value} value={option.value} label={option.label} className="switcher__option">
               {option.icon ? <span className="switcher__option-icon">{option.icon}</span> : null}
               <span className="switcher__option-text">
                 <span className="switcher__option-label">{option.label}</span>
@@ -119,7 +131,7 @@ export function ContextSwitcher({
               {option.aside ? <span className="switcher__option-aside">{option.aside}</span> : null}
               <ComboboxItemIndicator className="switcher__check" />
             </ComboboxItem>
-          )}
+          ))}
         </ComboboxList>
         {footer ? <div className="switcher__footer">{footer(() => setOpen(false))}</div> : null}
       </ComboboxContent>

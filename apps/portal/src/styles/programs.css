@@ -920,7 +920,7 @@ a.program-row:focus-visible {
   cursor: pointer;
 }
 .program-ticket__more:hover,
-.program-ticket__more[data-popup-open] {
+.program-ticket__more[data-open] {
   background: var(--color-hover);
 }
 .program-ticket__more:focus-visible {

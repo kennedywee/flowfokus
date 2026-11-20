@@ -1,19 +1,25 @@
 import * as React from "react"
-import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar"
+import {
+  Avatar as AvatarPrimitive,
+  AvatarFallback as AvatarFallbackPrimitive,
+  AvatarImage as AvatarImagePrimitive,
+} from "@ui-sdk/react/avatar"
 import { cn } from "@/lib/utils"
 
 /*
- * A round avatar, styled by `.avatar` in styles/components.css. Base UI shows
+ * A round avatar, styled by `.avatar` in styles/components.css. ui-sdk shows
  * the fallback (initials) until an image loads, or when there is none.
  */
 function Avatar({
   className,
   size = 24,
   ...props
-}: Omit<AvatarPrimitive.Root.Props, "style"> & { size?: number }) {
+}: Omit<React.ComponentProps<typeof AvatarPrimitive>, "className" | "style"> & {
+  className?: string
+  size?: number
+}) {
   return (
-    <AvatarPrimitive.Root
-      data-slot="avatar"
+    <AvatarPrimitive
       className={cn("avatar", className)}
       style={{ "--size": `${size}px` } as React.CSSProperties}
       {...props}
@@ -21,18 +27,15 @@ function Avatar({
   )
 }
 
-function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
-  return (
-    <AvatarPrimitive.Image
-      data-slot="avatar-image"
-      className={cn("size-full rounded-full object-cover", className)}
-      {...props}
-    />
-  )
+function AvatarImage({
+  className,
+  ...props
+}: Omit<React.ComponentProps<typeof AvatarImagePrimitive>, "className"> & { className?: string }) {
+  return <AvatarImagePrimitive className={cn("size-full rounded-full object-cover", className)} {...props} />
 }
 
-function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
-  return <AvatarPrimitive.Fallback data-slot="avatar-fallback" className={cn(className)} {...props} />
+function AvatarFallback(props: React.ComponentProps<typeof AvatarFallbackPrimitive>) {
+  return <AvatarFallbackPrimitive {...props} />
 }
 
 export { Avatar, AvatarFallback, AvatarImage }

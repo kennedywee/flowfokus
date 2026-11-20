@@ -58,26 +58,21 @@ Without WorkOS settings or demo access, the portal shows sign-in as unavailable 
 
 ## UI components
 
-The portal uses [shadcn/ui](https://ui.shadcn.com) components on [Base UI](https://base-ui.com) primitives, with Tailwind CSS v4. `components.json` holds the shadcn settings. Add a component with:
+The portal builds its components on [ui-sdk](https://ui-sdk.dev) (`@ui-sdk/react` and `@ui-sdk/core`), with Tailwind CSS v4. ui-sdk is in beta, so the versions are pinned exactly. Before you use or add a ui-sdk component, read `node_modules/@ui-sdk/react/docs/llms.txt`, then the page for that component. Follow the `ui-sdk` agent skill when it is installed.
 
-```sh
-cd apps/portal && bunx shadcn@latest add <component>
-```
-
-Answer **no** when the CLI asks to overwrite an existing file: the files in `src/components/ui/` are edited for the portal.
-
-- **Behaviour from Base UI.** Focus, keyboard, ARIA, portals, and positioning come from the shadcn components.
-- **Look from our CSS.** Each component renders the portal classes in `src/styles/` (for example `.button`, `.plate`, `.dialog`, `.menu`). After adding a component, replace its Tailwind look with those classes or new ones built on the tokens in `tokens.css`.
-- **Layers.** `src/styles.css` loads Tailwind first, then our files into the `base` and `components` layers. Tailwind utilities on an element still win over our classes. Do not add rules outside a layer.
-- **Theme.** The shadcn variables (`--background`, `--primary`, and the others) point at our tokens. Each colour token holds a light and a dark value in `light-dark()`. Staff choose System, Light, or Dark in the account menu. The choice lives in an httpOnly cookie (`lib/theme.functions.ts`), so the server sets the `light` or `dark` class on `<html>` and the page never flashes. System sets no class and follows the operating system through CSS. Add new colours to `tokens.css` with both values.
-- **Helpers.** `src/components/ui.tsx` builds the portal patterns (status pills, notices, cards with a heading, fields with hints and errors) from the shadcn parts. Use them in pages.
-- **Pickers.** Use `NativeSelect` for a short, plain list. Use `Select` only when options need icons or details. Use `Combobox` (`src/components/Combobox.tsx`) to search a long list. Use `DatePicker` (`src/components/DatePicker.tsx`) for a date. It takes and returns `"YYYY-MM-DD"`.
+- **Wrappers in `src/components/ui/`.** Each file wraps ui-sdk parts with the portal classes and keeps one name for the app, for example `DropdownMenu` around ui-sdk's `Menu`. Pages import the wrappers, not ui-sdk. To add a component, write a wrapper the same way. ui-sdk components have no styles, so there is nothing to strip.
+- **Behaviour from ui-sdk.** Focus, keyboard, ARIA, and positioning come from ui-sdk. Popups (menus, dialogs, tooltips, comboboxes, toasts) open in the browser's top layer, so they need no portal and no z-index.
+- **Look from our CSS.** Each wrapper renders the portal classes in `src/styles/` (for example `.button`, `.plate`, `.dialog`, `.menu`). Style state with ui-sdk's data attributes, such as `data-open`, `data-highlighted`, and `data-checked`. Build new classes on the tokens in `tokens.css`.
+- **Layers.** `src/styles.css` declares the `ui-sdk` layer first, so every other layer wins over ui-sdk's own small behaviour CSS. Then it loads Tailwind, then our files into the `base` and `components` layers. Tailwind utilities on an element still win over our classes. Do not add rules outside a layer.
+- **Theme.** The Tailwind theme variables (`--background`, `--primary`, and the others) point at our tokens. Each colour token holds a light and a dark value in `light-dark()`. Staff choose System, Light, or Dark in the account menu. The choice lives in an httpOnly cookie (`lib/theme.functions.ts`), so the server sets the `light` or `dark` class on `<html>` and the page never flashes. System sets no class and follows the operating system through CSS. Add new colours to `tokens.css` with both values.
+- **Helpers.** `src/components/ui.tsx` builds the portal patterns (status pills, notices, cards with a heading, fields with hints and errors) from the wrappers. Use them in pages.
+- **Pickers.** Use `NativeSelect` for a short, plain list. Use `Combobox` (`src/components/Combobox.tsx`) to search a long list. When a screen needs a select with icons or a date picker, wrap ui-sdk's `Select` or `DatePicker`.
 - **Page layout.** Every page is a `.page` with a `PageHead`, so headers and content line up across pages:
   - The title matches the sidebar label and the breadcrumb. The description is one short line. The header keeps the same height without one.
   - Header buttons use the default size. Use the primary variant for the main task and secondary for the rest.
   - Cards (`Plate`) have a title and an optional description, with no icon tile. Numbered steps, as on New sale, are the one exception.
   - A list card has no title: the page title already names it. Its toolbar (filters, count, search) opens the card. Filters use the toggle-group look.
-- **Outside Base UI.** `Calendar` uses react-day-picker. `Command` uses cmdk, which brings a few Radix packages with it.
+- **Toasts.** `useToast()` in `src/components/Toast.tsx` shows a toast through ui-sdk's toast queue. The region and its stack live in `.toaster` in `components.css`.
 
 ## Request boundary
 

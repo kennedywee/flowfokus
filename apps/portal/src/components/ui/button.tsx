@@ -1,11 +1,11 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import * as React from "react"
+import { Button as ButtonPrimitive } from "@ui-sdk/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 /*
- * Flowfokus keeps its own look for this shadcn component. The variants map to
- * the button classes in styles/components.css, and Base UI gives the
- * behaviour. Use `buttonVariants` on a router `Link` that looks like a button.
+ * The portal button. The variants map to the button classes in
+ * styles/components.css, and ui-sdk gives the behaviour. Use `buttonVariants` on a router `Link` that looks like a button.
  */
 const buttonVariants = cva("button", {
   variants: {
@@ -36,12 +36,17 @@ function Button({
   className,
   variant = "default",
   size = "default",
+  onClick,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: Omit<React.ComponentProps<typeof ButtonPrimitive>, "className"> & {
+  className?: string
+} & VariantProps<typeof buttonVariants>) {
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      // Callers track their own pending state, so a returned Promise must not make ui-sdk's button pending.
+      onClick={onClick ? (event, details) => void onClick(event, details) : undefined}
       {...props}
     />
   )

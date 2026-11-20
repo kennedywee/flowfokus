@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { CircleAlert, CreditCard, Search, Ticket } from "lucide-react";
-import { Command as CommandPrimitive } from "cmdk";
 import { useToast } from "../../components/Toast";
 import { SubmitButton, initials } from "../../components/ui";
 import { failureMessage } from "../../lib/format";
@@ -10,7 +9,7 @@ import { useAction } from "../../lib/hooks";
 import { useCan, useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Failure } from "../../lib/result";
 import { createBooking, createSale, getBookingOptions, listMembers } from "../../lib/staff.functions";
-import { Command, CommandItem, CommandList } from "@/components/ui/command";
+import { Command, CommandInputPrimitive, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { useMemberSearch } from "../check-ins/FindMember";
@@ -367,20 +366,19 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
   const search = useMemberSearch(q, true);
   const members = search.state === "done" ? search.members : [];
   return (
-    <Command shouldFilter={false} label="Member" className="book-search">
+    <Command filter={false} query={query} onQueryChange={setQuery} className="book-search">
       <div className="book-search__field">
         <Search className="book-search__icon" {...icon} />
-        <CommandPrimitive.Input
+        <CommandInputPrimitive
           className="book-search__input"
-          value={query}
-          onValueChange={setQuery}
           placeholder="Search by name or email"
           aria-labelledby="book-member-label"
           autoFocus
         />
       </div>
-      {search.state === "idle" ? null : (
-        <CommandList className="book-search__list">
+      {/* The listbox stays in the page so the input's aria-controls always points at it. */}
+      <div className="book-search__list" hidden={search.state === "idle"}>
+        <CommandList className="command__items">
           {members.map((member) => (
             <CommandItem key={member.id} value={member.id} className="book-search__item" onSelect={() => onPick(member)}>
               <span className="book-dialog__avatar" aria-hidden="true">
@@ -390,6 +388,7 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
               <span className="book-dialog__email">{member.email}</span>
             </CommandItem>
           ))}
+        </CommandList>
           {search.state === "loading" ? (
             <p className="book-search__status" role="status">
               Searching members…
@@ -398,13 +397,12 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
             <p className="book-search__status" role="alert">
               Search didn't load. Check the connection, then try again.
             </p>
-          ) : !members.length ? (
+          ) : search.state === "done" && !members.length ? (
             <p className="book-search__status" role="status">
               No members match “{search.q}”
             </p>
           ) : null}
-        </CommandList>
-      )}
+      </div>
     </Command>
   );
 }

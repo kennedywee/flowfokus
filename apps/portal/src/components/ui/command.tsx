@@ -1,19 +1,32 @@
 "use client"
 
 import * as React from "react"
-import { Command as CommandPrimitive } from "cmdk"
+import {
+  Command as CommandPrimitive,
+  CommandEmpty as CommandEmptyPrimitive,
+  CommandGroup as CommandGroupPrimitive,
+  CommandGroupLabel,
+  CommandInput as CommandInputPrimitive,
+  CommandItem as CommandItemPrimitive,
+  CommandList as CommandListPrimitive,
+  CommandSeparator as CommandSeparatorPrimitive,
+} from "@ui-sdk/react/command"
 import { Search } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 /*
- * A searchable list of actions, from cmdk. Focus stays in the search box and
- * the arrow keys move the highlight. Styled by the `.command` classes in
+ * A searchable list of actions, from ui-sdk. Focus stays in the search box and
+ * the arrow keys move the highlight. The search text lives on `Command`
+ * (`query` and `onQueryChange`). Keep status messages outside `CommandList`:
+ * it holds only commands. Styled by the `.command` classes in
  * styles/components.css. CommandDialog puts it in a modal, for a command
  * palette. To pick a value in a form, use Combobox instead.
  */
-function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
-  return <CommandPrimitive data-slot="command" className={cn("command", className)} {...props} />
+type WithClass<T extends React.ElementType> = Omit<React.ComponentProps<T>, "className"> & { className?: string }
+
+function Command({ className, autoHighlight = true, ...props }: WithClass<typeof CommandPrimitive>) {
+  return <CommandPrimitive className={cn("command", className)} autoHighlight={autoHighlight} {...props} />
 }
 
 function CommandDialog({
@@ -39,41 +52,48 @@ function CommandDialog({
   )
 }
 
-function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+/** The search box of the palette, with its icon. */
+function CommandInput({ className, ...props }: WithClass<typeof CommandInputPrimitive>) {
   return (
     <div data-slot="command-input-wrapper" className="command__search">
       <div className="search-field">
         <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
-        <CommandPrimitive.Input data-slot="command-input" className={cn("input", className)} {...props} />
+        <CommandInputPrimitive className={cn("input", className)} {...props} />
       </div>
     </div>
   )
 }
 
-function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
-  return <CommandPrimitive.List data-slot="command-list" className={cn("command__list", className)} {...props} />
+/** A `className` replaces the default class, for a list inside a scroll area of its own. */
+function CommandList({ className, ...props }: WithClass<typeof CommandListPrimitive>) {
+  return <CommandListPrimitive className={className ?? "command__list"} {...props} />
 }
 
-function CommandEmpty({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
-  return <CommandPrimitive.Empty data-slot="command-empty" className={cn("command__empty", className)} {...props} />
+function CommandEmpty({ className, ...props }: WithClass<typeof CommandEmptyPrimitive>) {
+  return <CommandEmptyPrimitive className={cn("command__empty", className)} {...props} />
 }
 
-function CommandGroup({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Group>) {
-  return <CommandPrimitive.Group data-slot="command-group" className={cn("command__group", className)} {...props} />
-}
-
-function CommandSeparator({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Separator>) {
+/** A named group of commands. */
+function CommandGroup({
+  className,
+  heading,
+  children,
+  ...props
+}: Omit<WithClass<typeof CommandGroupPrimitive>, "children"> & { heading?: string; children?: React.ReactNode }) {
   return (
-    <CommandPrimitive.Separator
-      data-slot="command-separator"
-      className={cn("command__separator", className)}
-      {...props}
-    />
+    <CommandGroupPrimitive className={cn("command__group", className)} {...props}>
+      {heading ? <CommandGroupLabel className="command__group-label">{heading}</CommandGroupLabel> : null}
+      {children}
+    </CommandGroupPrimitive>
   )
 }
 
-function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
-  return <CommandPrimitive.Item data-slot="command-item" className={cn("command__item", className)} {...props} />
+function CommandSeparator({ className, ...props }: WithClass<typeof CommandSeparatorPrimitive>) {
+  return <CommandSeparatorPrimitive className={cn("command__separator", className)} {...props} />
+}
+
+function CommandItem({ className, ...props }: WithClass<typeof CommandItemPrimitive>) {
+  return <CommandItemPrimitive className={cn("command__item", className)} {...props} />
 }
 
 /** The right side of an item: a shortcut or a current value. */
@@ -87,6 +107,7 @@ export {
   CommandEmpty,
   CommandGroup,
   CommandInput,
+  CommandInputPrimitive,
   CommandItem,
   CommandList,
   CommandSeparator,

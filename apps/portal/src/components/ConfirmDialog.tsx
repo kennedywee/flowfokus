@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 /*
- * A confirm dialog: one short decision, built on the shadcn alert dialog. Base
- * UI traps focus, makes the page inert, and returns focus to the button that
+ * A confirm dialog: one short decision, built on the ui-sdk alert dialog. It
+ * traps focus, makes the page inert, and returns focus to the button that
  * opened it.
  *
  *   <ConfirmDialog

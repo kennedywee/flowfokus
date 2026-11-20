@@ -23,7 +23,7 @@ import { Field as FieldRoot, FieldDescription, FieldError, FieldLabel } from "./
 import { Skeleton } from "./ui/skeleton";
 
 /*
- * Shared UI parts for the staff portal, built on the shadcn components in
+ * Shared UI parts for the staff portal, built on the ui-sdk wrappers in
  * components/ui/. These add the portal's conventions: icons with every state,
  * accessible names, and hint and error wiring. Styles live in
  * styles/components.css.
