@@ -1,9 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { GalleryEntryPage } from "../../features/components/Gallery";
-import { findEntry } from "../../features/components/registry";
 
 export const Route = createFileRoute("/components/$name")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
+    // Imported here so the registry stays out of the main bundle.
+    const { findEntry } = await import("../../features/components/registry");
     const entry = findEntry(params.name);
     if (!entry) throw notFound();
     return entry;

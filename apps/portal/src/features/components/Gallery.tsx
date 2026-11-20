@@ -164,7 +164,7 @@ export function GalleryEntryPage({ entry }: { entry: GalleryEntry }) {
         <h1>{entry.name}</h1>
         <p>{entry.summary}</p>
       </header>
-      {first ? <ExampleBlock example={first} /> : null}
+      {first ? <ExampleBlock key={first.file} example={first} /> : null}
       {rest.length ? (
         <section className="gallery-page__section" aria-labelledby="examples">
           <h2 id="examples">Examples</h2>
