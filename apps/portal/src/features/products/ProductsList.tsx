@@ -338,7 +338,8 @@ function ProductsHead() {
 function NoProducts() {
   const organization = useOrganization();
   const can = useCan();
-  const create = can("products:create");
+  // A new product needs a price, and adding a price needs products:update.
+  const create = can("products:create") && can("products:update");
   return (
     <TableState
       className="programs-table products-table"

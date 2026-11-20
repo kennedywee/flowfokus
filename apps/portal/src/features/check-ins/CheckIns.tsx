@@ -139,6 +139,7 @@ function Today({
 }) {
   const organization = useOrganization();
   const today = todayOnly(visits, organization.timezone);
+  const showLocation = organization.locations.length > 1;
   const results = readResults(search.result);
   const q = search.q ?? "";
   const shown = filterCheckIns(today, results, q);
@@ -146,10 +147,10 @@ function Today({
   if (!today.length) {
     return (
       <TableState
-        className="checkins-table"
-        head={<CheckInsHead />}
+        className={showLocation ? "checkins-table checkins-table--locations" : "checkins-table"}
+        head={<CheckInsHead showLocation={showLocation} />}
         grid="checkins-grid"
-        cells={["text", "avatar", "text", "blank"]}
+        cells={showLocation ? ["text", "avatar", "text", "text", "blank"] : ["text", "avatar", "text", "blank"]}
         title="No check-ins yet today"
         text="Members who check in today show up here."
       />
@@ -309,14 +310,7 @@ function CheckInRows({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
   const showLocation = organization.locations.length > 1;
   return (
     <section className="checkins-table" aria-label="Today's check-ins" data-locations={showLocation || undefined}>
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="checkins-table__head checkins-grid" aria-hidden="true">
-        <span>Time</span>
-        <span>Member</span>
-        {showLocation ? <span className="checkins-col--location">Location</span> : null}
-        <span>Result</span>
-        <span />
-      </div>
+      <CheckInsHead showLocation={showLocation} />
       <ul className="checkins-rows">
         {checkIns.map((checkIn) => (
           <li key={checkIn.id}>
@@ -368,12 +362,13 @@ function NoMatch({ results, q }: { results: CheckInResult[]; q: string }) {
   );
 }
 
-/** Column titles without Location: the empty list and the failed load. */
-function CheckInsHead() {
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function CheckInsHead({ showLocation = false }: { showLocation?: boolean }) {
   return (
     <div className="checkins-table__head checkins-grid" aria-hidden="true">
       <span>Time</span>
       <span>Member</span>
+      {showLocation ? <span className="checkins-col--location">Location</span> : null}
       <span>Result</span>
       <span />
     </div>

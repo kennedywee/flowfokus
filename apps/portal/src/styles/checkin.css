@@ -81,7 +81,8 @@
   align-items: center;
   column-gap: var(--space-4);
 }
-.checkins-table[data-locations] .checkins-grid {
+.checkins-table[data-locations] .checkins-grid,
+.checkins-table--locations .checkins-grid {
   grid-template-columns: 56px minmax(0, 1fr) minmax(0, 240px) 220px 16px;
 }
 .checkins-table__head {

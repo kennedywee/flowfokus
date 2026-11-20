@@ -1861,7 +1861,6 @@ a.counter:hover .counter__label {
   min-width: 0;
 }
 .table-state__panel {
-  container: table-state / inline-size;
   position: relative;
   display: grid;
   margin-inline: calc(-1 * var(--space-3));
@@ -1947,6 +1946,8 @@ a.counter:hover .counter__label {
   background: linear-gradient(to bottom, transparent 28%, var(--color-well) 62%);
 }
 .table-state__title {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--color-ink);
   font-size: var(--text-base);
   font-weight: var(--font-weight-semibold);
@@ -1960,11 +1961,37 @@ a.counter:hover .counter__label {
 .table-state__action {
   margin-top: var(--space-3);
 }
-/* Narrow panels: one cell per ghost row, as the list's own rows collapse. */
-@container table-state (max-width: 640px) {
+/*
+ * Where a list collapses its columns, its ghost rows keep one lane: the first
+ * cell. Each list collapses at its own container width.
+ */
+@container sales-table (max-width: 720px) {
   .table-state__ghosts > .table-state__ghost {
-    display: flex;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .table-state__cell:not(:first-child) {
+    display: none;
+  }
+}
+@container programs-table (max-width: 640px) {
+  .table-state__ghosts > .table-state__ghost {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .table-state__cell:not(:first-child) {
+    display: none;
+  }
+}
+@container programs-table (max-width: 720px) {
+  .products-table .table-state__ghosts > .table-state__ghost {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .products-table .table-state__cell:not(:first-child) {
+    display: none;
+  }
+}
+@container checkins-table (max-width: 640px) {
+  .table-state__ghosts > .table-state__ghost {
+    grid-template-columns: minmax(0, 1fr);
   }
   .table-state__cell:not(:first-child) {
     display: none;

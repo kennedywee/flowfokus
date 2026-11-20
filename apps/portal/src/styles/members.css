@@ -237,6 +237,12 @@ a.members-row:focus-visible {
   .members-row__joined {
     display: none;
   }
+  .members-table__ghost {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .members-table__ghost > :not(:first-child) {
+    display: none;
+  }
   .new-member__fields {
     grid-template-columns: minmax(0, 1fr);
   }
