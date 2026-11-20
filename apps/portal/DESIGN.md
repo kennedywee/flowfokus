@@ -61,7 +61,8 @@ Use the existing `--space-*` scale. Note that `--space-7` is 32px and
 Separate ordinary sections with surface color and thin borders. Use the existing
 popover, dialog, and toast shadow tokens only for those floating surfaces.
 Use `--duration-press` and `--duration-hover` for repeated control feedback.
-`HoldButton` uses `--duration-hold` (600ms, `--ease-in`) and `--duration-drain` (200ms).
+`HoldButton` uses `--duration-hold` (600ms, `--ease-in`) and `--duration-drain` (200ms);
+`SwipeConfirm` springs back over `--duration-spring` (250ms).
 Special transitions retain their existing timing. Preserve reduced-motion rules.
 
 ## Shapes
@@ -83,6 +84,7 @@ live, with code, at `localhost:4001/components` (local development only; see
 | Action | `Button`: `variant="default"`, `size="default"` | CSS supplies hover, press, focus and disabled. Use `SubmitButton` for pending forms. |
 | Alternative / destructive action | `secondary` (`outline` is an alias), `ghost`, `destructive` | Confirm consequential changes with `ConfirmDialog`; critical tone starts focus on Cancel. |
 | Safe action that must not fire on a stray click | `HoldButton` (`components/ui/hold-button.tsx`): `variant="secondary"`, or `"default"` for a top-bar action | Hold 600ms to confirm. See [Hold to confirm](#hold-to-confirm). |
+| The same, on a phone or tablet | `SwipeConfirm` (`components/ui/swipe-confirm.tsx`) | Drag to the end to confirm. See [Hold to confirm](#hold-to-confirm). |
 | Navigation styled as an action | Router `Link` with `buttonVariants()` | Keep link semantics; do not nest a button in a link. |
 | Status | `Status state={…}` with visible label | Use the current response, not the requested outcome. `Pill` defaults to neutral for other labels. |
 | Form field | `Field`, `describedBy`, `ui/input`, `ui/native-select` | Match input ID to field ID. Link hint/error IDs and set `aria-invalid`. |
@@ -138,6 +140,20 @@ error color and no shake. A click from a screen reader or switch control
 (`detail` 0, or no mouse, touch or pen) confirms at once, because those users
 cannot hold. The action stays the accessible name; the hint is the description.
 Reduced motion drops the scale and the sweep; the fill fades in instead.
+
+`fill` picks how the hold shows progress, as in Paper "B · Variants":
+`sweep` (default) fills the button; `dots` fills it with dither dots, for pages
+that already use dotted bars; `ring` closes a ring around an icon, for row
+actions with no room for a label (name it with `aria-label`); `line` runs a 2px
+line under the label. `shortcut="c"` holds the button while C is held anywhere
+on the page, under the single-key rules in `lib/shortcuts.ts`; pair it with
+`line`. A tap of the key does nothing and shows the hint.
+
+`SwipeConfirm` (`components/ui/swipe-confirm.tsx`) is the touch form for phone
+and tablet check-in: drag the knob to the end. A release before 90% springs it
+back over `--duration-spring` (250ms). The knob is a button named for the
+action; holding Space or Enter slides it across over 600ms, and a click from
+assistive tech confirms at once.
 
 After the hold, the button shows `confirmedLabel` in the success color until
 the Promise from `onConfirm` settles. `onConfirm` owns its failure path, such
