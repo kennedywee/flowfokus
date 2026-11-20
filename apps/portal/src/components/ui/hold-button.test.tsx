@@ -119,6 +119,18 @@ describe("HoldButton", () => {
     expect(onConfirm).not.toHaveBeenCalled();
   });
 
+  test("a second finger sliding off does not cancel the first finger's hold", async () => {
+    const onConfirm = mock(() => {});
+    const button = await renderButton(onConfirm);
+    button.getBoundingClientRect = () => new DOMRect(0, 0, 100, 40);
+
+    await act(async () => pointer(button, "pointerdown", { pointerType: "touch", clientX: 50, clientY: 20 }));
+    await act(async () => pointer(button, "pointermove", { pointerType: "touch", pointerId: 2, isPrimary: false, clientX: 104, clientY: 20 }));
+    await wait(HOLD_MS + 50);
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
   test("holding Space confirms after the same time, and a key repeat does not restart it", async () => {
     const onConfirm = mock(() => {});
     const button = await renderButton(onConfirm);

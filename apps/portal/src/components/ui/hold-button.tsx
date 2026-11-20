@@ -144,6 +144,8 @@ function HoldButton({
     }
     // A touch or pen keeps sending moves to the button after it leaves, so check the bounds too.
     const onMove = (event: PointerEvent) => {
+      // Only the primary pointer holds; a second finger's moves do not count.
+      if (!event.isPrimary) return
       const box = el.getBoundingClientRect()
       const { clientX: x, clientY: y } = event
       if (x < box.left || x > box.right || y < box.top || y > box.bottom) onLeave()
