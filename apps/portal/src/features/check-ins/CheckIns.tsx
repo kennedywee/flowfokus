@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Download, ListFilter, LogIn, MoreHorizontal, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Download, ListFilter, MoreHorizontal, Plus, Search, X } from "lucide-react";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { Kbd, initials } from "../../components/ui";
 import { downloadCsv } from "../../lib/export";
 import { failureMessage } from "../../lib/format";
@@ -138,18 +139,19 @@ function Today({
 }) {
   const organization = useOrganization();
   const today = todayOnly(visits, organization.timezone);
+  const showLocation = organization.locations.length > 1;
   const results = readResults(search.result);
   const q = search.q ?? "";
   const shown = filterCheckIns(today, results, q);
 
   if (!today.length) {
     return (
-      <div className="list-state checkins-state" role="status">
-        <span className="checkins-state__tile" aria-hidden="true">
-          <LogIn {...icon} />
-        </span>
-        <p>No check-ins yet today</p>
-      </div>
+      <TableState
+        className={showLocation ? "checkins-table checkins-table--locations" : "checkins-table"}
+        head={<CheckInsHead showLocation={showLocation} />}
+        title="No check-ins yet today"
+        text="Members who check in today show up here."
+      />
     );
   }
 
@@ -306,14 +308,7 @@ function CheckInRows({ checkIns }: { checkIns: Schemas["CheckIn"][] }) {
   const showLocation = organization.locations.length > 1;
   return (
     <section className="checkins-table" aria-label="Today's check-ins" data-locations={showLocation || undefined}>
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="checkins-table__head checkins-grid" aria-hidden="true">
-        <span>Time</span>
-        <span>Member</span>
-        {showLocation ? <span className="checkins-col--location">Location</span> : null}
-        <span>Result</span>
-        <span />
-      </div>
+      <CheckInsHead showLocation={showLocation} />
       <ul className="checkins-rows">
         {checkIns.map((checkIn) => (
           <li key={checkIn.id}>
@@ -349,16 +344,31 @@ function NoMatch({ results, q }: { results: CheckInResult[]; q: string }) {
   const organization = useOrganization();
   const navigate = useNavigate();
   return (
-    <div className="list-state" role="status">
-      <p>{noMatchText(results, q)}</p>
-      <Button
-        type="button"
-        variant="secondary"
-        size="compact"
-        onClick={() => void navigate({ to: "/$org/check-in", params: { org: organization.slug }, search: {}, replace: true })}
-      >
-        {q && !results.length ? "Clear search" : "Clear filters"}
-      </Button>
+    <TableState
+      title={noMatchText(results, q)}
+      action={
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          onClick={() => void navigate({ to: "/$org/check-in", params: { org: organization.slug }, search: {}, replace: true })}
+        >
+          {q && !results.length ? "Clear search" : "Clear filters"}
+        </Button>
+      }
+    />
+  );
+}
+
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function CheckInsHead({ showLocation = false }: { showLocation?: boolean }) {
+  return (
+    <div className="checkins-table__head checkins-grid" aria-hidden="true">
+      <span>Time</span>
+      <span>Member</span>
+      {showLocation ? <span className="checkins-col--location">Location</span> : null}
+      <span>Result</span>
+      <span />
     </div>
   );
 }
@@ -370,12 +380,7 @@ function DidNotLoad({ error }: { error: Failure }) {
   return (
     <>
       <div className="checkins-table">
-        <div className="checkins-table__head checkins-grid" aria-hidden="true">
-          <span>Time</span>
-          <span>Member</span>
-          <span>Result</span>
-          <span />
-        </div>
+        <CheckInsHead />
       </div>
       <div className="list-state checkins-state" role="alert">
         <p>Check-ins didn't load</p>

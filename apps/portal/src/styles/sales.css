@@ -16,7 +16,7 @@
 
 .sales-list {
   max-width: 1280px;
-  gap: var(--space-5);
+  gap: var(--space-6);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
@@ -140,7 +140,6 @@
 }
 .sales-table__head {
   height: 36px;
-  margin-inline: calc(-1 * var(--space-3));
   padding-inline: var(--space-3);
   border-radius: var(--radius-compact);
   background: var(--color-well);
@@ -157,7 +156,6 @@
 }
 .sales-row {
   min-height: 44px;
-  margin-inline: calc(-1 * var(--space-3));
   padding: 6px var(--space-3);
   border-radius: var(--radius-compact);
   color: var(--color-ink);

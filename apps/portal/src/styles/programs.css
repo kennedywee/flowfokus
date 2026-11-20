@@ -88,7 +88,6 @@
 }
 .programs-table__head {
   height: 36px;
-  margin-inline: calc(-1 * var(--space-3));
   padding-inline: var(--space-3);
   border-radius: var(--radius-compact);
   background: var(--color-well);
@@ -115,7 +114,6 @@
 }
 .programs-row {
   min-height: 52px;
-  margin-inline: calc(-1 * var(--space-3));
   padding: 6px var(--space-3);
   border-radius: var(--radius-compact);
   color: var(--color-ink);
@@ -230,21 +228,6 @@ a.programs-row:focus-visible {
   width: 16px;
   height: 16px;
   color: var(--color-ink-4);
-}
-/* No match: a muted 40px tile with the search icon, as in the Sales list. */
-.programs-state__tile {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: var(--color-well);
-  color: var(--color-ink-2);
-}
-.programs-state__tile svg {
-  width: 18px;
-  height: 18px;
 }
 
 /* Narrow: name and upcoming on line 1, then kind, length, and host. */

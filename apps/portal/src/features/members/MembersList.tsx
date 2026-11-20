@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Plus, Search, Users } from "lucide-react";
+import { ChevronRight, Plus, Search } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
 import { PageActions } from "../../components/PageActions";
+import { TableState } from "../../components/TableState";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
@@ -143,12 +144,7 @@ function MemberRows({ members }: { members: Schemas["Member"][] }) {
 
   return (
     <section className="members-table" aria-label="Members">
-      {/* Column titles for sighted staff. Each row link reads its own facts. */}
-      <div className="members-table__head" aria-hidden="true">
-        <span className="members-table__member">Member</span>
-        <span className="members-table__joined">Joined</span>
-        <span className="members-table__chevron" />
-      </div>
+      <MembersHead />
       <ul className="members-rows">
         {rows.map((member) => (
           <li key={member.id}>
@@ -186,30 +182,45 @@ function MemberRows({ members }: { members: Schemas["Member"][] }) {
   );
 }
 
+/** Column titles for sighted staff. Each row link reads its own facts. */
+function MembersHead() {
+  return (
+    <div className="members-table__head" aria-hidden="true">
+      <span className="members-table__member">Member</span>
+      <span className="members-table__joined">Joined</span>
+      <span className="members-table__chevron" />
+    </div>
+  );
+}
+
 function NoResults({ q }: { q: string }) {
   const organization = useOrganization();
   return (
-    <div className="list-state" role="status">
-      <p>No members match “{q}”</p>
-      <Link
-        to="/$org/members"
-        params={{ org: organization.slug }}
-        search={{}}
-        className={buttonVariants({ variant: "secondary", size: "compact" })}
-      >
-        Clear search
-      </Link>
-    </div>
+    <TableState
+      title={`No members match “${q}”`}
+      action={
+        <Link
+          to="/$org/members"
+          params={{ org: organization.slug }}
+          search={{}}
+          className={buttonVariants({ variant: "secondary", size: "compact" })}
+        >
+          Clear search
+        </Link>
+      }
+    />
   );
 }
 
 function NoMembers() {
   return (
-    <div className="list-state">
-      <Users className="list-state__icon" {...icon} />
-      <p>No members yet</p>
-      <NewMemberLink variant="secondary" />
-    </div>
+    <TableState
+      className="members-table"
+      head={<MembersHead />}
+      title="No members yet"
+      text="Members you add or who join online show up here."
+      action={<NewMemberLink variant="secondary" />}
+    />
   );
 }
 
