@@ -33,7 +33,7 @@ describe("component gallery registry", () => {
   test("every components/ui file has a page", () => {
     const covered = new Set(GALLERY.flatMap((entry) => entry.source));
     const missing = readdirSync(join(SRC, "components/ui"))
-      .filter((file) => file.endsWith(".tsx"))
+      .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
       .map((file) => `components/ui/${file}`)
       .filter((file) => !covered.has(file) && !SHELL_ONLY.has(file));
     expect(missing).toEqual([]);

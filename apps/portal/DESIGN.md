@@ -61,6 +61,7 @@ Use the existing `--space-*` scale. Note that `--space-7` is 32px and
 Separate ordinary sections with surface color and thin borders. Use the existing
 popover, dialog, and toast shadow tokens only for those floating surfaces.
 Use `--duration-press` and `--duration-hover` for repeated control feedback.
+`HoldButton` uses `--duration-hold` (600ms, `--ease-in`) and `--duration-drain` (200ms).
 Special transitions retain their existing timing. Preserve reduced-motion rules.
 
 ## Shapes
@@ -81,6 +82,7 @@ live, with code, at `localhost:4001/components` (local development only; see
 | --- | --- | --- |
 | Action | `Button`: `variant="default"`, `size="default"` | CSS supplies hover, press, focus and disabled. Use `SubmitButton` for pending forms. |
 | Alternative / destructive action | `secondary` (`outline` is an alias), `ghost`, `destructive` | Confirm consequential changes with `ConfirmDialog`; critical tone starts focus on Cancel. |
+| Safe action that must not fire on a stray click | `HoldButton` (`components/ui/hold-button.tsx`): `variant="secondary"`, or `"default"` for a top-bar action | Hold 600ms to confirm. See [Hold to confirm](#hold-to-confirm). |
 | Navigation styled as an action | Router `Link` with `buttonVariants()` | Keep link semantics; do not nest a button in a link. |
 | Status | `Status state={…}` with visible label | Use the current response, not the requested outcome. `Pill` defaults to neutral for other labels. |
 | Form field | `Field`, `describedBy`, `ui/input`, `ui/native-select` | Match input ID to field ID. Link hint/error IDs and set `aria-invalid`. |
@@ -125,6 +127,27 @@ Existing blocks to compose before adding another abstraction:
 See the component source for exact props. Only document or use built variants.
 A data block's parent owns loading, empty and failure branches; presentational
 pieces do not each need their own request.
+
+### Hold to confirm
+
+`HoldButton` sits between a plain button and `ConfirmDialog`. The user presses
+and holds for 600ms while a fill sweeps across the button. Space and Enter hold
+the same way. Releasing early, or moving off the button, drains the fill in
+200ms and shows the `holdLabel` hint ("Hold to check in") for 1.5s. There is no
+error color and no shake. A click from a screen reader or switch control
+(`detail` 0, or no mouse, touch or pen) confirms at once, because those users
+cannot hold. The action stays the accessible name; the hint is the description.
+Reduced motion drops the scale and the sweep; the fill fades in instead.
+
+After the hold, the button shows `confirmedLabel` in the success color until
+the Promise from `onConfirm` settles. `onConfirm` owns its failure path, such
+as `FormNotice` or a toast.
+
+Use it for safe actions that change state: check in, mark attended, publish a
+program, send an invoice. Keep `ConfirmDialog` for destructive, money-out, bulk
+and input-taking actions. Before a screen swaps a dialog for a hold, it needs
+an Undo, or its issue must say why it does not. Design: Paper page
+"Experimental — Hold to confirm".
 
 ## Do's and Don'ts
 

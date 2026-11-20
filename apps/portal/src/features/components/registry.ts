@@ -16,6 +16,7 @@ export const PAPER_PAGES = {
   "Components — Core": `${PAPER_FILE}/p-Z-0`,
   "Components — Complex": `${PAPER_FILE}/p-10-0`,
   "Components — Data": `${PAPER_FILE}/p-11-0`,
+  "Experimental — Hold to confirm": `${PAPER_FILE}/p-13-0`,
 } as const;
 
 export type PaperPage = keyof typeof PAPER_PAGES;
@@ -289,6 +290,24 @@ export const GALLERY: readonly GalleryEntry[] = [
       { name: "confirmLabel", type: "string", note: "Repeat the action and the amount." },
       { name: "pending", type: "boolean", note: "Ignores Escape and Cancel while true." },
       { name: "tone", type: '"default" | "critical"', default: '"default"', note: "Critical for actions that cannot be undone." },
+    ],
+  },
+  {
+    slug: "hold-button",
+    name: "Hold button",
+    group: "Complex",
+    summary: "A safe action that must not fire on a stray click. Press and hold for 600 ms to confirm.",
+    source: ["components/ui/hold-button.tsx"],
+    paper: { page: "Experimental — Hold to confirm", board: "A · Hold button — frames" },
+    examples: [
+      { file: "hold-button-variants", title: "Variants", note: "Secondary for row and card actions; primary for a top-bar action that commits a record." },
+      { file: "hold-button-request", title: "Confirmed until the request settles" },
+    ],
+    props: [
+      { name: "onConfirm", type: "() => unknown", note: "Runs once the hold completes. Return a Promise to keep the success state until it settles." },
+      { name: "holdLabel", type: "string", note: "The hint, such as \"Hold to check in\". It is also the accessible description." },
+      { name: "confirmedLabel", type: "ReactNode", note: "Shown while the request runs, such as \"Checked in\"." },
+      { name: "variant", type: '"secondary" | "default"', default: '"secondary"', note: '"default" is the primary fill.' },
     ],
   },
   {
