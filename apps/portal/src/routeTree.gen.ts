@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OrgRouteRouteImport } from './routes/$org/route'
 import { Route as CallbackRouteImport } from './routes/callback'
+import { Route as ComponentsRouteRouteImport } from './routes/components/route'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignOutRouteImport } from './routes/sign-out'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
@@ -21,6 +22,8 @@ import { Route as OrgCheckInRouteImport } from './routes/$org/check-in'
 import { Route as OrgInboxRouteImport } from './routes/$org/inbox'
 import { Route as OrgReportsRouteImport } from './routes/$org/reports'
 import { Route as OrgSoonRouteImport } from './routes/$org/soon'
+import { Route as ComponentsIndexRouteImport } from './routes/components/index'
+import { Route as ComponentsNameRouteImport } from './routes/components/$name'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
 import { Route as OrgMembersNewRouteImport } from './routes/$org/members/new'
@@ -58,6 +61,11 @@ const OrgRouteRoute = OrgRouteRouteImport.update({
 const CallbackRoute = CallbackRouteImport.update({
   id: '/callback',
   path: '/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComponentsRouteRoute = ComponentsRouteRouteImport.update({
+  id: '/components',
+  path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -104,6 +112,16 @@ const OrgSoonRoute = OrgSoonRouteImport.update({
   id: '/soon',
   path: '/soon',
   getParentRoute: () => OrgRouteRoute,
+} as any)
+const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ComponentsRouteRoute,
+} as any)
+const ComponentsNameRoute = ComponentsNameRouteImport.update({
+  id: '/$name',
+  path: '/$name',
+  getParentRoute: () => ComponentsRouteRoute,
 } as any)
 const OrgMembersIndexRoute = OrgMembersIndexRouteImport.update({
   id: '/members/',
@@ -227,6 +245,7 @@ const OrgProgramsProgramIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/components': typeof ComponentsRouteRouteWithChildren
   '/callback': typeof CallbackRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
@@ -236,7 +255,9 @@ export interface FileRoutesByFullPath {
   '/$org/inbox': typeof OrgInboxRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/soon': typeof OrgSoonRoute
+  '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
+  '/components/': typeof ComponentsIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -272,7 +293,9 @@ export interface FileRoutesByTo {
   '/$org/inbox': typeof OrgInboxRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/soon': typeof OrgSoonRoute
+  '/components/$name': typeof ComponentsNameRoute
   '/$org': typeof OrgIndexRoute
+  '/components': typeof ComponentsIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -301,6 +324,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$org': typeof OrgRouteRouteWithChildren
+  '/components': typeof ComponentsRouteRouteWithChildren
   '/callback': typeof CallbackRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
@@ -310,7 +334,9 @@ export interface FileRoutesById {
   '/$org/inbox': typeof OrgInboxRoute
   '/$org/reports': typeof OrgReportsRoute
   '/$org/soon': typeof OrgSoonRoute
+  '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
+  '/components/': typeof ComponentsIndexRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -340,6 +366,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$org'
+    | '/components'
     | '/callback'
     | '/sign-in'
     | '/sign-out'
@@ -349,7 +376,9 @@ export interface FileRouteTypes {
     | '/$org/inbox'
     | '/$org/reports'
     | '/$org/soon'
+    | '/components/$name'
     | '/$org/'
+    | '/components/'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -385,7 +414,9 @@ export interface FileRouteTypes {
     | '/$org/inbox'
     | '/$org/reports'
     | '/$org/soon'
+    | '/components/$name'
     | '/$org'
+    | '/components'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -413,6 +444,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$org'
+    | '/components'
     | '/callback'
     | '/sign-in'
     | '/sign-out'
@@ -422,7 +454,9 @@ export interface FileRouteTypes {
     | '/$org/inbox'
     | '/$org/reports'
     | '/$org/soon'
+    | '/components/$name'
     | '/$org/'
+    | '/components/'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -451,6 +485,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OrgRouteRoute: typeof OrgRouteRouteWithChildren
+  ComponentsRouteRoute: typeof ComponentsRouteRouteWithChildren
   CallbackRoute: typeof CallbackRoute
   SignInRoute: typeof SignInRoute
   SignOutRoute: typeof SignOutRoute
@@ -477,6 +512,13 @@ declare module '@tanstack/react-router' {
       path: '/callback'
       fullPath: '/callback'
       preLoaderRoute: typeof CallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/components': {
+      id: '/components'
+      path: '/components'
+      fullPath: '/components'
+      preLoaderRoute: typeof ComponentsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -541,6 +583,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$org/soon'
       preLoaderRoute: typeof OrgSoonRouteImport
       parentRoute: typeof OrgRouteRoute
+    }
+    '/components/': {
+      id: '/components/'
+      path: '/'
+      fullPath: '/components/'
+      preLoaderRoute: typeof ComponentsIndexRouteImport
+      parentRoute: typeof ComponentsRouteRoute
+    }
+    '/components/$name': {
+      id: '/components/$name'
+      path: '/$name'
+      fullPath: '/components/$name'
+      preLoaderRoute: typeof ComponentsNameRouteImport
+      parentRoute: typeof ComponentsRouteRoute
     }
     '/$org/members/': {
       id: '/$org/members/'
@@ -776,9 +832,24 @@ const OrgRouteRouteWithChildren = OrgRouteRoute._addFileChildren(
   OrgRouteRouteChildren,
 )
 
+interface ComponentsRouteRouteChildren {
+  ComponentsNameRoute: typeof ComponentsNameRoute
+  ComponentsIndexRoute: typeof ComponentsIndexRoute
+}
+
+const ComponentsRouteRouteChildren: ComponentsRouteRouteChildren = {
+  ComponentsNameRoute: ComponentsNameRoute,
+  ComponentsIndexRoute: ComponentsIndexRoute,
+}
+
+const ComponentsRouteRouteWithChildren = ComponentsRouteRoute._addFileChildren(
+  ComponentsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OrgRouteRoute: OrgRouteRouteWithChildren,
+  ComponentsRouteRoute: ComponentsRouteRouteWithChildren,
   CallbackRoute: CallbackRoute,
   SignInRoute: SignInRoute,
   SignOutRoute: SignOutRoute,

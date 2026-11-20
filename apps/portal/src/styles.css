@@ -30,6 +30,7 @@
 @import "./styles/schedule.css" layer(components);
 @import "./styles/settings.css" layer(components);
 @import "./styles/features.css" layer(components);
+@import "./styles/gallery.css" layer(components);
 
 /*
  * Tailwind's `dark:` utilities follow the same choice as tokens.css: the `dark`
