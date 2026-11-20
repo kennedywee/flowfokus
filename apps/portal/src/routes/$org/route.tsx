@@ -59,6 +59,7 @@ import { useDeskLocation } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
 import { setTheme } from "../../lib/theme.functions";
+import { applyTheme } from "../../lib/theme";
 import { isSlug, type Theme } from "../../lib/validate";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -531,13 +532,6 @@ const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: LucideIc
   { value: "dark", label: "Dark", icon: MoonStar },
   { value: "system", label: "System", icon: Monitor },
 ];
-
-/** Sets the class that tokens.css reads. No class means follow the operating system. */
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  root.classList.remove("light", "dark");
-  if (theme !== "system") root.classList.add(theme);
-}
 
 /**
  * The account menu, at the foot of the sidebar. It holds the theme choice,

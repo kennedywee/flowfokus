@@ -60,6 +60,9 @@ These actions persist in PostgreSQL, including during local demo development.
   integration states. Edits do not update Rails or contact external systems.
 - What's new: static notes for the preview and portal layout. It opens from
   the account menu.
+- Component gallery, `/components`: live examples of each component with
+  sample records. Local development only, outside any organization. See
+  [the design system](design-system.md#component-gallery).
 
 These screens display a Sample data label. Local edits reset when the screen
 unmounts. The sample fixtures live in `src/features/preview/data.ts` and the

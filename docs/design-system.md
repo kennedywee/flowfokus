@@ -21,6 +21,22 @@ components, defaults, states, and good/bad uses. Source CSS and component APIs
 remain the authority for exact values and props. Do not copy token values into
 another theme configuration.
 
+## Component gallery
+
+The portal shows every built component and block at
+`localhost:4001/components`, for example `localhost:4001/components/button`.
+Each page has live examples with their code, states, the props that matter,
+and links to the Paper board and the source. Check it before you build a
+component. It runs in local development only; a production build answers
+Not Found. It needs no sign-in, and its examples use sample data.
+
+The entries live in `apps/portal/src/features/components/registry.ts`. Each
+example is one file in `features/components/examples/`; the page renders it
+and shows its source, so the two cannot drift. To add a component, add its
+entry and at least one example. `registry.test.ts` fails when a file in
+`components/ui/` has no page. The gallery lists only code that exists: a
+design without code stays in Paper.
+
 ## Simplicity standard
 
 Each screen has one task. Layout, field labels, and action names carry that task.
