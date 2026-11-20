@@ -1,27 +1,17 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, ListFilter, Plus, Search, X } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { ListPager } from "../../components/ListPager";
+import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { TableState } from "../../components/TableState";
-import { FailureNotice, Kbd, initials } from "../../components/ui";
+import { FailureNotice, initials } from "../../components/ui";
 import { formatMoney } from "../../lib/format";
 import { useCan, useOrganization } from "../../lib/organization";
 import { PAGE_SIZE } from "../../lib/paging";
 import type { Result } from "../../lib/result";
-import { useShortcut } from "../../lib/shortcuts";
 import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   FULFILLMENT_FILTERS,
   PAYMENT_FILTERS,
@@ -83,167 +73,27 @@ function NewSaleLink({ variant = "default" }: { variant?: "default" | "secondary
   );
 }
 
-/** Updates the list URL. The URL holds filters and search, so Back and reload keep them. */
-function useSetSearch(current: SalesSearch) {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  return (next: Partial<SalesSearch>) => {
-    const merged = { ...current, ...next };
-    const clean: SalesSearch = {};
-    if (merged.payment) clean.payment = merged.payment;
-    if (merged.fulfillment) clean.fulfillment = merged.fulfillment;
-    if (merged.q) clean.q = merged.q;
-    void navigate({ to: "/$org/sales", params: { org: organization.slug }, search: clean, replace: true });
-  };
-}
-
 function Toolbar({ sales, filter, search }: { sales: Schemas["Sale"][]; filter: SalesFilter; search: SalesSearch }) {
-  const setSearch = useSetSearch(search);
+  const setSearch = useSetListSearch("/$org/sales", search, ["payment", "fulfillment", "q"]);
   const counts = factCounts(sales);
-  const toggle = (key: "payment" | "fulfillment", value: string, on: boolean) => {
-    const values = new Set<string>(filter[key]);
-    if (on) values.add(value);
-    else values.delete(value);
-    const allowed = (key === "payment" ? PAYMENT_FILTERS : FULFILLMENT_FILTERS).map((item) => item.value as string);
-    setSearch({ [key]: allowed.filter((item) => values.has(item)).join(",") || undefined });
-  };
-
+  const groups = [
+    { key: "payment" as const, title: "Payment", options: withCounts(PAYMENT_FILTERS, counts), chosen: filter.payment },
+    { key: "fulfillment" as const, title: "Fulfillment", options: withCounts(FULFILLMENT_FILTERS, counts), chosen: filter.fulfillment },
+  ];
   return (
-    <div className="sales-toolbar">
-      <div className="sales-toolbar__filters">
-        <DropdownMenu>
-          <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <ListFilter {...icon} />
-            Filter
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="sales-filter-menu">
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                Payment
-                <DropdownMenuShortcut>
-                  <ChevronRight {...icon} />
-                </DropdownMenuShortcut>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="sales-filter-menu">
-                {PAYMENT_FILTERS.map((item) => (
-                  <DropdownMenuCheckboxItem
-                    key={item.value}
-                    checked={filter.payment.includes(item.value)}
-                    onCheckedChange={(on) => toggle("payment", item.value, on)}
-                  >
-                    {item.label}
-                    <DropdownMenuShortcut className="sales-filter-menu__count">{counts[item.value]}</DropdownMenuShortcut>
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                Fulfillment
-                <DropdownMenuShortcut>
-                  <ChevronRight {...icon} />
-                </DropdownMenuShortcut>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="sales-filter-menu">
-                {FULFILLMENT_FILTERS.map((item) => (
-                  <DropdownMenuCheckboxItem
-                    key={item.value}
-                    checked={filter.fulfillment.includes(item.value)}
-                    onCheckedChange={(on) => toggle("fulfillment", item.value, on)}
-                  >
-                    {item.label}
-                    <DropdownMenuShortcut className="sales-filter-menu__count">{counts[item.value]}</DropdownMenuShortcut>
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <FilterChip
-          name="Payment"
-          values={PAYMENT_FILTERS.filter((item) => filter.payment.includes(item.value)).map((item) => item.label)}
-          onClear={() => setSearch({ payment: undefined })}
+    <ListToolbar
+      filter={<FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />}
+      chips={<FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />}
+      search={
+        <SearchField
+          id="sale-search"
+          label="Search sales by member or item"
+          placeholder="Search members or items"
+          q={search.q ?? ""}
+          onSearch={(q) => setSearch({ q: q || undefined })}
         />
-        <FilterChip
-          name="Fulfillment"
-          values={FULFILLMENT_FILTERS.filter((item) => filter.fulfillment.includes(item.value)).map((item) => item.label)}
-          onClear={() => setSearch({ fulfillment: undefined })}
-        />
-      </div>
-      <SearchField q={search.q ?? ""} onSearch={(q) => setSearch({ q: q || undefined })} />
-    </div>
-  );
-}
-
-/** One active filter: "Payment is Unpaid, Part paid", and a button that clears it. */
-function FilterChip({ name, values, onClear }: { name: string; values: string[]; onClear: () => void }) {
-  if (!values.length) return null;
-  return (
-    <span className="filter-chip">
-      <span className="filter-chip__part filter-chip__name">{name}</span>
-      <span className="filter-chip__part filter-chip__op">{values.length > 1 ? "is any of" : "is"}</span>
-      <span className="filter-chip__part filter-chip__values">{values.join(", ")}</span>
-      <button type="button" className="filter-chip__clear" aria-label={`Clear the ${name.toLowerCase()} filter`} onClick={onClear}>
-        <X {...icon} />
-      </button>
-    </span>
-  );
-}
-
-/** Filters as staff type, after a short pause, and at once on Enter. "/" focuses it; Escape clears it. */
-function SearchField({ q, onSearch }: { q: string; onSearch: (q: string) => void }) {
-  const input = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState(q);
-  useShortcut("/", () => input.current?.focus());
-
-  useEffect(() => {
-    setValue((current) => (current.trim() === q ? current : q));
-  }, [q]);
-
-  const search = (next: string) => {
-    if (next.trim() !== q) onSearch(next.trim());
-  };
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => search(value), 250);
-    return () => window.clearTimeout(timer);
-    // Only typing restarts the pause.
-  }, [value]);
-
-  return (
-    <form
-      role="search"
-      className="list-search sales-toolbar__search"
-      onSubmit={(event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        search(value);
-      }}
-    >
-      <label htmlFor="sale-search" className="visually-hidden">
-        Search sales by member or item
-      </label>
-      <Search className="list-search__icon" {...icon} />
-      <input
-        ref={input}
-        id="sale-search"
-        className="list-search__input"
-        type="search"
-        placeholder="Search members or items"
-        autoComplete="off"
-        maxLength={200}
-        aria-keyshortcuts="/"
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && value) {
-            event.preventDefault();
-            setValue("");
-            search("");
-          }
-        }}
-      />
-      <Kbd>/</Kbd>
-    </form>
+      }
+    />
   );
 }
 
@@ -361,12 +211,7 @@ export function SalesListLoading() {
   return (
     <div className="page sales-list" role="status" aria-busy="true" aria-label="Loading sales">
       <ListHead />
-      <div className="sales-toolbar">
-        <span className="sales-toolbar__filters">
-          <span className="skeleton-block sales-skeleton__button" />
-        </span>
-        <span className="list-search sales-toolbar__search skeleton-block" />
-      </div>
+      <ListToolbarLoading />
       <div className="sales-table">
         <div className="sales-table__head" />
         <div className="sales-rows">

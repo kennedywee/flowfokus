@@ -1401,8 +1401,9 @@ a.counter:hover .counter__label {
 
 /* ---------- List pieces (redesign) ---------- */
 /*
- * Shared by the members and sales lists: the 28px search field with a "/"
- * hint, the pager under the rows, and the one-line empty and no-results state.
+ * Shared by the list screens: the 28px search field with a "/" hint, the
+ * table toolbar with its filter menu and chips, the pager under the rows, and
+ * the one-line empty and no-results state.
  */
 
 /* Search: a 28px field with a "/" hint. The hint hides while staff type. */
@@ -1465,6 +1466,133 @@ a.counter:hover .counter__label {
   .list-search {
     height: 40px;
   }
+}
+
+
+/* Table toolbar: Filter and the active chips on the left, search on the right. */
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.list-toolbar__filter {
+  flex: none;
+}
+.list-toolbar__chips {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.list-toolbar__chips:empty {
+  display: none;
+}
+.list-toolbar__search {
+  margin-left: auto;
+}
+.list-toolbar__skeleton-button {
+  display: block;
+  width: 72px;
+  height: var(--control-height-compact);
+  border-radius: var(--radius-compact);
+}
+.list-toolbar .list-search.skeleton-block {
+  border-color: transparent;
+}
+@media (max-width: 767.98px) {
+  /* Paper phone lists: a full-width Filter, search on its own row, chips below. */
+  .list-toolbar__filter,
+  .list-toolbar__search,
+  .list-toolbar__chips {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+  .list-toolbar__filter > button,
+  .list-toolbar__skeleton-button {
+    width: 100%;
+  }
+  .list-toolbar__search {
+    order: 1;
+  }
+  .list-toolbar__chips {
+    order: 2;
+  }
+}
+
+/* Filter menu: facts on the left, values with their counts in a submenu. */
+.menu.filter-menu {
+  width: 220px;
+  font-size: var(--text-sm);
+}
+.menu.filter-menu .menu__item {
+  min-height: 32px;
+  color: var(--color-ink);
+}
+.filter-menu__count {
+  color: var(--color-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* An active filter: name, "is", values, clear. Segments share one hairline. */
+.filter-chip {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  height: var(--control-height-compact);
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-compact);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.filter-chip__part {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--space-2);
+  white-space: nowrap;
+}
+.filter-chip__part + .filter-chip__part,
+.filter-chip__clear {
+  border-left: 1px solid var(--color-line);
+}
+.filter-chip__name,
+.filter-chip__op {
+  color: var(--color-ink-2);
+}
+.filter-chip__values {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-ink);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+}
+.filter-chip__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: transparent;
+  color: var(--color-ink-2);
+  cursor: pointer;
+}
+.filter-chip__clear:hover {
+  background: var(--color-hover);
+  color: var(--color-ink);
+}
+.filter-chip__clear:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+.filter-chip__clear svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Pager: the count on the left, 24px page buttons on the right. */

@@ -30,97 +30,6 @@
   min-width: 0;
 }
 
-.sales-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-.sales-toolbar__filters {
-  display: flex;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.sales-toolbar__search {
-  margin-left: auto;
-}
-
-/* Filter menu: facts on the left, values with their counts in a submenu. */
-.menu.sales-filter-menu {
-  width: 220px;
-  font-size: var(--text-sm);
-}
-.menu.sales-filter-menu .menu__item {
-  min-height: 32px;
-  color: var(--color-ink);
-}
-.sales-filter-menu__count {
-  color: var(--color-ink-3);
-  font-variant-numeric: tabular-nums;
-}
-
-/* An active filter: name, "is", values, clear. Segments share one hairline. */
-.filter-chip {
-  display: inline-flex;
-  align-items: stretch;
-  max-width: 100%;
-  height: var(--control-height-compact);
-  overflow: hidden;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-compact);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.filter-chip__part {
-  display: inline-flex;
-  align-items: center;
-  padding-inline: var(--space-2);
-  white-space: nowrap;
-}
-.filter-chip__part + .filter-chip__part,
-.filter-chip__clear {
-  border-left: 1px solid var(--color-line);
-}
-.filter-chip__name,
-.filter-chip__op {
-  color: var(--color-ink-2);
-}
-.filter-chip__values {
-  min-width: 0;
-  overflow: hidden;
-  color: var(--color-ink);
-  font-weight: var(--font-weight-medium);
-  text-overflow: ellipsis;
-}
-.filter-chip__clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  padding: 0;
-  border-top: 0;
-  border-right: 0;
-  border-bottom: 0;
-  background: transparent;
-  color: var(--color-ink-2);
-  cursor: pointer;
-}
-.filter-chip__clear:hover {
-  background: var(--color-hover);
-  color: var(--color-ink);
-}
-.filter-chip__clear:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-.filter-chip__clear svg {
-  width: 14px;
-  height: 14px;
-}
-
 /* The table: one grid for the band and the rows, so the columns keep their lanes. */
 .sales-table {
   container: sales-table / inline-size;
@@ -290,15 +199,6 @@ a.sales-row:focus-visible {
 .sales-list .skeleton-block {
   background: var(--color-well);
 }
-.sales-list .list-search.skeleton-block {
-  border-color: transparent;
-}
-.sales-skeleton__button {
-  display: block;
-  width: 72px;
-  height: var(--control-height-compact);
-  border-radius: var(--radius-compact);
-}
 .sales-skeleton__row {
   display: flex;
   align-items: center;
@@ -314,13 +214,6 @@ a.sales-row:focus-visible {
   height: 10px;
 }
 
-@media (max-width: 767.98px) {
-  .sales-toolbar__search {
-    flex: 1 1 100%;
-    order: -1;
-    margin-left: 0;
-  }
-}
 
 /* ---------- New sale (redesign) ---------- */
 /*
