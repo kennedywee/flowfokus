@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { FilterChips, FilterMenu, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
@@ -32,7 +32,7 @@ import { OccurrenceMark } from "./marks";
 
 type Entry = Schemas["ScheduleEntry"];
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * Schedule: two weeks of sessions at the top bar location, one band per day.
@@ -88,7 +88,7 @@ function ScheduleHead() {
       <h1>Schedule</h1>
       <PageActions>
         <Link to="/$org/programs" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-          <CalendarCheck {...icon} />
+          <Icon name="programs" {...icon} />
           Programs
         </Link>
       </PageActions>
@@ -119,7 +119,7 @@ function Toolbar({
         <span className="schedule-range__label">{rangeLabel(from)}</span>
         <span className="schedule-range__buttons">
           <Link to="/$org/schedule" params={{ org: organization.slug }} search={at(shiftDay(from, -DAYS))} className="schedule-range__button">
-            <ChevronLeft {...icon} />
+            <Icon name="chevronLeft" {...icon} />
             <span className="schedule-range__text">Earlier</span>
           </Link>
           {from === today ? null : (
@@ -129,7 +129,7 @@ function Toolbar({
           )}
           <Link to="/$org/schedule" params={{ org: organization.slug }} search={at(shiftDay(from, DAYS))} className="schedule-range__button">
             <span className="schedule-range__text">Later</span>
-            <ChevronRight {...icon} />
+            <Icon name="chevronRight" {...icon} />
           </Link>
         </span>
       </nav>
@@ -161,7 +161,7 @@ function DayGroup({ day, today, entries }: { day: string; today: string; entries
   return (
     <section className="schedule-day" aria-label={title}>
       <h2 className="schedule-band">
-        <CalendarDays className="schedule-band__icon" strokeWidth={1.5} aria-hidden="true" focusable="false" />
+        <Icon name="schedule" className="schedule-band__icon" aria-hidden="true" focusable="false" />
         <span className="schedule-band__title">{title}</span>
         <span className="schedule-band__count">{sessionCount(entries.length)}</span>
       </h2>
@@ -205,7 +205,7 @@ function SessionRow({ entry }: { entry: Entry }) {
           {rowStatusText(entry)}
         </span>
       </span>
-      <ChevronRight className="schedule-row__chevron" {...icon} />
+      <Icon name="chevronRight" className="schedule-row__chevron" {...icon} />
     </Link>
   );
 }

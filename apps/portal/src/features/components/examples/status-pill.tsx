@@ -1,14 +1,14 @@
-import { CalendarClock, Snowflake } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Pill } from "@/components/ui";
 
 export default function Example() {
   return (
     <>
-      <Pill icon={Snowflake} tone="info">
+      <Pill icon="length" tone="info">
         Frozen
       </Pill>
-      <Pill icon={CalendarClock}>Renews 1 Dec</Pill>
-      <Pill icon={CalendarClock} square>
+      <Pill icon="schedule">Renews 1 Dec</Pill>
+      <Pill icon="schedule" square>
         Square
       </Pill>
     </>

@@ -1,10 +1,10 @@
 import type { Schemas } from "@flowfokus/api";
-import { Check, Minus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import type { Result } from "../../lib/result";
 import { LockLine, SettingsPage } from "./SettingsPage";
 import { ABILITIES, reach } from "./abilities";
 
-const icon = { strokeWidth: 1.75, focusable: false } as const;
+const icon = { focusable: false } as const;
 
 /**
  * Paper "Settings — Roles": what each role can do. The columns and the ticks
@@ -55,11 +55,11 @@ export function Roles({ team }: { team: Result<Schemas["Team"]> }) {
                   return (
                     <td key={role.slug} data-reach={value}>
                       {value === "all" ? (
-                        <Check {...icon} aria-label="Yes" role="img" />
+                        <Icon name="check" {...icon} aria-label="Yes" role="img" />
                       ) : value === "some" ? (
                         "Some"
                       ) : (
-                        <Minus {...icon} aria-label="No" role="img" />
+                        <Icon name="close" {...icon} aria-label="No" role="img" />
                       )}
                     </td>
                   );

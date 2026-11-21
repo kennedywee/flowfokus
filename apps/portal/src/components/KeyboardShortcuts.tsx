@@ -1,10 +1,10 @@
-import { X } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { useCan } from "../lib/organization";
 import type { Permission } from "@flowfokus/api";
 import { useModKeyLabel } from "../lib/shortcuts";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 type Shortcut = { keys: string[]; label: string };
 export type ShortcutGroup = { title: string; items: Shortcut[] };
@@ -97,7 +97,7 @@ export function KeyboardShortcuts({ open, onOpenChange }: { open: boolean; onOpe
         <div className="sale-dialog__head">
           <DialogTitle className="sale-dialog__title">Keyboard shortcuts</DialogTitle>
           <button type="button" className="sale-dialog__close" onClick={() => onOpenChange(false)}>
-            <X {...icon} />
+            <Icon name="close" {...icon} />
             <span className="visually-hidden">Close</span>
           </button>
         </div>

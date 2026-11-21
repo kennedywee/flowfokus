@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, ListFilter, Search, X } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Kbd } from "./ui";
 import { useOrganization } from "../lib/organization";
 import { useShortcut } from "../lib/shortcuts";
@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** One value in a filter group, with the number of rows that have it. */
 export interface FilterOption {
@@ -63,7 +63,7 @@ export function FilterMenu<K extends string>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
-        <ListFilter {...icon} />
+        <Icon name="filter" {...icon} />
         Filter
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="filter-menu">
@@ -72,7 +72,7 @@ export function FilterMenu<K extends string>({
             <DropdownMenuSubTrigger>
               {group.title}
               <DropdownMenuShortcut>
-                <ChevronRight {...icon} />
+                <Icon name="chevronRight" {...icon} />
               </DropdownMenuShortcut>
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent className="filter-menu">
@@ -134,7 +134,7 @@ export function FilterChip({ name, values, onClear }: { name: string; values: re
       <span className="filter-chip__part filter-chip__op">{values.length > 1 ? "is any of" : "is"}</span>
       <span className="filter-chip__part filter-chip__values">{values.join(", ")}</span>
       <button type="button" className="filter-chip__clear" aria-label={`Clear the ${name.toLowerCase()} filter`} onClick={onClear}>
-        <X {...icon} />
+        <Icon name="close" {...icon} />
       </button>
     </span>
   );
@@ -191,7 +191,7 @@ export function SearchField({
       <label htmlFor={id} className="visually-hidden">
         {label}
       </label>
-      <Search className="list-search__icon" {...icon} />
+      <Icon name="search" className="list-search__icon" {...icon} />
       <input
         ref={input}
         id={id}

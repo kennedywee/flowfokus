@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Banknote, CalendarDays, IdCard, Landmark, Ticket, X, type LucideIcon } from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { useToast } from "../../components/Toast";
 import { Kbd, SubmitButton, describedBy } from "../../components/ui";
 import {
@@ -36,12 +36,12 @@ const sendRefund = (input: Parameters<typeof recordRefund>[0]["data"]) => record
 const sendVoid = (input: Parameters<typeof voidSale>[0]["data"]) => voidSale({ data: input });
 const sendRevoke = (input: Parameters<typeof revokeSale>[0]["data"]) => revokeSale({ data: input });
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
-export const KIND_ICON: Record<Schemas["ProductKind"], LucideIcon> = {
-  membership: IdCard,
-  pass: Ticket,
-  ticket: CalendarDays,
+export const KIND_ICON: Record<Schemas["ProductKind"], IconName> = {
+  membership: "membership",
+  pass: "pass",
+  ticket: "schedule",
 };
 
 /* ---------- Frame ---------- */
@@ -102,7 +102,7 @@ export function SaleDialog({
             <DialogTitle className="sale-dialog__title">{title}</DialogTitle>
             {meta ? <span className="sale-dialog__meta">{meta}</span> : null}
             <button type="button" className="sale-dialog__close" onClick={close} disabled={pending}>
-              <X {...icon} />
+              <Icon name="close" {...icon} />
               <span className="visually-hidden">Close</span>
             </button>
           </div>
@@ -154,9 +154,9 @@ export function DialogFailure({ title, error, next }: { title: string; error: Fa
 
 /* ---------- Record payment ---------- */
 
-const METHODS: { value: Schemas["ManualPaymentMethod"]; icon: LucideIcon }[] = [
-  { value: "cash", icon: Banknote },
-  { value: "bank_transfer", icon: Landmark },
+const METHODS: { value: Schemas["ManualPaymentMethod"]; icon: IconName }[] = [
+  { value: "cash", icon: "cash" },
+  { value: "bank_transfer", icon: "bank" },
 ];
 
 /**
@@ -292,7 +292,7 @@ export function PaymentFields({
       <fieldset className="sale-methods">
         <legend className="sale-stack__label">Method</legend>
         <div className="sale-methods__options">
-          {METHODS.map(({ value, icon: Icon }) => (
+          {METHODS.map(({ value, icon: iconName }) => (
             <label key={value} className="sale-method">
               <input
                 type="radio"
@@ -302,7 +302,7 @@ export function PaymentFields({
                 checked={method === value}
                 onChange={() => onMethod(value)}
               />
-              <Icon {...icon} />
+              <Icon name={iconName} {...icon} />
               {PAYMENT_METHOD_LABEL[value]}
             </label>
           ))}
@@ -391,7 +391,7 @@ export function FulfillDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState<string | undefined>();
   const line = sale.line_item;
-  const KindIcon = KIND_ICON[line.terms.kind];
+  const kindIcon = KIND_ICON[line.terms.kind];
   const kindLabel = PRODUCT_KIND_LABEL[line.terms.kind];
 
   async function submit() {
@@ -433,7 +433,7 @@ export function FulfillDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
     >
       <div className="sale-item-card">
         <span className="sale-tile" aria-hidden="true">
-          <KindIcon {...icon} />
+          <Icon name={kindIcon} {...icon} />
         </span>
         <span className="sale-item-card__text">
           <span className="sale-item-card__name">{line.product_name}</span>

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive, CheckboxIndicator } from "@ui-sdk/react/checkbox"
-import { Check, Minus } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils"
 
 /*
@@ -28,9 +28,9 @@ function Checkbox({
       <CheckboxIndicator className="checkbox__mark">
         {(state) =>
           state.indeterminate ? (
-            <Minus strokeWidth={3} aria-hidden="true" focusable="false" />
+            <span className="checkbox__dash" aria-hidden="true" />
           ) : (
-            <Check strokeWidth={3} aria-hidden="true" focusable="false" />
+            <Icon name="check" aria-hidden="true" focusable="false" />
           )
         }
       </CheckboxIndicator>

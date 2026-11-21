@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight, LogOut } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { initials } from "./ui";
 import type { StaffOrganizationChoice } from "../lib/staff.functions";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { buttonVariants } from "@/components/ui/button";
  * through page scripts.
  */
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** The sign-in address. `returnTo` is the page to open afterwards; the server keeps same-origin paths only. */
 export function signInHref(returnTo?: string): string {
@@ -49,7 +49,7 @@ export const SignOutForm = forwardRef<
           </button>
         ) : (
           <button type="submit" className={buttonVariants({ variant: "secondary" })}>
-            <LogOut {...icon} />
+            <Icon name="checkIns" {...icon} />
             Sign out
           </button>
         )
@@ -83,7 +83,7 @@ export function OrganizationChoices({ organizations }: { organizations: StaffOrg
                 <span className="entry__choice-name">{organization.name}</span>
                 <span className="entry__choice-detail">{roleLabel(organization.role)}</span>
               </span>
-              <ChevronRight {...icon} />
+              <Icon name="chevronRight" {...icon} />
             </Link>
           </li>
         ))}

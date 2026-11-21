@@ -1,13 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { CalendarClock, MoreHorizontal, Receipt, Users, type LucideIcon } from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { useSidebar } from "@/components/ui/sidebar";
 
-type Tab = { label: string; icon: LucideIcon; to: "/$org/schedule" | "/$org/members" | "/$org/sales"; path: string };
+type Tab = { label: string; icon: IconName; to: "/$org/schedule" | "/$org/members" | "/$org/sales"; path: string };
 
 const TABS: Tab[] = [
-  { label: "Schedule", icon: CalendarClock, to: "/$org/schedule", path: "/schedule" },
-  { label: "Members", icon: Users, to: "/$org/members", path: "/members" },
-  { label: "Sales", icon: Receipt, to: "/$org/sales", path: "/sales" },
+  { label: "Schedule", icon: "schedule", to: "/$org/schedule", path: "/schedule" },
+  { label: "Members", icon: "members", to: "/$org/members", path: "/members" },
+  { label: "Sales", icon: "sales", to: "/$org/sales", path: "/sales" },
 ];
 
 /** Full-page create and edit forms hide the tab bar on phones, as in Paper. */
@@ -49,7 +49,7 @@ export function TabBar({ slug }: { slug: string }) {
           className="tab-bar__tab"
         >
           <span className="tab-bar__icon">
-            <tab.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
+            <Icon name={tab.icon} aria-hidden="true" focusable="false" />
           </span>
           {tab.label}
         </Link>
@@ -63,7 +63,7 @@ export function TabBar({ slug }: { slug: string }) {
         onClick={() => setOpenMobile(true)}
       >
         <span className="tab-bar__icon">
-          <MoreHorizontal strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <Icon name="more" aria-hidden="true" focusable="false" />
         </span>
         More
       </button>

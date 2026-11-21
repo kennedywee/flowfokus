@@ -1,9 +1,10 @@
 /*
  * Flowfokus staff portal: design tokens.
- * Source: the Paper file "Flowfokus Redesign" (tokens --background, --muted,
- * --border, --foreground, --muted-foreground, --subtle-foreground, --accent,
- * --success, --warning, --destructive). One white surface, few lines, neutral
- * ink, and colour only for small status marks.
+ * Source: the Paper file "Flowfokus Design". Its tokens hold the dark values:
+ * --background, --surface, --raised, --sunken, --hover, --selected, --border,
+ * --border-strong, --foreground, --muted-foreground, --subtle-foreground,
+ * --success, --warning, --destructive, --info. The light values come from the
+ * light frames in the same file (for example "Member details — Priya Nair · Light").
  *
  * Read DESIGN.md before changing this system. Use semantic roles here,
  * not raw swatches, in components. Keep both themes together.
@@ -11,10 +12,8 @@
  * Each colour is `light-dark(<light>, <dark>)`. The browser picks one from
  * `color-scheme`: both by default, so the operating system decides, or one
  * when <html> has the `light` or `dark` class (see lib/theme.functions.ts).
- * The light values are the Paper ones. The dark values are derived: the same
- * single surface, one step lighter for the band and hover, and the earlier
- * dark status colours. Text roles meet 4.5:1 on the surface and the band;
- * ink-4 is for marks only.
+ * Text roles meet 4.5:1 on page, surface, raised, and the band. Two subtle
+ * greys are slightly off the Paper value for that reason (see ink-3 and DESIGN.md).
  */
 
 :root {
@@ -28,53 +27,73 @@
 }
 
 :root {
-  /* Surfaces, from the page outward. */
-  --color-page: light-dark(var(--swatch-ffffff), var(--swatch-101011));
-  --color-surface: light-dark(var(--swatch-ffffff), var(--swatch-101011));
-  --color-sidebar: light-dark(var(--swatch-ffffff), var(--swatch-101011));
-  --color-well: light-dark(var(--swatch-f7f7f7), var(--swatch-19191b));
-  --color-control: light-dark(var(--swatch-ffffff), var(--swatch-101011));
-  --color-hover: light-dark(var(--swatch-f4f4f3), var(--swatch-1f1f22));
-  --color-overlay: light-dark(var(--swatch-ffffff), var(--swatch-19191b));
+  /* Surfaces, from the page outward. Paper: --background, --surface, --raised. */
+  --color-page: light-dark(var(--swatch-ffffff), var(--swatch-09090b));
+  --color-surface: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
+  --color-sidebar: light-dark(var(--swatch-fafafa), var(--swatch-0c0c0e));
+  --color-raised: light-dark(var(--swatch-ffffff), var(--swatch-1f1f23));
+  --color-overlay: var(--color-raised);
+  --color-control: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
+  /* Paper --sunken: the band behind a list header, a key hint, a recessed group. */
+  --color-well: light-dark(var(--swatch-black-04), var(--swatch-white-04));
+  /* Paper --hover and --selected. Fills with opacity, so they work on any surface. */
+  --color-hover: light-dark(var(--swatch-black-03), var(--swatch-white-06));
+  --color-selected: light-dark(var(--swatch-black-05), var(--swatch-white-10));
 
   /* Lines. `field-line` is for form controls only: it meets 3:1 (WCAG 1.4.11). */
-  --color-line: light-dark(var(--swatch-e3e3e3), var(--swatch-26262a));
-  --color-line-strong: light-dark(var(--swatch-d4d4d4), var(--swatch-34343a));
-  --color-field-line: light-dark(var(--swatch-8a8a8a), var(--swatch-6b6b72));
+  --color-line: light-dark(var(--swatch-black-08), var(--swatch-white-10));
+  --color-line-strong: light-dark(var(--swatch-black-14), var(--swatch-white-16));
+  --color-field-line: light-dark(var(--swatch-8b8b94), var(--swatch-71717a));
 
   /*
-   * Ink. Paper names: foreground = ink, muted-foreground = ink-2.
-   * Paper's subtle-foreground (#8A8A8A) is 3.4:1 on white, so it is ink-4 and
-   * marks only (chevrons, slashes, idle icons). Subtle text uses ink-3, the
-   * lightest grey that still meets 4.5:1 on the surface and the band.
+   * Ink. Paper names: foreground = ink, muted-foreground = ink-2,
+   * subtle-foreground = ink-3. Ink-3 is subtle text (an ID, a key hint, a
+   * label). Paper's #71717A is 4.4:1 on the light band and 3.7:1 on the dark
+   * surface, so light ink-3 is a step darker (#6B6B74) and dark ink-3 a step
+   * lighter (#8F8F98). Ink-4 is for marks and disabled text only: chevrons,
+   * slashes, idle icons.
    */
-  --color-ink: light-dark(var(--swatch-303030), var(--swatch-f2f2ee));
-  --color-ink-2: light-dark(var(--swatch-616161), var(--swatch-a3a3aa));
-  --color-ink-3: light-dark(var(--swatch-707070), var(--swatch-83838b));
-  --color-ink-4: light-dark(var(--swatch-8a8a8a), var(--swatch-5c5c63));
-  --color-on-ink: light-dark(var(--swatch-ffffff), var(--swatch-000000));
-  /* The primary button on hover: a step away from ink. */
-  --color-ink-hover: light-dark(var(--swatch-484848), var(--swatch-ffffff));
+  --color-ink: light-dark(var(--swatch-18181b), var(--swatch-f4f4f5));
+  --color-ink-2: light-dark(var(--swatch-52525b), var(--swatch-a1a1aa));
+  --color-ink-3: light-dark(var(--swatch-6b6b74), var(--swatch-8f8f98));
+  --color-ink-4: light-dark(var(--swatch-8b8b94), var(--swatch-71717a));
+  /* Text on an ink fill (the checked box, the avatar), and the fill on hover. */
+  --color-on-ink: light-dark(var(--swatch-ffffff), var(--swatch-09090b));
+  --color-ink-hover: light-dark(var(--swatch-3f3f46), var(--swatch-ffffff));
 
-  --color-accent: light-dark(var(--swatch-3d55d6), var(--swatch-7088ff));
-  --color-accent-wash: light-dark(var(--swatch-eef0fd), var(--swatch-161a33));
-  --color-accent-line: light-dark(var(--swatch-c8cff7), var(--swatch-262d5c));
-  --color-focus: light-dark(var(--swatch-3d55d6), var(--swatch-7088ff));
+  /*
+   * The primary button is a gradient: dark in the light theme, light in the
+   * dark theme, as in the Paper frames. `light-dark()` takes colours only, so
+   * each stop has its own token. Components use the two gradients.
+   */
+  --color-primary-top: light-dark(var(--swatch-303034), var(--swatch-ffffff));
+  --color-primary-bottom: light-dark(var(--swatch-18181b), var(--swatch-dedee3));
+  --color-primary-top-hover: light-dark(var(--swatch-3f3f46), var(--swatch-f4f4f5));
+  --color-primary-bottom-hover: light-dark(var(--swatch-27272a), var(--swatch-d4d4d8));
+  --gradient-primary: linear-gradient(180deg in oklab, var(--color-primary-top), var(--color-primary-bottom));
+  --gradient-primary-hover: linear-gradient(180deg in oklab, var(--color-primary-top-hover), var(--color-primary-bottom-hover));
+  --color-primary-ring: var(--swatch-white-12);
 
-  --color-good: light-dark(var(--swatch-0d6b4e), var(--swatch-3dd68c));
-  --color-good-wash: light-dark(var(--swatch-e9f6ef), var(--swatch-0f2a1e));
-  --color-good-line: light-dark(var(--swatch-b5dfc8), var(--swatch-1b4a34));
-  --color-warning: light-dark(var(--swatch-9a5b00), var(--swatch-f5a524));
-  --color-warning-wash: light-dark(var(--swatch-fcf3e2), var(--swatch-1a1407));
-  --color-warning-line: light-dark(var(--swatch-efd7a6), var(--swatch-3a2c0e));
-  --color-critical: light-dark(var(--swatch-b3261e), var(--swatch-f2555a));
-  --color-critical-wash: light-dark(var(--swatch-fdeeee), var(--swatch-1a0d0e));
-  --color-critical-line: light-dark(var(--swatch-f2c4c6), var(--swatch-3a1a1c));
-  --color-critical-wash-strong: light-dark(var(--swatch-fbe0e1), var(--swatch-2a1214));
-  --color-critical-line-strong: light-dark(var(--swatch-e9a5a8), var(--swatch-4a1e21));
-  --color-info: var(--color-accent);
-  --color-info-wash: var(--color-accent-wash);
-  --color-info-line: var(--color-accent-line);
+  /* Information is the portal's blue. Focus and links use it too. */
+  --color-info: light-dark(var(--swatch-245eaa), var(--swatch-80b7f5));
+  --color-info-wash: color-mix(in srgb, var(--color-info) 9%, transparent);
+  --color-info-line: color-mix(in srgb, var(--color-info) 28%, transparent);
+  --color-accent: var(--color-info);
+  --color-accent-wash: var(--color-info-wash);
+  --color-accent-line: var(--color-info-line);
+  --color-focus: var(--color-info);
+
+  --color-good: light-dark(var(--swatch-18734b), var(--swatch-5bbf8a));
+  --color-good-wash: color-mix(in srgb, var(--color-good) 9%, transparent);
+  --color-good-line: color-mix(in srgb, var(--color-good) 28%, transparent);
+  --color-warning: light-dark(var(--swatch-9a5b00), var(--swatch-e5b25d));
+  --color-warning-wash: color-mix(in srgb, var(--color-warning) 9%, transparent);
+  --color-warning-line: color-mix(in srgb, var(--color-warning) 28%, transparent);
+  --color-critical: light-dark(var(--swatch-c62e28), var(--swatch-f0706a));
+  --color-critical-wash: color-mix(in srgb, var(--color-critical) 8%, transparent);
+  --color-critical-line: color-mix(in srgb, var(--color-critical) 26%, transparent);
+  --color-critical-wash-strong: color-mix(in srgb, var(--color-critical) 12%, transparent);
+  --color-critical-line-strong: color-mix(in srgb, var(--color-critical) 42%, transparent);
 
   --color-series-1: var(--swatch-9085e9);
   --color-series-2: var(--swatch-199e70);
@@ -82,18 +101,25 @@
   --color-series-4: var(--swatch-d55181);
   --color-series-5: var(--swatch-3987e5);
 
-  /* Type. Redesigned screens use three sizes: --text-lg (20px) for the page
-   * title, --text-sm (13px) for body text and headings, --text-xs (12px) for
-   * secondary text. Hierarchy comes from weight and ink tone. */
-  --font-sans: "Figtree Variable", "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Type, Geist and Geist Mono as in Paper. Lists and forms use --text-sm
+   * (13px) for body text and headings and --text-xs (12px) for secondary text.
+   * Hierarchy comes from weight and ink tone. Mono is for identifiers. */
+  --font-sans: "Geist Variable", "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
+  --text-3xs: 10px;
+  --text-2xs: 11px;
   --text-xs: 12px;
   --text-sm: 13px;
   --text-base: 14px;
+  --text-lead: 15px;
   --text-md: 16px;
   --text-lg: 20px;
   --text-xl: 24px;
+  /* The Paper detail frames: 28px for a figure, 36px for a page title. */
+  --text-figure: 28px;
   --text-2xl: 32px;
+  --text-display: 36px;
   --text-readout: 64px;
 
   --font-weight-regular: 400;
@@ -102,10 +128,16 @@
 
   --tracking-tight: -0.02em;
   --tracking-caps: 0.12em;
+  /* Paper's large titles close up as they grow: 24px -0.03em, 28px -0.04em, 36px -0.045em. */
+  --tracking-title: -0.03em;
+  --tracking-figure: -0.04em;
+  --tracking-display: -0.045em;
 
   --leading-tight: 18px;
   --leading-normal: 20px;
   --leading-relaxed: 22px;
+  --leading-figure: 32px;
+  --leading-display: 40px;
 
   /* Space, on a 4px grid. `--spacing-*` repeats `--space-*` for Paper names. */
   --space-1: 4px;
@@ -125,18 +157,19 @@
   --spacing-7: var(--space-7);
   --spacing-8: var(--space-8);
 
+  /* Paper: 6, 8, 10, 12. The app window in the frames has 14px; the real window is the browser. */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 24px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
   --radius-full: 999px;
 
   /* Controls and focus. */
   --control-height: 44px;
   --control-height-small: 32px;
-  /* Redesign buttons and switchers: 28px, with an 8px radius. Coarse pointers grow them (components.css). */
+  /* Redesign buttons and switchers: 28px, with a 6px radius. Coarse pointers grow them (components.css). */
   --control-height-compact: 28px;
-  --radius-compact: 8px;
+  --radius-compact: var(--radius-sm);
   --focus-ring: 2px solid var(--color-focus);
   --focus-offset: 2px;
 
@@ -149,6 +182,8 @@
 
   /* The 1px drop under a compact secondary button. */
   --shadow-control: 0 1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4));
+  /* The primary button: a 1px light edge inside and a soft drop. */
+  --shadow-primary: inset 0 0 0 1px var(--color-primary-ring), 0 1px 2px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.4));
   --shadow-popover: 0 16px 40px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --shadow-dialog: 0 24px 64px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.6));
   --shadow-toast: 0 12px 32px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
@@ -172,11 +207,8 @@
    * Avatars. `avatar` takes ink initials. `avatar-light` takes surface-colour
    * initials, so in light mode it turns dark to keep the contrast.
    */
-  --color-avatar: light-dark(var(--swatch-e3e3e3), var(--swatch-3e3e44));
-  --color-avatar-light: light-dark(var(--swatch-5c5c63), var(--swatch-cfcfd3));
-}
-
-:root {
-  /* Rail tooltip, from the Paper sidebar kit. */
-  --color-tooltip: light-dark(var(--swatch-ffffff), var(--swatch-1e1e22));
+  --color-avatar: light-dark(var(--swatch-f4f4f5), var(--swatch-27272a));
+  --color-avatar-light: light-dark(var(--swatch-52525b), var(--swatch-d4d4d8));
+  /* Rail tooltip. */
+  --color-tooltip: var(--color-raised);
 }

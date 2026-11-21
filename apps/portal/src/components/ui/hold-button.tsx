@@ -1,6 +1,6 @@
 import * as React from "react"
 import { bindHold } from "@ui-sdk/core"
-import { Check } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { isEditable, overlayOpen } from "@/lib/shortcuts"
@@ -266,7 +266,7 @@ function HoldButton({
             {/* The action stays the accessible name; the success label is for sight. */}
             <span className="visually-hidden">{children}</span>
             <span className="hold-button__label" aria-hidden="true">
-              <Check />
+              <Icon name="check" />
               {fill === "ring" ? null : confirmedLabel}
             </span>
           </>

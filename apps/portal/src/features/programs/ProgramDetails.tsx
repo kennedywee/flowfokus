@@ -1,21 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import {
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  EyeOff,
-  Globe,
-  MapPin,
-  MoreHorizontal,
-  Pencil,
-  Plus,
-  StickyNote,
-  Table2,
-  User,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { PageActions } from "../../components/PageActions";
 import { Kbd } from "../../components/ui";
 import { PRODUCT_KIND_LABEL, PROGRAM_KIND_LABEL } from "../../lib/format";
@@ -40,7 +26,7 @@ import { usePublishProgram } from "./publish";
 type Program = Schemas["ProgramDetail"];
 type Open = "sessions" | "ticket" | "book" | "sell" | null;
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * Paper "Program details": the kind tile and the name, the sessions from
@@ -118,18 +104,18 @@ export function ProgramDetails({ program }: { program: Program }) {
           {manage ? (
             <DropdownMenu>
               <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon-compact" })} aria-label="More actions">
-                <MoreHorizontal {...icon} />
+                <Icon name="more" {...icon} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="sale-menu">
                 <DropdownMenuItem disabled={publishing} onClick={() => void togglePublished()}>
-                  {program.published ? <EyeOff {...icon} /> : <Globe {...icon} />}
+                  {program.published ? <Icon name="visibility" {...icon} /> : <Icon name="gymSite" {...icon} />}
                   {program.published ? "Make staff only" : "Publish"}
                   <DropdownMenuShortcut>⇧P</DropdownMenuShortcut>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   render={<Link to="/$org/programs/$programId/edit" params={{ org: organization.slug, programId: program.id }} />}
                 >
-                  <Pencil {...icon} />
+                  <Icon name="edit" {...icon} />
                   Edit program
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -166,13 +152,13 @@ function Sessions({ program, onAdd }: { program: Program; onAdd?: () => void }) 
   return (
     <section className="program-sessions" aria-labelledby="program-sessions-title">
       <div className="mx-section__head">
-        <CalendarDays {...icon} />
+        <Icon name="schedule" {...icon} />
         <h2 id="program-sessions-title">
           Sessions <span className="mx-section__count">{all.length}</span>
         </h2>
         {onAdd ? (
           <Button type="button" variant="ghost" size="compact" className="program-sessions__add" aria-haspopup="dialog" onClick={onAdd}>
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             Add sessions
           </Button>
         ) : null}
@@ -203,7 +189,7 @@ function Sessions({ program, onAdd }: { program: Program; onAdd?: () => void }) 
                       {rowStatusText(occurrence)}
                     </span>
                   </span>
-                  <ChevronRight className="program-row__chevron" {...icon} />
+                  <Icon name="chevronRight" className="program-row__chevron" {...icon} />
                 </Link>
               </li>
             );
@@ -215,7 +201,7 @@ function Sessions({ program, onAdd }: { program: Program; onAdd?: () => void }) 
       {hidden > 0 ? (
         <button type="button" className="mx-more program-sessions__more" aria-expanded={false} onClick={() => setExpanded(true)}>
           Show {hidden} more
-          <ChevronDown className="mx-more__icon" {...icon} />
+          <Icon name="chevronDown" className="mx-more__icon" {...icon} />
         </button>
       ) : null}
     </section>
@@ -240,7 +226,7 @@ function Property({ label, children }: { label: string; children: ReactNode }) {
 
 function Properties({ program, manage, onAddTicket }: { program: Program; manage: boolean; onAddTicket: () => void }) {
   const organization = useOrganization();
-  const KindIcon = KIND_ICON[program.kind];
+  const kindIcon = KIND_ICON[program.kind];
   const prices = ticketPrices(program);
   return (
     <aside className="mx-props program-props" aria-label="Program details">
@@ -249,25 +235,25 @@ function Properties({ program, manage, onAddTicket }: { program: Program; manage
         <dl>
           <Property label="Kind">
             <span className="mx-value">
-              <KindIcon {...icon} />
+              <Icon name={kindIcon} {...icon} />
               <span className="mx-value__text">{PROGRAM_KIND_LABEL[program.kind]}</span>
             </span>
           </Property>
           <Property label="Host">
             <span className="mx-value" data-empty={program.host_name ? undefined : true}>
-              <User {...icon} />
+              <Icon name="profile" {...icon} />
               <span className="mx-value__text">{program.host_name ?? "No host"}</span>
             </span>
           </Property>
           <Property label="Length">
             <span className="mx-value">
-              <Clock {...icon} />
+              <Icon name="length" {...icon} />
               <span className="mx-value__text money">{lengthText(program.duration_minutes)}</span>
             </span>
           </Property>
           <Property label="Capacity">
             <span className="mx-value">
-              <Table2 {...icon} />
+              <Icon name="capacity" {...icon} />
               <span className="mx-value__text money">
                 {program.capacity} {program.capacity === 1 ? "spot" : "spots"}
               </span>
@@ -275,14 +261,14 @@ function Properties({ program, manage, onAddTicket }: { program: Program; manage
           </Property>
           <Property label="Visibility">
             <span className="mx-value">
-              {program.published ? <Globe {...icon} /> : <EyeOff {...icon} />}
+              {program.published ? <Icon name="gymSite" {...icon} /> : <Icon name="visibility" {...icon} />}
               <span className="mx-value__text">{program.published ? "Published" : "Staff only"}</span>
             </span>
           </Property>
           {organization.locations.length > 1 ? (
             <Property label="Location">
               <span className="mx-value">
-                <MapPin {...icon} />
+                <Icon name="location" {...icon} />
                 <span className="mx-value__text">{program.location_name}</span>
               </span>
             </Property>
@@ -295,7 +281,7 @@ function Properties({ program, manage, onAddTicket }: { program: Program; manage
           Tickets
           {manage ? (
             <button type="button" className="program-props__add" aria-label="New ticket" aria-haspopup="dialog" onClick={onAddTicket}>
-              <Plus {...icon} />
+              <Icon name="plus" {...icon} />
             </button>
           ) : null}
         </h2>
@@ -329,7 +315,7 @@ function Properties({ program, manage, onAddTicket }: { program: Program; manage
       {program.description ? (
         <section className="mx-props__group program-props__note" aria-labelledby="program-note-title">
           <h2 id="program-note-title">
-            <StickyNote {...icon} />
+            <Icon name="customItem" {...icon} />
             Note
           </h2>
           <p>{program.description}</p>

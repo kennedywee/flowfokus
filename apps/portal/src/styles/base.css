@@ -89,6 +89,12 @@ kbd {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
 }
+/* Identifiers and code use Geist Mono, as in Paper. */
+.mono,
+.id,
+code {
+  font-family: var(--font-mono);
+}
 .money,
 .num,
 time {

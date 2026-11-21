@@ -1,4 +1,4 @@
-import { CircleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { failureMessage } from "../lib/format";
 import type { Failure } from "../lib/result";
 
@@ -10,7 +10,7 @@ import type { Failure } from "../lib/result";
 export function FormNotice({ title, error, text, after }: { title: string; error: Failure; text?: string; after?: string }) {
   return (
     <div className="form-notice" role="alert">
-      <CircleAlert className="form-notice__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+      <Icon name="notifications" className="form-notice__icon" aria-hidden="true" focusable="false" />
       <p className="form-notice__text">
         <span className="form-notice__title">{title}</span> · {text ?? failureMessage(error)}
         {after ? ` ${after}` : null}

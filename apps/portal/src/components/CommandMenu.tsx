@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { LogIn, Receipt, User, type LucideIcon } from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
 import { failureMessage } from "../lib/format";
 import { listMembers } from "../lib/staff.functions";
@@ -21,7 +21,7 @@ export interface CommandMemberActions {
 
 export interface CommandPage {
   label: string;
-  icon: LucideIcon;
+  icon: IconName;
   open: () => void;
 }
 
@@ -31,7 +31,7 @@ type MemberSearch =
   | { state: "done"; q: string; members: Schemas["Member"][] }
   | { state: "failed"; q: string; message: string };
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * Search, opened with ⌘K or the top bar button. It finds members by name or
@@ -123,7 +123,7 @@ export function CommandMenu({
                   void navigate({ to: "/$org/members/$memberId", params: { org: slug, memberId: member.id } });
                 }}
               >
-                <User {...icon} />
+                <Icon name="profile" {...icon} />
                 <span className="command__label">{member.name}</span>
                 <span className="command__detail">{member.email}</span>
               </CommandItem>
@@ -142,7 +142,7 @@ export function CommandMenu({
                   actions.checkIn?.(member);
                 }}
               >
-                <LogIn {...icon} />
+                <Icon name="checkIns" {...icon} />
                 <span className="command__label">Check in {members[0].name}</span>
               </CommandItem>
             ) : null}
@@ -155,7 +155,7 @@ export function CommandMenu({
                   actions.sell?.(member);
                 }}
               >
-                <Receipt {...icon} />
+                <Icon name="sales" {...icon} />
                 <span className="command__label">New sale for {members[0].name}</span>
               </CommandItem>
             ) : null}
@@ -172,7 +172,7 @@ export function CommandMenu({
                   page.open();
                 }}
               >
-                <page.icon {...icon} />
+                <Icon name={page.icon} {...icon} />
                 <span className="command__label">{page.label}</span>
               </CommandItem>
             ))}

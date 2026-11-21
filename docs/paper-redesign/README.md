@@ -4,6 +4,14 @@ Every screen and state of the staff portal now has a design in the Paper file
 "Flowfokus Redesign". The app is built from Paper next. Paper is the target:
 where Paper and the app differ, the app changes.
 
+**Update, 21 Nov 2026.** The reference moved to the Paper file
+"Flowfokus Design" ([#85](https://github.com/kennedywee/flowfokus/issues/85)).
+Its colours, type, radius, and icons replace the 18 Nov design-system rules below
+(Figtree, neutral greys, the grey table band, 8px and 12px radius, the Hugeicons
+wish). The screen frames and reports here are history; the layout of each
+screen follows the new file as its issue lands. See
+[Decisions](../decisions.md) and `apps/portal/DESIGN.md`.
+
 - `brief.md` holds the rules every design agent followed.
 - `reports/` has one report per set: coverage, what was added, conflicts, the
   build list ("Needs app or Rails work"), and open questions.
@@ -45,8 +53,8 @@ desktop frame.
 - Page actions sit in the top bar. On phones they sit under the title, and
   full-page create forms use a bar at the bottom with no tab bar.
 - A ticket sale can buy several spots in one session.
-- Figtree only, with tabular figures for numbers.
-- Design system (decided 18 Nov 2026):
+- ~~Figtree only, with tabular figures for numbers.~~ Replaced on 21 Nov 2026: Geist and Geist Mono, with tabular figures for numbers. See [Decisions](../decisions.md).
+- Design system (decided 18 Nov 2026). **Replaced on 21 Nov 2026** by the Paper file "Flowfokus Design": the grey palette (Figtree, Tailwind neutral greys, the grey table band), the 8px/12px radius, and the Hugeicons wish below no longer apply. The portal now uses zinc colours, Geist, a 6/8/10/12 radius, and its own icon set; see `apps/portal/DESIGN.md`. The list is kept as history:
   - Two font weights: 400 for body text, 500 for headings and emphasis.
   - Greys come from the Tailwind CSS neutral palette. Paper tokens:
     `--muted` neutral-50, `--accent` neutral-100, `--border` neutral-200,
@@ -96,7 +104,7 @@ use.
 | 8 | Email required or optional on New member | [#13](https://github.com/kennedywee/flowfokus/issues/13) |
 | 9 | Status words for sales and access | [#14](https://github.com/kennedywee/flowfokus/issues/14) |
 | 10 | Slips in the original frames | [#15](https://github.com/kennedywee/flowfokus/issues/15) |
-| | The Hugeicons Pro licence | [#16](https://github.com/kennedywee/flowfokus/issues/16) |
+| | The Hugeicons Pro licence. Settled 21 Nov 2026: the portal uses its own icons. | [#16](https://github.com/kennedywee/flowfokus/issues/16) |
 
 When a decision is made, record it under "Settled" and close its issue.
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, CircleAlert, MapPin, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { FormNotice } from "../../components/FormNotice";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
@@ -18,7 +18,6 @@ import { locationCount, locationFieldError } from "./facts";
 const sendLocation = (input: Parameters<typeof saveLocation>[0]["data"]) =>
   saveLocation({ data: input });
 const icon = {
-  strokeWidth: 1.5,
   "aria-hidden": true,
   focusable: false,
 } as const;
@@ -49,7 +48,7 @@ export function Locations() {
               size="compact"
               onClick={() => setEditing("new")}
             >
-              <Plus {...icon} />
+              <Icon name="plus" {...icon} />
               New location
             </Button>
           </PageActions>
@@ -73,7 +72,7 @@ export function Locations() {
             {locations.map((location) => {
               const body = (
                 <>
-                  <MapPin className="settings-locations__pin" {...icon} />
+                  <Icon name="location" className="settings-locations__pin" {...icon} />
                   <span className="settings-row-text">
                     <span className="settings-row-text__name">
                       {location.name}
@@ -86,7 +85,7 @@ export function Locations() {
                   </span>
                   {/* An empty lane keeps the columns in line when the role cannot edit. */}
                   {editable ? (
-                    <ChevronRight
+                    <Icon name="chevronRight"
                       className="settings-rows__chevron"
                       {...icon}
                     />
@@ -242,7 +241,7 @@ function LocationDialog({
 export function FieldError({ id, children }: { id: string; children: string }) {
   return (
     <p id={id} className="settings-field__error">
-      <CircleAlert strokeWidth={1.75} aria-hidden="true" focusable="false" />
+      <Icon name="notifications" aria-hidden="true" focusable="false" />
       {children}
     </p>
   );

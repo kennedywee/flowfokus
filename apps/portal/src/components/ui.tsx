@@ -1,16 +1,6 @@
 import type { ReactNode } from "react";
 import { PageActions } from "./PageActions";
-import {
-  Circle,
-  CircleAlert,
-  CircleCheck,
-  CircleX,
-  Clock,
-  Info,
-  Inbox,
-  TriangleAlert,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { failureMessage, formatDateTime, formatMoney } from "../lib/format";
 import type { Failure } from "../lib/result";
 import { Alert, AlertAction, AlertContent, AlertDescription, AlertTitle } from "./ui/alert";
@@ -40,16 +30,16 @@ export type LampState = "off" | "granted" | "denied" | "paid" | "due" | "waiting
 /** The tone of a pill. Each tone has a wash and an icon in the Paper kit. */
 export type PillTone = "good" | "warning" | "critical" | "info" | "neutral";
 
-const LAMP: Record<LampState, { icon: LucideIcon; tone: PillTone }> = {
-  off: { icon: Circle, tone: "neutral" },
-  granted: { icon: CircleCheck, tone: "good" },
-  paid: { icon: CircleCheck, tone: "good" },
-  fulfilled: { icon: CircleCheck, tone: "good" },
-  active: { icon: CircleCheck, tone: "good" },
-  denied: { icon: CircleX, tone: "critical" },
-  error: { icon: CircleX, tone: "critical" },
-  due: { icon: CircleAlert, tone: "warning" },
-  waiting: { icon: Clock, tone: "info" },
+const LAMP: Record<LampState, { icon: IconName; tone: PillTone }> = {
+  off: { icon: "unfulfilled", tone: "neutral" },
+  granted: { icon: "paid", tone: "good" },
+  paid: { icon: "paid", tone: "good" },
+  fulfilled: { icon: "paid", tone: "good" },
+  active: { icon: "paid", tone: "good" },
+  denied: { icon: "close", tone: "critical" },
+  error: { icon: "close", tone: "critical" },
+  due: { icon: "notifications", tone: "warning" },
+  waiting: { icon: "length", tone: "info" },
 };
 
 /**
@@ -57,20 +47,20 @@ const LAMP: Record<LampState, { icon: LucideIcon; tone: PillTone }> = {
  * text label beside it.
  */
 export function Lamp({ state }: { state: LampState }) {
-  const Icon = LAMP[state].icon;
+  const iconName = LAMP[state].icon;
   return (
     <span className="lamp" data-state={state} aria-hidden="true">
-      <Icon strokeWidth={2} aria-hidden="true" focusable="false" />
+      <Icon name={iconName} aria-hidden="true" focusable="false" />
     </span>
   );
 }
 
 /** A status pill: an icon and a label, never colour alone. */
 export function Status({ state, children }: { state: LampState; children: ReactNode }) {
-  const { icon: Icon, tone } = LAMP[state];
+  const { icon: iconName, tone } = LAMP[state];
   return (
     <Badge tone={tone} className="status">
-      <Icon strokeWidth={2} aria-hidden="true" focusable="false" />
+      <Icon name={iconName} aria-hidden="true" focusable="false" />
       {children}
     </Badge>
   );
@@ -79,18 +69,18 @@ export function Status({ state, children }: { state: LampState; children: ReactN
 /** A pill with your own icon and tone, for labels that are not a sale or access state. */
 export function Pill({
   tone = "neutral",
-  icon: Icon,
+  icon: iconName,
   square = false,
   children,
 }: {
   tone?: PillTone;
-  icon?: LucideIcon;
+  icon?: IconName;
   square?: boolean;
   children: ReactNode;
 }) {
   return (
     <Badge variant={square ? "square" : "pill"} tone={tone}>
-      {Icon ? <Icon strokeWidth={2} aria-hidden="true" focusable="false" /> : null}
+      {iconName ? <Icon name={iconName} aria-hidden="true" focusable="false" /> : null}
       {children}
     </Badge>
   );
@@ -109,11 +99,11 @@ export function Time({ iso, timeZone }: { iso: string; timeZone: string }) {
   );
 }
 
-const NOTICE: Record<"info" | "error" | "warning" | "success", { icon: LucideIcon; state: LampState }> = {
-  info: { icon: Info, state: "waiting" },
-  error: { icon: CircleX, state: "error" },
-  warning: { icon: TriangleAlert, state: "due" },
-  success: { icon: CircleCheck, state: "granted" },
+const NOTICE: Record<"info" | "error" | "warning" | "success", { icon: IconName; state: LampState }> = {
+  info: { icon: "notifications", state: "waiting" },
+  error: { icon: "close", state: "error" },
+  warning: { icon: "notifications", state: "due" },
+  success: { icon: "paid", state: "granted" },
 };
 
 /** An inline alert: icon, title, body, and one optional action. */
@@ -131,11 +121,11 @@ export function Notice({
   action?: ReactNode;
   live?: boolean;
 }) {
-  const { icon: Icon, state } = NOTICE[tone];
+  const { icon: iconName, state } = NOTICE[tone];
   return (
     <Alert tone={tone} role={live ? (tone === "error" ? "alert" : "status") : undefined}>
       <span className="lamp" data-state={state} aria-hidden="true">
-        <Icon strokeWidth={2} aria-hidden="true" focusable="false" />
+        <Icon name={iconName} aria-hidden="true" focusable="false" />
       </span>
       <AlertContent>
         <AlertTitle>{title}</AlertTitle>
@@ -156,11 +146,11 @@ export function FailureNotice({ error, title = "That did not work" }: { error: F
 }
 
 /** An empty list or section. Put one sentence and, if useful, one button inside. */
-export function Empty({ title, children, icon: Icon = Inbox }: { title: string; children?: ReactNode; icon?: LucideIcon }) {
+export function Empty({ title, children, icon: iconName = "unfulfilled" }: { title: string; children?: ReactNode; icon?: IconName }) {
   return (
     <EmptyRoot>
       <EmptyMedia>
-        <Icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name={iconName} aria-hidden="true" focusable="false" />
       </EmptyMedia>
       <EmptyTitle>{title}</EmptyTitle>
       {children}
@@ -173,7 +163,7 @@ export function ErrorState({ title, children }: { title: string; children?: Reac
   return (
     <EmptyRoot className="state" data-tone="error">
       <EmptyMedia className="state__icon">
-        <CircleAlert strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name="notifications" aria-hidden="true" focusable="false" />
       </EmptyMedia>
       <EmptyTitle className="state__title">{title}</EmptyTitle>
       {children}
@@ -208,7 +198,7 @@ export function Plate({
   title: string;
   description?: ReactNode;
   action?: ReactNode;
-  /** A Lucide icon element for the tile left of the title, for example `<Clock />`. */
+  /** An `<Icon>` element for the tile left of the title, for example `<Icon name="length" />`. */
   icon?: ReactNode;
   /** Remove the body padding, for a table or list that runs edge to edge. */
   flush?: boolean;

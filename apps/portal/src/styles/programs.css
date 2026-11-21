@@ -965,9 +965,14 @@ a.program-row:focus-visible {
   .program-head__book {
     order: -1;
     border-color: transparent;
-    background: var(--color-ink);
+    background: var(--gradient-primary);
     color: var(--color-on-ink);
     box-shadow: none;
+  }
+  /* Beats the secondary button's hover, which would drop the gradient. */
+  .button.program-head__book:hover:not(:disabled, [aria-disabled="true"]) {
+    background: var(--gradient-primary-hover);
+    color: var(--color-on-ink);
   }
   .program-row {
     grid-template-columns: auto minmax(0, 1fr) 16px;

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Lock } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { useOrganization } from "../../lib/organization";
 import { SettingsBack } from "./SettingsNav";
 
@@ -39,7 +39,7 @@ export function SettingsPage({
 export function LockLine({ children }: { children: ReactNode }) {
   return (
     <p className="settings-lock">
-      <Lock strokeWidth={1.75} aria-hidden="true" focusable="false" />
+      <Icon name="roles" aria-hidden="true" focusable="false" />
       {children}
     </p>
   );

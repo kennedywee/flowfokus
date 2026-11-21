@@ -1,22 +1,7 @@
 import { useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import {
-  CalendarCheck,
-  CalendarX2,
-  ChevronDown,
-  ChevronRight,
-  CircleCheck,
-  Clock,
-  CreditCard,
-  MapPin,
-  MoreHorizontal,
-  Table2,
-  Ticket,
-  User,
-  Users,
-  X,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
 import { Kbd, initials } from "../../components/ui";
@@ -57,7 +42,7 @@ type Booking = Schemas["Booking"];
 
 const sendAttend = (input: Parameters<typeof attendBooking>[0]["data"]) => attendBooking({ data: input });
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 const GROUP_TITLE: Record<BookingGroup, string> = {
   not_marked: "Not marked",
@@ -87,7 +72,7 @@ export function SessionDetails({ roster }: { roster: Roster }) {
     <div className="page session-page">
       <header className="session-head">
         <span className="session-head__tile" aria-hidden="true">
-          <Users strokeWidth={1.5} />
+          <Icon name="members" />
         </span>
         <div className="session-head__text">
           <h1>{sessionTitle(roster.starts_at, roster.ends_at, organization.timezone)}</h1>
@@ -112,18 +97,18 @@ export function SessionDetails({ roster }: { roster: Roster }) {
           ) : null}
           <DropdownMenu>
             <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon-compact" })} aria-label="More actions">
-              <MoreHorizontal {...icon} />
+              <Icon name="more" {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 render={<Link to="/$org/programs/$programId" params={{ org: organization.slug, programId: roster.program.id }} />}
               >
-                <CalendarCheck {...icon} />
+                <Icon name="programs" {...icon} />
                 Open program
               </DropdownMenuItem>
               {canCancel ? (
                 <DropdownMenuItem className="menu__item--critical" onClick={() => setCancelling(true)}>
-                  <CalendarX2 {...icon} />
+                  <Icon name="close" {...icon} />
                   Cancel session…
                 </DropdownMenuItem>
               ) : null}
@@ -176,7 +161,7 @@ function BookingBand({ group, bookings, roster, startOpen }: { group: BookingGro
     <div className="session-group">
       <h2 className="session-band">
         <button type="button" className="session-band__toggle" aria-expanded={open} aria-controls={id} onClick={() => setOpen(!open)}>
-          <span className="session-band__chevron">{open ? <ChevronDown {...icon} /> : <ChevronRight {...icon} />}</span>
+          <span className="session-band__chevron">{open ? <Icon name="chevronDown" {...icon} /> : <Icon name="chevronRight" {...icon} />}</span>
           <span className="session-band__mark">
             <AttendanceMark status={group === "attended" ? "attended" : group === "cancelled" ? "cancelled" : "not_marked"} />
           </span>
@@ -267,7 +252,7 @@ function BookingRow({ booking, roster }: { booking: Booking; roster: Roster }) {
                 <AttendanceMark status="not_marked" />
                 Not marked
                 <DropdownMenuShortcut>
-                  <CircleCheck {...icon} />
+                  <Icon name="paid" {...icon} />
                 </DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => void markAttended()}>
@@ -309,7 +294,7 @@ function BookingRow({ booking, roster }: { booking: Booking; roster: Roster }) {
         {rowActions ? (
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="session-row__more" aria-label={`Actions for ${name}`}>
-              <MoreHorizontal {...icon} />
+              <Icon name="more" {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {canManage ? (
@@ -321,13 +306,13 @@ function BookingRow({ booking, roster }: { booking: Booking; roster: Roster }) {
               ) : null}
               {booking.member ? (
                 <DropdownMenuItem render={<Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: booking.member.id }} />}>
-                  <User {...icon} />
+                  <Icon name="profile" {...icon} />
                   Open member
                 </DropdownMenuItem>
               ) : null}
               {booking.sale_id ? (
                 <DropdownMenuItem render={<Link to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: booking.sale_id }} />}>
-                  <Ticket {...icon} />
+                  <Icon name="pass" {...icon} />
                   Open sale
                 </DropdownMenuItem>
               ) : null}
@@ -335,7 +320,7 @@ function BookingRow({ booking, roster }: { booking: Booking; roster: Roster }) {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="menu__item--critical" onClick={() => setCancelling(true)}>
-                    <X {...icon} />
+                    <Icon name="close" {...icon} />
                     Cancel booking…
                   </DropdownMenuItem>
                 </>
@@ -366,10 +351,10 @@ function statusWords(booking: Booking): string {
 
 /** The pass, membership, or ticket that holds the spot. */
 function RightChip({ booking }: { booking: Booking }) {
-  const Icon = booking.source === "ticket" ? Ticket : CreditCard;
+  const iconName = booking.source === "ticket" ? "pass" : "payments";
   return (
     <span className="session-chip">
-      <Icon {...icon} />
+      <Icon name={iconName} {...icon} />
       {rightLabel(booking)}
     </span>
   );
@@ -396,7 +381,7 @@ function Properties({ roster }: { roster: Roster }) {
         <dl>
           <Property label="Program">
             <span className="mx-value">
-              <Users {...icon} />
+              <Icon name="members" {...icon} />
               <Link to="/$org/programs/$programId" params={{ org: organization.slug, programId: roster.program.id }}>
                 {roster.program.name}
               </Link>
@@ -404,27 +389,27 @@ function Properties({ roster }: { roster: Roster }) {
           </Property>
           <Property label="Host">
             <span className="mx-value">
-              <User {...icon} />
+              <Icon name="profile" {...icon} />
               <span className="mx-value__text">{roster.program.host_name ?? "No host"}</span>
             </span>
           </Property>
           {organization.locations.length > 1 ? (
             <Property label="Location">
               <span className="mx-value">
-                <MapPin {...icon} />
+                <Icon name="location" {...icon} />
                 <span className="mx-value__text">{roster.program.location_name}</span>
               </span>
             </Property>
           ) : null}
           <Property label="Time">
             <span className="mx-value">
-              <Clock {...icon} />
+              <Icon name="length" {...icon} />
               <span className="mx-value__text money">{clockRange(roster.starts_at, roster.ends_at, organization.timezone)}</span>
             </span>
           </Property>
           <Property label="Capacity">
             <span className="mx-value">
-              <Table2 {...icon} />
+              <Icon name="capacity" {...icon} />
               <span className="mx-value__text money" suppressHydrationWarning>
                 {capacityText(roster)}
               </span>

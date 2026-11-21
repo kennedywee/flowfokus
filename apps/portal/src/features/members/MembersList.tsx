@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { ListToolbar, ListToolbarLoading, SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -14,7 +14,7 @@ import { useShortDate } from "./dates";
 import { PAGE_SIZE } from "../../lib/paging";
 import { rangeLabel } from "./list";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * The members list: search, then one row per member with the join date.
@@ -57,7 +57,7 @@ function NewMemberLink({ variant = "default" }: { variant?: "default" | "seconda
   if (!can("members:create")) return null;
   return (
     <Link to="/$org/members/new" params={{ org: organization.slug }} className={buttonVariants({ variant, size: "compact" })}>
-      <Plus {...icon} />
+      <Icon name="plus" {...icon} />
       New member
     </Link>
   );
@@ -114,7 +114,7 @@ function MemberRows({ members }: { members: Schemas["Member"][] }) {
                   {shortDate(member.created_at)}
                 </time>
               </span>
-              <ChevronRight className="members-row__chevron" {...icon} />
+              <Icon name="chevronRight" className="members-row__chevron" {...icon} />
             </Link>
           </li>
         ))}

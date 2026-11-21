@@ -11,7 +11,7 @@ import {
   CommandList as CommandListPrimitive,
   CommandSeparator as CommandSeparatorPrimitive,
 } from "@ui-sdk/react/command"
-import { Search } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
@@ -57,7 +57,7 @@ function CommandInput({ className, ...props }: WithClass<typeof CommandInputPrim
   return (
     <div data-slot="command-input-wrapper" className="command__search">
       <div className="search-field">
-        <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name="search" aria-hidden="true" focusable="false" />
         <CommandInputPrimitive className={cn("input", className)} {...props} />
       </div>
     </div>

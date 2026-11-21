@@ -1,15 +1,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import {
-  CircleMinus,
-  Clock3,
-  Mail,
-  MoreHorizontal,
-  Ban,
-  Plus,
-  XCircle,
-} from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
 import { PageActions } from "../../components/PageActions";
@@ -65,7 +57,6 @@ const sendRemove = (input: Parameters<typeof removeStaff>[0]["data"]) =>
   removeStaff({ data: input });
 
 const icon = {
-  strokeWidth: 1.5,
   "aria-hidden": true,
   focusable: false,
 } as const;
@@ -117,7 +108,7 @@ export function Staff({ team }: { team: Result<Schemas["Team"]> }) {
               size="compact"
               onClick={() => setInviting(true)}
             >
-              <Plus {...icon} />
+              <Icon name="plus" {...icon} />
               Invite staff
             </Button>
           ) : null}
@@ -183,10 +174,10 @@ function DidNotLoad() {
 function StatusMark({ member }: { member: TeamMember }) {
   const status = memberStatus(member.status);
   if (!status) return <span className="settings-status">Active</span>;
-  const Icon = status.tone === "warning" ? Clock3 : CircleMinus;
+  const iconName = status.tone === "warning" ? "length" : "close";
   return (
     <span className="settings-status" data-tone={status.tone}>
-      <Icon {...icon} />
+      <Icon name={iconName} {...icon} />
       {status.label}
     </span>
   );
@@ -278,7 +269,7 @@ function MemberRow({
             aria-label={`Change ${member.name}`}
             disabled={changing.pending || removing.pending}
           >
-            <MoreHorizontal {...icon} />
+            <Icon name="more" {...icon} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="sale-menu settings-menu">
             {choices.length ? (
@@ -304,7 +295,7 @@ function MemberRow({
               className="menu__item--critical"
               onClick={() => setConfirming(true)}
             >
-              <Ban {...icon} />
+              <Icon name="close" {...icon} />
               Remove access…
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -380,7 +371,7 @@ function InvitationRow({
           className="settings-avatar settings-avatar--invite"
           aria-hidden="true"
         >
-          <Mail {...icon} />
+          <Icon name="send" {...icon} />
         </span>
         <span className="settings-row-text">
           <span className="settings-row-text__name">{invitation.email}</span>
@@ -403,14 +394,14 @@ function InvitationRow({
             aria-label={`Change the invitation for ${invitation.email}`}
             disabled={action.pending}
           >
-            <MoreHorizontal {...icon} />
+            <Icon name="more" {...icon} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="sale-menu settings-menu">
             <DropdownMenuItem
               className="menu__item--critical"
               onClick={() => void revoke()}
             >
-              <XCircle {...icon} />
+              <Icon name="close" {...icon} />
               Revoke invitation
             </DropdownMenuItem>
           </DropdownMenuContent>

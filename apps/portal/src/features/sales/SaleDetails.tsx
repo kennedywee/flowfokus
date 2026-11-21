@@ -1,22 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import {
-  Activity,
-  Ban,
-  Banknote,
-  CalendarDays,
-  CircleX,
-  MapPin,
-  MoreHorizontal,
-  PackageCheck,
-  Receipt,
-  ShieldOff,
-  Tag,
-  Undo2,
-  User,
-  Users,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Kbd } from "../../components/ui";
 import { PageActions } from "../../components/PageActions";
 import {
@@ -44,8 +29,8 @@ import { fulfillmentFact, saleActions, saleActivity, type SaleActions } from "./
 import { FulfillDialog, KIND_ICON, ReasonDialog, RecordPaymentDialog, RefundDialog } from "./SaleDialogs";
 import { FulfillmentMark, METHOD_ICON, PaymentMark } from "./SaleFacts";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
-const markIcon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
+const markIcon = { "aria-hidden": true, focusable: false } as const;
 
 type Open = "pay" | "fulfill" | "refund" | "void" | "revoke" | null;
 
@@ -94,7 +79,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
   return (
     <header className="sale-head">
       <span className="sale-head__tile" aria-hidden="true">
-        <Receipt {...icon} />
+        <Icon name="sales" {...icon} />
       </span>
       <div className="sale-head__text">
         <div className="sale-head__title">
@@ -113,12 +98,12 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
         <PageActions>
           <DropdownMenu>
             <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="Sale actions">
-              <MoreHorizontal {...icon} />
+              <Icon name="more" {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="sale-menu">
               {actions.pay ? (
                 <DropdownMenuItem onClick={() => onOpen("pay")}>
-                  <Banknote {...markIcon} />
+                  <Icon name="cash" {...markIcon} />
                   Record payment
                   <DropdownMenuShortcut>
                     <Kbd>P</Kbd>
@@ -127,7 +112,7 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
               ) : null}
               {canFulfill ? (
                 <DropdownMenuItem onClick={() => onOpen("fulfill")}>
-                  <PackageCheck {...markIcon} />
+                  <Icon name="fulfilled" {...markIcon} />
                   {actions.fulfill === "early" ? "Fulfill early…" : "Fulfill"}
                   <DropdownMenuShortcut>
                     <Kbd>F</Kbd>
@@ -137,19 +122,19 @@ function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions:
               {(actions.pay || canFulfill) && corrections ? <DropdownMenuSeparator /> : null}
               {actions.refund ? (
                 <DropdownMenuItem onClick={() => onOpen("refund")}>
-                  <Undo2 {...markIcon} />
+                  <Icon name="arrowDown" {...markIcon} />
                   Refund…
                 </DropdownMenuItem>
               ) : null}
               {actions.revoke ? (
                 <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("revoke")}>
-                  <ShieldOff {...markIcon} />
+                  <Icon name="roles" {...markIcon} />
                   Revoke access…
                 </DropdownMenuItem>
               ) : null}
               {actions.void ? (
                 <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("void")}>
-                  <Ban {...markIcon} />
+                  <Icon name="close" {...markIcon} />
                   Void sale…
                 </DropdownMenuItem>
               ) : null}
@@ -165,7 +150,7 @@ function VoidBanner({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
   return (
     <div className="sale-void">
-      <CircleX className="sale-void__icon" {...markIcon} />
+      <Icon name="close" className="sale-void__icon" {...markIcon} />
       <div>
         <p className="sale-void__title">This sale was voided</p>
         <p className="sale-void__sub">
@@ -182,10 +167,10 @@ function VoidBanner({ sale }: { sale: Schemas["Sale"] }) {
 /* ---------- Sections ---------- */
 
 /** A section: a grey band with an icon, a title, and an optional action. */
-function Band({ id, title, icon: Icon, action }: { id: string; title: string; icon: typeof Tag; action?: ReactNode }) {
+function Band({ id, title, icon: iconName, action }: { id: string; title: string; icon: IconName; action?: ReactNode }) {
   return (
     <div className="mx-section__head sale-band">
-      <Icon {...icon} />
+      <Icon name={iconName} {...icon} />
       <h2 id={`${id}-title`}>{title}</h2>
       {action}
     </div>
@@ -198,7 +183,7 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
   const locationName = useLocationName();
   const shortDate = useShortDate();
   const line = sale.line_item;
-  const KindIcon = KIND_ICON[line.terms.kind];
+  const kindIcon = KIND_ICON[line.terms.kind];
   const fulfillment = sale.fulfillment;
   const period = fulfillment?.membership_period;
   const fact = fulfillmentFact(sale);
@@ -214,7 +199,7 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
       <Band
         id="items"
         title="Items"
-        icon={Tag}
+        icon="products"
         action={
           actions.fulfill === "ready" || actions.fulfill === "early" ? (
             <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onFulfill}>
@@ -236,7 +221,7 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
       </div>
       <div className="sale-line">
         <span className="sale-tile" aria-hidden="true">
-          <KindIcon {...markIcon} />
+          <Icon name={kindIcon} {...markIcon} />
         </span>
         <div className="sale-line__main">
           <span className="sale-line__name">{line.product_name}</span>
@@ -322,7 +307,7 @@ function PaymentSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay
       <Band
         id="payment"
         title="Payment"
-        icon={Banknote}
+        icon="cash"
         action={
           canPay ? (
             <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onPay}>
@@ -336,11 +321,11 @@ function PaymentSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay
           {rows.map((row) => {
             if (row.kind === "payment") {
               const { payment } = row;
-              const MethodIcon = METHOD_ICON[payment.method];
+              const methodIcon = METHOD_ICON[payment.method];
               return (
                 <li key={payment.id} className="sale-line">
                   <span className="sale-tile" aria-hidden="true">
-                    <MethodIcon {...markIcon} />
+                    <Icon name={methodIcon} {...markIcon} />
                   </span>
                   <div className="sale-line__main">
                     <span className="sale-line__name">
@@ -363,7 +348,7 @@ function PaymentSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay
             return (
               <li key={refund.id} className="sale-line">
                 <span className="sale-tile sale-tile--critical" aria-hidden="true">
-                  <Undo2 {...markIcon} />
+                  <Icon name="arrowDown" {...markIcon} />
                 </span>
                 <div className="sale-line__main">
                   <span className="sale-line__name">Refund{payment ? ` · ${PAYMENT_METHOD_LABEL[payment.method]}` : ""}</span>
@@ -398,7 +383,7 @@ function ActivitySection({ sale }: { sale: Schemas["Sale"] }) {
   return (
     <section className="mx-section mx-activity" aria-labelledby="activity-title">
       <div className="mx-activity__head">
-        <Activity {...icon} />
+        <Icon name="activity" {...icon} />
         <h2 id="activity-title">Activity</h2>
       </div>
       <ol className="mx-feed">
@@ -438,23 +423,23 @@ function SaleProperties({ sale }: { sale: Schemas["Sale"] }) {
         <h2 id="props-details">Details</h2>
         <dl>
           <Property label="Member">
-            <User {...markIcon} />
+            <Icon name="profile" {...markIcon} />
             <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: sale.member.id }}>
               {sale.member.name}
             </Link>
           </Property>
           <Property label={sale.channel === "online" ? "Channel" : "Location"}>
-            <MapPin {...markIcon} />
+            <Icon name="location" {...markIcon} />
             <span className="mx-value__text">{sale.channel === "online" ? "Online" : locationName(sale.location_id)}</span>
           </Property>
           <Property label="Date">
-            <CalendarDays {...markIcon} />
+            <Icon name="schedule" {...markIcon} />
             <time dateTime={sale.purchased_at} suppressHydrationWarning>
               {formatDateTime(sale.purchased_at, organization.timezone)}
             </time>
           </Property>
           <Property label="Price">
-            <Tag {...markIcon} />
+            <Icon name="products" {...markIcon} />
             <span className="mx-value__text">
               {sale.line_item.price_label}
               {sale.renewal ? " · Agreed price" : ""}
@@ -462,7 +447,7 @@ function SaleProperties({ sale }: { sale: Schemas["Sale"] }) {
           </Property>
           {sale.attendees.length > 1 ? (
             <Property label="Spots">
-              <Users {...markIcon} />
+              <Icon name="members" {...markIcon} />
               <span className="mx-value__text">{sale.attendees.length}</span>
             </Property>
           ) : null}

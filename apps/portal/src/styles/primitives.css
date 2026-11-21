@@ -1,63 +1,54 @@
 /* Raw palette. Use semantic tokens from tokens.css in components.
- * Swatch names encode the original hex value; they do not imply a UI role. */
+ * Swatch names encode the original hex value; they do not imply a UI role.
+ * Source: the Paper file "Flowfokus Design" (zinc neutrals, status colours). */
 :root {
-  --swatch-000000: #000000;
+  /* Zinc neutrals. */
   --swatch-ffffff: #ffffff;
-  --swatch-6b6b72: #6b6b72;
-  --swatch-f2f2ee: #f2f2ee;
-  --swatch-a3a3aa: #a3a3aa;
-  --swatch-83838b: #83838b;
-  --swatch-3d55d6: #3d55d6;
-  --swatch-7088ff: #7088ff;
-  --swatch-eef0fd: #eef0fd;
-  --swatch-161a33: #161a33;
-  --swatch-c8cff7: #c8cff7;
-  --swatch-262d5c: #262d5c;
-  --swatch-3dd68c: #3dd68c;
-  --swatch-e9f6ef: #e9f6ef;
-  --swatch-0f2a1e: #0f2a1e;
-  --swatch-b5dfc8: #b5dfc8;
-  --swatch-1b4a34: #1b4a34;
-  --swatch-f5a524: #f5a524;
-  --swatch-fcf3e2: #fcf3e2;
-  --swatch-1a1407: #1a1407;
-  --swatch-efd7a6: #efd7a6;
-  --swatch-3a2c0e: #3a2c0e;
-  --swatch-f2555a: #f2555a;
-  --swatch-fdeeee: #fdeeee;
-  --swatch-1a0d0e: #1a0d0e;
-  --swatch-f2c4c6: #f2c4c6;
-  --swatch-3a1a1c: #3a1a1c;
-  --swatch-fbe0e1: #fbe0e1;
-  --swatch-2a1214: #2a1214;
-  --swatch-e9a5a8: #e9a5a8;
-  --swatch-4a1e21: #4a1e21;
+  --swatch-fafafa: #fafafa;
+  --swatch-f4f4f5: #f4f4f5;
+  --swatch-e4e4e7: #e4e4e7;
+  --swatch-d4d4d8: #d4d4d8;
+  --swatch-8f8f98: #8f8f98;
+  --swatch-8b8b94: #8b8b94;
+  --swatch-71717a: #71717a;
+  --swatch-6b6b74: #6b6b74;
+  --swatch-52525b: #52525b;
+  --swatch-a1a1aa: #a1a1aa;
+  --swatch-3f3f46: #3f3f46;
+  --swatch-303034: #303034;
+  --swatch-27272a: #27272a;
+  --swatch-1f1f23: #1f1f23;
+  --swatch-18181b: #18181b;
+  --swatch-0c0c0e: #0c0c0e;
+  --swatch-09090b: #09090b;
+  --swatch-dedee3: #dedee3;
+
+  /* Black and white at fixed opacity: borders, hover, selected, and sunken fills. */
+  --swatch-black-03: #00000008;
+  --swatch-black-04: #0000000a;
+  --swatch-black-05: #0000000d;
+  --swatch-black-08: #00000014;
+  --swatch-black-14: #00000024;
+  --swatch-white-04: #ffffff0b;
+  --swatch-white-06: #ffffff0f;
+  --swatch-white-10: #ffffff1a;
+  --swatch-white-16: #ffffff29;
+  --swatch-white-12: #ffffff1f;
+
+  /* Status. Light values are the darker marks from the light frames. */
+  --swatch-18734b: #18734b;
+  --swatch-5bbf8a: #5bbf8a;
+  --swatch-9a5b00: #9a5b00;
+  --swatch-e5b25d: #e5b25d;
+  --swatch-c62e28: #c62e28;
+  --swatch-f0706a: #f0706a;
+  --swatch-245eaa: #245eaa;
+  --swatch-80b7f5: #80b7f5;
+
+  /* Chart series. They name data series, not status. */
   --swatch-9085e9: #9085e9;
   --swatch-199e70: #199e70;
   --swatch-c98500: #c98500;
   --swatch-d55181: #d55181;
   --swatch-3987e5: #3987e5;
-  --swatch-3e3e44: #3e3e44;
-  --swatch-5c5c63: #5c5c63;
-  --swatch-cfcfd3: #cfcfd3;
-  --swatch-1e1e22: #1e1e22;
-
-  /* Redesign neutrals and status marks (Paper "Flowfokus Redesign"), with derived dark values. */
-  --swatch-f7f7f7: #f7f7f7;
-  --swatch-f4f4f3: #f4f4f3;
-  --swatch-e3e3e3: #e3e3e3;
-  --swatch-d4d4d4: #d4d4d4;
-  --swatch-8a8a8a: #8a8a8a;
-  --swatch-303030: #303030;
-  --swatch-616161: #616161;
-  --swatch-707070: #707070;
-  --swatch-484848: #484848;
-  --swatch-0d6b4e: #0d6b4e;
-  --swatch-9a5b00: #9a5b00;
-  --swatch-b3261e: #b3261e;
-  --swatch-101011: #101011;
-  --swatch-19191b: #19191b;
-  --swatch-1f1f22: #1f1f22;
-  --swatch-26262a: #26262a;
-  --swatch-34343a: #34343a;
 }

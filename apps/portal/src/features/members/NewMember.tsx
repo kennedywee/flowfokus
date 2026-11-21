@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { User, UserPlus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { checkNewMember, fieldMessage, type NewMemberErrors } from "./list";
 
 const sendMember = (input: Parameters<typeof createMember>[0]["data"]) => createMember({ data: input });
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 const FORM_ID = "new-member";
 
 function focusField(id: string) {
@@ -46,7 +46,7 @@ function NewMemberHead({ children }: { children?: ReactNode }) {
   return (
     <header className="new-member__head">
       <span className="new-member__icon" aria-hidden="true">
-        <UserPlus {...icon} />
+        <Icon name="profile" {...icon} />
       </span>
       <h1>New member</h1>
       {children ? <PageActions>{children}</PageActions> : null}
@@ -163,7 +163,7 @@ function NewMemberForm() {
 
         <section className="mx-section" aria-labelledby="profile-title">
           <div className="mx-section__head">
-            <User {...icon} />
+            <Icon name="profile" {...icon} />
             <h2 id="profile-title">Profile</h2>
           </div>
           <div className="new-member__fields">

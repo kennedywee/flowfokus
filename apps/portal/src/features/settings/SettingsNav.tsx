@@ -1,15 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import {
-  ArrowLeft,
-  Bell,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  SlidersHorizontal,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -21,15 +12,14 @@ import {
   type SettingsSection,
 } from "./sections";
 
-const ICON: Record<string, LucideIcon> = {
-  general: SlidersHorizontal,
-  locations: MapPin,
-  staff: Users,
-  notifications: Bell,
+const ICON: Record<string, IconName> = {
+  general: "general",
+  locations: "location",
+  staff: "staff",
+  notifications: "notifications",
 };
 
 const icon = {
-  strokeWidth: 1.5,
   "aria-hidden": true,
   focusable: false,
 } as const;
@@ -60,7 +50,7 @@ export function SettingsNav({
   const real = SETTINGS_SECTIONS.filter((section) => !section.sample);
   const samples = SETTINGS_SECTIONS.filter((section) => section.sample);
   const item = (section: SettingsSection) => {
-    const Icon = ICON[section.slug]!;
+    const iconName = ICON[section.slug]!;
     const active = section.slug === current.slug;
     return (
       <SidebarMenuItem key={section.slug}>
@@ -76,7 +66,7 @@ export function SettingsNav({
             />
           }
         >
-          <Icon className="settings-nav__icon" {...icon} />
+          <Icon name={iconName} className="settings-nav__icon" {...icon} />
           <span className="nav-item__label">{section.label}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -98,7 +88,7 @@ export function SettingsNav({
               />
             }
           >
-            <ArrowLeft {...icon} />
+            <Icon name="chevronLeft" {...icon} />
             <span className="nav-item__label">Back to app</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -128,7 +118,7 @@ export function SettingsIndexList({ slug }: { slug: string }) {
   const real = SETTINGS_SECTIONS.filter((section) => !section.sample);
   const samples = SETTINGS_SECTIONS.filter((section) => section.sample);
   const row = (section: SettingsSection) => {
-    const Icon = ICON[section.slug]!;
+    const iconName = ICON[section.slug]!;
     return (
       <li key={section.slug}>
         <Link
@@ -136,9 +126,9 @@ export function SettingsIndexList({ slug }: { slug: string }) {
           params={{ org: slug }}
           className="settings-index__row"
         >
-          <Icon {...icon} />
+          <Icon name={iconName} {...icon} />
           <span className="settings-index__label">{section.label}</span>
-          <ChevronRight className="settings-index__chevron" {...icon} />
+          <Icon name="chevronRight" className="settings-index__chevron" {...icon} />
         </Link>
       </li>
     );
@@ -157,7 +147,7 @@ export function SettingsIndexList({ slug }: { slug: string }) {
 export function SettingsBack({ slug }: { slug: string }) {
   return (
     <Link to="/$org/settings" params={{ org: slug }} className="settings-back">
-      <ChevronLeft {...icon} />
+      <Icon name="chevronLeft" {...icon} />
       Settings
     </Link>
   );

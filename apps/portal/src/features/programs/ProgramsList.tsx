@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ArrowDown, ChevronRight, Clock, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -28,7 +28,7 @@ import { KindTile } from "./kinds";
 
 type Program = Schemas["ProgramListItem"];
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * Paper "Programs": Filter and search, a header band, then one 52px row per
@@ -64,7 +64,7 @@ function ListHead() {
       {can("programs:manage") ? (
         <PageActions>
           <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ size: "compact" })}>
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             New program
           </Link>
         </PageActions>
@@ -156,7 +156,7 @@ function ProgramRows({ programs }: { programs: Program[] }) {
                     <span className="programs-row__dot" aria-hidden="true">
                       ·
                     </span>
-                    <Clock className="programs-row__clock" {...icon} />
+                    <Icon name="length" className="programs-row__clock" {...icon} />
                     {lengthText(program.duration_minutes)}
                     {manyLocations ? (
                       <>
@@ -184,7 +184,7 @@ function ProgramRows({ programs }: { programs: Program[] }) {
                 )}
               </span>
               <span className="programs-row__upcoming programs-col--num">{upcomingText(program.upcoming_count)}</span>
-              <ChevronRight className="programs-row__chevron" {...icon} />
+              <Icon name="chevronRight" className="programs-row__chevron" {...icon} />
             </Link>
           </li>
         ))}
@@ -200,7 +200,7 @@ function ProgramsHead() {
     <div className="programs-table__head programs-grid" aria-hidden="true">
       <span className="programs-table__sort">
         Program
-        <ArrowDown {...icon} />
+        <Icon name="arrowDown" {...icon} />
       </span>
       <span className="programs-col--host">Host</span>
       <span className="programs-col--num">Upcoming</span>
@@ -222,7 +222,7 @@ function NoPrograms() {
       action={
         manage ? (
           <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             New program
           </Link>
         ) : null

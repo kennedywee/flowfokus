@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { ChevronRight, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -25,7 +25,7 @@ import {
 } from "./facts";
 import { FulfillmentMark, PaymentMark } from "./SaleFacts";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * The sales list: filters and search, then one row per sale with the member,
@@ -67,7 +67,7 @@ function NewSaleLink({ variant = "default" }: { variant?: "default" | "secondary
   if (!can("purchases:create")) return null;
   return (
     <Link to="/$org/sales/new" params={{ org: organization.slug }} className={buttonVariants({ variant, size: "compact" })}>
-      <Plus {...icon} />
+      <Icon name="plus" {...icon} />
       New sale
     </Link>
   );
@@ -169,7 +169,7 @@ function SaleRows({ sales }: { sales: Schemas["Sale"][] }) {
               <time className="sales-row__date" dateTime={sale.purchased_at} suppressHydrationWarning>
                 {shortSaleDate(sale.purchased_at, organization.timezone, now)}
               </time>
-              <ChevronRight className="sales-row__chevron" {...icon} />
+              <Icon name="chevronRight" className="sales-row__chevron" {...icon} />
             </Link>
           </li>
         ))}

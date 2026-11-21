@@ -17,7 +17,7 @@ import {
   MenuSubTrigger,
   MenuTrigger,
 } from "@ui-sdk/react/menu"
-import { Check } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils"
 
 /*
@@ -76,7 +76,7 @@ function DropdownMenuRadioItem({
     <MenuRadioItem className={cn("menu__item", className)} closeOnSelect={closeOnSelect} {...props}>
       {/* The slot keeps its width when empty, so every label lines up. */}
       <span className="menu__check">
-        <MenuItemIndicator render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />} />
+        <MenuItemIndicator render={<Icon name="check" aria-hidden="true" focusable="false" />} />
       </span>
       {children}
     </MenuRadioItem>
@@ -103,7 +103,7 @@ function DropdownMenuCheckboxItem({
       {...props}
     >
       <span className="menu__check menu__check--box">
-        <MenuItemIndicator render={<Check strokeWidth={2.5} aria-hidden="true" focusable="false" />} />
+        <MenuItemIndicator render={<Icon name="check" aria-hidden="true" focusable="false" />} />
       </span>
       {children}
     </MenuCheckboxItem>

@@ -7,36 +7,81 @@ description: Quiet operational UI with neutral surfaces and explicit state.
 
 Mode: Operate. Staff serve a customer at the desk. Each screen has one task.
 Use a title, clear controls, and direct actions. Cut taglines, routine helper
-text, and repeated labels. Keep facts and action consequences. The current
-palette has dark and light surfaces, thin borders, and restrained status color.
-The live source is `src/styles/tokens.css`, not the older gym-site style or a
-component library's default theme. Read [the system guide](../../docs/design-system.md) first.
+text, and repeated labels. Keep facts and action consequences. The palette is
+zinc, with dark and light surfaces, thin borders, and restrained status color.
+The reference is the Paper file "Flowfokus Design". The live source is
+`src/styles/tokens.css`, not the older gym-site style or a component library's
+default theme. Read [the system guide](../../docs/design-system.md) first.
 
 ## Colors
 
 Raw hex swatches live in `src/styles/primitives.css`. Their names identify the
-value, not its purpose. Components use semantic roles in `tokens.css`:
+value, not its purpose. Components use semantic roles in `tokens.css`. Paper's
+tokens hold the dark values; the light values come from the light frames in the
+same file, such as "Member details — Priya Nair · Light".
 
-| Job | Token |
-| --- | --- |
-| Page / raised section / recessed group | `--color-page` / `--color-surface` / `--color-well` |
-| Main / secondary / muted text | `--color-ink` / `--color-ink-2` / `--color-ink-3` |
-| Disabled or decorative marks only | `--color-ink-4` |
-| Divider / control boundary / keyboard focus | `--color-line` / `--color-field-line` / `--color-focus` |
-| Completed / attention / failure / information | `--color-good` / `--color-warning` / `--color-critical` / `--color-info` |
+| Job | Token | Paper | Light | Dark |
+| --- | --- | --- | --- | --- |
+| Page | `--color-page` | `--background` | #FFFFFF | #09090B |
+| Raised section, card | `--color-surface` | `--surface` | #FFFFFF | #18181B |
+| Menu, dialog, popover | `--color-overlay` (= `--color-raised`) | `--raised` | #FFFFFF | #1F1F23 |
+| Sidebar | `--color-sidebar` | window frame | #FAFAFA | #0C0C0E |
+| Band, recessed group, key hint | `--color-well` | `--sunken` | black 4% | white 4% |
+| Hover | `--color-hover` | `--hover` | black 3% | white 6% |
+| Selected nav item | `--color-selected` | `--selected` | black 5% | white 10% |
+| Divider | `--color-line` | `--border` | black 8% | white 10% |
+| Stronger divider | `--color-line-strong` | `--border-strong` | black 14% | white 16% |
+| Form control boundary (3:1) | `--color-field-line` | | #8B8B94 | #71717A |
+| Main text | `--color-ink` | `--foreground` | #18181B | #F4F4F5 |
+| Secondary text | `--color-ink-2` | `--muted-foreground` | #52525B | #A1A1AA |
+| Muted text | `--color-ink-3` | `--subtle-foreground` | #6B6B74 | #8F8F98 |
+| Marks and disabled only | `--color-ink-4` | `--subtle-foreground` | #8B8B94 | #71717A |
+| Completed / attention / failure / information | `--color-good` / `--color-warning` / `--color-critical` / `--color-info` | `--success` / `--warning` / `--destructive` / `--info` | #18734B / #9A5B00 / #C62E28 / #245EAA | #5BBF8A / #E5B25D / #F0706A / #80B7F5 |
 
-Each status has matching wash and line roles. Show a label and an icon with
-status color. Chart series colors identify data series; they do not imply status.
+Muted text is not Paper's value in either theme. Paper's #71717A is 4.4:1 on
+the light band and 3.7:1 on the dark surface, below the 4.5:1 that small text
+needs. Light `--color-ink-3` is a step darker and dark `--color-ink-3` a step
+lighter. Paper's value stays as the dark mark colour (`--color-ink-4`).
+
+Contrast of text roles, measured on the rendered colours in the running portal
+(the band is flattened onto the page). The status colours are also at least
+4.9:1 on all four backgrounds in both themes:
+
+| Role | Light: page / surface / raised / band | Dark: page / surface / raised / band |
+| --- | --- | --- |
+| `--color-ink` | 17.7 / 17.7 / 17.7 / 16.2 | 18.1 / 16.1 / 14.9 / 16.8 |
+| `--color-ink-2` | 7.7 / 7.7 / 7.7 / 7.1 | 7.8 / 6.9 / 6.4 / 7.2 |
+| `--color-ink-3` | 5.3 / 5.3 / 5.3 / 4.8 | 6.2 / 5.5 / 5.1 / 5.8 |
+
+Each status has matching wash and line roles, made with `color-mix()` from the
+status colour, so they follow both themes. Show a label and an icon with status
+color. Chart series colors identify data series; they do not imply status. The
+information color is also the focus ring and the link color (`--color-accent`
+is an alias).
+
+The primary button is a gradient (`--gradient-primary`), as in the Paper
+frames: #303034 to #18181B with white text in the light theme, and #FFFFFF to
+#DEDEE3 with dark text in the dark theme. It has a 1px light edge inside and
+a soft drop (`--shadow-primary`). Other controls that need an ink fill (a
+checked box, an avatar) use `--color-ink` and `--color-on-ink`.
+
 `light-dark()` owns both theme values. Root `.light` or `.dark` overrides the
 system choice. The theme variables in `src/styles.css` bridge these roles;
-`--accent` there means neutral hover, not the portal's blue accent.
+`--accent` there means neutral hover, not an accent color.
 
 ## Typography
 
-Use Figtree Variable for all text, as in Paper. Money, times, counts, and IDs
-use equal-width figures (`font-variant-numeric: tabular-nums`) so they line up.
-There is no mono font. Use the existing `--text-*`, `--font-weight-*`, and `--leading-*`
-scales. Body text uses `--text-base` (14px); page titles use `--text-xl` (24px).
+Use Geist Variable for text and Geist Mono Variable for identifiers and code
+(`--font-sans`, `--font-mono`), both loaded from `@fontsource-variable` in the
+root route. Money, times, counts, and IDs use equal-width figures
+(`font-variant-numeric: tabular-nums`) so they line up. Use the existing `--text-*`, `--font-weight-*`, and `--leading-*`
+scales. Body text uses `--text-base` (14px); lists and forms use `--text-sm`
+(13px) and `--text-xs` (12px); page titles use `--text-lg` (20px). The scale
+also holds the sizes of the Paper detail frames: `--text-3xs` 10px,
+`--text-2xs` 11px, `--text-lead` 15px, `--text-figure` 28px (a large figure,
+with `--tracking-figure` and `--leading-figure`), and `--text-display` 36px
+(a detail page title on Program and Session, with `--tracking-display` and
+`--leading-display`). They are not applied to a page until its screen issue.
 Use `Money` and `Time` for domain values.
 
 ## Layout
@@ -67,10 +112,54 @@ Special transitions retain their existing timing. Preserve reduced-motion rules.
 
 ## Shapes
 
-Use the `--radius-*` tokens. Controls use `--radius-md`; components retain their
-existing radius classes. Small status pills can be fully rounded. Controls use
-`--control-height` (44px), with the existing compact variant where appropriate.
-Do not replace the radius scale with Tailwind's default values.
+Use the `--radius-*` tokens: `--radius-sm` 6px, `--radius-md` 8px,
+`--radius-lg` 10px, `--radius-xl` 12px, as in Paper. Compact (28px) controls use
+`--radius-compact`, which is 6px. Other controls use `--radius-md`; components
+retain their existing radius classes. Small status pills can be fully rounded.
+Controls use `--control-height` (44px), with the existing compact variant where
+appropriate. Do not replace the radius scale with Tailwind's default values.
+
+## Icons
+
+Every icon comes from one set, drawn in the Paper file "Flowfokus Design" (page
+"Icons"): a 16px grid, a 1.25 stroke, round ends, soft corners. Use
+`<Icon name="members" />` from `components/ui/icon.tsx`. Its names are in
+`ICON_NAMES`, and the gallery shows each one at `localhost:4001/components/icon`.
+Icons draw in `currentColor`, so the text color sets the icon color. The status
+icons (`paid`, `fulfilled`, `partlyFulfilled`, `partlyPaid`) also use
+`currentColor` for their mark; a tone class on the parent gives the status
+color, and a grey part uses `--color-ink-3`. An icon hides from assistive
+technology unless it has an `aria-label`, so put a text label beside it.
+There is no other icon library in the portal. The gym site keeps its own.
+
+Add a new icon to the Paper page first, then to `icon.tsx`. Where the set has
+no icon for a job, use the closest one and say so here. These are the lucide
+icons the portal used before, and what replaced them:
+
+| Job | Icon |
+| --- | --- |
+| Alert, warning, info, notice (circle-alert, triangle-alert, info, bell) | `notifications` |
+| Error, no, cancel, void, remove, delete, dismiss (x, circle-x, ban, trash, minus in Roles) | `close` |
+| Clock, waiting, frozen (clock, snowflake) | `length` |
+| Empty, off, unfulfilled (inbox, circle, package) | `unfulfilled` |
+| Unpaid (circle-dashed) | `payments` |
+| Part paid | `partlyPaid` |
+| Archive price, hidden (archive, eye-off) | `visibility` |
+| Gym access benefit, log in (dumbbell, log-in); Sign out (log-out, flipped) | `checkIns` |
+| Refund, undo (undo-2); renew (refresh-cw); swap (arrow-right-left) | `arrowDown` / `sort` / `sort` |
+| Notes, description (sticky-note, align-left) | `customItem` / `edit` |
+| Bookings table (table-2) | `capacity` |
+| Programs (calendar-check, layers) | `programs` |
+| Linked, unlinked, new member (user-check, user-x, user-plus) | `profile` |
+| Keyboard shortcuts | `developer` |
+| Light, dark, system theme (sun, moon, monitor) | `appearance` for all three |
+| Mixed checkbox (minus) | a CSS bar; the set has no minus |
+
+Two groups of marks are not from the set and stay as they were: the time and
+credit rings (`MemberDetails.tsx`) and the session status marks
+(`features/schedule/marks.tsx`). Both are drawn state marks, not icons.
+
+
 
 ## Components
 
@@ -187,9 +276,11 @@ an Undo, or its issue must say why it does not. Design: Paper page
 
 This section records the target for the portal redesign. The sections above
 describe the live app. Where they conflict, the live rules apply until a screen
-moves to the redesign. The reference is the "Member details page" in the
-Paper file "Flowfokus Redesign". Earlier explorations live in the separate
-file "Flowfokus Redesign — Explorations".
+moves to the redesign. The reference is the Paper file "Flowfokus Design", which
+replaces the earlier file "Flowfokus Redesign" (its "Member details page" and its
+component boards). Colors, type, radius, and icons now follow the new file; see
+Colors, Typography, Shapes, and Icons above. The layout notes below still apply
+until a screen moves to the new file.
 
 Layout:
 
@@ -228,11 +319,10 @@ Styling:
 - Use three text sizes: 20px for the page title, 13px for body text and
   headings, and 12px for secondary text. Use weight and grey tone for hierarchy.
 - Use two font weights only: 400 for body text, 500 for headings and emphasis.
-- Take greys from the Tailwind CSS neutral palette (see
-  `docs/paper-redesign/README.md` for the token map).
-- Use an 8px radius on controls and 12px on floating surfaces (menus, dialogs,
-  toasts, panels, cards). Circles keep their shape; checkboxes and square
-  tiles under 20px use 4px.
+- Take greys and status colors from the tokens (Colors above): zinc, not the
+  Tailwind neutral greys of the earlier file.
+- Use the radius tokens (Shapes above). Circles keep their shape; checkboxes
+  and square tiles under 20px use 4px.
 - Draw progress bars solid by default. A dotted pattern is an optional variant.
 - Put one 16px grey icon on each section title. Keep list rows as plain text.
 - Show status as a colored 16px icon with grey text, such as a green pie for
@@ -245,34 +335,14 @@ Styling:
 The tokens and the shell now follow the redesign. Screens that have not moved
 still use their older components on the new palette.
 
-Tokens. `tokens.css` maps the Paper tokens to the existing roles:
-
-| Paper token | Role | Light | Dark (derived) |
-| --- | --- | --- | --- |
-| `--background` | `--color-page`, `--color-surface`, `--color-sidebar` | #FFFFFF | #101011 |
-| `--muted` | `--color-well` (section band, key hint) | #F7F7F7 | #19191B |
-| `--accent` | `--color-hover` (hover, selected nav item) | #F4F4F3 | #1F1F22 |
-| `--border` | `--color-line`, `--color-avatar` | #E3E3E3 | #26262A |
-| `--foreground` | `--color-ink` | #303030 | #F2F2EE |
-| `--muted-foreground` | `--color-ink-2` | #616161 | #A3A3AA |
-| `--subtle-foreground` | `--color-ink-4` (marks only) | #8A8A8A | #5C5C63 |
-| `--success` / `--warning` / `--destructive` | `--color-good` / `--color-warning` / `--color-critical` | #0D6B4E / #9A5B00 / #B3261E | earlier dark values |
-
-Decision on muted text: the theme variable `--muted-foreground` now maps to `ink-2`,
-which is Paper's #616161. It used to map to `ink-3`. Paper's subtle grey
-(#8A8A8A) has 3.4:1 contrast on white, so it is `ink-4` and only colours
-chevrons, slashes, and idle icons. Subtle text, such as a key hint or an ID,
-uses `ink-3` (#707070), the lightest grey that meets 4.5:1 on the surface and
-the band. Dark values keep the earlier dark ink and status colours on a single
-#101011 surface.
-
-Type. Redesigned screens use `--text-lg` (20px, semibold) for the page title,
-`--text-sm` (13px) for body text and headings, and `--text-xs` (12px) for
-secondary text. The base `h1` is now 20px. Figtree is the only font, as in Paper.
+Tokens. `tokens.css` maps the Paper tokens to the existing roles; the table
+is in Colors above. Redesigned screens use `--text-lg` (20px, semibold) for the
+page title, `--text-sm` (13px) for body text and headings, and `--text-xs` (12px)
+for secondary text. The base `h1` is 20px. Geist is the font, as in Paper.
 Numbers use its equal-width figures.
 
 Controls. `Button size="compact"` (and `"icon-compact"`) is the 28px redesign
-button with an 8px radius (`--control-height-compact`, `--radius-compact`). A
+button with a 6px radius (`--control-height-compact`, `--radius-compact`). A
 compact secondary button has a hairline and a 1px drop (`--shadow-control`).
 Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
 `aria-keyshortcuts` on the button. Touch screens hide the hints. Show a hint
@@ -471,8 +541,8 @@ tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
 
 - Programs: the title, New program (programs:manage) in the top bar, Filter
   (Kind, Visibility, with counts and chips) and a "/" search over names and
-  hosts. A header band, then 52px rows: the kind tile (two people, ticket,
-  clock), the name with Staff only, kind and length (and the location when
+  hosts. A header band, then 52px rows: the kind tile (the set's groupClass, event,
+  and appointment icons), the name with Staff only, kind and length (and the location when
   there are several), the host with an initial, and the upcoming count. Rails
   returns every program; the list sorts by name, filters, and pages 50 at a
   time in the browser. The URL keeps `kind`, `visibility`, and `q`. Phones

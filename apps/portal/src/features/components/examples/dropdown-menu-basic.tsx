@@ -1,4 +1,4 @@
-import { Ellipsis } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,7 +13,7 @@ export default function Example() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button size="icon-compact" variant="secondary" aria-label="Sale actions" />}>
-        <Ellipsis strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name="more" aria-hidden="true" focusable="false" />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem>

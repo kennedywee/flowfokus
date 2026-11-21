@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { ChevronsUpDown, Search } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import {
   Combobox,
   ComboboxContent,
@@ -103,12 +103,12 @@ export function ContextSwitcher({
         >
           {icon ? <span className="switcher__icon">{icon}</span> : null}
           <span className="switcher__current">{current}</span>
-          <ChevronsUpDown className="switcher__chevron" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <Icon name="chevrons" className="switcher__chevron" aria-hidden="true" focusable="false" />
         </ComboboxTrigger>
       </div>
       <ComboboxContent className="switcher__panel" aria-label={label} anchor={button}>
         <div className="switcher__search">
-          <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <Icon name="search" aria-hidden="true" focusable="false" />
           <ComboboxInput
             autoFocus
             className="switcher__input"

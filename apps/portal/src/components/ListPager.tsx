@@ -1,7 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { pageItems } from "../lib/paging";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * The footer of a list: the range on the left ("1–50 of 212 sales") and
@@ -36,7 +36,7 @@ export function ListPager({
               disabled={page === 1}
               onClick={() => onPage(page - 1)}
             >
-              <ChevronLeft {...icon} />
+              <Icon name="chevronLeft" {...icon} />
             </button>
           </li>
           {pageItems(page, pages).map((item, index) => (
@@ -66,7 +66,7 @@ export function ListPager({
               disabled={page === pages}
               onClick={() => onPage(page + 1)}
             >
-              <ChevronRight {...icon} />
+              <Icon name="chevronRight" {...icon} />
             </button>
           </li>
         </ul>
