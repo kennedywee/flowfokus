@@ -46,7 +46,18 @@ before it) is history. The visual rules live in
   ([#18](https://github.com/kennedywee/flowfokus/issues/18)). The sale page's
   title is the product name. Record payment (P) and Fulfill items (F) are in the
   page's section headers; Refund, Revoke access, and Void are in its more menu.
-- Calendar (the schedule route): sessions by day.
+- Calendar (`/calendar`, first page): the sessions at the top bar location as a
+  Day grid (a column per host, program, or none) or a Week grid (a row per group,
+  Monday to Sunday). The toolbar has Previous, Next, Today, the date with its
+  session count, Group by, a Program filter, and Day and Week; a kinds row
+  switches Classes, Appointments, and Events with a count each. View, date,
+  group, program, and the switched-off kinds are in the URL. A block opens
+  Session details; phones get a list. Hosts are the program's free-text host
+  name, with "No host". It leaves out the month view (no Paper frame), the booked
+  member's name on an appointment ("Booked" or "Open"), staff hosts
+  ([#20](https://github.com/kennedywee/flowfokus/issues/20)), and open times from
+  host availability ([#99](https://github.com/kennedywee/flowfokus/issues/99)).
+  `/schedule` redirects.
 - Session details: the date and time with "Starts in", the arrival ribbon (the
   members who are here, how many are still to arrive, and the spots open), and
   the bookings as Here, To arrive, and Cancelled. Staff mark a booked

@@ -23,6 +23,7 @@ export const PAPER_PAGES = {
   "Flowfokus Design — Program details": `${DESIGN_FILE}/p-9-0`,
   "Flowfokus Design — Members": `${DESIGN_FILE}/p-D-0`,
   "Flowfokus Design — Session details": `${DESIGN_FILE}/p-A-0`,
+  "Flowfokus Design — Calendar": `${DESIGN_FILE}/p-B-0`,
   "Flowfokus Design — Sale details": `${DESIGN_FILE}/p-8-0`,
   "Flowfokus Design — Product details": `${DESIGN_FILE}/p-C-0`,
   "Flowfokus Design — Pass credits": `${DESIGN_FILE}/p-5-0`,
@@ -203,7 +204,10 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A row of quiet buttons where one stays pressed. Arrow keys move between them.",
     source: ["components/ui/toggle-group.tsx"],
-    examples: [{ file: "toggle-group-basic", title: "Single choice" }],
+    examples: [
+      { file: "toggle-group-basic", title: "Single choice" },
+      { file: "toggle-group-multiple", title: "Several pressed at once", note: "The Calendar's kinds row. Sample counts." },
+    ],
   },
   {
     slug: "segmented-control",
@@ -538,6 +542,16 @@ export const GALLERY: readonly GalleryEntry[] = [
     source: ["components/parts/marks.tsx", "lib/list-parts.ts"],
     paper: { page: "Flowfokus Design — Program details", board: "Program" },
     examples: [{ file: "spot-stack-sizes", title: "Chart size and row size" }],
+  },
+  {
+    slug: "calendar-block",
+    name: "Calendar block",
+    group: "Blocks",
+    summary:
+      "One session on the Calendar. A class is a white card with its spot stack and a count, an appointment a flat grey block (Booked or Open), an event a dark one with its spots taken. Full is amber, an ended session is washed out, and a cancelled one is a dashed red outline with a struck name. With a link it opens the session page.",
+    source: ["features/calendar/Block.tsx", "features/calendar/Calendar.tsx", "styles/calendar.css"],
+    paper: { page: "Flowfokus Design — Calendar", board: "Calendar · K2 · Day, kinds" },
+    examples: [{ file: "calendar-blocks", title: "Each kind and state", note: "Sample data." }],
   },
   {
     slug: "mix-bar",

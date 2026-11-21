@@ -11,30 +11,12 @@ type Occurrence = Schemas["Occurrence"];
 type Entry = Schemas["ScheduleEntry"];
 type Booking = Schemas["Booking"];
 
-/** The schedule shows two weeks at a time. */
-export const DAYS = 14;
 /** A ticket sale buys at most this many spots. Rails has the same limit. */
 export const MAX_SPOTS = 10;
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/* ---------- The schedule URL ---------- */
-
-/** `from` is the first day; `program` is a comma list of program IDs. */
-export interface ScheduleSearch {
-  from?: string;
-  program?: string;
-}
-
-export function readScheduleSearch(search: Record<string, unknown>): ScheduleSearch {
-  const clean: ScheduleSearch = {};
-  if (typeof search.from === "string" && DATE.test(search.from)) clean.from = search.from;
-  const programs = readPrograms(typeof search.program === "string" ? search.program : undefined);
-  if (programs.length) clean.program = programs.join(",");
-  return clean;
-}
-
+/** A comma list of program IDs from the URL, without repeats or anything that is not an ID. */
 export function readPrograms(value: string | undefined): string[] {
   if (!value) return [];
   return [...new Set(value.split(",").filter((id) => UUID.test(id)))];
@@ -55,18 +37,6 @@ export function shiftDay(day: string, days: number): string {
 
 function dayParts(day: string, options: Intl.DateTimeFormatOptions): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", ...options }).format(new Date(`${day}T00:00:00Z`));
-}
-
-/** "Thu 5 Nov – Wed 18 Nov": the range Earlier and Later move through. */
-export function rangeLabel(from: string, days: number = DAYS): string {
-  const short = (day: string) => dayParts(day, { weekday: "short", day: "numeric", month: "short" }).replace(",", "");
-  return `${short(from)} – ${short(shiftDay(from, days - 1))}`;
-}
-
-/** "Today, Thursday 5 November" or "Friday 6 November": a day band. */
-export function dayTitle(day: string, today: string): string {
-  const title = dayParts(day, { weekday: "long", day: "numeric", month: "long" }).replace(",", "");
-  return day === today ? `Today, ${title}` : title;
 }
 
 export function sessionCount(count: number): string {
@@ -125,20 +95,6 @@ export function bookedText(occurrence: Pick<Occurrence, "spots_taken" | "capacit
   return `${occurrence.spots_taken} of ${occurrence.capacity} booked`;
 }
 
-/** The status on a schedule row: "Ended · 11 of 12 booked", "Cancelled · Coach unwell", "Full", "9 of 14 booked". */
-export function rowStatusText(occurrence: Occurrence, now: Date = new Date()): string {
-  switch (sessionState(occurrence, now)) {
-    case "cancelled":
-      return occurrence.cancel_reason ? `Cancelled · ${occurrence.cancel_reason}` : "Cancelled";
-    case "ended":
-      return `Ended · ${bookedText(occurrence)}`;
-    case "full":
-      return "Full";
-    case "open":
-      return bookedText(occurrence);
-  }
-}
-
 /** The Status property on the session page. The reason is its own property. */
 export function sessionStatusText(occurrence: Occurrence, now: Date = new Date()): string {
   switch (sessionState(occurrence, now)) {
@@ -160,12 +116,7 @@ export function capacityText(occurrence: Occurrence, now: Date = new Date()): st
   return state === "full" || state === "ended" ? `${spots} · ${occurrence.spots_taken} booked` : spots;
 }
 
-/** "Group class · Daniel Wong", or the length when nobody hosts it. */
-export function programLine(entry: Entry, kindLabel: string): string {
-  return `${kindLabel} · ${entry.program.host_name ?? lengthLabel(entry.starts_at, entry.ends_at)}`;
-}
-
-/* ---------- The schedule list ---------- */
+/* ---------- Sessions on the Calendar ---------- */
 
 /** Sessions at the top bar location. With no location, every session. */
 export function atLocation(entries: Entry[], locationId: string | null): Entry[] {
@@ -193,16 +144,6 @@ export function filterPrograms(entries: Entry[], programIds: string[]): Entry[] 
   if (!programIds.length) return entries;
   const chosen = new Set(programIds);
   return entries.filter((entry) => chosen.has(entry.program.id));
-}
-
-/** Sessions by day, in order. Rails sends them in start order. */
-export function groupByDay(entries: Entry[], timeZone: string): [string, Entry[]][] {
-  const days = new Map<string, Entry[]>();
-  for (const entry of entries) {
-    const key = dayKey(entry.starts_at, timeZone);
-    days.set(key, [...(days.get(key) ?? []), entry]);
-  }
-  return [...days.entries()];
 }
 
 /* ---------- Bookings on a session ---------- */

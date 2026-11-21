@@ -19,6 +19,8 @@ import { Route as OrgIndexRouteImport } from './routes/$org/index'
 import { Route as OrgSplatRouteImport } from './routes/$org/$'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as ComponentsNameRouteImport } from './routes/components/$name'
+import { Route as OrgCalendarIndexRouteImport } from './routes/$org/calendar/index'
+import { Route as OrgCalendarOccurrenceIdRouteImport } from './routes/$org/calendar/$occurrenceId'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
 import { Route as OrgMembersMemberIdRouteImport } from './routes/$org/members/$memberId'
 import { Route as OrgMembersNewRouteImport } from './routes/$org/members/new'
@@ -91,6 +93,16 @@ const ComponentsNameRoute = ComponentsNameRouteImport.update({
   id: '/$name',
   path: '/$name',
   getParentRoute: () => ComponentsRouteRoute,
+} as any)
+const OrgCalendarIndexRoute = OrgCalendarIndexRouteImport.update({
+  id: '/calendar/',
+  path: '/calendar/',
+  getParentRoute: () => OrgRouteRoute,
+} as any)
+const OrgCalendarOccurrenceIdRoute = OrgCalendarOccurrenceIdRouteImport.update({
+  id: '/calendar/$occurrenceId',
+  path: '/calendar/$occurrenceId',
+  getParentRoute: () => OrgRouteRoute,
 } as any)
 const OrgMembersIndexRoute = OrgMembersIndexRouteImport.update({
   id: '/members/',
@@ -217,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/$org/calendar/$occurrenceId': typeof OrgCalendarOccurrenceIdRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -231,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
   '/$org/settings/staff': typeof OrgSettingsStaffRoute
+  '/$org/calendar/': typeof OrgCalendarIndexRoute
   '/$org/members/': typeof OrgMembersIndexRoute
   '/$org/products/': typeof OrgProductsIndexRoute
   '/$org/programs/': typeof OrgProgramsIndexRoute
@@ -249,6 +263,7 @@ export interface FileRoutesByTo {
   '/components/$name': typeof ComponentsNameRoute
   '/$org': typeof OrgIndexRoute
   '/components': typeof ComponentsIndexRoute
+  '/$org/calendar/$occurrenceId': typeof OrgCalendarOccurrenceIdRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -263,6 +278,7 @@ export interface FileRoutesByTo {
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
   '/$org/settings/staff': typeof OrgSettingsStaffRoute
+  '/$org/calendar': typeof OrgCalendarIndexRoute
   '/$org/members': typeof OrgMembersIndexRoute
   '/$org/products': typeof OrgProductsIndexRoute
   '/$org/programs': typeof OrgProgramsIndexRoute
@@ -284,6 +300,7 @@ export interface FileRoutesById {
   '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
   '/components/': typeof ComponentsIndexRoute
+  '/$org/calendar/$occurrenceId': typeof OrgCalendarOccurrenceIdRoute
   '/$org/members/$memberId': typeof OrgMembersMemberIdRoute
   '/$org/members/new': typeof OrgMembersNewRoute
   '/$org/products/$productId': typeof OrgProductsProductIdRoute
@@ -298,6 +315,7 @@ export interface FileRoutesById {
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
   '/$org/settings/staff': typeof OrgSettingsStaffRoute
+  '/$org/calendar/': typeof OrgCalendarIndexRoute
   '/$org/members/': typeof OrgMembersIndexRoute
   '/$org/products/': typeof OrgProductsIndexRoute
   '/$org/programs/': typeof OrgProgramsIndexRoute
@@ -320,6 +338,7 @@ export interface FileRouteTypes {
     | '/components/$name'
     | '/$org/'
     | '/components/'
+    | '/$org/calendar/$occurrenceId'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -334,6 +353,7 @@ export interface FileRouteTypes {
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
     | '/$org/settings/staff'
+    | '/$org/calendar/'
     | '/$org/members/'
     | '/$org/products/'
     | '/$org/programs/'
@@ -352,6 +372,7 @@ export interface FileRouteTypes {
     | '/components/$name'
     | '/$org'
     | '/components'
+    | '/$org/calendar/$occurrenceId'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -366,6 +387,7 @@ export interface FileRouteTypes {
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
     | '/$org/settings/staff'
+    | '/$org/calendar'
     | '/$org/members'
     | '/$org/products'
     | '/$org/programs'
@@ -386,6 +408,7 @@ export interface FileRouteTypes {
     | '/components/$name'
     | '/$org/'
     | '/components/'
+    | '/$org/calendar/$occurrenceId'
     | '/$org/members/$memberId'
     | '/$org/members/new'
     | '/$org/products/$productId'
@@ -400,6 +423,7 @@ export interface FileRouteTypes {
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
     | '/$org/settings/staff'
+    | '/$org/calendar/'
     | '/$org/members/'
     | '/$org/products/'
     | '/$org/programs/'
@@ -490,6 +514,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/components/$name'
       preLoaderRoute: typeof ComponentsNameRouteImport
       parentRoute: typeof ComponentsRouteRoute
+    }
+    '/$org/calendar/': {
+      id: '/$org/calendar/'
+      path: '/calendar'
+      fullPath: '/$org/calendar/'
+      preLoaderRoute: typeof OrgCalendarIndexRouteImport
+      parentRoute: typeof OrgRouteRoute
+    }
+    '/$org/calendar/$occurrenceId': {
+      id: '/$org/calendar/$occurrenceId'
+      path: '/calendar/$occurrenceId'
+      fullPath: '/$org/calendar/$occurrenceId'
+      preLoaderRoute: typeof OrgCalendarOccurrenceIdRouteImport
+      parentRoute: typeof OrgRouteRoute
     }
     '/$org/members/': {
       id: '/$org/members/'
@@ -651,6 +689,7 @@ declare module '@tanstack/react-router' {
 interface OrgRouteRouteChildren {
   OrgSplatRoute: typeof OrgSplatRoute
   OrgIndexRoute: typeof OrgIndexRoute
+  OrgCalendarOccurrenceIdRoute: typeof OrgCalendarOccurrenceIdRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
   OrgMembersNewRoute: typeof OrgMembersNewRoute
   OrgProductsProductIdRoute: typeof OrgProductsProductIdRoute
@@ -665,6 +704,7 @@ interface OrgRouteRouteChildren {
   OrgSettingsNotificationsRoute: typeof OrgSettingsNotificationsRoute
   OrgSettingsRolesRoute: typeof OrgSettingsRolesRoute
   OrgSettingsStaffRoute: typeof OrgSettingsStaffRoute
+  OrgCalendarIndexRoute: typeof OrgCalendarIndexRoute
   OrgMembersIndexRoute: typeof OrgMembersIndexRoute
   OrgProductsIndexRoute: typeof OrgProductsIndexRoute
   OrgProgramsIndexRoute: typeof OrgProgramsIndexRoute
@@ -678,6 +718,7 @@ interface OrgRouteRouteChildren {
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgSplatRoute: OrgSplatRoute,
   OrgIndexRoute: OrgIndexRoute,
+  OrgCalendarOccurrenceIdRoute: OrgCalendarOccurrenceIdRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
   OrgMembersNewRoute: OrgMembersNewRoute,
   OrgProductsProductIdRoute: OrgProductsProductIdRoute,
@@ -692,6 +733,7 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgSettingsNotificationsRoute: OrgSettingsNotificationsRoute,
   OrgSettingsRolesRoute: OrgSettingsRolesRoute,
   OrgSettingsStaffRoute: OrgSettingsStaffRoute,
+  OrgCalendarIndexRoute: OrgCalendarIndexRoute,
   OrgMembersIndexRoute: OrgMembersIndexRoute,
   OrgProductsIndexRoute: OrgProductsIndexRoute,
   OrgProgramsIndexRoute: OrgProgramsIndexRoute,

@@ -1,0 +1,583 @@
+/* ---------- Calendar ---------- */
+/*
+ * Paper "Calendar · K2" (Day, Week): a toolbar, a kinds row, then a Day grid
+ * with a column per group and an hour axis, or a Week grid with a row per
+ * group. A class is a white card, an appointment a flat grey block, an event a
+ * dark one. Full is amber; an ended session washes out; a cancelled one is a
+ * dashed red outline. Colour comes from the tokens. The hour height (64px) is
+ * also `HOUR` in features/calendar/Calendar.tsx.
+ */
+
+.calendar {
+  max-width: none;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+.calendar .skeleton-line {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-well);
+}
+
+.calendar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.calendar-head h1 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Toolbar and kinds ---------- */
+
+.calendar-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  min-height: var(--control-height-compact);
+}
+.calendar-toolbar__date,
+.calendar-toolbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.calendar-step {
+  display: inline-flex;
+  gap: 4px;
+}
+.calendar-date {
+  margin: 0 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.calendar-date__count {
+  color: var(--color-ink-3);
+  font-weight: var(--font-weight-normal);
+}
+.calendar-group-value {
+  color: var(--color-ink-3);
+  font-weight: var(--font-weight-normal);
+}
+
+.calendar .calendar-kinds {
+  gap: var(--space-1);
+  margin-top: calc(var(--space-2) * -1);
+}
+.calendar-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-height-compact);
+  padding: 0 10px;
+  font-size: var(--text-xs);
+}
+.calendar-kind[data-pressed] {
+  box-shadow: inset 0 0 0 1px var(--color-line);
+}
+.calendar-kind__count {
+  color: var(--color-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Blocks ---------- */
+
+.cal-block {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 5px 8px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow:
+    inset 0 0 0 1px var(--color-line-strong),
+    var(--shadow-control);
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-decoration: none;
+  transition: background-color var(--duration-hover) var(--ease-out);
+}
+.cal-block:hover {
+  background: var(--color-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--color-ink-4),
+    var(--shadow-control);
+}
+.cal-block:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+  z-index: 3;
+}
+.cal-block__time {
+  color: var(--color-ink-3);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cal-block__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-block__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  margin-top: auto;
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.cal-block__status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Appointment: flat grey, no card edge. */
+.cal-block[data-kind="appointment"] {
+  background: var(--color-selected);
+  box-shadow: none;
+}
+.cal-block[data-kind="appointment"]:hover {
+  background: var(--color-line);
+  box-shadow: none;
+}
+
+/* Event: dark, with its spots taken. */
+.cal-block[data-kind="event"] {
+  background: var(--color-ink);
+  box-shadow: none;
+  color: var(--color-on-ink);
+}
+.cal-block[data-kind="event"] .cal-block__time,
+.cal-block[data-kind="event"] .cal-block__meta {
+  color: color-mix(in srgb, var(--color-on-ink) 72%, transparent);
+}
+.cal-block[data-kind="event"]:hover {
+  background: color-mix(in srgb, var(--color-ink) 88%, var(--color-on-ink));
+  box-shadow: none;
+}
+
+/* Full is amber. An appointment with its one spot taken is booked, not full. */
+.cal-block[data-state="full"]:not([data-kind="appointment"]) {
+  background: var(--color-warning-wash);
+  box-shadow: inset 0 0 0 1px var(--color-warning-line);
+}
+.cal-block[data-state="full"][data-kind="event"] {
+  background: var(--color-ink);
+  box-shadow: inset 0 0 0 2px var(--color-warning);
+}
+.cal-block[data-state="full"]:not([data-kind="appointment"]) .cal-block__status {
+  color: var(--color-warning);
+  font-weight: var(--font-weight-medium);
+}
+.cal-block[data-state="full"][data-kind="event"] .cal-block__status {
+  color: var(--color-on-ink);
+}
+
+/* Ended: washed out. */
+.cal-block[data-state="ended"] {
+  opacity: 0.65;
+}
+.cal-block[data-state="ended"]:hover,
+.cal-block[data-state="ended"]:focus-visible {
+  opacity: 1;
+}
+
+/* Cancelled: a dashed red outline and a struck name, with no fill. */
+.cal-block[data-state="cancelled"] {
+  background: transparent;
+  box-shadow: none;
+  outline: 1px dashed var(--color-critical-line-strong);
+  outline-offset: -1px;
+  color: var(--color-ink-3);
+}
+.cal-block[data-state="cancelled"]:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+}
+.cal-block[data-state="cancelled"] .cal-block__name {
+  text-decoration: line-through;
+}
+.cal-block[data-state="cancelled"] .cal-block__time {
+  color: var(--color-ink-3);
+}
+.cal-block[data-state="cancelled"] .cal-block__status {
+  color: var(--color-critical);
+}
+
+/* A short block says its name and count on one line. */
+.cal-block[data-density="tight"] {
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding-block: 0;
+}
+.cal-block[data-density="tight"] .cal-block__meta {
+  margin: 0 0 0 auto;
+}
+.cal-block[data-density="tight"] .cal-block__name {
+  font-size: var(--text-xs);
+  flex: 0 1 auto;
+}
+/* A medium block (40 to 54 minutes, 40px or more inside) has room for two lines: the start and name, then the status. */
+.cal-block[data-density="compact"] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  column-gap: 6px;
+  padding-block: 3px;
+}
+.cal-block[data-density="compact"] .cal-block__meta {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+/* ---------- Day ---------- */
+
+.cal-day {
+  --axis: 44px;
+  margin-inline: calc(var(--space-2) * -1);
+}
+.cal-day__head,
+.cal-day__body {
+  display: grid;
+  grid-template-columns: var(--axis) repeat(var(--cols), minmax(0, 1fr));
+}
+.cal-day__head {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 4;
+  background: var(--color-page);
+  box-shadow: 0 1px 0 var(--color-line);
+}
+.cal-colhead,
+.cal-dayhead,
+.cal-rowhead {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.cal-colhead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+}
+.cal-colhead__label,
+.cal-rowhead__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-colhead__count,
+.cal-rowhead__count {
+  color: var(--color-ink-3);
+  font-weight: var(--font-weight-normal);
+  font-variant-numeric: tabular-nums;
+}
+.cal-colhead[data-muted] .cal-colhead__label,
+.cal-rowhead[data-muted] .cal-rowhead__label {
+  color: var(--color-ink-3);
+}
+
+.cal-day__body {
+  position: relative;
+  height: calc(var(--hours) * var(--hour));
+  /* One hairline at the foot of each hour. */
+  background-image: linear-gradient(to bottom, transparent calc(var(--hour) - 1px), var(--color-line) calc(var(--hour) - 1px));
+  background-size: 100% var(--hour);
+}
+.cal-axis {
+  position: relative;
+  z-index: 1;
+  background: var(--color-page);
+}
+.cal-axis__hour {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  padding-top: 0;
+  color: var(--color-ink-3);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+}
+.cal-axis__hour:first-child {
+  transform: none;
+}
+.cal-col {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--color-line);
+}
+.cal-slot {
+  position: absolute;
+  padding: 1px 3px 1px 3px;
+}
+/* The part of today that has passed. It sits under the blocks. */
+.cal-wash {
+  position: absolute;
+  top: 0;
+  left: var(--axis);
+  right: 0;
+  z-index: 0;
+  background: var(--color-well);
+  pointer-events: none;
+}
+.cal-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 0;
+  border-top: 1px solid var(--color-critical);
+  pointer-events: none;
+}
+.cal-now__tag {
+  position: absolute;
+  top: -9px;
+  left: 2px;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-critical);
+  color: var(--color-page);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 14px;
+}
+
+/* ---------- Week ---------- */
+
+.cal-week {
+  --label: 0px;
+  margin-inline: calc(var(--space-2) * -1);
+}
+.cal-week[data-labelled] {
+  --label: 144px;
+}
+.cal-week__head,
+.cal-week__row {
+  display: grid;
+  grid-template-columns: var(--label) repeat(7, minmax(0, 1fr));
+}
+.cal-week:not([data-labelled]) .cal-week__head,
+.cal-week:not([data-labelled]) .cal-week__row {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.cal-week__head {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 4;
+  background: var(--color-page);
+  box-shadow: 0 1px 0 var(--color-line);
+}
+.cal-dayhead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 8px;
+  color: var(--color-ink-2);
+}
+.cal-dayhead__date {
+  font-variant-numeric: tabular-nums;
+}
+.cal-dayhead[data-today] {
+  color: var(--color-ink);
+  background: var(--color-well);
+}
+.cal-dayhead[data-today] .cal-dayhead__date {
+  color: var(--color-ink);
+}
+.cal-dayhead[data-past] {
+  color: var(--color-ink-3);
+}
+.cal-week__row {
+  border-bottom: 1px solid var(--color-line);
+}
+.cal-rowhead {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+}
+.cal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  min-height: 72px;
+  margin: 0;
+  padding: 4px 3px;
+  list-style: none;
+  border-left: 1px solid var(--color-line);
+}
+.cal-cell > li {
+  min-width: 0;
+}
+.cal-cell[data-today] {
+  background: var(--color-well);
+}
+.cal-cell[data-past] {
+  background: color-mix(in srgb, var(--color-ink) 2%, transparent);
+}
+.cal-cell[data-past] .cal-block {
+  opacity: 0.65;
+}
+.cal-cell[data-past] .cal-block:hover,
+.cal-cell[data-past] .cal-block:focus-visible {
+  opacity: 1;
+}
+.cal-block[data-variant="week"] {
+  height: auto;
+  min-height: 40px;
+}
+.cal-block[data-variant="week"] .cal-block__meta {
+  margin-top: 0;
+}
+
+/* ---------- List ---------- */
+
+.cal-list {
+  display: none;
+}
+.cal-list__day {
+  margin-bottom: var(--space-5);
+}
+.cal-list__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-well);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+}
+.cal-list__count {
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-normal);
+}
+.cal-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cal-list__row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-areas: "time text" ". status";
+  gap: 2px var(--space-3);
+  padding: 10px 12px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.cal-list__row:hover {
+  background: var(--color-hover);
+}
+.cal-list__row:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -2px;
+}
+.cal-list__time {
+  grid-area: time;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.cal-list__text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cal-list__name {
+  font-weight: var(--font-weight-medium);
+}
+.cal-list__line,
+.cal-list__status {
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.cal-list__status {
+  grid-area: status;
+  color: var(--color-ink-2);
+}
+.cal-list__row[data-state="full"]:not([data-kind="appointment"]) .cal-list__status {
+  color: var(--color-warning);
+}
+.cal-list__row[data-state="cancelled"] .cal-list__status {
+  color: var(--color-critical);
+}
+.cal-list__row[data-state="cancelled"] .cal-list__name {
+  color: var(--color-ink-3);
+  text-decoration: line-through;
+}
+.cal-list__row[data-state="ended"] {
+  color: var(--color-ink-3);
+}
+
+.cal-skeleton {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.cal-skeleton .skeleton-line {
+  height: 64px;
+}
+
+/* Phones and narrow windows read the list, not the grid. */
+@media (max-width: 767.98px) {
+  .cal-day,
+  .cal-week {
+    display: none;
+  }
+  .cal-list {
+    display: block;
+  }
+  .calendar-toolbar__controls {
+    width: 100%;
+  }
+  .calendar .calendar-kinds {
+    margin-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cal-block {
+    transition: none;
+  }
+}
