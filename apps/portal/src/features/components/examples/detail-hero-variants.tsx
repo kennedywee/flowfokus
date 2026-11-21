@@ -1,4 +1,4 @@
-import { DetailHero, HeroTile } from "@/components/parts/DetailLayout";
+import { DetailHero, HeroStats, HeroTile } from "@/components/parts/DetailLayout";
 import { StatusMark } from "@/components/parts/marks";
 
 export default function Example() {
@@ -23,6 +23,13 @@ export default function Example() {
         line="Mondays, Wednesdays, Thursdays and Fridays at 07:00"
         stats={[{ value: "78%", label: "filled, last 4 weeks" }]}
       />
+      <p className="gallery-caption">On a list page: the title, and the count beside it (HeroStats)</p>
+      <header className="hero">
+        <div className="hero__text">
+          <h1 className="hero__title">Members</h1>
+        </div>
+        <HeroStats stats={[{ value: 186, label: "Total" }]} />
+      </header>
     </div>
   );
 }

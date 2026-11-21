@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ListGroup, ListTable, ListTableBody, ListTableCell, ListTableRow, SelectionBar, ListTableEmpty } from "./ListTable";
-import { FilterBarChip, type FilterField } from "./FilterBar";
+import { FilterBar, FilterBarChip, type FilterField } from "./FilterBar";
 import { CreditRing, SpotRow } from "./marks";
 import { RecordBackdrop } from "./Backdrop";
 
@@ -114,6 +114,22 @@ describe("FilterBarChip", () => {
     const html = renderToStaticMarkup(<FilterBarChip field={field} filter={{ field: "status", values: ["active", "frozen"], negated: true }} onChange={() => {}} />);
     expect(html).toContain("is none of");
     expect(html).toContain("Change to is any of");
+  });
+});
+
+describe("FilterBar", () => {
+  const status: FilterField = { key: "status", label: "Status", options: [{ value: "active", label: "Active" }] };
+
+  test("with no fields there is no Filter button, and search and Display stay", () => {
+    const html = renderToStaticMarkup(<FilterBar fields={[]} filters={[]} onChange={() => {}} search={<input aria-label="Search" />} display={<button type="button">Display</button>} />);
+    expect(html).not.toContain(">Filter<");
+    expect(html).toContain('aria-label="Search"');
+    expect(html).toContain("Display");
+  });
+
+  test("with a field there is a Filter button", () => {
+    const html = renderToStaticMarkup(<FilterBar fields={[status]} filters={[]} onChange={() => {}} />);
+    expect(html).toContain("Filter");
   });
 });
 

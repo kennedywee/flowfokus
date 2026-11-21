@@ -479,7 +479,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     source: ["components/parts/ListTable.tsx", "lib/list-parts.ts", "styles/parts.css"],
     paper: { page: "Flowfokus Design — Members", board: "Members — few filters + Display open" },
     examples: [
-      { file: "list-table-members", title: "Two-line rows with sort and footer", note: "Rows are 56px. The footer is ListPager." },
+      { file: "list-table-members", title: "Two-line rows with sort and footer", note: "Rows are 56px. The footer is ListPager. A row that opens a record puts one Link with class list-table__link in its first cell; the link covers the row." },
       { file: "list-table-selection", title: "Row selection", note: "Adjacent chosen rows merge into one band. Shift-click chooses a range. The bar is announced as you choose." },
       { file: "list-table-groups", title: "Collapsible groups", note: "One-line rows are 44px, for a detail page." },
       { file: "list-table-states", title: "States", note: "Default, hover, focus, selected, loading, and empty." },
@@ -497,15 +497,15 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Filter bar",
     group: "Data",
     summary:
-      "A Filter button, then a chip per filter: field, operator, value, remove. A click on the operator flips is and is not (or is any of and is none of). Search sits on the right.",
+      "A Filter button, then a chip per filter: field, operator, value, remove. A click on the operator flips is and is not (or is any of and is none of). Search sits on the right. With no fields, the Filter button is left out: the Members list does this until Rails has member filters.",
     source: ["components/parts/FilterBar.tsx", "lib/list-parts.ts", "styles/parts.css"],
     paper: { page: "Flowfokus Design — Members", board: "Members — filter operator (is / is not)" },
     examples: [
       { file: "filter-bar-basic", title: "Add, flip, change and remove", note: "Press / to search." },
-      { file: "filter-bar-states", title: "States", note: "No filters; a chip at default, hover, and focus." },
+      { file: "filter-bar-states", title: "States", note: "No filters; no fields (search and Display only); a chip at default, hover, and focus." },
     ],
     props: [
-      { name: "fields", type: "FilterField[]", note: "key, label, icon, and options with an optional dot and count." },
+      { name: "fields", type: "FilterField[]", note: "key, label, icon, and options with an optional dot and count. An empty list leaves the Filter button out." },
       { name: "filters / onChange", type: "ActiveFilter[]", note: "{ field, values, negated }. The operator text comes from filterOperator." },
     ],
   },
@@ -633,10 +633,11 @@ export const GALLERY: readonly GalleryEntry[] = [
     slug: "detail-hero",
     name: "Detail hero",
     group: "Blocks",
-    summary: "An avatar or icon tile, the title, one muted line, and up to two stats on the right. The display size is for a program or session.",
+    summary:
+      "An avatar or icon tile, the title, one muted line, and up to two stats on the right. The display size is for a program or session. HeroStats is the same figures on their own: the Members list shows its count with it.",
     source: ["components/parts/DetailLayout.tsx"],
     paper: { page: "Flowfokus Design — Program details", board: "Program" },
-    examples: [{ file: "detail-hero-variants", title: "Member, sale, and program" }],
+    examples: [{ file: "detail-hero-variants", title: "Member, sale, program, and list title", note: "The last one is HeroStats beside a list title." }],
   },
   {
     slug: "activity",

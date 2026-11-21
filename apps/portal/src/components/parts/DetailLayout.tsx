@@ -51,17 +51,22 @@ export function DetailHero({
         {children ? <div className="hero__facts">{children}</div> : null}
         {line ? <p className="hero__line">{line}</p> : null}
       </div>
-      {stats?.length ? (
-        <dl className="hero__stats">
-          {stats.map((stat) => (
-            <div key={stat.label} className="hero__stat">
-              <dd className="hero__value">{stat.value}</dd>
-              <dt className="hero__label">{stat.label}</dt>
-            </div>
-          ))}
-        </dl>
-      ) : null}
+      {stats?.length ? <HeroStats stats={stats} /> : null}
     </header>
+  );
+}
+
+/** Up to two figures with a small label under each. A list page uses it beside its title too. */
+export function HeroStats({ stats }: { stats: readonly HeroStat[] }) {
+  return (
+    <dl className="hero__stats">
+      {stats.map((stat) => (
+        <div key={stat.label} className="hero__stat">
+          <dd className="hero__value">{stat.value}</dd>
+          <dt className="hero__label">{stat.label}</dt>
+        </div>
+      ))}
+    </dl>
   );
 }
 

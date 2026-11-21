@@ -1,5 +1,6 @@
 import { FilterBar, FilterBarChip, type FilterField } from "@/components/parts/FilterBar";
 import { SearchField } from "@/components/ListToolbar";
+import { DisplayPopover } from "@/components/parts/FilterBar";
 
 const STATUS: FilterField = {
   key: "status",
@@ -20,6 +21,30 @@ export default function Example() {
         filters={[]}
         onChange={() => {}}
         search={<SearchField id="example-states-search" label="Search members" placeholder="Search members" q="" onSearch={() => {}} />}
+      />
+      <p className="gallery-caption">No fields (the live Members list: Rails has no member filters yet): no Filter button, search and Display only</p>
+      <FilterBar
+        fields={[]}
+        filters={[]}
+        onChange={() => {}}
+        search={<SearchField id="example-states-search-only" label="Search members" placeholder="Search name or email" q="" onSearch={() => {}} />}
+        display={
+          <DisplayPopover
+            sortFields={[
+              { value: "name", label: "Name" },
+              { value: "since", label: "Member since" },
+            ]}
+            sort={{ column: "since", direction: "desc" }}
+            onSort={() => {}}
+            columns={[
+              { id: "since", label: "Member since", on: true },
+              { id: "email", label: "Email", on: true },
+            ]}
+            onColumn={() => {}}
+            isDefault
+            onReset={() => {}}
+          />
+        }
       />
       <p className="gallery-caption">Chip: default, hover, focus. One value reads "is"; several read "is any of".</p>
       <div className="gallery-row">
