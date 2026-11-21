@@ -16,7 +16,9 @@ before it) is history. The visual rules live in
 
 ## API-backed screens
 
-- Top bar switchers: organization, actor, and locations from Rails. The
+- App shell: the sidebar lists Calendar, Members, Sales, Programs, and Products,
+  only the ones the role can read. The account control shows the actor from
+  Rails. Top bar switchers: organization, actor, and locations from Rails. The
   organization list comes from `/staff/memberships`. The portal start, `/`,
   offers sign-in and opens the session's selected organization. A chooser is a
   fallback when no organization is selected and several memberships are available.
@@ -29,7 +31,7 @@ before it) is history. The visual rules live in
   unlink members from their sign-in.
 - Sales: list and create sales, record payments, deliver access, renew,
   refund, void, and end access.
-- Schedule: sessions by day, the roster of each session, booking a member,
+- Calendar (the schedule route): sessions by day, the roster of each session, booking a member,
   cancelling a booking or a session, and marking attendance.
 - Programs: create and edit programs, add sessions, and add or change ticket
   prices.
@@ -65,7 +67,8 @@ views live in their domain folders. Shared filters live in
 
 Home, Inbox, Agents, Check-ins, Reports, Settings Integrations, and What's new
 left the product on 21 November 2026. See [Decisions](decisions.md). `/<org>`
-and the old URLs of these pages open the schedule (`lib/removed-pages.ts`).
+and the old URLs of these pages open the first page in the sidebar the role can
+read, which is Calendar for most roles (`lib/removed-pages.ts`, `lib/pages.ts`).
 Rails keeps the check-in endpoints until
 [#81](https://github.com/kennedywee/flowfokus/issues/81) is decided.
 

@@ -60,7 +60,8 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | Staff with `check_ins:override` can let a denied member in once, with a reason. It uses no right. | [Workflows](workflows.md#check-in) |
 | A member links a sign-in with a one-time code that staff issue. A matching email is not enough. | [Identity](identity.md#member-customer) |
 | Three default roles: Owner, Manager, Receptionist. | [Authorization](authorization.md#implemented-permissions) |
-| The staff portal sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Home, Inbox, Agents, the Check-ins page, Reports, Integrations, and What's new left the scope on 21 November 2026. `/<org>` opens the schedule until Calendar is built. | [Frontend preview](frontend-preview.md) |
+| The staff portal sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Home, Inbox, Agents, the Check-ins page, Reports, Integrations, and What's new left the scope on 21 November 2026. `/<org>` opens the first page the role can read, which is Calendar (the schedule route) until it is built. | [Frontend preview](frontend-preview.md) |
+| The staff portal shell is a rounded window on a tinted frame, with a darker sidebar, a breadcrumb top bar, and the account control at the foot. The sidebar and ⌘K list only the pages a role can read. The location crumb shows on every page, including Calendar. | [Portal design](../apps/portal/DESIGN.md#redesign-foundation) |
 
 ## Deferred
 

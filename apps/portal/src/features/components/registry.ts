@@ -19,6 +19,8 @@ const DESIGN_FILE = "https://app.paper.design/file/01M7X4HENFQVWCFYKJH6A9QSXD";
 const REDESIGN_FILE = "https://app.paper.design/file/01M6FWEABX58V0RANJNQW72ZPN";
 export const PAPER_PAGES = {
   "Flowfokus Design — Icons": `${DESIGN_FILE}/p-6-0`,
+  "Flowfokus Design — Member details": `${DESIGN_FILE}/p-1-0`,
+  "Flowfokus Design — Program details": `${DESIGN_FILE}/p-9-0`,
   "Flowfokus Redesign — Components — Core": `${REDESIGN_FILE}/p-Z-0`,
   "Flowfokus Redesign — Components — Complex": `${REDESIGN_FILE}/p-10-0`,
   "Flowfokus Redesign — Components — Data": `${REDESIGN_FILE}/p-11-0`,
@@ -397,6 +399,22 @@ export const GALLERY: readonly GalleryEntry[] = [
     examples: [{ file: "sheet-basic", title: "Drawer" }],
   },
   {
+    slug: "context-switcher",
+    name: "Context switcher",
+    group: "Complex",
+    summary: "The organization and location crumbs of the top bar. Each opens a searchable list; the location list ends with Manage locations.",
+    source: ["components/ContextSwitcher.tsx", "styles/shell.css"],
+    paper: { page: "Flowfokus Design — Program details", board: "Program" },
+    examples: [{ file: "context-switcher", title: "Organization and location" }],
+    props: [
+      { name: "label", type: "string", note: 'What it chooses, such as "Location". Names the button and the list.' },
+      { name: "current", type: "string", note: "The name on the button." },
+      { name: "options", type: "SwitcherOption[]", note: "value, label, and an optional aside, detail, and icon." },
+      { name: "footer", type: "(close) => ReactNode", note: "Actions under the list. Call close before leaving the page." },
+      { name: "strong", type: "boolean", default: "false", note: "Ink text for the first crumb. Later crumbs are grey." },
+    ],
+  },
+  {
     slug: "toast",
     name: "Toast",
     group: "Complex",
@@ -446,6 +464,20 @@ export const GALLERY: readonly GalleryEntry[] = [
 
   // Blocks
   {
+    slug: "app-shell",
+    name: "App shell",
+    group: "Blocks",
+    summary:
+      "From 768px the app is a rounded window on a tinted frame. The sidebar lists the pages the role can read; the top bar holds the breadcrumb, Search, and the page actions.",
+    source: ["routes/$org/route.tsx", "components/ui/sidebar.tsx", "lib/pages.ts", "styles/shell.css"],
+    paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Dark" },
+    examples: [{ file: "app-shell", title: "Window, sidebar and top bar", note: "Sample content. It shows from 768px; a phone gets the drawer and the tab bar." }],
+    props: [
+      { name: "pages", type: "readablePages(permissions)", note: "Calendar, Members, Sales, Programs, Products. A page the role cannot read has no item." },
+      { name: "data-scroll-restoration-id", type: '"main"', note: "The main column scrolls inside the window, so the router restores it." },
+    ],
+  },
+  {
     slug: "page-head",
     name: "Page head",
     group: "Blocks",
@@ -457,7 +489,7 @@ export const GALLERY: readonly GalleryEntry[] = [
       { name: "title", type: "string", note: "The page title." },
       { name: "meta", type: "ReactNode", note: "Record metadata, such as a date. Not a subtitle." },
       { name: "children", type: "ReactNode", note: "Facts beside the title, such as a status." },
-      { name: "actions", type: "ReactNode", note: "Placed in the top bar from 768px." },
+      { name: "actions", type: "ReactNode", note: "Placed in the top bar from 768px. Compact buttons show their letter with Kbd." },
     ],
   },
   {

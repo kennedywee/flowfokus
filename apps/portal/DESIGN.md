@@ -26,6 +26,7 @@ same file, such as "Member details — Priya Nair · Light".
 | Raised section, card | `--color-surface` | `--surface` | #FFFFFF | #18181B |
 | Menu, dialog, popover | `--color-overlay` (= `--color-raised`) | `--raised` | #FFFFFF | #1F1F23 |
 | Sidebar | `--color-sidebar` | window frame | #FAFAFA | #0C0C0E |
+| Tinted frame around the window | `--color-frame` | artboard behind "Window" | #F4F4F5 | #050506 |
 | Band, recessed group, key hint | `--color-well` | `--sunken` | black 4% | white 4% |
 | Hover | `--color-hover` | `--hover` | black 3% | white 6% |
 | Selected nav item | `--color-selected` | `--selected` | black 5% | white 10% |
@@ -284,7 +285,7 @@ until a screen moves to the new file.
 
 Layout:
 
-- Use one white surface. Separate sections with spacing and headings, not cards.
+- Use one white surface inside the window. Separate sections with spacing and headings, not cards.
 - Use few lines. Keep borders only on buttons, the comment box, and floating menus.
 - Do not use decorative backgrounds. Use grey fills only for interaction states,
   such as the selected nav item or a hovered menu item. The one exception is
@@ -348,22 +349,63 @@ Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
 `aria-keyshortcuts` on the button. Touch screens hide the hints. Show a hint
 only where the shortcut works (`lib/shortcuts.ts`).
 
-Shell. The sidebar (236px, no fill or edge) holds the logo, the collapse
-button, one list of pages, and the account menu at the foot. The account
-button shows the avatar and name only; the role shows in the organization
-switcher. The account menu
-holds Settings, Keyboard shortcuts, Theme, and Sign out. The 48px top bar holds the
-breadcrumb: organization, location, section, and page, then Search and the
-page's actions on the right. A detail route names
-its page with `staticData.crumb(loaderData)`. The top bar has no search field:
-a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
-finds members through Rails and opens pages. Its Actions group checks in or
-sells to the first member found, for roles that can. The organization
-switcher shows the role on the right; the location switcher ends with Manage
-locations. `/<org>` opens Schedule, and so do the old URLs of removed pages
-(`lib/removed-pages.ts`). Below 768px the tab bar (`components/TabBar.tsx`) holds Schedule,
-Members, Sales, and More, which opens the drawer. The rail is 56px wide; icons stay
-at x=28 when the sidebar collapses.
+Shell (`routes/$org/route.tsx`, styles in `styles/shell.css`, pages in
+`lib/pages.ts`). From 768px the app is a rounded window panel (`--radius-window`,
+14px, `--shadow-window`) on a tinted frame (`--color-frame`, 24px of it from
+1181px and 12px on a tablet), as in Paper "Window". The main column scrolls
+inside the window; the router restores its scroll (`data-scroll-restoration-id`).
+Phones drop the frame and scroll the page. Paper's decorative glow and glyph
+field behind the window are not built.
+
+- Sidebar: 232px, `--color-sidebar` (a slightly darker tone than the window),
+  with a hairline on its right edge. It holds the logo and the collapse button,
+  one list of pages, and the account control at the foot. Items are 30px; the
+  selected item has `--color-selected`, ink text, and an ink icon.
+- Pages, in order: Calendar, Members, Sales, Programs, Products
+  (`PAGES` in `lib/pages.ts`). Calendar uses the calendar icon and opens
+  `/<org>/schedule` until the Calendar issue (#91) renames the route. A role
+  sees only the pages it can read: Calendar and Programs need `programs:read`,
+  Members `members:read`, Sales `purchases:read`, Products `products:read`. ⌘K
+  lists the same pages. Rails still checks every request.
+- Account control: initials and name in a 36px well. Its menu holds Settings,
+  Keyboard shortcuts, Theme, and Sign out. The role shows in the organization
+  switcher.
+- Top bar: 52px with a hairline under it. Breadcrumb: organization, location,
+  section, and page, then Search with its ⌘K hint, the page's actions, and the
+  page's ⋯ menu. The organization and location crumbs open their switchers
+  (`ContextSwitcher`); the location list ends with Manage locations. A detail
+  route names its page with `staticData.crumb(loaderData)`.
+- Page actions show their letter on the button (`Kbd`, with `aria-keyshortcuts`):
+  Check in C and Sell S (member page), New member N (members list), Record
+  payment P and Fulfill F (sale page), Add sessions T, Sell ticket S, and Book
+  member B (program page), Book member B (session page), Sell S and Edit E
+  (product page). A letter works only where its hint shows
+  (`lib/shortcuts.ts`); the Keyboard shortcuts sheet lists the ones the role can
+  use. Pages put their own ⋯ menu at the end of the actions; a page with no
+  extra actions has none.
+- Start page: `/<org>` and the old URLs of removed pages open the first page in
+  the sidebar the role can read (`startPage` in `lib/pages.ts`). A role that
+  can read none opens Settings.
+- Phones: the top bar holds the two switchers and Search. The tab bar
+  (`components/TabBar.tsx`) holds Calendar, Members, Sales, and More, which
+  opens the drawer; a role without a page has no tab for it. The rail is 56px
+  wide on a tablet and when staff collapse the sidebar; icons stay at x=28.
+
+Shell decisions, 21 November 2026 (issue #86):
+
+- The location crumb shows on every page, including Calendar. Paper's Calendar
+  frames leave it out, but sessions belong to a location and the switcher must
+  stay reachable. Settings has no location crumb, as in Paper.
+- A page with no extra actions has no ⋯ button. Paper's frames show one on
+  every page, but a menu with nothing in it would be a control that does
+  nothing.
+- The account menu keeps Keyboard shortcuts beside Settings, Theme, and Sign
+  out, because the sheet is a working feature with no other way in on touch.
+- The switcher buttons keep a small chevron. Paper has none, but it is the only
+  sign that a crumb opens a list.
+- Labels stay as the screens have them ("New member", "Fulfill"). Paper's "Add
+  member" and "Fulfill items" are screen wording for the Members and Sales
+  issues.
 
 Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
 facts in `features/members/facts.ts`, styles in `styles/members.css`). It shows
