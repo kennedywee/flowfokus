@@ -105,7 +105,7 @@ export function fillRate(sessions: readonly Occurrence[], now: number, timeZone:
   if (!complete) return null;
   const since = shiftDay(dayKey(new Date(now).toISOString(), timeZone), -FILL_DAYS);
   const counted = sessions.filter(
-    (session) => !session.cancelled_at && isOver(session, now) && dayKey(session.starts_at, timeZone) >= since && session.capacity > 0,
+    (session) => !session.cancelled_at && isOver(session, now) && dayKey(session.ends_at, timeZone) > since && session.capacity > 0,
   );
   if (!counted.length) return null;
   const offered = counted.reduce((sum, session) => sum + session.capacity, 0);

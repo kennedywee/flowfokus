@@ -178,15 +178,21 @@ function Bookings({ roster, now, canBook, onBook }: { roster: Roster; now: numbe
   }
 
   // Rails marks one booking per call and ignores a booking that is already checked in, so a retry is safe.
-  async function checkInChosen() {
-    if (bulk || !chosen.size) return;
+  // `retry` holds the ids that failed last time, so Try again never resends the ones that worked.
+  async function checkInChosen(retry?: readonly string[]) {
+    const ids = retry ? [...retry] : order.filter((id) => chosen.has(id));
+    if (bulk || !ids.length) return;
     setBulk(true);
-    const ids = [...order.filter((id) => chosen.has(id))];
     const failed: { id: string; name: string; message: string }[] = [];
     for (const id of ids) {
       const target = roster.bookings.find((booking) => booking.id === id);
-      const result = await sendAttend({ slug: organization.slug, id });
-      if (!result.ok) failed.push({ id, name: target?.attendee_name ?? "A member", message: failureMessage(result.error) });
+      const name = target?.attendee_name ?? "A member";
+      try {
+        const result = await sendAttend({ slug: organization.slug, id });
+        if (!result.ok) failed.push({ id, name, message: failureMessage(result.error) });
+      } catch {
+        failed.push({ id, name, message: "The connection failed." });
+      }
     }
     setBulk(false);
     const done = ids.length - failed.length;
@@ -198,7 +204,7 @@ function Bookings({ roster, now, canBook, onBook }: { roster: Roster; now: numbe
         tone: "error",
         title: done ? `${done} of ${ids.length} checked in` : "Nobody was checked in",
         body: `${failed.map((item) => item.name).join(", ")} ${failed.length === 1 ? "was" : "were"} not checked in. ${failed[0]?.message ?? ""}`,
-        action: { label: "Try again", onClick: () => void checkInChosen() },
+        action: { label: "Try again", onClick: () => void checkInChosen(failed.map((item) => item.id)) },
       });
     }
     void router.invalidate();

@@ -88,6 +88,11 @@ describe("the fill rate", () => {
     expect(fillRate(all, NOW, TZ, true)).toEqual({ percent: 75, sessions: 2 });
   });
 
+  test("covers 28 gym days, today included", () => {
+    const edge = [session("in", "2026-10-09", { spots_taken: 12 }), session("out", "2026-10-08", { spots_taken: 0 })];
+    expect(fillRate(edge, NOW, TZ, true)).toEqual({ percent: 100, sessions: 1 });
+  });
+
   test("is left out when the history is missing or nothing qualifies", () => {
     expect(fillRate([session("a", "2026-11-03")], NOW, TZ, false)).toBeNull();
     expect(fillRate([session("a", "2026-11-06")], NOW, TZ, true)).toBeNull();
