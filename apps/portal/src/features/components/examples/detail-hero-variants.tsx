@@ -28,7 +28,7 @@ export default function Example() {
         <div className="hero__text">
           <h1 className="hero__title">Members</h1>
         </div>
-        <HeroStats stats={[{ value: 186, label: "Total" }]} />
+        <HeroStats stats={[{ value: 186, label: "members" }]} />
       </header>
     </div>
   );

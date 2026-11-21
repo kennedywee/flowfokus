@@ -80,7 +80,7 @@ function ListHead({ count }: { count: number | null }) {
   return (
     <header className="members-head">
       <h1>Members</h1>
-      {count !== null ? <HeroStats stats={[{ value: count, label: "Total" }]} /> : null}
+      {count !== null ? <HeroStats stats={[{ value: count, label: "members" }]} /> : null}
       <PageActions>
         <NewMemberLink shortcut />
       </PageActions>

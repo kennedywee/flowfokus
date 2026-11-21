@@ -37,6 +37,13 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+/* Paper "Members": the list title is display size, like a detail page title. */
+.members-head h1 {
+  font-size: var(--text-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+}
 /* On a phone the count stays beside the title. */
 .members-head .hero__stats {
   flex-basis: auto;

@@ -62,8 +62,9 @@ export function HeroStats({ stats }: { stats: readonly HeroStat[] }) {
     <dl className="hero__stats">
       {stats.map((stat) => (
         <div key={stat.label} className="hero__stat">
-          <dd className="hero__value">{stat.value}</dd>
+          {/* The label is the term; CSS shows the value above it, as in Paper. */}
           <dt className="hero__label">{stat.label}</dt>
+          <dd className="hero__value">{stat.value}</dd>
         </div>
       ))}
     </dl>

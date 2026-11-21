@@ -27,7 +27,7 @@ const render = (members: Parameters<typeof MembersList>[0]["members"], q?: strin
 describe("MembersList", () => {
   test("shows the count, rows, and the range, and has no Filter button", () => {
     const html = render({ ok: true, data: rows(3) });
-    expect(html).toContain("Total");
+    expect(html).toContain('<dt class="hero__label">members</dt><dd class="hero__value">3</dd>');
     expect(html).toContain("Member 01");
     expect(html).toContain("member1@example.com");
     expect(html).toContain("1–3 of 3 members");
@@ -45,7 +45,7 @@ describe("MembersList", () => {
   });
 
   test("a search hides the count of all members", () => {
-    expect(render({ ok: true, data: rows(2) }, "member")).not.toContain("Total");
+    expect(render({ ok: true, data: rows(2) }, "member")).not.toContain("hero__stat");
   });
 
   test("says so when there are no members, and when a search matches none", () => {
