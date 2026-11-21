@@ -684,8 +684,8 @@ frames before a screen review:
   host" last), a program, or one column for None. Sessions that overlap share the
   column side by side (`placeColumn`). A short session is drawn 30 minutes tall.
   On today, a red now tag and line cross the grid and the time before it is
-  washed grey. The grid scrolls the now line into view when it is below the fold,
-  or the first session on another day.
+  washed grey; the wash stops at the foot of the grid, and the line shows only
+  while now is inside the axis. The page does not scroll by itself when the day opens.
 - Week: one row per group by Monday to Sunday, in the same blocks, one cell per
   day. Today's column is tinted and past days are grey. None is a single row with
   no label.

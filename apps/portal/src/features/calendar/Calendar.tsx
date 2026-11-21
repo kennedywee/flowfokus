@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
@@ -350,16 +350,6 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
   const nowAxis = nowGeometry(nowAt, { start, end }, HOUR);
   const items: NavItem[] = placed.flatMap((column, x) => column.map((item) => ({ id: item.entry.id, x, y: 0, start: Date.parse(item.entry.starts_at) })));
   const keys = useGridKeys(items);
-
-  // Bring the now line into view when it is below the fold, or the day's first session on another day.
-  // A target already in view does not move the page.
-  const earliest = items.reduce<NavItem | null>((first, item) => (!first || item.start < first.start ? item : first), null)?.id;
-  useEffect(() => {
-    const target = nowAxis.line !== null ? document.querySelector(".cal-now") : earliest ? keys.ref.current?.querySelector(`[data-nav-id="${CSS.escape(earliest)}"]`)?.closest(".cal-slot") : null;
-    target?.scrollIntoView({ block: "nearest" });
-    // Only when the day opens.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <section

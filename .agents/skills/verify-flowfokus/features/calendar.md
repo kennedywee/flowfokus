@@ -56,8 +56,8 @@ Steps:
 ## Gotchas
 
 - Rails sends no booked member's name, so an appointment block says `Booked` or `Open`.
-- Today's Day grid scrolls the now line into view. Another day scrolls its first session into view,
-  so a screenshot is not at 06:00. Scroll the main column first if you need the top.
+- The Day grid does not scroll by itself. The toolbar is in view on load. Scroll the page to reach
+  the afternoon or the now line.
 - Past sessions are washed out. A screenshot of a past week looks grey by design.
 - The program filter and the kinds work on the loaded range; changing the view or the date reloads it.
 - Seeded `Proof …` and `Bulk Failure …` programs from earlier runs share one time and fill a Day grid
