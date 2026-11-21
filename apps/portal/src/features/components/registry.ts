@@ -620,7 +620,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Detail layout",
     group: "Blocks",
     summary:
-      "A main column and a right panel. The panel holds label and value rows under Details, and groups such as Tags and Notes with a + button. Below 1100px the panel sits under the main column.",
+      "A main column and a right panel. The panel holds label and value rows under Details, and groups such as Tags and Notes with a + button. Below 1100px the panel sits under the main column. The layout pads its own sides, so the main column drops its page padding and the layout fills the window.",
     source: ["components/parts/DetailLayout.tsx", "styles/parts.css"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
     examples: [{ file: "detail-layout-member", title: "Member page, with its background", note: "Sample data. A real page shows only what Rails returns." }],
@@ -648,6 +648,34 @@ export const GALLERY: readonly GalleryEntry[] = [
     source: ["components/parts/Activity.tsx", "components/ui/segmented-control.tsx", "lib/list-parts.ts"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
     examples: [{ file: "activity-states", title: "Feed, empty, and loading", note: "Comment with ⌘↵." }],
+  },
+  {
+    slug: "record-section",
+    name: "Record section",
+    group: "Blocks",
+    summary:
+      "A section of a record page: a small grey title, View all on the right when the list has more rows, then flush list rows with no label row on screen (the list table keeps it for assistive technology with the list-table--bare class). Member details uses it for Holds, Recent sales, and Bookings; New member for Profile.",
+    source: ["features/members/Section.tsx", "components/parts/ListTable.tsx", "styles/members.css"],
+    paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
+    examples: [{ file: "record-section", title: "Holds with View all, and an empty section", note: "Sample data." }],
+    props: [
+      { name: "title", type: "string", note: "Names the section. 12px, muted." },
+      { name: "more", type: "{ open, onToggle } | null", note: "Shows View all (or Show fewer) and opens the rest in place. Leave it null when the list is short." },
+    ],
+  },
+  {
+    slug: "horizon",
+    name: "Horizon",
+    group: "Blocks",
+    summary:
+      "A line of the last week and the next 30 days. Today is a ringed dot, coming bookings are rings, earlier ones are small dots, and a membership or pass that ends is an amber ring. Labels sit above and below; one that would overlap is left out, and a hidden list names every mark for assistive technology.",
+    source: ["features/members/Horizon.tsx", "features/members/timeline.ts", "styles/members.css"],
+    paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
+    examples: [{ file: "horizon-basic", title: "Bookings, and passes that end", note: "Sample data. A real page marks only bookings, periods, and rights that Rails returned." }],
+    props: [
+      { name: "horizon", type: "Horizon", note: "From horizonFor(member, productName, now): the window, and the marks in time order. Show it only when it has a mark besides today." },
+      { name: "timezone", type: "string", note: "The organization's time zone, for the day and time labels." },
+    ],
   },
   {
     slug: "background-pattern",

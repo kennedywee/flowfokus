@@ -30,8 +30,13 @@ before it) is history. The visual rules live in
   Member since, and a page range), create, and view member records. The list
   has no Filter button and no Holds, Spent, or Balance due columns, because
   Rails does not supply them yet ([#17](https://github.com/kennedywee/flowfokus/issues/17)).
-  Staff check a member in from the member page or with Ctrl K. Staff create gym site link codes and
-  unlink members from their sign-in.
+  The member page shows the hero with paid and balance due, the Horizon,
+  Holds, Recent sales, Bookings, and Activity, and Contact on the right. It
+  leaves out tags, phone, emergency contact, home location, notes, comments, the
+  sale number, and each booking's location until Rails returns them (#17).
+  Staff check a member in from the member page (C) or with Ctrl K. Sell (S) needs
+  purchases:create. Renew, gym site link codes, and unlink are in the page's more
+  menu.
 - Sales: list and create sales, record payments, deliver access, renew,
   refund, void, and end access.
 - Calendar (the schedule route): sessions by day, the roster of each session, booking a member,
@@ -63,8 +68,9 @@ These actions persist in PostgreSQL, including during local demo development.
   parts for the redesign (list table, filter bar, Display popover, row
   selection, groups, detail layout, hero, activity, background patterns, and
   data marks) on labelled sample members, bookings, and events. The
-  Members list uses them with real Rails data; the other screens follow in the
-  issues #89 to #94. See
+  Members list and Member details use them with real Rails data; the other
+  screens follow in the issues #90 to #94. It also shows the Horizon and the
+  record section that Member details adds. See
   [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 
 These screens display a Sample data label. Local edits reset when the screen

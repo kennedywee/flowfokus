@@ -157,7 +157,7 @@ icons the portal used before, and what replaced them:
 | Mixed checkbox (minus) | a CSS bar; the set has no minus |
 
 Two groups of marks are not from the set and stay as they were: the time and
-credit rings (`MemberDetails.tsx`) and the session status marks
+credit rings (`components/parts/marks.tsx`) and the session status marks
 (`features/schedule/marks.tsx`). Both are drawn state marks, not icons.
 
 
@@ -468,24 +468,60 @@ Space toggles a checkbox or presses a button; the Display popover keeps focus
 inside and Escape returns it; the selection count and the bulk bar are announced
 by a live region.
 
-Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
-facts in `features/members/facts.ts`, styles in `styles/members.css`). It shows
-only Rails data:
+Member details (issue #89, Paper "Member details", light and dark) is on the
+shared parts (`features/members/MemberDetails.tsx`; facts in
+`features/members/facts.ts`; the Horizon in `Horizon.tsx` and `timeline.ts`;
+styles in `styles/members.css`). It shows only Rails data. Paper could not be
+read while it was built (the Paper server timed out), so the layout, order, and
+content follow the saved light screenshot, and every size and colour comes from
+the tokens and shared parts built from Paper in #85 and #87.
 
-- Header: name, last visit, and balance due. Check in (C) opens the check-in
-  panel in a dialog; Sell (S) opens a new sale for the member. The more menu
-  holds Renew when Rails offers renewal terms. There is no Book action yet.
-- Membership: periods with a ring that fills with the time left, and grey text
-  such as "Ends in 13d 11h". Access: rights with "7 of 8 left". Bookings and
-  sales list recent rows and expand in place.
-- Sale rows keep payment (Paid, Part paid, Unpaid, Void) and fulfillment
-  (Fulfilled, Unfulfilled, Access revoked) as separate facts, then the
-  payment method and the amount, with any balance due under it.
-- Activity merges check-ins, sales, payments, fulfillments, refunds, voids,
-  bookings, and the join date. It has no comment box or filters, because
-  Rails has no member comments.
-- Properties: email, gym site sign-in (click the value to create a link code
-  or unlink, with members:link), member since, and total paid.
+- Hero: the initials tile, the name, "Member since Nov 2026", and two stats
+  from the member's sales: "paid" (money received less refunds, the old Total
+  paid) and "balance due" (sales that are not void). Paper's "spent" is not a
+  Rails field, so the label stays "paid". With 100 sales, the most Rails
+  returns, the stats are left out, because the sums would be partial.
+- Top bar: Check in (C, check_ins:create) and Sell (S, the primary button,
+  purchases:create; it and its key were open to every role before). The more
+  menu holds Renew membership (purchases:create, when Rails returns renewal
+  terms) and Create link code or Unlink sign-in (members:link). A role with
+  none of these sees no menu. A link code opens in a dialog that stays until
+  staff close it, because Rails shows the code once. There is no Edit action
+  yet: Rails has no member update endpoint, and the page never had one.
+- Horizon: a line of the last week and the next 30 days with today, bookings
+  (rings ahead, small dots behind), and the end of each membership period or
+  pass. A period followed by another one, and a right that ends with its period, add no mark. Rails
+  has no "renews" state, so a period followed by another shows no end. When
+  Rails sent 10 earlier bookings that all fall inside the week, older ones may be
+  missing, so the window starts at the oldest one and the title says "Recent
+  bookings". Labels alternate above and below; one that would overlap is left
+  out (its mark stays, and a hidden list names every mark). The section is left
+  out when nothing but today is in the window.
+- Holds: one row per membership period and per access right, with Rails dates
+  and the words the page had before (#14 is open): "Ends in 29d 16h",
+  "Starts in 2d", "Ended 3 Nov", "Revoked", "Starts 21 Dec", "Unlimited visits",
+  and the credit ring "3 of 10 left" for a counted right. A period links to its
+  sale. Rows that are over show under View all.
+- Recent sales: product and date, Paid and Fulfilled as two separate marks, the
+  payment method, and the amount with any balance due or refund under it. Left
+  out: the sale number, which Rails does not return.
+- Bookings: program, day and time range, the right it uses (or Ticket, or Held
+  for payment), and how soon ("In 1d 16h") or its status. Left out: the
+  location, which a booking does not carry.
+- Activity: the shared feed with real events (check-ins, sales, payments,
+  fulfillments, refunds, voids, bookings, and the join date). No comment box,
+  and no All, Comments, Activity control: Rails has no comments.
+- Contact (the right panel): email and the gym site link state. Left out:
+  tags, phone, emergency contact, home location, and notes (issue #17).
+- Empty lists say so in one line. A member with nothing keeps the hero, the
+  stats at zero, and the empty sections.
+- On a phone the panel moves under the main column, and each row wraps: the
+  main figure stays on the first line, the marks go under it.
+- Layout: `DetailLayout` fills the window (`.main:has(> .detail)` drops the main
+  column's own padding) and pads its own sides. Sections share `Section`
+  (`features/members/Section.tsx`): a 12px grey title and View all, then flush
+  rows. The list table keeps its label row for assistive technology and hides
+  it on screen with `list-table--bare`.
 
 The members list and New member are redesigned screens
 (`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
@@ -513,8 +549,10 @@ The members list and New member are redesigned screens
 - No results: the label row, one line, and Clear search. No members: the label
   row, one line, and New member. Loading: skeleton rows in the same columns.
   A load error: the label row and the failure notice.
-- New member: a page, not a dialog. An icon tile and the title, Create member
-  (⌘↵) in the top bar, then the Profile band with Full name and Email.
+- New member: a page, not a dialog, on the same record frame as Member details
+  (glyph dots, `DetailHero` with an icon tile, and a `Section`). Create member
+  (⌘↵) in the top bar, then the Profile section with Full name and Email, two
+  fields per row (12px labels, 13px values, 32px fields).
   Email is required because Rails requires it. Errors show on the fields, with
   a summary above. Leaving with typed details asks "Discard this member?".
   After a create, the member page opens with a "Member created" toast. The
