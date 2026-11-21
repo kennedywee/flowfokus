@@ -110,7 +110,7 @@ export function useCheckIn({ record }: { record?: MemberRecord } = {}) {
     />
   ) : null;
 
-  return { checkIn, pending, dialog, hasLocation: location !== null };
+  return { checkIn, pending, dialog };
 }
 
 /** The next step after a failed request, in staff words. */
