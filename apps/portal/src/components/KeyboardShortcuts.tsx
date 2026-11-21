@@ -40,7 +40,7 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
     },
     {
       title: "Members list",
-      items: can("members:create") ? [{ keys: ["N"], label: "New member" }] : [],
+      items: can("members:create") && can("members:read") ? [{ keys: ["N"], label: "New member" }] : [],
     },
     {
       title: lists.length > 1 ? `${lists.slice(0, -1).join(", ")} and ${lists.at(-1)}` : (lists[0] ?? ""),

@@ -57,7 +57,8 @@ function NewMemberLink({ variant = "default", shortcut = false }: { variant?: "d
   const organization = useOrganization();
   const can = useCan();
   const navigate = useNavigate();
-  const canCreate = can("members:create");
+  // A new member opens on its record, which needs members:read.
+  const canCreate = can("members:create") && can("members:read");
   useShortcut("n", () => void navigate({ to: "/$org/members/new", params: { org: organization.slug } }), {
     enabled: shortcut && canCreate,
   });
