@@ -55,7 +55,7 @@ try {
   await next.arrayBuffer()
 
   // The start page is Schedule. Pages that left the product open it too.
-  for (const path of ['/chainsaw', '/chainsaw/reports', '/chainsaw/check-in']) {
+  for (const path of ['/chainsaw', '/chainsaw/reports', '/chainsaw/check-in', '/chainsaw/settings?section=Integrations']) {
     const start = await fetch(new URL(path, portal), {
       headers: { Cookie: `hf_session=${encodeURIComponent(sealed)}` }, redirect: 'manual', signal: AbortSignal.timeout(15_000),
     })
