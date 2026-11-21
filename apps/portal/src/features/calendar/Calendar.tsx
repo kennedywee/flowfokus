@@ -29,6 +29,7 @@ import {
   hourLabel,
   longDate,
   moveFocus,
+  nowGeometry,
   nowMinutes,
   onDay,
   placeColumn,
@@ -346,8 +347,7 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
   const { start, end } = axisFor(placed.flat());
   const hours = Array.from({ length: end - start }, (_, index) => start + index);
   const nowAt = nowMinutes(day, now, tz);
-  const nowTop = nowAt === null ? null : ((nowAt - start * 60) / 60) * HOUR;
-  const inAxis = nowTop !== null && nowTop >= 0 && nowTop <= (end - start) * HOUR;
+  const nowAxis = nowGeometry(nowAt, { start, end }, HOUR);
   const items: NavItem[] = placed.flatMap((column, x) => column.map((item) => ({ id: item.entry.id, x, y: 0, start: Date.parse(item.entry.starts_at) })));
   const keys = useGridKeys(items);
 
@@ -355,7 +355,7 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
   // A target already in view does not move the page.
   const earliest = items.reduce<NavItem | null>((first, item) => (!first || item.start < first.start ? item : first), null)?.id;
   useEffect(() => {
-    const target = inAxis ? document.querySelector(".cal-now") : earliest ? keys.ref.current?.querySelector(`[data-nav-id="${CSS.escape(earliest)}"]`)?.closest(".cal-slot") : null;
+    const target = nowAxis.line !== null ? document.querySelector(".cal-now") : earliest ? keys.ref.current?.querySelector(`[data-nav-id="${CSS.escape(earliest)}"]`)?.closest(".cal-slot") : null;
     target?.scrollIntoView({ block: "nearest" });
     // Only when the day opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -388,7 +388,7 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
             </span>
           ))}
         </div>
-        {inAxis && nowTop !== null ? <div className="cal-wash" aria-hidden="true" style={{ height: nowTop }} /> : null}
+        {nowAxis.wash > 0 ? <div className="cal-wash" aria-hidden="true" style={{ height: nowAxis.wash }} /> : null}
         {placed.map((column, index) => (
           <ul key={columns[index]?.key ?? index} className="cal-col" aria-labelledby={`${id}-col-${index}`}>
             {column.map((item) => (
@@ -407,8 +407,8 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
             ))}
           </ul>
         ))}
-        {inAxis && nowTop !== null && nowAt !== null ? (
-          <div className="cal-now" aria-hidden="true" style={{ top: nowTop }}>
+        {nowAxis.line !== null ? (
+          <div className="cal-now" aria-hidden="true" style={{ top: nowAxis.line }}>
             <span className="cal-now__tag" suppressHydrationWarning>
               {clockTime(now.toISOString(), tz)}
             </span>

@@ -291,6 +291,18 @@ export function nowMinutes(day: string, now: Date, timeZone: string): number | n
   return dayKey(now.toISOString(), timeZone) === day ? minutesOfDay(now.toISOString(), timeZone) : null;
 }
 
+/**
+ * Where the now line and the past-time wash sit on the axis, in px from its top.
+ * The wash stops at the foot of the grid, so a day that is over stays washed.
+ * The line shows only while now is inside the axis.
+ */
+export function nowGeometry(nowAt: number | null, axis: { start: number; end: number }, hour: number): { wash: number; line: number | null } {
+  if (nowAt === null) return { wash: 0, line: null };
+  const top = ((nowAt - axis.start * 60) / 60) * hour;
+  const height = (axis.end - axis.start) * hour;
+  return { wash: Math.min(Math.max(top, 0), height), line: top >= 0 && top <= height ? top : null };
+}
+
 /* ---------- Block content ---------- */
 
 export type BlockTone = "class" | "appointment" | "event";

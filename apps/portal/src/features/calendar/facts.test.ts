@@ -12,6 +12,7 @@ import {
   kindCounts,
   minutesOfDay,
   moveFocus,
+  nowGeometry,
   nowMinutes,
   placeColumn,
   rangeFor,
@@ -240,6 +241,22 @@ describe("block text", () => {
     expect(blockLabel(entry("a", "19:00", "20:00", { host_name: null }, { spots_taken: 12, spots_left: 0 }), TZ, "Group class", NOW)).toBe(
       "Yoga Flow, Group class, 19:00 to 20:00, no host, 12 of 12 booked, full",
     );
+  });
+});
+
+describe("now line and wash", () => {
+  const axis = { start: 6, end: 22 };
+  test("inside the axis the wash ends at the line", () => {
+    expect(nowGeometry(9 * 60, axis, 64)).toEqual({ wash: 192, line: 192 });
+  });
+
+  test("after the last hour the wash fills the grid and the line is gone", () => {
+    expect(nowGeometry(23 * 60, axis, 64)).toEqual({ wash: 16 * 64, line: null });
+  });
+
+  test("before the first hour or on another day there is no wash and no line", () => {
+    expect(nowGeometry(5 * 60, axis, 64)).toEqual({ wash: 0, line: null });
+    expect(nowGeometry(null, axis, 64)).toEqual({ wash: 0, line: null });
   });
 });
 
