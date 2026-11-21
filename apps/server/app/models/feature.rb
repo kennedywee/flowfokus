@@ -19,7 +19,8 @@ class Feature < ApplicationRecord
 
   scope :in_effect, -> { where(state: "on").or(where(state: "labs", enabled: true)) }
 
-  validates :key, inclusion: { in: LIST.keys }, uniqueness: { scope: :organization_id }
+  # The unique index keeps one row per organization and key; Organization#change_feature! retries a race.
+  validates :key, inclusion: { in: LIST.keys }
   validates :state, inclusion: { in: STATES }
   # Leaving Labs clears the organization's choice, so a feature that comes back
   # to Labs starts turned off.

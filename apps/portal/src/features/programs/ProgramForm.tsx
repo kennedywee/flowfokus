@@ -9,7 +9,7 @@ import { useToast } from "../../components/Toast";
 import { Kbd } from "../../components/ui";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useAction, useIdempotencyKey } from "../../lib/hooks";
-import { useCan, useDeskLocation, useOrganization } from "../../lib/organization";
+import { gymSiteLive, useCan, useDeskLocation, useOrganization } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { useWide } from "../../lib/use-wide";
 import { createProgram, scheduleProgram, updateProgram } from "../../lib/staff.functions";
@@ -242,7 +242,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
   }
 
   function createdToast(created: Schemas["ProgramDetail"], sessions?: string) {
-    const facts = [sessions, created.published ? "Members can book it online" : "Members can't see it yet"].filter(Boolean).join(" · ");
+    const facts = [sessions, created.published && gymSiteLive(organization) ? "Members can book it online" : "Members can't see it yet"].filter(Boolean).join(" · ");
     toast.show({
       tone: "success",
       title: "Program created",
