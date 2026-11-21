@@ -24,13 +24,10 @@ describe("calendar block", () => {
     expect(event).toContain("18 of 30 sold");
   });
 
-  test("a cancelled class draws a flat line and says it was cancelled", () => {
-    const html = renderToStaticMarkup(
-      <CalendarBlock kind="group_class" state="cancelled" time="19:00" name="Yoga Flow" status="Cancelled · Coach unwell" spots={{ capacity: 12, booked: 0 }} />,
-    );
+  test("a cancelled class says it was cancelled", () => {
+    const html = renderToStaticMarkup(<CalendarBlock kind="group_class" state="cancelled" time="19:00" name="Yoga Flow" status="Cancelled · Coach unwell" />);
     expect(html).toContain('data-state="cancelled"');
     expect(html).toContain("Cancelled · Coach unwell");
-    expect(html).toContain("spot--line");
   });
 
   test("without a link it is a plain box that the keyboard cannot reach", () => {

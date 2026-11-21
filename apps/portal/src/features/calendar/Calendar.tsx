@@ -281,16 +281,19 @@ function SessionBlock({
   const organization = useOrganization();
   const tz = organization.timezone;
   const { kind } = entry.program;
+  const state = sessionState(entry, now);
+  // A cancelled session has no spots to count: its words say why.
+  const showSpots = kind === "group_class" && variant === "day" && density === "full" && state !== "cancelled";
   return (
     <CalendarBlock
       kind={kind}
-      state={sessionState(entry, now)}
+      state={state}
       density={density}
       variant={variant}
       time={variant === "week" || density === "tight" ? clockTime(entry.starts_at, tz) : clockRange(entry.starts_at, entry.ends_at, tz)}
       name={group === "program" ? entry.program.host_name?.trim() || "No host" : entry.program.name}
       status={blockStatus(entry, now)}
-      spots={kind === "group_class" && variant === "day" && density === "full" ? { capacity: entry.capacity, booked: entry.spots_taken } : undefined}
+      spots={showSpots ? { capacity: entry.capacity, booked: entry.spots_taken } : undefined}
       label={blockLabel(entry, tz, PROGRAM_KIND_LABEL[kind], now)}
       href={{ org: organization.slug, occurrenceId: entry.id }}
       navId={navId}
