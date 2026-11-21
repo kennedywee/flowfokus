@@ -1,201 +1,246 @@
 /*
- * Screen styles: products. The list, the page, and the form reuse the
- * programs pieces (tile, toolbar, rows, properties, form fields) in
- * programs.css; this file holds only what differs.
+ * Screen styles: products. The list is the Members and Sales pattern: a title
+ * with a count, the filter bar, and the shared list table (styles/parts.css).
+ * The product page is the shared detail layout with the barcode pattern. The
+ * form is the record frame, as New member and New sale.
  */
 
-/* ---------- Products list ---------- */
-/* Paper "Products — list": Product, Type, Terms, Status, Price, then the chevron. */
+/* ---------- Barcode behind a product hero ---------- */
+/* The bars run behind the hero, so the text blocks are cut out of them, as on the sale page. */
 
-.products-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px 200px 110px 96px 16px;
+:is(.product-details, .product-form) .hero :is(.hero__title, .hero__facts, .hero__line) {
+  width: fit-content;
+  max-width: calc(100% + 8px);
+  margin-inline: -4px;
+  padding-inline: 4px;
+  background: color-mix(in srgb, var(--color-ink) 2.5%, var(--color-page));
+}
+
+/* ---------- Products list ---------- */
+
+.products-list {
+  position: relative;
+  max-width: 1280px;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+/* The pattern is decoration behind the page; the content paints over it. */
+.products-list > :not(.backdrop) {
+  position: relative;
+}
+.products-list > .backdrop {
+  width: 864px;
+  height: 220px;
+  mask-image: linear-gradient(var(--color-ink) 35%, transparent);
+}
+.products-head {
+  display: flex;
   align-items: center;
-  column-gap: var(--space-4);
+  gap: var(--space-3);
 }
-.products-row {
-  min-height: 44px;
+.products-head h1 {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
 }
-.products-row__product {
-  gap: 10px;
+.products-head .hero__stats {
+  flex-basis: auto;
 }
-.products-row__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--color-ink-4);
+.products-list .list-table__link {
+  min-width: 0;
 }
-.products-col--num {
-  text-align: right;
+.products-list__skeleton-button {
+  display: block;
+  width: 68px;
+  height: var(--control-height-compact);
+  border-radius: var(--radius-compact);
 }
-.products-row__fact {
-  overflow: hidden;
-  color: var(--color-ink-2);
+.products-list .list-search.skeleton-block {
+  border-color: transparent;
+  background: var(--color-well);
+}
+.products-failure {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+/* The table's own width decides the layout: the sidebar and the page padding take space too. */
+.products-table-frame {
+  container: products-table / inline-size;
+  min-width: 0;
+}
+.products-table__price {
+  justify-content: flex-end;
+  font-size: var(--text-base);
   font-variant-numeric: tabular-nums;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
-.products-row__price {
-  font-variant-numeric: tabular-nums;
+.products-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
 }
-.products-row__phone-line {
-  display: none;
-}
-/* Not sold: the row turns grey, as the archived row does in Paper. */
-.products-row[data-state="not_sold"] .programs-row__name,
-.products-row[data-state="not_sold"] .products-row__fact,
-.products-row[data-state="not_sold"] .products-row__price {
+/* A product not for sale is grey, as an archived price is. */
+.products-table__row--quiet :is(.cell-stack__title, .products-status, .products-table__price) {
   color: var(--color-ink-3);
 }
 
-/* Narrow: name and price on line 1, then type, terms, and status. */
-@container programs-table (max-width: 720px) {
-  .products-table .programs-table__head {
+@media (max-width: 767.98px) {
+  /* The title keeps its word; the count and New product wrap to the next line. */
+  .products-head {
+    flex-wrap: wrap;
+  }
+  .products-head h1 {
+    flex: 1 0 auto;
+    overflow-wrap: normal;
+  }
+  .products-list .filter-bar .list-search {
+    flex: 1 1 0;
+    width: auto;
+  }
+  .products-list .filter-bar__space {
     display: none;
   }
-  .products-grid {
-    grid-template-columns: minmax(0, 1fr) auto 16px;
-  }
-  .products-col--wide {
+}
+
+/* Compact: the product and its price share the first line; the facts wrap under. The header is gone; Display sorts. */
+@container products-table (max-width: 640px) {
+  .products-table .list-table__head {
     display: none;
   }
-  .products-row__phone-line {
-    display: block;
-    overflow: hidden;
-    color: var(--color-ink-2);
-    font-size: var(--text-xs);
-    font-variant-numeric: tabular-nums;
-    line-height: 16px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .products-row {
+  .products-table .list-table__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px var(--space-3);
     padding-block: var(--space-2);
   }
-  .products-row__icon {
-    display: none;
+  .products-table .list-table__row > .products-table__product {
+    flex: 1 1 0;
+    min-width: 0;
   }
-  .products-row__price {
-    align-self: start;
+  .products-table .list-table__row > .products-table__price {
+    order: 2;
+  }
+  .products-table .list-table__row::before {
+    content: "";
+    order: 3;
+    flex-basis: 100%;
+    height: 0;
+  }
+  .products-table .list-table__row > .products-table__type,
+  .products-table .list-table__row > .products-table__status {
+    order: 4;
   }
 }
 
 /* ---------- Product details ---------- */
-/* Paper "Product details": the program page layout, with the bands in the main column. */
 
-.product-head__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-}
-.product-head__facts {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  line-height: 16px;
-}
-.product-page__main {
-  grid-area: sessions;
-  display: grid;
-  align-content: start;
+.product-details .detail__main {
   gap: var(--space-6);
-  min-width: 0;
 }
-.product-prices {
-  padding-block: var(--space-1);
+.product-details .member-section {
+  container: product-section / inline-size;
 }
-.product-benefits {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* A price that can never be sold again is grey. */
+.product-prices__row--archived :is(.list-table__cell, .products-status) {
+  color: var(--color-ink-3);
 }
-.product-benefit {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 200px) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 44px;
-  font-variant-numeric: tabular-nums;
-}
-.product-benefit__name {
-  overflow: hidden;
+.product-prices__name {
   font-weight: var(--font-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.product-benefit__facts,
-.product-benefit__location {
-  min-width: 0;
-  color: var(--color-ink-2);
   overflow-wrap: anywhere;
 }
-.product-benefit__location {
-  text-align: right;
+.product-allowance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
-.product-page .skeleton-line {
-  display: block;
-  height: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--color-well);
+.product-details .cell-stack__sub {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/*
+ * Compact, by the section's own width: the header is gone. A price shows its
+ * name and amount on line 1, then its length and status. A benefit shows its
+ * name, then its amount and location.
+ */
+@container product-section (max-width: 640px) {
+  .product-prices .list-table__head,
+  .product-benefits .list-table__head {
+    display: none;
+  }
+  .product-prices .list-table__row,
+  .product-benefits .list-table__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px var(--space-3);
+    padding-block: var(--space-2);
+  }
+  .product-prices .list-table__row > :first-child {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .product-prices .list-table__row > :nth-child(4) {
+    order: 2;
+  }
+  .product-prices .list-table__row > :nth-child(5) {
+    order: 3;
+  }
+  .product-prices .list-table__row::before {
+    content: "";
+    order: 4;
+    flex-basis: 100%;
+    height: 0;
+  }
+  .product-prices .list-table__row > :nth-child(2),
+  .product-prices .list-table__row > :nth-child(3) {
+    order: 5;
+  }
+  .product-benefits .list-table__row > :first-child {
+    flex-basis: 100%;
+  }
 }
 
 @media (max-width: 767.98px) {
-  /* Phones: Sell first and dark, Edit beside it, as in "Phone — Product details". */
-  .product-page .program-head .page-actions > a {
-    flex: 1;
-  }
+  /* Phones: Sell first, as in "Phone — Product details". */
   .product-head__sell {
     order: -1;
-    border-color: transparent;
-    background: var(--gradient-primary);
-    color: var(--color-on-ink);
-    box-shadow: none;
-  }
-  /* Beats the secondary button's hover, which would drop the gradient. */
-  .button.product-head__sell:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--gradient-primary-hover);
-    color: var(--color-on-ink);
-  }
-  .product-benefit {
-    grid-template-columns: 28px minmax(0, 1fr);
-    grid-template-areas: "tile name" "tile facts" "tile location";
-    row-gap: 2px;
-    padding-block: var(--space-2);
-  }
-  .product-benefit > .program-tile {
-    grid-area: tile;
-    align-self: start;
-  }
-  .product-benefit__name {
-    grid-area: name;
-  }
-  .product-benefit__facts {
-    grid-area: facts;
-    font-size: var(--text-xs);
-  }
-  .product-benefit__location {
-    grid-area: location;
-    font-size: var(--text-xs);
-    text-align: left;
   }
 }
 
 /* ---------- New product and Edit product ---------- */
 /* Paper "New product": Name and Price, Type, then Terms and Benefits; Gym site and Note on the right. */
 
+.product-form .detail__main {
+  gap: var(--space-6);
+}
+.product-form__form {
+  display: grid;
+  gap: 40px;
+  max-width: 756px;
+}
+.product-form__fields {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-1);
+}
 .product-form__row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 180px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
 .product-kinds {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.product-form__terms {
-  max-width: 280px;
 }
 .product-form__hint,
 .product-form__muted {
@@ -272,7 +317,35 @@
   .product-kinds {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .product-form__terms {
-    max-width: none;
+  }
+
+/* ---------- Fields ---------- */
+/* The 32px field of the program form (programs.css), on the product form and the Add price dialog. */
+
+:is(.product-form, .sale-dialog) .program-input {
+  min-height: 32px;
+  padding-inline: 10px;
+  border-radius: var(--radius-compact);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+:is(.product-form, .sale-dialog) .select.program-input {
+  padding-right: 32px;
+}
+.product-form textarea.program-input {
+  min-height: 72px;
+  padding-block: 6px;
+}
+.product-form .program-select__control {
+  padding-left: 30px;
+}
+@media (pointer: coarse) {
+  :is(.product-form, .sale-dialog) .program-input {
+    min-height: 40px;
+  }
+}
+@media (max-width: 767.98px) {
+  :is(.product-form, .sale-dialog) .program-input {
+    font-size: 16px;
   }
 }

@@ -417,7 +417,7 @@ Session details, Member details, Sale details, Program details, Product
 details, and Pass credits. The screen issues (#88 to #94) move each screen onto
 them. Until then the older `ListToolbar`, `FilterChips`, `ListPager`, and
 `TableState` stay as they are, and the existing screens use them. The Members
-list is the first screen on the new parts (#88); the Sales list follows (#90). The new parts add no sample
+list is the first screen on the new parts (#88); the Sales list (#90) and the Products list (#93) follow. The new parts add no sample
 data to a screen; the gallery examples carry labelled sample data.
 
 Code: `components/parts/` (`ListTable`, `FilterBar`, `DetailLayout`,
@@ -441,6 +441,7 @@ and `lib/paging.ts`, styles in `styles/parts.css`.
 | Credit ring (`CreditRing`) | "7 of 10 left" with a ring. Amber at two or fewer left, and at none. |
 | Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross. Chart size is a 10px column per session; row size is 60 x 12 for twelve spots. Put the count beside it as text. |
 | Mix bar (`MixBar`) | Slanted stripes sized by share, darkest first. Put the numbers beside it as text. |
+| Allowance bar (`AllowanceBar`) | What a benefit allows: one slanted segment for each visit or booking, or one solid slanted bar for unlimited (and for more than 20). The amount sits beside it as text. |
 | Tag chip (`TagChip`) | A 20px pill with a 6px dot (`DotTone`: neutral, good, warning, critical, info, violet) and the tag name. The dot never carries the meaning alone. |
 
 Differences from Paper, and why:
@@ -778,45 +779,65 @@ tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
   pass credits per program, ticket Covers, Who can buy, and Sell online,
   several days per schedule, Until, and specific dates.
 
-Products, Product details, and New and Edit product are the next redesigned
-screens (`features/products/ProductsList.tsx`, `ProductDetails.tsx`, and
-`ProductForm.tsx`; rules in `facts.ts`, the price change in
-`priceChange.ts`, loading in `load.ts`, styles in `styles/products.css` on
-top of the programs pieces). They show only Rails data:
+The Products list, Product details, and New and Edit product (issue #93, Paper
+"Product" and "Product · Pass (10-class pass)", light and dark) are on the
+shared parts (`features/products/ProductsList.tsx`, `ProductDetails.tsx`,
+`PriceDialogs.tsx`, and `ProductForm.tsx`; rules in `facts.ts`, loading in
+`load.ts`, styles in `styles/products.css`). They show only Rails data. Paper
+could not be read while they were built (the Paper server timed out on every
+call), so the layout, order, and content follow the issue text and the Member
+and Sale pages, and every size and colour comes from the tokens and shared
+parts built from Paper in #85 and #87. The Products list and the two forms have
+no Paper frame; they use the same parts.
 
-- One price per product (decision of 18 Nov 2026). Staff see the first price
-  on sale; Rails keeps fixed prices underneath. A new amount or length adds a
-  new price, then archives the old one; members who bought keep theirs. The
-  form says this under Price before staff save. The new price exists before
-  the old one goes, so a product never has nothing on sale. If the archive
-  fails, the form says both prices are on sale, and saving again only
-  archives: each save first loads the product and reuses a price an earlier
-  try made. Other prices still on sale show in an "Other prices" band.
-- Products: the title, New product (products:create) in the top bar, Filter
-  (Type, Status, with counts and chips) and a "/" search over names. A header
-  band, then 44px rows: the kind icon and name, type, terms ("10 bookings ·
-  60 days"), status (On sale, Staff only, Not sold), and the price. Not sold
-  rows are grey and sort last. Tickets are left out; they live on the program
-  page. Phones put type, terms, and status on line 2.
-- Product details: the tile, the name (with "Not sold"), and "Membership ·
-  30 days · RM 220.00". Sell (S, purchases:create, price on sale) opens New
-  sale with the product chosen; Edit (E) and ⋯ (Publish or Make staff only,
-  Take off sale or Put on sale, Edit product, Archive price…) need
-  products:update. Main column: Other prices, then Benefits ("Changes apply
-  to new sales"). Properties: Type, Price, Length or Valid for, Uses (pass),
-  Sold, and the Note. Phones put Sell first and dark.
-- New product and Edit product: Details (Name, Price, Type cards), Terms
-  (Length or Valid for, in days from fulfillment), and Benefits (Name,
-  Gives, visits or bookings, Location, Programs). Gym site and Note on the
-  right. ⌘↵ saves; leaving with changes asks first. Edit has no Type. A new
-  product needs products:create and products:update, because adding its
-  price needs update. If the price fails after the product exists, an error
-  toast says so and the product page opens, so staff never create it twice.
-- Not shown, because Rails has no data for them: holders, product activity
-  and comments, archive and restore of a whole product, access hours, who
-  can buy and member tags, a desk or online channel beyond the gym site,
-  product-level locations, pass credits and "valid from first use", and
-  Sold or Last 30 days counts.
+- A product has many prices, as in Paper. Rails never changes a price a sale may use, so a new amount or
+  length is a new price. Staff add it from the product page, then take the old
+  one off sale or archive it. Edit product has no price fields.
+- Products: the title with the product count on the right, New product (N,
+  products:create) in the top bar, the filter bar (Type and Status with counts,
+  chips with "is" and "is not", search over names, and Display), the list table,
+  and a page range. Columns: product (kind tile, name, and its terms such as
+  "10 bookings · 60 days"), Type, Status (On sale, Staff only, Not sold, each
+  with a dot), and Price. Display sorts by Status, Name, or Price and hides
+  Type. Not sold rows are grey and sort last. Tickets are left out; they live on
+  the program page. The URL keeps `type`, `status`, their `_not` flags, and `q`.
+  Narrow tables put the price on line 1 and the type and status under it.
+- Product details: `DetailLayout` with the barcode pattern. The hero has the
+  kind's tile, the name, a status tag (On sale, Staff only, or Not sold), and the
+  note as one muted line. Sell (S, purchases:create, a price on sale) opens New
+  sale with the first price on sale chosen; Edit (E) and the more menu (Publish
+  on the gym site or Make staff only) need products:update.
+  - Prices: a table of Name, Length, Status (On sale, Not on sale, Archived),
+    and Price, with Add price in the header. The row menu has Sell at this price
+    (purchases:create, price on sale), Take off sale or Put on sale, and Archive
+    price… (a confirm dialog that says members keep what they bought; products:update).
+    Archived rows are grey and have no menu: an archived price never goes back on
+    sale. Add price opens a dialog (Price, Length or Valid for in days from
+    fulfillment, and an optional Name; the name defaults to the length) and the
+    price is on sale at once.
+  - Benefits: a table of the benefit (tile, name, and the programs it books),
+    Amount (the allowance bar and the words, such as "10 bookings" or
+    "Unlimited visits"), and Location. "Changes apply to new sales." sits under
+    it. Edit benefits opens Edit product (products:update).
+  - Panel: Kind and Visibility (Gym site and desk, or Staff only).
+- New product and Edit product: `DetailLayout` with the barcode pattern and the
+  record frame, as New member. Details (Name, and Type cards on a new product),
+  Price (Price and Length or Valid for, new products only), and Benefits (Name,
+  Gives, visits or bookings, Location, Programs). Where the product is sold (Gym
+  site) and the Note are in the right panel. ⌘↵ saves; leaving with changes asks
+  first. A new product needs products:create and products:update, because adding
+  its price needs update. If the price fails after the product exists, an error
+  toast says so and the product page opens, so staff never create it twice; Add
+  price sets it.
+- The note is the hero's muted line and is not repeated in the panel. Rails has
+  no note author or date.
+- Not shown, because Rails has no data for them (all in
+  [#21](https://github.com/kennedywee/flowfokus/issues/21)): the active member
+  or pass count, Revenue, Sales, and Average stats, the active count and archive
+  date of each price, credits left on active passes, "Ending in 7 days", product
+  activity and comments, who can buy and member tags, a desk or online channel
+  beyond the gym site, product-level locations, "valid from first use", and
+  archive and restore of a whole product.
 
 Settings and the sign-in screens are the last redesigned screens
 (`features/settings/`: `General.tsx`, `Locations.tsx`, `Staff.tsx`,

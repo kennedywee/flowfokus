@@ -1,20 +1,22 @@
 import { describe, expect, test } from "bun:test";
 import type { Schemas } from "@flowfokus/api";
-import { formatMoney } from "../../lib/format";
 import {
+  activeFilters,
   checkDraft,
+  checkPrice,
   draftChanged,
   filterFromSearch,
   filterProducts,
-  headFacts,
   mainPrice,
-  otherPrices,
-  priceChange,
   priceLabel,
+  priceSpec,
   productCounts,
   productFields,
   readProductsSearch,
   saleState,
+  searchFromFilters,
+  sortProducts,
+  sortedPrices,
   startBenefits,
   startDraft,
   termsText,
@@ -42,21 +44,16 @@ function product(overrides: Partial<Schemas["StaffProduct"]> = {}): Schemas["Sta
 
 const archived = { available: false, archived_at: "2026-10-01T00:00:00Z" };
 
-describe("the one price", () => {
+describe("the main price", () => {
   test("is the first price on sale", () => {
     const item = product({ prices: [price("old", 20000, archived), price("a", 22000), price("b", 60000)] });
     expect(mainPrice(item)?.id).toBe("a");
-    expect(otherPrices(item).map((p) => p.id)).toEqual(["b"]);
   });
 
   test("falls back to a price off sale, then an archived one", () => {
     expect(mainPrice(product({ prices: [price("old", 20000, archived), price("off", 22000, { available: false })] }))?.id).toBe("off");
     expect(mainPrice(product({ prices: [price("old", 20000, archived)] }))?.id).toBe("old");
     expect(mainPrice(product({ prices: [] }))).toBeNull();
-  });
-
-  test("other prices leave out archived prices", () => {
-    expect(otherPrices(product({ prices: [price("a", 22000), price("old", 20000, archived)] }))).toEqual([]);
   });
 });
 
@@ -78,8 +75,6 @@ describe("terms", () => {
       prices: [price("a", 28000, { duration_days: 60 })],
     });
     expect(termsText(pass)).toBe("10 bookings · 60 days");
-    expect(headFacts(pass)).toBe(`Pass · 10 bookings · 60 days · ${formatMoney(28000, "MYR")}`);
-    expect(headFacts(product({ prices: [] }))).toBe("Membership · No price");
   });
 });
 
@@ -91,14 +86,24 @@ describe("the list", () => {
     product({ id: "4", name: "Drop-in", kind: "ticket" }),
   ];
 
-  test("leaves out tickets and puts products not sold last", () => {
-    expect(filterProducts(list, { type: [], status: [] }, "").map((p) => p.id)).toEqual(["3", "1", "2"]);
+  const none = { type: [], typeNot: false, status: [], statusNot: false };
+
+  test("leaves out tickets, and the default sort puts products not sold last", () => {
+    const all = filterProducts(list, none, "");
+    expect(all.map((p) => p.id).sort()).toEqual(["1", "2", "3"]);
+    expect(sortProducts(all, { column: "status", direction: "asc" }).map((p) => p.id)).toEqual(["3", "1", "2"]);
+    expect(sortProducts(all, { column: "name", direction: "desc" }).map((p) => p.id)).toEqual(["1", "3", "2"]);
   });
 
   test("filters by type, status, and name", () => {
-    expect(filterProducts(list, { type: ["pass"], status: [] }, "").map((p) => p.id)).toEqual(["3"]);
-    expect(filterProducts(list, { type: [], status: ["staff_only", "not_sold"] }, "").map((p) => p.id)).toEqual(["1", "2"]);
-    expect(filterProducts(list, { type: [], status: [] }, "ANN").map((p) => p.id)).toEqual(["2"]);
+    expect(filterProducts(list, { ...none, type: ["pass"] }, "").map((p) => p.id)).toEqual(["3"]);
+    expect(filterProducts(list, { ...none, status: ["staff_only", "not_sold"] }, "").map((p) => p.id).sort()).toEqual(["1", "2"]);
+    expect(filterProducts(list, none, "ANN").map((p) => p.id)).toEqual(["2"]);
+  });
+
+  test("a flipped chip leaves out the values", () => {
+    expect(filterProducts(list, { ...none, type: ["pass"], typeNot: true }, "").map((p) => p.id).sort()).toEqual(["1", "2"]);
+    expect(filterProducts(list, { ...none, status: ["not_sold"], statusNot: true }, "").map((p) => p.id).sort()).toEqual(["1", "3"]);
   });
 
   test("counts each value", () => {
@@ -107,16 +112,30 @@ describe("the list", () => {
 
   test("reads the URL and ignores unknown values", () => {
     expect(readProductsSearch({ type: " pass ", status: 3, q: "" })).toEqual({ type: "pass" });
-    expect(filterFromSearch({ type: "pass,ticket", status: "not_sold" })).toEqual({ type: ["pass"], status: ["not_sold"] });
+    expect(filterFromSearch({ type: "pass,ticket", status: "not_sold" })).toEqual({ type: ["pass"], typeNot: false, status: ["not_sold"], statusNot: false });
+  });
+
+  test("keeps a flipped chip in the URL", () => {
+    const search = readProductsSearch({ type: "pass", type_not: true, status_not: true });
+    expect(search).toEqual({ type: "pass", type_not: true });
+    const chips = activeFilters(filterFromSearch(search));
+    expect(chips).toEqual([{ field: "type", values: ["pass"], negated: true }]);
+    expect(searchFromFilters(chips)).toEqual({ type: "pass", type_not: true });
   });
 });
 
 describe("the form", () => {
-  test("starts from the product's main price", () => {
+  test("starts from the product's fields", () => {
     const draft = startDraft(product(), "MYR");
-    expect(draft).toMatchObject({ name: "Monthly unlimited", amount: "220.00", days: "30", published: true });
+    expect(draft).toMatchObject({ name: "Monthly unlimited", published: true });
     expect(draftChanged(draft, startDraft(product(), "MYR"))).toBe(false);
-    expect(draftChanged({ ...draft, amount: "240.00" }, draft)).toBe(true);
+    expect(draftChanged({ ...draft, name: "Other" }, draft)).toBe(true);
+  });
+
+  test("an edit does not check the price", () => {
+    const draft = startDraft(product(), "MYR");
+    expect(checkDraft(draft, "MYR").amount).toBeDefined();
+    expect(checkDraft(draft, "MYR", { price: false })).toEqual({});
   });
 
   test("checks name, price, length, and benefits", () => {
@@ -148,28 +167,25 @@ describe("the form", () => {
   });
 });
 
-describe("price change", () => {
-  const current = price("a", 22000);
-  const draft = { ...startDraft(product(), "MYR") };
-
-  test("is nothing when amount and length stay", () => {
-    expect(priceChange(draft, current, "MYR")).toBeNull();
-  });
-
-  test("is a new price when the amount or the length changes", () => {
-    expect(priceChange({ ...draft, amount: "240" }, current, "MYR")).toEqual({ label: "30 days", amount_minor: 24000, duration_days: 30 });
-    expect(priceChange({ ...draft, days: "90" }, current, "MYR")).toEqual({ label: "90 days", amount_minor: 22000, duration_days: 90 });
-  });
-
-  test("is a new price when the current one is archived", () => {
-    expect(priceChange(draft, { ...current, ...archived }, "MYR")).not.toBeNull();
-    expect(priceChange(draft, null, "MYR")).not.toBeNull();
-  });
-
-  test("keeps a label staff chose unless it named the old length", () => {
-    expect(priceLabel(30, { label: "Founding rate", duration_days: 30 })).toBe("Founding rate");
-    expect(priceLabel(90, { label: "Founding rate", duration_days: 30 })).toBe("90 days");
-    expect(priceLabel(90, { label: "30 days", duration_days: 30 })).toBe("90 days");
+describe("prices", () => {
+  test("a new price is the amount and the length staff typed", () => {
+    expect(priceSpec("240", "30", "MYR")).toEqual({ label: "30 days", amount_minor: 24000, duration_days: 30 });
+    expect(priceSpec("12.345", "30", "MYR")).toBeNull();
     expect(priceLabel(7)).toBe("7 days (1 week)");
+  });
+
+  test("checks the amount and the length", () => {
+    expect(checkPrice("12.345", "0", "MYR")).toEqual({ amount: "Enter a price, like 120.50.", days: "Enter 1 to 3660 days." });
+    expect(checkPrice("120", "30", "MYR")).toEqual({});
+  });
+
+  test("the table lists prices on sale, then not on sale, then archived", () => {
+    const prices = [
+      price("a", 100, { archived_at: "2026-10-01T00:00:00Z", available: false }),
+      price("b", 200, { available: false }),
+      price("c", 300),
+      price("d", 400),
+    ];
+    expect(sortedPrices({ prices }).map((p) => p.id)).toEqual(["c", "d", "b", "a"]);
   });
 });

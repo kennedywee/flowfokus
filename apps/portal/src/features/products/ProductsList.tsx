@@ -1,101 +1,146 @@
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
-import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
+import { SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
-import { TableState } from "../../components/TableState";
-import { PRODUCT_KIND_LABEL, failureMessage, formatMoney } from "../../lib/format";
-import { useCan, useOrganization } from "../../lib/organization";
-import { PAGE_SIZE } from "../../lib/paging";
-import type { Failure, Result } from "../../lib/result";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { RecordBackdrop } from "@/components/parts/Backdrop";
+import { HeroStats } from "@/components/parts/DetailLayout";
+import { DisplayPopover, FilterBar } from "@/components/parts/FilterBar";
 import {
+  CellStack,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableEmpty,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { Dot, Tile, type DotTone } from "@/components/parts/marks";
+import { FailureNotice, Kbd } from "../../components/ui";
+import { PRODUCT_KIND_LABEL, formatMoney } from "../../lib/format";
+import { useCan, useOrganization } from "../../lib/organization";
+import { PAGE_SIZE, pageRange, rangeLabel } from "../../lib/paging";
+import type { Result } from "../../lib/result";
+import { useShortcut } from "../../lib/shortcuts";
+import { Button, buttonVariants } from "@/components/ui/button";
+import type { ActiveFilter, SortState } from "@/lib/list-parts";
+import {
+  DEFAULT_PRODUCT_COLUMNS,
+  DEFAULT_PRODUCT_SORT,
+  PRODUCT_SORT_FIELDS,
   SALE_STATE_LABEL,
-  STATUS_FILTERS,
-  TYPE_FILTERS,
+  activeFilters,
   filterFromSearch,
   filterProducts,
+  isDefaultDisplay,
   mainPrice,
   offers,
   productCounts,
-  productsRange,
+  productFilterFields,
   saleState,
+  searchFromFilters,
+  sortProducts,
   termsText,
   type Product,
-  type ProductsFilter,
+  type ProductColumnId,
   type ProductsSearch,
+  type SaleState,
 } from "./facts";
 import { PRODUCT_ICON } from "./kinds";
 
 const icon = { "aria-hidden": true, focusable: false } as const;
 
+/** The dot beside each status. The word is the fact; the dot repeats it. */
+const STATE_TONE: Record<SaleState, DotTone> = { on_sale: "good", staff_only: "info", not_sold: "neutral" };
+
+function productColumns(columns: Record<ProductColumnId, boolean>): ListColumn[] {
+  return [
+    { id: "name", label: "Product", sortable: true },
+    ...(columns.type ? [{ id: "type", label: "Type", width: "112px" }] : []),
+    { id: "status", label: "Status", width: "128px", sortable: true },
+    { id: "price", label: "Price", width: "128px", align: "end" as const, sortable: true },
+  ];
+}
+
 /**
- * Paper "Products — list": Filter and search, a header band, then one row per
- * product with its type, terms, status, and the one price. Rails returns every
- * product; the list leaves out tickets, filters, and pages here.
+ * The products list (the Members and Sales pattern): the title and the count,
+ * a filter bar with Type and Status filters, search, and Display, the list
+ * table, and the page range. Rails returns every product; the list filters,
+ * sorts, and pages them here. Tickets are left out: they live on their program
+ * page. The URL keeps `type`, `status`, and `q`.
  */
 export function ProductsList({ products, search }: { products: Result<Product[]>; search: ProductsSearch }) {
   const can = useCan();
-  if (!can("products:read")) {
-    return (
-      <div className="page programs-list products-list">
-        <ListHead />
-        <div className="list-state" role="status">
-          <p className="list-state__title">Your role cannot see products.</p>
-          <p className="list-state__text">An owner or manager can change your role.</p>
-        </div>
-      </div>
-    );
-  }
-  const filter = filterFromSearch(search);
-  const q = search.q ?? "";
+  const count = products.ok ? offers(products.data).length : null;
   return (
-    <div className="page programs-list products-list">
-      <ListHead />
-      {!products.ok ? (
-        <DidNotLoad error={products.error} />
-      ) : !offers(products.data).length ? (
-        <NoProducts />
+    <div className="page products-list">
+      <RecordBackdrop record="product" />
+      <ListHead count={count && !search.type && !search.status && !search.q ? String(count) : null} />
+      {!can("products:read") ? (
+        <ListTable label="Products" columns={productColumns(DEFAULT_PRODUCT_COLUMNS)}>
+          <ListTableEmpty title="Your role cannot see products." text="An owner or manager can change your role." />
+        </ListTable>
+      ) : products.ok ? (
+        <Loaded products={offers(products.data)} search={search} />
       ) : (
         <>
-          <Toolbar products={products.data} filter={filter} search={search} />
-          <Results products={products.data} filter={filter} q={q} />
+          <Bar search={search} counts={null} />
+          <ListTable label="Products" columns={productColumns(DEFAULT_PRODUCT_COLUMNS)}>
+            <DidNotLoad error={products.error} />
+          </ListTable>
         </>
       )}
     </div>
   );
 }
 
-function ListHead() {
-  const organization = useOrganization();
-  const can = useCan();
+function ListHead({ count }: { count: string | null }) {
   return (
-    <header className="programs-head">
+    <header className="products-head">
       <h1>Products</h1>
-      {can("products:create") ? (
-        <PageActions>
-          <Link to="/$org/products/new" params={{ org: organization.slug }} className={buttonVariants({ size: "compact" })}>
-            <Icon name="plus" {...icon} />
-            New product
-          </Link>
-        </PageActions>
-      ) : null}
+      {count !== null ? <HeroStats stats={[{ value: count, label: "products" }]} /> : null}
+      <PageActions>
+        <NewProductLink shortcut />
+      </PageActions>
     </header>
   );
 }
 
-function Toolbar({ products, filter, search }: { products: Product[]; filter: ProductsFilter; search: ProductsSearch }) {
-  const setSearch = useSetListSearch("/$org/products", search, ["type", "status", "q"]);
-  const counts = productCounts(products);
-  const groups = [
-    { key: "type" as const, title: "Type", options: withCounts(TYPE_FILTERS, counts), chosen: filter.type },
-    { key: "status" as const, title: "Status", options: withCounts(STATUS_FILTERS, counts), chosen: filter.status },
-  ];
+/** A new product needs a price, and adding a price needs products:update. The list needs products:read. `shortcut` adds the N key; only the top bar action has it. */
+function NewProductLink({ variant = "default", shortcut = false }: { variant?: "default" | "secondary"; shortcut?: boolean }) {
+  const organization = useOrganization();
+  const can = useCan();
+  const navigate = useNavigate();
+  const allowed = can("products:read") && can("products:create") && can("products:update");
+  useShortcut("n", () => void navigate({ to: "/$org/products/new", params: { org: organization.slug } }), { enabled: shortcut && allowed });
+  if (!allowed) return null;
   return (
-    <ListToolbar
-      filter={<FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />}
-      chips={<FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />}
+    <Link
+      to="/$org/products/new"
+      params={{ org: organization.slug }}
+      className={buttonVariants({ variant, size: "compact" })}
+      aria-keyshortcuts={shortcut ? "N" : undefined}
+    >
+      <Icon name="plus" {...icon} />
+      New product
+      {shortcut ? <Kbd>N</Kbd> : null}
+    </Link>
+  );
+}
+
+/** Filter, one chip per active filter, search, and Display. The chips change the URL. Without counts the Filter button is left out. */
+function Bar({ search, counts, display }: { search: ProductsSearch; counts: ReturnType<typeof productCounts> | null; display?: ReactNode }) {
+  const setSearch = useSetListSearch("/$org/products", search, ["type", "type_not", "status", "status_not", "q"]);
+  return (
+    <FilterBar
+      fields={counts ? productFilterFields(counts) : []}
+      filters={activeFilters(filterFromSearch(search))}
+      onChange={(next: ActiveFilter[]) => {
+        const { type, type_not, status, status_not } = searchFromFilters(next);
+        setSearch({ type, type_not, status, status_not });
+      }}
       search={
         <SearchField
           id="product-search"
@@ -103,138 +148,148 @@ function Toolbar({ products, filter, search }: { products: Product[]; filter: Pr
           placeholder="Search products"
           q={search.q ?? ""}
           onSearch={(q) => setSearch({ q: q || undefined })}
+          delay={300}
         />
       }
+      display={display}
     />
   );
 }
 
-function Results({ products, filter, q }: { products: Product[]; filter: ProductsFilter; q: string }) {
+function Loaded({ products, search }: { products: Product[]; search: ProductsSearch }) {
   const organization = useOrganization();
-  const navigate = useNavigate();
-  const shown = filterProducts(products, filter, q);
-  if (!shown.length) {
-    const onlySearch = q && !filter.type.length && !filter.status.length;
-    return (
-      <TableState
-        title={q ? `No products match “${q}”` : "No products match these filters"}
-        action={
-          <Button
-            type="button"
-            variant="secondary"
-            size="compact"
-            onClick={() => void navigate({ to: "/$org/products", params: { org: organization.slug }, search: {}, replace: true })}
-          >
-            {onlySearch ? "Clear search" : "Clear filters"}
-          </Button>
-        }
-      />
-    );
+  const filter = filterFromSearch(search);
+  const q = search.q ?? "";
+  const [sort, setSort] = useState<SortState>(DEFAULT_PRODUCT_SORT);
+  const [columns, setColumns] = useState(DEFAULT_PRODUCT_COLUMNS);
+  const [chosenPage, setPage] = useState(1);
+  // A new filter or search starts again at page 1.
+  const key = `${filter.typeNot ? "!" : ""}${filter.type.join()}|${filter.statusNot ? "!" : ""}${filter.status.join()}|${q}`;
+  const [lastKey, setLastKey] = useState(key);
+  if (lastKey !== key) {
+    setLastKey(key);
+    setPage(1);
   }
-  // A new filter starts again at page 1.
-  return <ProductRows key={`${filter.type.join()}|${filter.status.join()}|${q}`} products={shown} />;
-}
-
-function ProductRows({ products }: { products: Product[] }) {
-  const organization = useOrganization();
-  const [requested, setPage] = useState(1);
-  const pages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const requested = lastKey === key ? chosenPage : 1;
+  const shown = useMemo(() => sortProducts(filterProducts(products, filter, q), sort), [products, key, sort]);
+  const { from, to, pages } = pageRange(requested, PAGE_SIZE, shown.length);
   const page = Math.min(requested, pages);
-  const first = (page - 1) * PAGE_SIZE;
-  const rows = products.slice(first, first + PAGE_SIZE);
+  const rows = shown.slice(Math.max(from - 1, 0), to);
+  const set = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
+
+  const display = (
+    <DisplayPopover
+      sortFields={PRODUCT_SORT_FIELDS}
+      sort={sort}
+      onSort={set}
+      columns={[{ id: "type", label: "Type", on: columns.type }]}
+      onColumn={(id, on) => setColumns((current) => ({ ...current, [id as ProductColumnId]: on }))}
+      isDefault={isDefaultDisplay(sort, columns)}
+      onReset={() => {
+        set(DEFAULT_PRODUCT_SORT);
+        setColumns(DEFAULT_PRODUCT_COLUMNS);
+      }}
+    />
+  );
 
   return (
-    <section className="programs-table products-table" aria-label="Products">
-      <ProductsHead />
-      <ul className="programs-rows">
-        {rows.map((product) => {
-          const price = mainPrice(product);
-          const state = saleState(product);
-          return (
-            <li key={product.id}>
-              <Link
-                to="/$org/products/$productId"
-                params={{ org: organization.slug, productId: product.id }}
-                className="programs-row products-row products-grid"
-                data-state={state}
-              >
-                <span className="programs-row__program products-row__product">
-                  <ProductIcon kind={product.kind} />
-                  <span className="programs-row__text">
-                    <span className="programs-row__name">{product.name}</span>
-                    {/* Phones put the facts on line 2, as in "Phone — Products". */}
-                    <span className="products-row__phone-line">
-                      {PRODUCT_KIND_LABEL[product.kind]} · {termsText(product)} · {SALE_STATE_LABEL[state]}
-                    </span>
-                  </span>
-                </span>
-                <span className="products-row__fact products-col--wide">{PRODUCT_KIND_LABEL[product.kind]}</span>
-                <span className="products-row__fact products-col--wide">{termsText(product)}</span>
-                <span className="products-row__fact products-col--wide">{SALE_STATE_LABEL[state]}</span>
-                <span className="products-row__price products-col--num">{price ? formatMoney(price.amount_minor, price.currency) : "No price"}</span>
-                <Icon name="chevronRight" className="programs-row__chevron" {...icon} />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      <ListPager label="Product pages" range={productsRange(first, rows.length, products.length)} page={page} pages={pages} onPage={setPage} />
-    </section>
+    <>
+      <Bar search={search} counts={productCounts(products)} display={products.length ? display : undefined} />
+      <div className="products-table-frame">
+        <ListTable label="Products" columns={productColumns(columns)} sort={sort} onSort={set} className="products-table">
+          {rows.length ? (
+            <ListTableBody>
+              {rows.map((product) => {
+                const price = mainPrice(product);
+                const state = saleState(product);
+                return (
+                  <ListTableRow key={product.id} className={state === "not_sold" ? "products-table__row--quiet" : undefined}>
+                    <ListTableCell className="products-table__product">
+                      <Link
+                        to="/$org/products/$productId"
+                        params={{ org: organization.slug, productId: product.id }}
+                        className="list-table__link"
+                      >
+                        <CellStack
+                          lead={
+                            <Tile square>
+                              <Icon name={PRODUCT_ICON[product.kind]} size={16} {...icon} />
+                            </Tile>
+                          }
+                          title={product.name}
+                          sub={termsText(product)}
+                        />
+                      </Link>
+                    </ListTableCell>
+                    {columns.type ? <ListTableCell className="cell-muted products-table__type">{PRODUCT_KIND_LABEL[product.kind]}</ListTableCell> : null}
+                    <ListTableCell className="products-table__status">
+                      <span className="products-status">
+                        <Dot tone={STATE_TONE[state]} />
+                        {SALE_STATE_LABEL[state]}
+                      </span>
+                    </ListTableCell>
+                    <ListTableCell align="end" className="products-table__price">
+                      {price ? formatMoney(price.amount_minor, price.currency) : "No price"}
+                    </ListTableCell>
+                  </ListTableRow>
+                );
+              })}
+            </ListTableBody>
+          ) : products.length ? (
+            <NoMatch q={q} filtered={Boolean(filter.type.length || filter.status.length)} />
+          ) : (
+            <NoProducts />
+          )}
+        </ListTable>
+      </div>
+      {rows.length ? (
+        <ListPager label="Product pages" range={rangeLabel(page, PAGE_SIZE, shown.length, "products")} page={page} pages={pages} onPage={setPage} />
+      ) : null}
+    </>
   );
 }
 
-function ProductIcon({ kind }: { kind: Product["kind"] }) {
-  const iconName = PRODUCT_ICON[kind];
-  return <Icon name={iconName} className="products-row__icon" {...icon} />;
-}
-
-/** Column titles for sighted staff. Each row link reads its own facts. */
-function ProductsHead() {
+function NoMatch({ q, filtered }: { q: string; filtered: boolean }) {
+  const navigate = useNavigate();
+  const organization = useOrganization();
   return (
-    <div className="programs-table__head products-grid" aria-hidden="true">
-      <span className="programs-table__sort">
-        Product
-        <Icon name="arrowDown" {...icon} />
-      </span>
-      <span className="products-col--wide">Type</span>
-      <span className="products-col--wide">Terms</span>
-      <span className="products-col--wide">Status</span>
-      <span className="products-col--num">Price</span>
-      <span />
-    </div>
+    <ListTableEmpty
+      title={q ? `No products match “${q}”` : "No products match these filters"}
+      action={
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          onClick={() => void navigate({ to: "/$org/products", params: { org: organization.slug }, search: {}, replace: true })}
+        >
+          {q && !filtered ? "Clear search" : "Clear filters"}
+        </Button>
+      }
+    />
   );
 }
 
 function NoProducts() {
-  const organization = useOrganization();
   const can = useCan();
-  // A new product needs a price, and adding a price needs products:update.
   const create = can("products:create") && can("products:update");
   return (
-    <TableState
-      className="programs-table products-table"
-      head={<ProductsHead />}
+    <ListTableEmpty
       title="No products yet"
       text={create ? "Memberships and passes you add show up here." : "A manager adds products."}
-      action={
-        create ? (
-          <Link to="/$org/products/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <Icon name="plus" {...icon} />
-            New product
-          </Link>
-        ) : null
-      }
+      action={create ? <NewProductLink variant="secondary" /> : null}
     />
   );
 }
 
-function DidNotLoad({ error }: { error: Failure }) {
+function DidNotLoad({ error }: { error: Parameters<typeof FailureNotice>[0]["error"] }) {
   const router = useRouter();
   const [retrying, setRetrying] = useState(false);
   return (
-    <div className="list-state" role="alert">
-      <p className="list-state__title">Products did not load.</p>
-      <p className="list-state__text">{failureMessage(error)}</p>
+    <div className="products-failure">
+      <FailureNotice error={error} title="Products did not load" />
       <Button
         type="button"
         variant="secondary"
@@ -253,30 +308,21 @@ function DidNotLoad({ error }: { error: Failure }) {
   );
 }
 
-/** Paper "Products — loading": the toolbar and the header band stay; four skeleton rows. */
+/** Keeps the list shape while products load. */
 export function ProductsLoading() {
   return (
-    <div className="page programs-list products-list" role="status" aria-busy="true" aria-label="Loading products">
-      <ListHead />
-      <ListToolbarLoading />
-      <div className="programs-table products-table" aria-hidden="true">
-        <div className="programs-table__head products-grid">
-          <span>Product</span>
-          <span className="products-col--wide">Type</span>
-          <span className="products-col--wide">Terms</span>
-          <span className="products-col--wide">Status</span>
-          <span className="products-col--num">Price</span>
-          <span />
-        </div>
-        <div className="programs-rows">
-          {[38, 30, 34, 26].map((width, index) => (
-            <div key={index} className="programs-row programs-skeleton__row">
-              <span className="programs-skeleton__text">
-                <span className="skeleton-line" style={{ width: `${width}%` }} />
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="page products-list">
+      <RecordBackdrop record="product" />
+      <ListHead count={null} />
+      <div className="filter-bar" aria-hidden="true">
+        <span className="skeleton-block products-list__skeleton-button" />
+        <span className="filter-bar__space" />
+        <span className="list-search skeleton-block" />
+      </div>
+      <div className="products-table-frame">
+        <ListTable label="Products" columns={productColumns(DEFAULT_PRODUCT_COLUMNS)} className="products-table">
+          <ListTableLoading rows={8} label="Loading products" />
+        </ListTable>
       </div>
     </div>
   );
