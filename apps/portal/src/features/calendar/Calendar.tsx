@@ -531,6 +531,7 @@ function ListRow({ entry, now }: { entry: Entry; now: Date }) {
       to="/$org/calendar/$occurrenceId"
       params={{ org: organization.slug, occurrenceId: entry.id }}
       className="cal-list__row"
+      aria-label={blockLabel(entry, tz, kindLabel, now)}
       data-kind={entry.program.kind}
       data-state={state}
     >
