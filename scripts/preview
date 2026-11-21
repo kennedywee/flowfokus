@@ -7,6 +7,7 @@
 #   scripts/preview deploy <pr> <sha> --fresh    replace it with a new one
 #   scripts/preview wake <pr>                    the /preview comment: wake it
 #   scripts/preview teardown <pr>                delete the preview
+#   scripts/preview sweep                        the nightly clean-up
 # Inside the sandbox, started by deploy:
 #   scripts/preview up <sha>                     build and start the stack
 set -euo pipefail
@@ -16,6 +17,8 @@ DEFAULT_BRANCH="${DEFAULT_BRANCH:-master}"
 ENVIRONMENT="${PREVIEW_ENVIRONMENT:-preview}"
 SIZE="${PREVIEW_SIZE:-small}"
 TTL="${PREVIEW_TTL:-1800}"
+MAX_RUNNING="${PREVIEW_MAX_RUNNING:-5}"
+KEEP_ASLEEP_DAYS="${PREVIEW_KEEP_ASLEEP_DAYS:-7}"
 MARKER="<!-- flowfokus-preview -->"
 IMAGES=(flowfokus-server:development flowfokus-portal:development flowfokus-site:development)
 
@@ -36,6 +39,17 @@ find_sandbox() {
   boat list --all --json |
     jq -r --arg name "$NAME" '.sandboxes[] | select(.name == $name) | "\(.id) \(.state)"' |
     head -n 1
+}
+
+# Prints one line for each preview sandbox: "<pr> <id> <state> <started>
+# <stopped>". The times are in seconds, and 0 when Boat gives none. The
+# account also holds development sandboxes, so the name must match exactly.
+list_previews() {
+  boat list --all --json | jq -r '
+    def seconds: if . then sub("\\.[0-9]+"; "") | fromdateiso8601 else 0 end;
+    .sandboxes[]
+    | select(.name // "" | test("^flowfokus-pr-[0-9]+$"))
+    | "\(.name | ltrimstr("flowfokus-pr-")) \(.id) \(.state) \(.hydratedAt // .createdAt | seconds) \(.stoppedAt // .stop.endedAt | seconds)"'
 }
 
 is_stopped() { [[ "$(boat info "$ID" --json | jq -r '.sandbox.state // .state')" == "stopped" ]]; }
@@ -74,8 +88,23 @@ delete_sandbox() {
   if [[ "${1:-}" == "stopping" ]]; then
     retry 180 is_stopped || die "$NAME did not stop"
   fi
-  boat delete "$ID" --yes --json >/dev/null
+  boat delete "$ID" --yes --json >/dev/null || return 1
   echo "Deleted $ID ($NAME)"
+}
+
+# Stops the previews that ran longest, until one more can start.
+make_room() {
+  local running pr id
+  running="$(list_previews | awk -v me="$PR" '$1 != me && $3 ~ /^(ready|idle|running)$/' | sort -n -k4)"
+  while [[ -n "$running" && "$(wc -l <<<"$running")" -ge "$MAX_RUNNING" ]]; do
+    read -r pr id _ <<<"$running"
+    running="$(tail -n +2 <<<"$running")"
+    boat stop "$id" --json >/dev/null
+    echo "Stopped $id (flowfokus-pr-$pr) to stay at $MAX_RUNNING running previews"
+    PR="$pr" comment "**Preview is asleep.** Only $MAX_RUNNING previews run at once, and this one ran longest.
+
+To wake it, comment \`/preview\`." --only-existing
+  done
 }
 
 run_link() {
@@ -107,6 +136,7 @@ deploy() {
   case "$state" in
     "")
       comment "**Preview is building** for \`$short\`. A new preview takes about 4 minutes.$(run_link)"
+      make_room
       ID="$(boat new --type "$SIZE" --environment "$ENVIRONMENT" --name "$NAME" --ttl "$TTL" --json |
         jq -r 'select(.event == "ready") | .id')"
       [[ -n "$ID" ]] || die "Boat did not create a sandbox"
@@ -119,6 +149,7 @@ deploy() {
 To wake it, comment \`/preview\`."
         return 0
       fi
+      make_room
       boat resume "$ID" --ttl "$TTL" --json >/dev/null
       ;;
     ready | idle | running) ;;
@@ -189,6 +220,43 @@ teardown() {
   comment "**Preview deleted.** Add the \`preview\` label to build a new one." --only-existing
 }
 
+# The nightly clean-up. It deletes the previews that nothing else will delete:
+# a teardown run can fail, and a preview can sleep for good.
+sweep() {
+  local pr state stopped info limit failed=""
+  limit=$(($(date +%s) - KEEP_ASLEEP_DAYS * 86400))
+  while read -r pr ID state _ stopped <&3; do
+    PR="$pr"
+    NAME="flowfokus-pr-$pr"
+    if [[ "$state" == "stopping" ]]; then
+      echo "Kept $NAME (stopping)"
+    elif ! info="$(gh pr view "$pr" --repo "$REPO" --json state,labels)"; then
+      echo "::warning::Kept $NAME. GitHub gave no pull request $pr."
+      failed=yes
+    elif [[ "$(jq -r '.state' <<<"$info")" != "OPEN" ]] ||
+      ! jq -e '.labels | any(.name == "preview")' <<<"$info" >/dev/null; then
+      if delete_sandbox "$state"; then
+        comment "**Preview deleted.** Add the \`preview\` label to build a new one." --only-existing
+      else
+        echo "::warning::Could not delete $NAME."
+        failed=yes
+      fi
+    elif [[ "$state" == "stopped" && "$stopped" -gt 0 && "$stopped" -lt "$limit" ]]; then
+      if delete_sandbox "$state"; then
+        comment "**Preview deleted.** It slept for more than $KEEP_ASLEEP_DAYS days.
+
+To build a new one, comment \`/preview\`." --only-existing
+      else
+        echo "::warning::Could not delete $NAME."
+        failed=yes
+      fi
+    else
+      echo "Kept $NAME ($state)"
+    fi
+  done 3< <(list_previews)
+  [[ -z "$failed" ]] || die "the clean-up did not finish"
+}
+
 # --- In the sandbox ----------------------------------------------------------
 
 images_present() { docker image inspect "${IMAGES[@]}" >/dev/null 2>&1; }
@@ -238,6 +306,6 @@ up() {
 }
 
 case "${1:-}" in
-  deploy | wake | teardown | up) "$@" ;;
-  *) die "usage: scripts/preview deploy <pr> <sha> [--wake | --fresh] | wake <pr> | teardown <pr> | up <sha>" ;;
+  deploy | wake | teardown | sweep | up) "$@" ;;
+  *) die "usage: scripts/preview deploy <pr> <sha> [--wake | --fresh] | wake <pr> | teardown <pr> | sweep | up <sha>" ;;
 esac
