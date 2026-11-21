@@ -40,7 +40,7 @@ async function signIn(page, email = "kennedy@flowfokus.com") {
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("textbox", { name: "Password" }).fill("123123qwe");
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.waitForURL(`${PORTAL}/chainsaw/schedule`);
+  await page.waitForURL(`${PORTAL}/chainsaw/calendar`);
   await page.waitForLoadState("networkidle"); // Wait for hydration before typing.
 }
 
@@ -50,11 +50,11 @@ const page = await context.newPage();
 try {
   const before = sql(`select count(*) from members m join organizations o on o.id = m.organization_id where o.slug = 'chainsaw'`);
 
-  await assert("Kennedy signs in and lands on /chainsaw/schedule", async () => {
+  await assert("Kennedy signs in and lands on /chainsaw/calendar", async () => {
     await signIn(page);
-    await page.getByRole("heading", { name: "Schedule", level: 1 }).waitFor();
+    await page.getByRole("heading", { name: "Calendar", level: 1 }).waitFor();
   });
-  await shot(page, "signed-in-schedule");
+  await shot(page, "signed-in-calendar");
 
   await assert("New member on /chainsaw/members opens /chainsaw/members/new", async () => {
     await page.getByRole("navigation", { name: "Staff pages" }).getByRole("link", { name: "Members" }).click();

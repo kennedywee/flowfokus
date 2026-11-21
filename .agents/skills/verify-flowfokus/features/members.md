@@ -30,8 +30,8 @@ Preconditions:
 The script `.agents/skills/verify-flowfokus/scripts/proof-create-member.mjs` runs the first five
 steps and writes all the proof.
 
-- **Sign in.** Sign in as `kennedy@flowfokus.com`. The URL becomes `http://localhost:4001/chainsaw/schedule`
-  and the heading reads `Schedule`.
+- **Sign in.** Sign in as `kennedy@flowfokus.com`. The URL becomes `http://localhost:4001/chainsaw/calendar`
+  and the heading reads `Calendar`.
 - **Open the form.** Choose `Members` in the sidebar, then `New member`. The URL becomes
   `/chainsaw/members/new`, and the heading reads `New member`. Run:
   `page.getByRole('navigation', { name: 'Staff pages' }).getByRole('link', { name: 'Members' }).click()`,

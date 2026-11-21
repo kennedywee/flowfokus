@@ -11,7 +11,7 @@ gym check-in left the product (issue #81): a member's page and Ctrl K have no `C
 
 ## How to reach it
 
-- Open a session from Calendar, or from a program's page. The URL is `/chainsaw/schedule/<uuid>`.
+- Open a session from Calendar, or from a program's page. The URL is `/chainsaw/calendar/<uuid>`.
 - The bookings show in three groups: `Here`, `To arrive`, and `Cancelled`.
 
 ## How to drive it
@@ -25,7 +25,7 @@ Preconditions:
 
 Steps:
 
-- **Open the session.** Go to `/chainsaw/schedule/<uuid>` and wait for `networkidle`. The level-1
+- **Open the session.** Go to `/chainsaw/calendar/<uuid>` and wait for `networkidle`. The level-1
   heading is the date and time.
 - **Choose rows.** Run `page.getByRole('checkbox', { name: 'Choose Nurul Huda' }).click()` for each
   member. Do not use a pattern that also matches `Choose all rows`, the header box. A floating bar

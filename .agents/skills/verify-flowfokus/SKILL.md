@@ -109,7 +109,7 @@ Kumar and Sofia Wong.
 
 ### Stable handles
 
-- Portal routes: `/chainsaw` (it opens `/chainsaw/schedule`), `/chainsaw/members`,
+- Portal routes: `/chainsaw` (it opens `/chainsaw/calendar`), `/chainsaw/members`,
   `/chainsaw/members/new`, `/chainsaw/members/<uuid>`, `/chainsaw/sales/new`, `/chainsaw/sales/<uuid>`.
 - The sidebar is `getByRole('navigation', { name: 'Staff pages' })`. The top bar is
   `getByRole('banner')`. It holds page actions such as `Sell`, `Book member`, and `Create sale`.
@@ -137,7 +137,7 @@ Put each run in `.artifacts/verify-flowfokus/runs/<timestamp>-<feature>/`. Git i
 `.artifacts/`. Keep the capture script next to its output, so the run can repeat. A complete run
 folder holds:
 
-- numbered screenshots, named after what they show: `01-signed-in-schedule.png`;
+- numbered screenshots, named after what they show: `01-signed-in-calendar.png`;
 - the Playwright video (`*.webm`);
 - `assertions.md`, with the commit and each assertion as `passed`, `failed`, or `untested` with a
   reason;
