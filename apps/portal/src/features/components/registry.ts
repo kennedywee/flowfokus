@@ -27,6 +27,7 @@ export const PAPER_PAGES = {
   "Flowfokus Design — Sale details": `${DESIGN_FILE}/p-8-0`,
   "Flowfokus Design — Product details": `${DESIGN_FILE}/p-C-0`,
   "Flowfokus Design — Pass credits": `${DESIGN_FILE}/p-5-0`,
+  "Flowfokus Design — Settings": `${DESIGN_FILE}/p-E-0`,
   "Flowfokus Redesign — Components — Core": `${REDESIGN_FILE}/p-Z-0`,
   "Flowfokus Redesign — Components — Complex": `${REDESIGN_FILE}/p-10-0`,
   "Flowfokus Redesign — Components — Data": `${REDESIGN_FILE}/p-11-0`,
@@ -705,6 +706,21 @@ export const GALLERY: readonly GalleryEntry[] = [
       { name: "meta", type: "ReactNode", note: "Record metadata, such as a date. Not a subtitle." },
       { name: "children", type: "ReactNode", note: "Facts beside the title, such as a status." },
       { name: "actions", type: "ReactNode", note: "Placed in the top bar from 768px. Compact buttons show their letter with Kbd." },
+    ],
+  },
+  {
+    slug: "settings-rows",
+    name: "Settings page",
+    group: "Blocks",
+    summary:
+      "A page inside the Settings dialog: a 30px title with at most one 32px secondary + button beside it, sections whose header keeps the only hairline, and rows of a title, one line of description, and one control (a value, a select, or a switch). Rows have no lines between them. A list page (Locations, Staff, Roles) has no section header; a table keeps a hairline under its column headings, 20px under the title. A change saves when it is made, with a toast.",
+    source: ["features/settings/SettingsPage.tsx", "features/settings/SettingsDialog.tsx", "styles/settings.css"],
+    paper: { page: "Flowfokus Design — Settings", board: "Settings D · Dialog — General" },
+    examples: [{ file: "settings-rows", title: "Sections, rows, the title action, and the lock line", note: "Sample data." }],
+    props: [
+      { name: "SettingsPage title / action", type: "string / ReactNode", note: "action is a SettingsPageAction, only when the person can take it." },
+      { name: "SettingsRow title / description", type: "string", note: "The description is one line. Pass htmlFor to name the control with the title." },
+      { name: "LockLine", type: "ReactNode", note: "Says why this role sees the page but cannot change it." },
     ],
   },
   {
