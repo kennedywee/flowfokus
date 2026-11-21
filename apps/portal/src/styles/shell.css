@@ -175,7 +175,7 @@
   color: var(--color-ink);
 }
 .nav-item[aria-current="page"] {
-  background: var(--color-hover);
+  background: var(--color-selected);
   color: var(--color-ink);
 }
 .nav-item svg {

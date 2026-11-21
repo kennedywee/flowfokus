@@ -152,7 +152,7 @@
   justify-content: flex-end;
 }
 
-/* Primary: ink background, page-colour text. One per card. */
+/* Primary: the Paper gradient, ink text on it. One per card. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -162,7 +162,8 @@
   padding: 0 18px;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  background: var(--color-ink);
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow-primary);
   color: var(--color-on-ink);
   font: inherit;
   font-size: var(--text-base);
@@ -178,7 +179,7 @@
     transform var(--duration-press) var(--ease-out);
 }
 .button:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--color-ink-hover);
+  background: var(--gradient-primary-hover);
   color: var(--color-on-ink);
 }
 .button:active:not(:disabled, [aria-disabled="true"]) {
@@ -192,7 +193,8 @@
 .button:disabled,
 .button[aria-disabled="true"] {
   cursor: not-allowed;
-  background: var(--color-control);
+  background: var(--color-well);
+  box-shadow: none;
   border-color: transparent;
   color: var(--color-ink-4);
   transform: none;
@@ -205,6 +207,7 @@
 .button--secondary,
 .button--quiet {
   background: var(--color-control);
+  box-shadow: none;
   border-color: var(--color-line-strong);
   color: var(--color-ink);
 }
@@ -218,6 +221,7 @@
 /* Ghost: text only, for Reset and Cancel. */
 .button--ghost {
   background: transparent;
+  box-shadow: none;
   color: var(--color-ink-2);
 }
 .button--ghost:hover:not(:disabled, [aria-disabled="true"]) {
@@ -228,6 +232,7 @@
 /* Critical: a wash, never solid red. */
 .button--critical {
   background: var(--color-critical-wash-strong);
+  box-shadow: none;
   border-color: var(--color-critical-line-strong);
   color: var(--color-critical);
 }
@@ -704,7 +709,7 @@ textarea.input {
 .select {
   appearance: none;
   padding-right: 40px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2383838B' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none' stroke='%238b8b94' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 6.75 8 9.75l3-3'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
   cursor: pointer;
@@ -847,6 +852,13 @@ input[type="radio"]:disabled {
 .checkbox__mark svg {
   width: 14px;
   height: 14px;
+}
+/* The mixed state is a bar, because the icon set has no minus. */
+.checkbox__dash {
+  width: 10px;
+  height: 0;
+  border-top: 2px solid currentColor;
+  border-radius: 1px;
 }
 
 /* Choice: a labelled radio or checkbox drawn as a card. */
