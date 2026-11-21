@@ -90,9 +90,13 @@ before it) is history. The visual rules live in
 - Settings: a dialog over the current page, at `?settings=<page>` on any
   organization address (`/<org>/settings/<page>` redirects there). Appearance
   sets the theme cookie. General shows the name and currency and changes the
-  time zone; Gym site shows the address and changes publication; Locations
-  adds and edits locations. Staff with `settings:manage` change these; others
-  see them with a lock line. Staff and Roles show staff, pending invitations,
+  time zone; Gym site shows the address and changes publication, and shows
+  only when the `gym_site` feature is in effect; Locations adds and edits
+  locations; Labs lists the features in Labs with a Beta tag and a switch, and
+  shows only when one exists. Staff with `settings:manage` change these; others
+  see them with a lock line. Developer, Features shows the WorkOS organization
+  ID and sets each feature to Off, Labs, or On; only staff with
+  `features:manage` see the Developer group. Staff and Roles show staff, pending invitations,
   and roles through Rails and WorkOS; staff with `staff:manage` invite, revoke,
   change roles, and remove access. Each change saves when it is made. Profile,
   Notifications, Payments, and Booking rules are left out until Rails supplies

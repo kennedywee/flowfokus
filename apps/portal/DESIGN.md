@@ -933,7 +933,7 @@ no Paper frame; they use the same parts.
 Settings is a dialog over the page staff are on (issue #94; `features/settings/`:
 the dialog in `SettingsDialog.tsx`, the page parts in `SettingsPage.tsx`, the
 pages `Appearance.tsx`, `General.tsx`, `GymSite.tsx`, `Locations.tsx`,
-`Staff.tsx`, and `Roles.tsx`; the page list in `sections.ts`; rules in
+`Labs.tsx`, `Staff.tsx`, `Roles.tsx`, and `Features.tsx`; the page list in `sections.ts`; rules in
 `facts.ts`, `team.ts`, and `abilities.ts`; styles in `styles/settings.css`).
 It was built from the issue and the recorded Settings rules while Paper was
 unreachable; [#113](https://github.com/kennedywee/flowfokus/issues/113)
@@ -943,7 +943,11 @@ compares it with the Paper page "Settings". It shows only Rails data:
   and a close button at the top right. The side has "Settings", a search that
   keeps the pages whose name or other words match (Enter opens the first), and
   the pages in groups with icons: You (Appearance), Gym (General, Gym site,
-  Locations), and Team (Staff, Roles). Profile, Notifications, Payments, and
+  Locations, Labs), Team (Staff, Roles), and Developer (Features). Gym site
+  shows only when the `gym_site` feature is in effect, Labs only when a feature
+  is in Labs, and Developer only for staff with `features:manage`
+  (`settingsPagesFor`). The address of a page the person does not have opens
+  General. Profile, Notifications, Payments, and
   Booking rules have no item until Rails supplies them. The open page shows in
   a 720px column.
 - Address: the page is a search value on any organization address,
@@ -972,6 +976,14 @@ compares it with the Paper page "Settings". It shows only Rails data:
 - General: the name and currency as values, and the time zone. Gym site: the
   address (`<slug>.flowfokus.com`) and the Public switch. Roles without
   settings:manage see the values and the lock line.
+- Labs (issue #98): one row per feature in Labs, with a Beta tag beside the
+  title, its description, and a switch that saves at once. Roles without
+  settings:manage see the switches off limits and the lock line.
+- Developer, Features (issue #98): an Organization section with the WorkOS
+  organization ID in Geist Mono, and a Features section with one row per
+  feature and an Off, Labs, On segmented control that saves when chosen. Built
+  from the issue while Paper was unreachable; the Paper frame's text about the
+  role seeing no member or payment data is out of date.
 - Locations: pin, name, address, and a chevron, with no section header. A
   row opens the edit dialog. A taken name reads "Another location is already
   called Bangsar". No remove: Rails keeps every location.

@@ -22,6 +22,7 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 | [Authentication](authentication.md) | Hosts, BFF sign-in for staff and members, mobile tokens. |
 | [Identity](identity.md) | Users, organizations, staff, members, staff portal, member area, WorkOS sync. |
 | [Authorization](authorization.md) | Permissions, enforcement, tenant isolation, staff management. |
+| [Feature flags](feature-flags.md) | Off, Labs, and On per organization, the Developer role's page, and the gym site flag. |
 | [Benefit Delivery Cycle](benefit-delivery-cycle.md) | The four stages of the business domain. |
 | [Models](models.md) | Domain records and their rules. |
 | [Workflows](workflows.md) | Purchase, renewal, attendance, refund, and adjustment flows. |

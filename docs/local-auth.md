@@ -90,6 +90,7 @@ Each fake user has the password `123123qwe`:
 | Rachel | `rachel@flowfokus.com` | Irongate | Owner |
 | Rachel | `rachel@flowfokus.com` | Chainsaw | Manager |
 | Aiman | `aiman@flowfokus.com` | Chainsaw | Receptionist |
+| Dana | `dana@flowfokus.com` | Chainsaw | Developer |
 
 - Kennedy can use the complete membership sale, payment, access delivery, and
   booking workflow. Kennedy is also the fixed demo actor.
@@ -97,7 +98,9 @@ Each fake user has the password `123123qwe`:
   switching.
 - Aiman can read members, offers, and sales, and check members in. Aiman cannot
   create members, record sales, record payments, or deliver access.
-- Kennedy and Aiman have no access to Irongate.
+- Dana has every Owner permission plus `features:manage`. Use her account to set
+  feature flags in Settings, Developer, Features.
+- Kennedy, Aiman, and Dana have no access to Irongate.
 
 Staff use a first name and `<first name>@flowfokus.com`. Members use a first
 name and `<first name>@example.com`.
