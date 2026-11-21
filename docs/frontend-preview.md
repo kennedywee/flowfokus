@@ -56,7 +56,12 @@ These actions persist in PostgreSQL, including during local demo development.
   Rails or contact external systems.
 - Component gallery, `/components`: live examples of each component with
   sample records. Local development only, outside any organization. See
-  [the design system](design-system.md#component-gallery).
+  [the design system](design-system.md#component-gallery). It shows the shared
+  parts for the redesign (list table, filter bar, Display popover, row
+  selection, groups, detail layout, hero, activity, background patterns, and
+  data marks) on labelled sample members, bookings, and events. No product
+  screen uses these parts yet; the screen issues #88 to #94 do. See
+  [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 
 These screens display a Sample data label. Local edits reset when the screen
 unmounts. The sample screen lives in `src/features/preview`. Real settings
