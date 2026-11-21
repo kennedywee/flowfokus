@@ -100,6 +100,7 @@ Every password is `123123qwe`. The emulator seed is `workos-emulate.config.yaml`
 | `kennedy@flowfokus.com` | Chainsaw | Owner. Can do the full sale, payment, fulfillment, and booking flow. |
 | `rachel@flowfokus.com` | Both | Owner at Irongate, Manager at Chainsaw. Must pick an organization. |
 | `aiman@flowfokus.com` | Chainsaw | Receptionist. Reads, books members, and marks them as here. Cannot create members or sales. |
+| `dana@flowfokus.com` | Chainsaw | Developer. Owner permissions plus `features:manage`: sets feature flags in Settings, Developer, Features. |
 | `patrick@example.com` | Gym site | No staff access. Matches the seeded member Patrick Ng after a link code. |
 
 Seeded Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, and Patrick Ng. Seeded products:
@@ -190,6 +191,9 @@ runner removes its own temporary folder on exit. Stop any other process you star
   has no gym.
 - **Check in** is on Session details only, for a booked member. A member's page and Ctrl K have no
   Check in action. Walk-in gym check-in left the product (issue #81).
+- **Stale WorkOS memberships.** Records from earlier runs can outlive the emulator, so a team change
+  fails with `WorkOS no longer has this membership`. Run
+  `docker compose exec server bin/rails workos:reconcile`.
 - **Emulator restarts** clear its in-memory sessions. Restart Rails too
   (`docker compose restart server`), then sign in again.
 - **Fixed container names.** One Flowfokus stack can run on a machine. If another checkout started

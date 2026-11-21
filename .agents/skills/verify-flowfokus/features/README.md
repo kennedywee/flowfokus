@@ -60,6 +60,12 @@ commands, and observable proof.
   or in bulk, and confirm the member page and Ctrl K have no walk-in check-in.
 - [Gym site member](gym-site-member.md): public catalog, member sign-in, account linking, and online
   checkout.
+- [Feature flags](feature-flags.md): Developer sets `gym_site` Off, Labs, or On; an Owner turns a Labs
+  feature on. Has a ready proof script.
+
+## Driven on 22 November 2026
+
+- Feature flags: driven end to end with `scripts/proof-feature-flags.mjs`, all eleven assertions passed.
 
 ## Driven on 21 November 2026
 
