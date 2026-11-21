@@ -291,7 +291,7 @@ function SessionBlock({
       state={state}
       density={density}
       variant={variant}
-      time={variant === "week" || density === "tight" ? clockTime(entry.starts_at, tz) : clockRange(entry.starts_at, entry.ends_at, tz)}
+      time={variant === "week" || density !== "full" ? clockTime(entry.starts_at, tz) : clockRange(entry.starts_at, entry.ends_at, tz)}
       name={group === "program" ? entry.program.host_name?.trim() || "No host" : entry.program.name}
       status={blockStatus(entry, now)}
       spots={showSpots ? { capacity: entry.capacity, booked: entry.spots_taken } : undefined}

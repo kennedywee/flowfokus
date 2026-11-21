@@ -162,7 +162,7 @@
   box-shadow: none;
 }
 
-/* Event: dark, with the tickets sold. */
+/* Event: dark, with its spots taken. */
 .cal-block[data-kind="event"] {
   background: var(--color-ink);
   box-shadow: none;
@@ -239,8 +239,18 @@
   font-size: var(--text-xs);
   flex: 0 1 auto;
 }
+/* A medium block (40 to 54 minutes, 40px or more inside) has room for two lines: the start and name, then the status. */
 .cal-block[data-density="compact"] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: start;
+  column-gap: 6px;
   padding-block: 3px;
+}
+.cal-block[data-density="compact"] .cal-block__meta {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 
 /* ---------- Day ---------- */
