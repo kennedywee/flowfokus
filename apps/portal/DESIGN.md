@@ -43,14 +43,15 @@ the light band and 3.7:1 on the dark surface, below the 4.5:1 that small text
 needs. Light `--color-ink-3` is a step darker and dark `--color-ink-3` a step
 lighter. Paper's value stays as the dark mark colour (`--color-ink-4`).
 
-Contrast of text roles, measured on the colours above (the band, hover, and
-selected fills are flattened onto the page):
+Contrast of text roles, measured on the rendered colours in the running portal
+(the band is flattened onto the page). The status colours are also at least
+4.9:1 on all four backgrounds in both themes:
 
 | Role | Light: page / surface / raised / band | Dark: page / surface / raised / band |
 | --- | --- | --- |
-| `--color-ink` | 17.7 / 17.7 / 17.7 / 16.3 | 18.1 / 16.1 / 14.9 / 16.7 |
+| `--color-ink` | 17.7 / 17.7 / 17.7 / 16.2 | 18.1 / 16.1 / 14.9 / 16.8 |
 | `--color-ink-2` | 7.7 / 7.7 / 7.7 / 7.1 | 7.8 / 6.9 / 6.4 / 7.2 |
-| `--color-ink-3` | 5.3 / 5.3 / 5.3 / 4.8 | 6.2 / 5.5 / 5.1 / 5.7 |
+| `--color-ink-3` | 5.3 / 5.3 / 5.3 / 4.8 | 6.2 / 5.5 / 5.1 / 5.8 |
 
 Each status has matching wash and line roles, made with `color-mix()` from the
 status colour, so they follow both themes. Show a label and an icon with status
