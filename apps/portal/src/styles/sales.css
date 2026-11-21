@@ -6,6 +6,21 @@
  *   .sale-details ... sale detail
  */
 
+/* ---------- Ledger rules behind a sale hero ---------- */
+/*
+ * The rules run behind the hero, so a rule would cross the title and the
+ * status pills. The text blocks are cut out of the rules with the page color
+ * (plus the 3% shade the detail background adds at the top), so no rule touches
+ * a letter. The tile and the pills are solid already.
+ */
+:is(.sale-details, .new-sale) .hero :is(.hero__title, .hero__facts, .hero__line) {
+  width: fit-content;
+  max-width: calc(100% + 8px);
+  margin-inline: -4px;
+  padding-inline: 4px;
+  background: color-mix(in srgb, var(--color-ink) 2.5%, var(--color-page));
+}
+
 /* ---------- Sales list ---------- */
 /*
  * The Members list pattern with the Recent sales columns: the title with the
@@ -131,7 +146,13 @@
   color: var(--color-critical);
 }
 
-/* Phones: the member and the amount share the first line; the product and the facts wrap under. */
+/* The table's own width decides the layout, not the viewport: the sidebar and the page padding take space too. */
+.sales-table-frame {
+  container: sales-table / inline-size;
+  min-width: 0;
+}
+
+/* Phones: the search takes the bar's free width. */
 @media (max-width: 767.98px) {
   .sales-list .filter-bar .list-search {
     flex: 1 1 0;
@@ -140,14 +161,17 @@
   .sales-list .filter-bar__space {
     display: none;
   }
+}
+
+/*
+ * Compact: the member and the amount share the first line; the product and the
+ * facts wrap under. The header is gone, with its sort buttons; Display sorts.
+ * The full row needs 724px for its fixed columns, and Member and Product take
+ * the rest. At 1024px each has about 150px, so the compact layout starts there.
+ */
+@container sales-table (max-width: 1024px) {
   .sales-table .list-table__head {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    border: 0;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    display: none;
   }
   .sales-table .list-table__row {
     display: flex;
@@ -187,7 +211,8 @@
  * title, then Products and Payment as sections, with Member and Location in
  * the right panel from 1100px. Narrower screens put Member and Location
  * between the title and the sections, because the member is the first choice,
- * and Create sale at the end. Lines reuse the list table; totals reuse
+ * and Create sale at the end. The page keeps that order in the document, not
+ * with CSS `order`, so Tab follows what the eye sees. Lines reuse the list table; totals reuse
  * `.sale-sum`.
  */
 
@@ -220,30 +245,14 @@
   min-height: 56px;
 }
 @media (max-width: 1099.98px) {
-  .new-sale.detail {
+  /* The panel is in the page flow here: the hero, Member and Location, the form, then the action. */
+  .new-sale .detail__main {
     gap: 28px;
     padding-bottom: 32px;
   }
-  /* The hero, the panel, the form, and the actions become siblings, so they can be ordered. */
-  .new-sale .detail__main {
-    display: contents;
-  }
-  .new-sale .detail__main > *,
-  .new-sale .detail__panel {
-    margin-inline: 20px;
-  }
-  .new-sale .hero {
-    margin-top: 28px;
-  }
-  .new-sale .detail__panel {
-    order: 1;
+  .new-sale .detail__main > .detail__panel {
+    width: auto;
     padding: 0;
-  }
-  .new-sale__form {
-    order: 2;
-  }
-  .new-sale .page-actions {
-    order: 3;
   }
 }
 
@@ -535,6 +544,11 @@
 }
 .sale-details .panel-link:hover {
   text-decoration: underline;
+}
+/* Guest names wrap in the row; every other sub line stays on one line. */
+.sale-items .cell-stack__sub[data-wrap] {
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .sale-items__unit {
   font-size: var(--text-sm);

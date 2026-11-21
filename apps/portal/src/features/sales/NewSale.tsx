@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
@@ -64,7 +64,6 @@ export function NewSale({ data, memberId, priceId }: { data: NewSaleData; member
   if (!can("purchases:create")) {
     return (
       <NewSaleLayout>
-        <NewSaleHead />
         <Notice tone="warning" title="You cannot sell">
           <p>Selling needs the purchases:create permission. Ask an owner to change your role.</p>
         </Notice>
@@ -74,7 +73,6 @@ export function NewSale({ data, memberId, priceId }: { data: NewSaleData; member
   if (!data.members.ok || !data.products.ok) {
     return (
       <NewSaleLayout>
-        <NewSaleHead />
         {!data.members.ok ? <FailureNotice error={data.members.error} title="Members did not load" /> : null}
         {!data.products.ok ? <FailureNotice error={data.products.error} title="Products did not load" /> : null}
       </NewSaleLayout>
@@ -83,21 +81,42 @@ export function NewSale({ data, memberId, priceId }: { data: NewSaleData; member
   return <NewSaleForm members={data.members.data} options={saleOptions(data.products.data)} initialMemberId={memberId} initialPriceId={priceId} />;
 }
 
-/** The page frame of a sale: ledger rules behind a hero, then the content, with an optional right panel. */
-function NewSaleLayout({ panel, children }: { panel?: ReactNode; children: ReactNode }) {
-  return (
-    <DetailLayout record="sale" className="new-sale" panel={panel}>
-      {children}
-    </DetailLayout>
+const WIDE = "(min-width: 1100px)";
+
+function subscribeWide(onChange: () => void) {
+  const query = window.matchMedia(WIDE);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** True from 1100px, where the panel sits beside the form. The server renders the wide layout. */
+function useWide(): boolean {
+  return useSyncExternalStore(
+    subscribeWide,
+    () => window.matchMedia(WIDE).matches,
+    () => true,
   );
 }
 
-function NewSaleHead({ children }: { children?: ReactNode }) {
+/**
+ * The page frame of a sale: ledger rules behind a hero, then the content, with
+ * an optional right panel. Below 1100px the panel moves into the page after the
+ * hero, so the document order is the order on screen: Member and Location, the
+ * form, then the action. `actions` goes last for that reason.
+ */
+function NewSaleLayout({ panel, actions, children }: { panel?: ReactNode; actions?: ReactNode; children: ReactNode }) {
+  const wide = useWide();
   return (
-    <>
+    <DetailLayout record="sale" className="new-sale" panel={wide ? panel : undefined}>
       <DetailHero tile={<HeroTile icon="sales" />} title="New sale" />
-      {children ? <PageActions>{children}</PageActions> : null}
-    </>
+      {!wide && panel ? (
+        <aside className="detail__panel" aria-label="Details">
+          {panel}
+        </aside>
+      ) : null}
+      {children}
+      {actions ? <PageActions>{actions}</PageActions> : null}
+    </DetailLayout>
   );
 }
 
@@ -303,8 +322,9 @@ function NewSaleForm({
   );
 
   return (
-    <NewSaleLayout panel={panel}>
-      <NewSaleHead>
+    <NewSaleLayout
+      panel={panel}
+      actions={
         <Button
           type="submit"
           form={FORM_ID}
@@ -325,8 +345,8 @@ function NewSaleForm({
             </>
           )}
         </Button>
-      </NewSaleHead>
-
+      }
+    >
       <form id={FORM_ID} ref={form} className="new-sale__form" onSubmit={onSubmit} noValidate>
         {error && !fieldError ? <FailureNotice error={error} title="The sale was not created" /> : null}
 
@@ -791,7 +811,6 @@ export function NewSaleLoading() {
       }
     >
       <div role="status" aria-busy="true" aria-label="Loading new sale" className="sale-loading">
-        <NewSaleHead />
         <ListTable label="Products (loading)" density="two-line" className="list-table--bare" columns={LINE_COLUMNS}>
           <ListTableLoading rows={2} label="Loading products" />
         </ListTable>

@@ -582,22 +582,33 @@ member (#89) with the sale page's rows.
   in amber or red, or the refund, under it; a void total is struck through).
   Member, Date, and Amount sort from the header. Display has Sort by (Date, Member,
   Amount; newest first is the start) and the chips Date, Fulfillment, and Method.
-  Each row opens the sale. The faint ledger rules sit behind the header.
-- The URL keeps `payment`, `fulfillment`, and `q`, as before; old `view=due`,
-  `view=deliver`, and `delivery=` links still work. The chip's operator click flips
-  "is" and "is not". The URL has no "is not", so a flipped chip becomes the values
-  it leaves in ("is any of Unpaid, Part paid, Paid" for "is not Void"). Rails
+  Each row opens the sale. The faint ledger rules sit behind the header. Rows
+  switch to the phone layout (member and amount first) when the table is 1024px wide or less; the
+  table's own width decides, through a container query, not the viewport. The
+  header, with its sort buttons, is `display: none` there, so Tab and screen
+  readers skip it; Display sorts.
+- The URL keeps `payment`, `fulfillment`, and `q`, as before, plus `payment_not=true`
+  and `fulfillment_not=true`. A filter with its `_not` flag is "is not" (or "is none
+  of"): each sale's state is tested against the values and kept when it is none of
+  them. Without the flag the values mean "is any of". The chip's operator click
+  flips the flag and keeps the values, so "is none of" every value shows no sale and
+  "is not Fulfilled" keeps void sales. `_not` counts only with values. Old
+  `view=due`, `view=deliver`, and `delivery=` links, and plain `payment=` and
+  `fulfillment=` links, still work and are "is any of". Rails
   returns the 100 newest sales; the list filters, sorts, and pages 50 at a time in
   the page, and at 100 it says "sales shown" and "100+". No sales: one line and
   New sale. No match: one line and Clear filters or Clear search. Phones put the
   member and amount on the first line, then the product, then the facts.
-- Sale details: `DetailLayout` with the ledger pattern. The hero has the receipt
+- Sale details: `DetailLayout` with the ledger pattern. The title and the pills are
+  cut out of the rules with a page-colored box as wide as the text, so no rule
+  crosses a letter (also on New sale). The hero has the receipt
   tile, the item as the title, and two pills: payment, then fulfillment, in the words
   Rails returns (#14 is open). Rails has no sale number, so the title is the
   product name; "Renewal" is the line under it for a renewal. Items: one group
   (Fulfilled, Unfulfilled, or Access revoked, with a count of one), and its row
-  with the icon tile, the name, the terms line (dates once fulfilled), the rights,
-  the guests of a ticket, the unit price and quantity, and the line total, then
+  with the icon tile, the name, the terms line (dates once fulfilled, then the
+  price that was sold, unless the line already says it), the rights, the guests of
+  a ticket (they wrap onto more lines), the unit price and quantity, and the line total, then
   Total. "Fulfill items" (F) is in the section header while the sale can be
   fulfilled, "Fulfill early" when staff may fulfill it before payment
   (purchases:fulfill_unpaid). Notes under the row say when it was fulfilled early,
@@ -623,7 +634,8 @@ member (#89) with the sale page's rows.
   receipt tile and "New sale"), with Create sale (⌘↵) in the top bar. Products and
   Payment are `Section`s on the left; Member and Location are in the right panel
   from 1100px. Narrower screens put them between the title and the sections, and
-  Create sale at the end. Products holds one line, because Rails sells one line,
+  Create sale at the end. The page moves the panel and the action in the document
+  itself, not with CSS `order`, so Tab follows the screen. Products holds one line, because Rails sells one line,
   quantity one, at the price's current amount; "+ Product" (and Change) opens Add
   product: search, then All, Memberships, and Passes when both are on sale, then
   one choice. Tickets are left out: they are sold for a session time from the
