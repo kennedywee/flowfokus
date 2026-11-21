@@ -7,7 +7,7 @@ import { PageActions } from "../../components/PageActions";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
-import { clockTime } from "../check-ins/facts";
+import { clockTime } from "./facts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DAYS,
@@ -137,7 +137,7 @@ function Toolbar({
   );
 }
 
-/** Filter, as on Check-ins: a Program submenu with a count per program, then a chip. */
+/** Filter: a Program submenu with a count per program, then a chip. */
 function ProgramFilter({ search, counts, programs }: { search: ScheduleSearch; counts: ProgramCount[]; programs: string[] }) {
   const setSearch = useSetListSearch("/$org/schedule", search, ["from", "program"]);
   const groups = [

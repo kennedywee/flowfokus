@@ -25,7 +25,7 @@ describe("readablePages", () => {
   });
 
   test("ignores permissions that do not read a page", () => {
-    expect(readablePages(["members:create", "settings:manage", "check_ins:create"])).toEqual([]);
+    expect(readablePages(["members:create", "settings:manage"])).toEqual([]);
   });
 });
 

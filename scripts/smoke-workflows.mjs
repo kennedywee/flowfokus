@@ -95,22 +95,6 @@ await call('POST', `/staff/sales/${sale.id}/refunds`, { ...as(owner), status: 42
   body: { payment_id: sale.payments[0].id, amount_minor: 3_001, reason: 'Too much' } })
 step('purchase: partial payment, early delivery with a reason, full payment, refund within the payment')
 
-// Check-in: granted, used up, denied, overridden
-let checkIn = (await call('POST', '/staff/check_ins', { ...as(receptionist), status: 201, key: randomUUID(),
-  body: { member_id: buyer.id, location_id: location.id } })).data
-assert.equal(checkIn.result, 'granted')
-await call('POST', '/staff/check_ins', { ...as(owner), status: 201, key: randomUUID(), body: { member_id: buyer.id, location_id: location.id } })
-checkIn = (await call('POST', '/staff/check_ins', { ...as(owner), status: 201, key: randomUUID(),
-  body: { member_id: buyer.id, location_id: location.id } })).data
-assert.equal(checkIn.denial_reason, 'usage_limit_reached')
-await call('POST', '/staff/check_ins', { ...as(receptionist), status: 403, key: randomUUID(),
-  body: { member_id: buyer.id, location_id: location.id, override_reason: 'Not allowed' } })
-checkIn = (await call('POST', '/staff/check_ins', { ...as(owner), status: 201, key: randomUUID(),
-  body: { member_id: buyer.id, location_id: location.id, override_reason: 'Smoke: manager approved' } })).data
-assert.equal(checkIn.result, 'granted')
-assert.equal(checkIn.entitlement_id, null)
-step('check-in: grant, use the last visit, deny, and override with a reason')
-
 // Renewal at the agreed price, after the price is archived
 await call('POST', `/staff/prices/${price.id}/archive`, as(owner))
 let detail = (await call('GET', `/staff/members/${buyer.id}`, as(owner))).data

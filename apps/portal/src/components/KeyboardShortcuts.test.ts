@@ -8,17 +8,17 @@ const keys = (groups: ReturnType<typeof shortcutGroups>) => groups.flatMap((grou
 describe("keyboard shortcuts sheet", () => {
   test("lists every key for a role that can use them all", () => {
     const groups = shortcutGroups("⌘", role(
-      "members:read", "purchases:read", "check_ins:read", "check_ins:create", "purchases:create",
+      "members:read", "purchases:read", "purchases:create",
       "payments:create", "purchases:fulfill", "programs:read", "bookings:manage",
     ));
-    expect(keys(groups)).toEqual(["⌘K", "⌘,", "⌘B", "?", "C", "S", "/", "P", "F", "S", "B", "B", "A", "⌘↵"]);
+    expect(keys(groups)).toEqual(["⌘K", "⌘,", "⌘B", "?", "S", "/", "P", "F", "S", "B", "B", "A", "⌘↵"]);
     expect(groups.map((group) => group.title)).toContain("Members, Sales and Programs");
   });
 
   test("leaves out keys the role cannot use, and empty groups", () => {
-    const groups = shortcutGroups("Ctrl ", role("members:read", "check_ins:read", "check_ins:create"));
-    expect(keys(groups)).toEqual(["Ctrl K", "Ctrl ,", "Ctrl B", "?", "C", "/", "Ctrl ↵"]);
-    expect(groups.map((group) => group.title)).toEqual(["Anywhere", "Member page", "Members", "Forms and dialogs"]);
+    const groups = shortcutGroups("Ctrl ", role("members:read"));
+    expect(keys(groups)).toEqual(["Ctrl K", "Ctrl ,", "Ctrl B", "?", "/", "Ctrl ↵"]);
+    expect(groups.map((group) => group.title)).toEqual(["Anywhere", "Members", "Forms and dialogs"]);
   });
 
   test("lists the program page keys for a manager", () => {

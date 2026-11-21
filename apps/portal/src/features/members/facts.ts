@@ -1,5 +1,5 @@
 import type { Schemas } from "@flowfokus/api";
-import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, formatBenefitUsage, formatMoney } from "../../lib/format";
+import { BOOKING_STATUS_LABEL, PAYMENT_METHOD_LABEL, formatBenefitUsage, formatMoney } from "../../lib/format";
 import { fulfillmentFact, paymentFact, type FulfillmentState, type PaymentState } from "../sales/facts";
 
 /*
@@ -98,29 +98,15 @@ export interface ActivityEvent {
 }
 
 /**
- * One feed of what happened to this member, newest first: check-ins, sales,
+ * One feed of what happened to this member, newest first: sales,
  * payments, fulfillments, refunds, voids, bookings, and the day they were added.
  * Every line comes from a timestamp Rails returned.
  */
 export function memberActivity(
-  { member, sales, checkIns }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; checkIns: Schemas["CheckIn"][] },
+  { member, sales }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][] },
   locationName: (id: string | null) => string,
 ): ActivityEvent[] {
   const events: ActivityEvent[] = [];
-  const rightName = (id: string | null) => member.entitlements.find((right) => right.id === id)?.name;
-
-  for (const checkIn of checkIns) {
-    const where = locationName(checkIn.location_id);
-    const right = rightName(checkIn.entitlement_id);
-    if (checkIn.override_reason) {
-      events.push({ id: `check-in-${checkIn.id}`, at: checkIn.checked_in_at, tone: "good", text: `Let in by staff at ${where} · ${checkIn.override_reason}` });
-    } else if (checkIn.result === "granted") {
-      events.push({ id: `check-in-${checkIn.id}`, at: checkIn.checked_in_at, tone: "good", text: `Checked in at ${where}${right ? ` · ${right}` : ""}` });
-    } else {
-      const reason = checkIn.denial_reason ? DENIAL[checkIn.denial_reason].title : "No reason recorded";
-      events.push({ id: `check-in-${checkIn.id}`, at: checkIn.checked_in_at, tone: "critical", text: `Check-in denied at ${where} · ${reason}` });
-    }
-  }
 
   for (const sale of sales) {
     const product = sale.line_item.product_name;

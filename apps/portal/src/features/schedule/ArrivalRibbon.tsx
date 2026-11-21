@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import type { Schemas } from "@flowfokus/api";
 import { initials } from "../../components/ui";
 import { useOrganization } from "../../lib/organization";
-import { clockTime } from "../check-ins/facts";
+import { clockTime } from "./facts";
 import { arrivalCounts, arrivals, axisFor, axisPosition, onRibbon, placeAvatars, ribbonText } from "./arrival";
 
 type Roster = Schemas["Roster"];

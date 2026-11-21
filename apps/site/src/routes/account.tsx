@@ -12,12 +12,6 @@ export const Route = createFileRoute("/account")({
   component: Account,
 });
 
-const DENIAL: Record<Schemas["DenialReason"], string> = {
-  no_entitlement: "No active membership",
-  location_not_allowed: "Not valid at this location",
-  usage_limit_reached: "No visits left",
-};
-
 function Account() {
   const page = Route.useLoaderData();
   const { organization } = useGym();
@@ -224,7 +218,7 @@ function Bookings({ bookings }: { bookings: Schemas["MemberBooking"][] }) {
 
 function AccountView({ person, account }: { person: { name: string; email: string }; account: Schemas["MemberAccount"] }) {
   const { organization } = useGym();
-  const { date, dateTime } = useDates();
+  const { date } = useDates();
   const current = account.current_period;
   // A ticket's one-use right is shown by its booking below.
   const rights = account.entitlements.filter((right) => right.occurrence_id === null);
@@ -296,31 +290,6 @@ function AccountView({ person, account }: { person: { name: string; email: strin
         <p>
           <Link to="/schedule">Book from the schedule</Link>
         </p>
-
-        <h2>Recent visits</h2>
-        {account.check_ins.length ? (
-          <ul className="account__list">
-            {account.check_ins.map((visit) => (
-              <li key={visit.id}>
-                <span className="lamp" data-state={visit.result === "granted" ? "granted" : "denied"} aria-hidden="true" />
-                <span>
-                  {visit.overridden
-                    ? "Let in by staff"
-                    : visit.result === "granted"
-                      ? "Checked in"
-                      : `Not let in: ${visit.denial_reason ? DENIAL[visit.denial_reason] : "denied"}`}{" "}
-                  at{" "}
-                  {visit.location_name}
-                </span>
-                <time dateTime={visit.checked_in_at} suppressHydrationWarning>
-                  {dateTime(visit.checked_in_at)}
-                </time>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="empty">No visits yet.</p>
-        )}
 
         <h2>Purchases</h2>
         {account.sales.length ? (

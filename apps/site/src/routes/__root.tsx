@@ -97,7 +97,7 @@ function GymFrame({ name, signedIn, children }: { name: string; signedIn: boolea
         {children}
       </main>
       <footer className="footer">
-        <div className="wrap">Memberships, bookings, and check-in run on Flowfokus.</div>
+        <div className="wrap">Memberships and bookings run on Flowfokus.</div>
       </footer>
     </div>
   );

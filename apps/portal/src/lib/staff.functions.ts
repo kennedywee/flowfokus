@@ -55,7 +55,6 @@ import {
   type CreateProductInput,
   type UpdatePriceInput,
   type UpdateProductInput,
-  createCheckInInput,
   createMemberInput,
   createSaleInput,
   fulfillInput,
@@ -64,7 +63,6 @@ import {
   optionalMemberInput,
   recordPaymentInput,
   slugInput,
-  type CreateCheckInInput,
   type CreateMemberInput,
   type CreateSaleInput,
   type FulfillInput,
@@ -143,24 +141,21 @@ export const createMember = createServerFn({ method: "POST" })
 export interface MemberRecord {
   member: Schemas["MemberDetail"];
   sales: Schemas["Sale"][];
-  checkIns: Schemas["CheckIn"][];
 }
 
-/** One member with their sales and recent check-ins, fetched in parallel. */
+/** One member with their sales, fetched in parallel. */
 export const getMemberRecord = createServerFn({ method: "GET" })
   .validator((input: IdInput) => idInput(input))
   .handler(async ({ data }): Promise<Result<MemberRecord>> => {
     const path = { params: { path: { id: data.id } } };
     const byMember = { params: { query: { member_id: data.id } } };
-    const [member, sales, checkIns] = await Promise.all([
+    const [member, sales] = await Promise.all([
       callStaff(data.slug, (api) => api.GET("/staff/members/{id}", path)),
       callStaff(data.slug, (api) => api.GET("/staff/sales", byMember)),
-      callStaff(data.slug, (api) => api.GET("/staff/check_ins", byMember)),
     ]);
     if (!member.ok) return member;
     if (!sales.ok) return sales;
-    if (!checkIns.ok) return checkIns;
-    return { ok: true, data: { member: member.data, sales: sales.data, checkIns: checkIns.data } };
+    return { ok: true, data: { member: member.data, sales: sales.data } };
   });
 
 export const listProducts = createServerFn({ method: "GET" })
@@ -305,22 +300,6 @@ export const revokeSale = createServerFn({ method: "POST" })
     async ({ data }): Promise<Result<Schemas["Sale"]>> =>
       callStaff(data.slug, (api) =>
         api.POST("/staff/sales/{id}/revoke", { params: { path: { id: data.saleId } }, body: { reason: data.reason } }),
-      ),
-  );
-
-export const createCheckIn = createServerFn({ method: "POST" })
-  .validator((input: CreateCheckInInput) => createCheckInInput(input))
-  .handler(
-    async ({ data }): Promise<Result<Schemas["CheckIn"]>> =>
-      callStaff(data.slug, (api) =>
-        api.POST("/staff/check_ins", {
-          params: { header: { "Idempotency-Key": data.idempotencyKey } },
-          body: {
-            member_id: data.member_id,
-            location_id: data.location_id,
-            ...(data.override_reason ? { override_reason: data.override_reason } : {}),
-          },
-        }),
       ),
   );
 

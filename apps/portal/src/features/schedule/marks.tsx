@@ -1,5 +1,4 @@
 import type { Schemas } from "@flowfokus/api";
-import { GrantedMark } from "../check-ins/CheckInFlow";
 import { sessionState, type SessionState } from "./facts";
 
 /*
@@ -57,6 +56,16 @@ export function SessionMark({ state, share }: { state: SessionState; share: numb
 
 export function OccurrenceMark({ occurrence, now }: { occurrence: Schemas["Occurrence"]; now?: Date }) {
   return <SessionMark state={sessionState(occurrence, now)} share={occurrence.capacity ? occurrence.spots_taken / occurrence.capacity : 0} />;
+}
+
+/** A filled green circle with a tick, as in Paper. */
+export function GrantedMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg className="granted-mark" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="10" />
+      <path d="m8 12 3 3 5-6" />
+    </svg>
+  );
 }
 
 /** The attendance mark on a booking row and its band. */

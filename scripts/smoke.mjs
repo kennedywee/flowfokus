@@ -40,10 +40,7 @@ const run = randomUUID()
 const member = await call('/staff/members', {
   body: { name: 'Smoke Test Member', email: `smoke-${run}@example.test` }, status: 201,
 })
-const checkBody = { member_id: member.id, location_id: location.id }
-const denied = await call('/staff/check_ins', { body: checkBody, key: randomUUID(), status: 201 })
-assert.equal(denied.result, 'denied')
-const saleBody = { ...checkBody, price_id: price.id }
+const saleBody = { member_id: member.id, location_id: location.id, price_id: price.id }
 const saleKey = randomUUID()
 const sale = await call('/staff/sales', { body: saleBody, key: saleKey, status: 201 })
 const sameSale = await call('/staff/sales', { body: saleBody, key: saleKey, status: 200 })
@@ -64,13 +61,8 @@ assert.equal(paid.balance_minor, 0)
 const fulfilled = await call(`/staff/sales/${sale.id}/fulfill`, { method: 'POST', status: 201 })
 const repeat = await call(`/staff/sales/${sale.id}/fulfill`, { method: 'POST', status: 200 })
 assert.equal(repeat.fulfillment.id, fulfilled.fulfillment.id)
-const checkKey = randomUUID()
-const checkIn = await call('/staff/check_ins', { body: checkBody, key: checkKey, status: 201 })
-assert.equal(checkIn.result, 'granted')
-const replay = await call('/staff/check_ins', { body: checkBody, key: checkKey, status: 200 })
-assert.equal(replay.id, checkIn.id)
 const detail = await call(`/staff/members/${member.id}`)
 assert.equal(detail.membership.periods.length, 1)
-assert.ok(detail.entitlements.some((right) => right.used_count === 1))
-console.log('PASS: public gym, member, denied access, sale retry, partial/manual payments, fulfillment retry, granted check-in, and single consumption.')
+assert.ok(detail.entitlements.length > 0 && detail.entitlements.every((right) => right.used_count === 0))
+console.log('PASS: public gym, member, sale retry, partial/manual payments, and fulfillment retry with one period and unused rights.')
 console.log(`Smoke member: ${member.id}. Smoke records remain in the local database.`)

@@ -574,7 +574,7 @@
 .mx-more[aria-expanded="true"] .mx-more__icon {
   transform: rotate(180deg);
 }
-/* Activity: no band. A dot marks each event; colour only for check-in results. */
+/* Activity: no band. A dot marks each event; colour only for problems. */
 .mx-activity {
   gap: var(--space-2);
 }

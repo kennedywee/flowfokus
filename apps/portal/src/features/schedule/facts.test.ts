@@ -5,6 +5,7 @@ import {
   bookingGroup,
   cancelNote,
   capacityText,
+  clockTime,
   clockRange,
   dayTitle,
   filterPrograms,
@@ -80,6 +81,12 @@ function booking(over: Partial<Schemas["Booking"]> = {}): Schemas["Booking"] {
 
 const before = new Date("2026-11-04T20:00:00Z");
 const after = new Date("2026-11-05T01:00:00Z");
+
+describe("clockTime", () => {
+  test("uses a 24-hour clock in the organization's time zone", () => {
+    expect(clockTime("2026-11-17T23:42:00Z", "Asia/Kuala_Lumpur")).toBe("07:42");
+  });
+});
 
 describe("schedule URL", () => {
   test("keeps a valid day and known program IDs only", () => {

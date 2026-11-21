@@ -103,7 +103,7 @@ describe("staff facts", () => {
 });
 
 describe("roles view", () => {
-  const manager = { permissions: ["purchases:create", "purchases:read", "check_ins:read", "staff:manage"] };
+  const manager = { permissions: ["purchases:create", "purchases:read", "members:read", "staff:manage"] };
   const ability = (label: string) => ABILITIES.find((item) => item.label === label)!;
 
   test("reads each cell from the role's permissions", () => {

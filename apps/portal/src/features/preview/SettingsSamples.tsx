@@ -14,7 +14,7 @@ function SampleNote() {
 }
 
 export function NotificationsSample() {
-  const [notifications, setNotifications] = useState({ expiry: true, due: true, denied: false, summary: true });
+  const [notifications, setNotifications] = useState({ expiry: true, due: true, summary: true });
   return (
     <SettingsPage title="Notifications" facts={<Pill>Sample data</Pill>}>
       <div className="settings-sample">
@@ -24,11 +24,6 @@ export function NotificationsSample() {
           onChange={(expiry) => setNotifications((value) => ({ ...value, expiry }))}
         />
         <Toggle label="Unpaid balances" checked={notifications.due} onChange={(due) => setNotifications((value) => ({ ...value, due }))} />
-        <Toggle
-          label="Denied check-ins"
-          checked={notifications.denied}
-          onChange={(denied) => setNotifications((value) => ({ ...value, denied }))}
-        />
         <Toggle
           label="Daily desk summary"
           checked={notifications.summary}

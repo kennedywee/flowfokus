@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createCheckInInput, createPriceInput, createProductInput, createSaleInput, updatePriceInput, updateProductInput, deskLocationInput, isSlug, recordPaymentInput, slugInput, themeInput } from "./validate";
+import { createPriceInput, createProductInput, createSaleInput, updatePriceInput, updateProductInput, deskLocationInput, isSlug, recordPaymentInput, slugInput, themeInput } from "./validate";
 import { parseAmountToMinor } from "./format";
 
 const id = "0b7c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
@@ -47,7 +47,7 @@ describe("write inputs", () => {
   });
 
   test("ids must be UUIDs", () => {
-    expect(() => createCheckInInput({ slug: "chainsaw", idempotencyKey: id, member_id: "1", location_id: id })).toThrow();
+    expect(() => createSaleInput({ slug: "chainsaw", idempotencyKey: id, member_id: "1", price_id: id, location_id: id })).toThrow();
   });
 
   test("payment method and amount are checked", () => {
