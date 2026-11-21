@@ -8,13 +8,17 @@ import type { Result } from "../../lib/result";
 import { getTeam } from "../../lib/staff.functions";
 import { Appearance } from "./Appearance";
 import { General } from "./General";
+import { Features } from "./Features";
 import { GymSite } from "./GymSite";
+import { Labs } from "./Labs";
 import { Locations } from "./Locations";
 import { Roles } from "./Roles";
 import { Staff } from "./Staff";
 import {
   SETTINGS_GROUPS,
   matchSettingsPages,
+  settingsPagesFor,
+  type SettingsPageInfo,
   type SettingsSlug,
 } from "./sections";
 
@@ -66,13 +70,25 @@ export function SettingsDialog() {
   const { settings } = orgRoute.useSearch();
   const { open, close } = useSettings();
   const organization = useOrganization();
-  const team = useTeam(organization.slug, settings === "staff" || settings === "roles");
+  const pages = settingsPagesFor({
+    features: organization.features,
+    labs: organization.labs,
+    permissions: organization.actor.permissions,
+  });
+  // A page this organization or person does not have, such as Gym site with the feature off, opens General.
+  const shown: SettingsSlug | undefined =
+    settings === undefined ? undefined : pages.some((page) => page.slug === settings) ? settings : "general";
+  const team = useTeam(organization.slug, shown === "staff" || shown === "roles");
   const main = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (settings && shown !== settings) open("general", { replace: true });
+  }, [settings, shown, open]);
 
   // A new page starts at its top.
   useEffect(() => {
     main.current?.scrollTo({ top: 0 });
-  }, [settings]);
+  }, [shown]);
 
   return (
     <Dialog open={settings !== undefined} onOpenChange={(next) => !next && close()}>
@@ -80,11 +96,11 @@ export function SettingsDialog() {
       <DialogContent className="settings-dialog" aria-describedby={undefined} initialFocus="content">
         <aside className="settings-dialog__side">
           <DialogTitle className="settings-dialog__title">Settings</DialogTitle>
-          {settings ? <SettingsNav current={settings} onOpen={(slug) => open(slug, { replace: true })} /> : null}
+          {shown ? <SettingsNav pages={pages} current={shown} onOpen={(slug) => open(slug, { replace: true })} /> : null}
         </aside>
         <div className="settings-dialog__main" ref={main}>
           <div className="settings-dialog__column">
-            {settings ? <SettingsContent slug={settings} team={team} /> : null}
+            {shown ? <SettingsContent slug={shown} team={team} /> : null}
           </div>
         </div>
         <button type="button" className="settings-dialog__close" onClick={close}>
@@ -106,6 +122,10 @@ function SettingsContent({ slug, team }: { slug: SettingsSlug; team: TeamState }
       return <GymSite />;
     case "locations":
       return <Locations />;
+    case "labs":
+      return <Labs />;
+    case "features":
+      return <Features />;
     case "staff":
       return <Staff team={team.data} reload={team.reload} />;
     case "roles":
@@ -114,9 +134,17 @@ function SettingsContent({ slug, team }: { slug: SettingsSlug; team: TeamState }
 }
 
 /** The search and the grouped pages. The search keeps the pages whose name or keywords match. */
-function SettingsNav({ current, onOpen }: { current: SettingsSlug; onOpen: (slug: SettingsSlug) => void }) {
+function SettingsNav({
+  pages: available,
+  current,
+  onOpen,
+}: {
+  pages: readonly SettingsPageInfo[];
+  current: SettingsSlug;
+  onOpen: (slug: SettingsSlug) => void;
+}) {
   const [query, setQuery] = useState("");
-  const pages = matchSettingsPages(query);
+  const pages = matchSettingsPages(query, available);
   const nav = useRef<HTMLElement>(null);
   // Phones show the pages in one scrolling row; keep the open page in view.
   useEffect(() => {

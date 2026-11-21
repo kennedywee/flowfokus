@@ -22,6 +22,7 @@ export const ABILITIES: readonly Ability[] = [
   { label: "Manage products and prices", permissions: ["products:create", "products:update"] },
   { label: "Change settings and locations", permissions: ["settings:manage"] },
   { label: "Invite and change staff", permissions: ["staff:manage"] },
+  { label: "Set feature flags", permissions: ["features:manage"] },
 ];
 
 export type Reach = "all" | "some" | "none";

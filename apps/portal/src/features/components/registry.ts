@@ -720,6 +720,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     props: [
       { name: "SettingsPage title / action", type: "string / ReactNode", note: "action is a SettingsPageAction, only when the person can take it." },
       { name: "SettingsRow title / description", type: "string", note: "The description is one line. Pass htmlFor to name the control with the title." },
+      { name: "SettingsRow tag", type: "string", note: "A short tag beside the title, such as Beta on a Labs feature." },
       { name: "LockLine", type: "ReactNode", note: "Says why this role sees the page but cannot change it." },
     ],
   },

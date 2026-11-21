@@ -4,13 +4,14 @@ import type { IconName } from "@/components/ui/icon";
  * The settings pages. Settings is a dialog over the page behind it, so a page
  * is a search value, `?settings=staff`, on any organization address. Profile,
  * Notifications, Payments, and Booking rules wait for Rails (issue #94) and
- * have no item until they are real.
+ * have no item until they are real. Gym site, Labs, and Features show only
+ * when Rails says the organization or the person has them (`settingsPagesFor`).
  */
 
-export const SETTINGS_SLUGS = ["appearance", "general", "gym-site", "locations", "staff", "roles"] as const;
+export const SETTINGS_SLUGS = ["appearance", "general", "gym-site", "locations", "labs", "staff", "roles", "features"] as const;
 export type SettingsSlug = (typeof SETTINGS_SLUGS)[number];
 
-export type SettingsGroup = "You" | "Gym" | "Team";
+export type SettingsGroup = "You" | "Gym" | "Team" | "Developer";
 
 export interface SettingsPageInfo {
   slug: SettingsSlug;
@@ -26,11 +27,39 @@ export const SETTINGS_PAGES: readonly SettingsPageInfo[] = [
   { slug: "general", label: "General", icon: "general", group: "Gym", keywords: ["name", "time zone", "timezone", "currency"] },
   { slug: "gym-site", label: "Gym site", icon: "gymSite", group: "Gym", keywords: ["website", "public", "publish", "address"] },
   { slug: "locations", label: "Locations", icon: "location", group: "Gym", keywords: ["address", "branch"] },
+  { slug: "labs", label: "Labs", icon: "labs", group: "Gym", keywords: ["beta", "try", "early", "preview"] },
   { slug: "staff", label: "Staff", icon: "staff", group: "Team", keywords: ["invite", "team", "people", "access"] },
   { slug: "roles", label: "Roles", icon: "roles", group: "Team", keywords: ["permissions", "access"] },
+  { slug: "features", label: "Features", icon: "developer", group: "Developer", keywords: ["flags", "developer", "labs", "workos"] },
 ];
 
-export const SETTINGS_GROUPS: readonly SettingsGroup[] = ["You", "Gym", "Team"];
+export const SETTINGS_GROUPS: readonly SettingsGroup[] = ["You", "Gym", "Team", "Developer"];
+
+/** What Rails says about the organization and the person: the features in effect, Labs, and permissions. */
+export interface SettingsReach {
+  features: readonly string[];
+  labs: readonly unknown[];
+  permissions: readonly string[];
+}
+
+/**
+ * The pages this organization and person have. Gym site needs the gym_site
+ * feature; Labs needs a feature in Labs; Features needs features:manage.
+ */
+export function settingsPagesFor(reach: SettingsReach): SettingsPageInfo[] {
+  return SETTINGS_PAGES.filter((page) => {
+    switch (page.slug) {
+      case "gym-site":
+        return reach.features.includes("gym_site");
+      case "labs":
+        return reach.labs.length > 0;
+      case "features":
+        return reach.permissions.includes("features:manage");
+      default:
+        return true;
+    }
+  });
+}
 
 export function isSettingsSlug(value: unknown): value is SettingsSlug {
   return typeof value === "string" && (SETTINGS_SLUGS as readonly string[]).includes(value);
@@ -46,10 +75,10 @@ export function readSettingsSearch(search: Record<string, unknown>): { settings?
 }
 
 /** The pages whose name or keywords hold the query. An empty query keeps every page. */
-export function matchSettingsPages(query: string): SettingsPageInfo[] {
+export function matchSettingsPages(query: string, pages: readonly SettingsPageInfo[] = SETTINGS_PAGES): SettingsPageInfo[] {
   const words = query.trim().toLowerCase();
-  if (!words) return [...SETTINGS_PAGES];
-  return SETTINGS_PAGES.filter(
+  if (!words) return [...pages];
+  return pages.filter(
     (page) => page.label.toLowerCase().includes(words) || page.keywords.some((keyword) => keyword.includes(words)),
   );
 }

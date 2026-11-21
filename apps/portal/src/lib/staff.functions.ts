@@ -39,6 +39,10 @@ import {
   type MemberRoleInput,
   locationInput,
   updateOrganizationInput,
+  featureStateInput,
+  labsFeatureInput,
+  type FeatureStateInput,
+  type LabsFeatureInput,
   type LocationInput,
   type UpdateOrganizationInput,
   reasonInput,
@@ -109,6 +113,31 @@ export const updateOrganization = createServerFn({ method: "POST" })
     const { slug, ...body } = data;
     return callStaff(slug, (api) => api.PATCH("/staff/organization", { body }));
   });
+
+/** Turns a feature in Labs on or off. Needs settings:manage. */
+export const setLabsFeature = createServerFn({ method: "POST" })
+  .validator((input: LabsFeatureInput) => labsFeatureInput(input))
+  .handler(async ({ data }): Promise<Result<Schemas["LabsFeature"]>> =>
+    callStaff(data.slug, (api) =>
+      api.PATCH("/staff/labs/{key}", { params: { path: { key: data.key } }, body: { enabled: data.enabled } }),
+    ),
+  );
+
+type DeveloperFeatures = Schemas["DeveloperFeaturesResponse"]["data"];
+
+/** Every feature with its state. Needs features:manage. */
+export const getDeveloperFeatures = createServerFn({ method: "GET" })
+  .validator((input: SlugInput) => slugInput(input))
+  .handler(async ({ data }): Promise<Result<DeveloperFeatures>> => callStaff(data.slug, (api) => api.GET("/staff/features")));
+
+/** Sets a feature to Off, Labs, or On. Needs features:manage. */
+export const setFeatureState = createServerFn({ method: "POST" })
+  .validator((input: FeatureStateInput) => featureStateInput(input))
+  .handler(async ({ data }): Promise<Result<DeveloperFeatures>> =>
+    callStaff(data.slug, (api) =>
+      api.PATCH("/staff/features/{key}", { params: { path: { key: data.key } }, body: { state: data.state } }),
+    ),
+  );
 
 /** Adds a location, or changes one when `id` is set. */
 export const saveLocation = createServerFn({ method: "POST" })

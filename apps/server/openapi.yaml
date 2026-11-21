@@ -2665,7 +2665,7 @@ components:
     StaffOrganization:
       type: object
       additionalProperties: false
-      required: [id, slug, name, timezone, currency, published, locations, actor]
+      required: [id, slug, name, timezone, currency, published, locations, features, labs, actor]
       properties:
         id:
           type: string

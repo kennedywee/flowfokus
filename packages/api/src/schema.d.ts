@@ -1247,9 +1247,9 @@ export interface components {
             published: boolean;
             locations: components["schemas"]["Location"][];
             /** @description The features in effect for this organization. Rails decides; clients only read it. */
-            features?: components["schemas"]["FeatureKey"][];
+            features: components["schemas"]["FeatureKey"][];
             /** @description The features in Labs, which staff with settings:manage can turn on or off. */
-            labs?: components["schemas"]["LabsFeature"][];
+            labs: components["schemas"]["LabsFeature"][];
             actor: components["schemas"]["Actor"];
         };
         /**
