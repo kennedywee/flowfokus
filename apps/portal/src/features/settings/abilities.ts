@@ -10,8 +10,6 @@ import type { TeamRole } from "./team";
 export interface Ability {
   label: string;
   permissions: string[];
-  /** Rails needs every permission for this one task, so a part is no use. */
-  all?: boolean;
 }
 
 export const ABILITIES: readonly Ability[] = [
@@ -24,7 +22,6 @@ export const ABILITIES: readonly Ability[] = [
   { label: "Book members into sessions", permissions: ["bookings:create"] },
   { label: "Manage programs and sessions", permissions: ["programs:manage"] },
   { label: "Manage products and prices", permissions: ["products:create", "products:update"] },
-  { label: "See reports", permissions: ["purchases:read", "check_ins:read"], all: true },
   { label: "Change settings and locations", permissions: ["settings:manage"] },
   { label: "Invite and change staff", permissions: ["staff:manage"] },
 ];
@@ -35,6 +32,6 @@ export type Reach = "all" | "some" | "none";
 export function reach(role: Pick<TeamRole, "permissions">, ability: Ability): Reach {
   const held = ability.permissions.filter((permission) => role.permissions.includes(permission)).length;
   if (held === ability.permissions.length) return "all";
-  if (held === 0 || ability.all) return "none";
+  if (held === 0) return "none";
   return "some";
 }
