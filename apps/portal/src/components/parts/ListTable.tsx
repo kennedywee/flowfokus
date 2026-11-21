@@ -294,14 +294,15 @@ export function ListTableEmpty({ title, text, action }: { title: string; text?: 
 export function LoadMore({
   loaded,
   onLoadMore,
-  loading = false,
+  loading,
   done = false,
   label = "Show more",
 }: {
   /** How many rows are loaded now. A change re-arms the scroll trigger. */
   loaded: number;
   onLoadMore: () => void;
-  loading?: boolean;
+  /** True while a request is out. Required: when it ends without new rows, Show more works again. */
+  loading: boolean;
   done?: boolean;
   label?: string;
 }) {
