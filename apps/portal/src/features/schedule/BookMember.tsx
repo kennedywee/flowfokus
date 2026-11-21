@@ -12,7 +12,7 @@ import { createBooking, createSale, getBookingOptions, listMembers } from "../..
 import { Command, CommandInputPrimitive, CommandItem, CommandList } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { useMemberSearch } from "../check-ins/FindMember";
+import { useMemberSearch } from "../check-ins/useMemberSearch";
 import { SaleDialog } from "../sales/SaleDialogs";
 import {
   missingSpot,

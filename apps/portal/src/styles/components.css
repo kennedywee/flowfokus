@@ -1264,9 +1264,6 @@ a.toggle-group__item {
   text-align: right;
   white-space: nowrap;
 }
-.table .muted {
-  color: var(--color-ink-3);
-}
 /* Times and dates stay on one line, so a column never breaks "2:38 pm" in two. */
 .table .when {
   color: var(--color-ink-2);

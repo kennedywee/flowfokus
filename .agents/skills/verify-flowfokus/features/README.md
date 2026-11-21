@@ -62,7 +62,7 @@ commands, and observable proof.
 ## Driven on 19 November 2026
 
 - Members: driven end to end with `scripts/proof-create-member.mjs`.
-- Staff sign-in as Kennedy, desk sale with cash and fulfillment, check-in from Home, the gym
+- Staff sign-in as Kennedy, desk sale with cash and fulfillment, check-in from a member's page, the gym
   site catalog, and member sign-in up to the link-code form: driven while writing the recipes, without
   saved evidence.
 - Not driven yet: organization choice for `rachel@flowfokus.com`, receptionist limits, sign-out,

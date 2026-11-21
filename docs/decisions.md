@@ -59,10 +59,11 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | Staff with `check_ins:override` can let a denied member in once, with a reason. It uses no right. | [Workflows](workflows.md#check-in) |
 | A member links a sign-in with a one-time code that staff issue. A matching email is not enough. | [Identity](identity.md#member-customer) |
 | Three default roles: Owner, Manager, Receptionist. | [Authorization](authorization.md#implemented-permissions) |
+| The staff portal sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Home, Inbox, Agents, the Check-ins page, Reports, Integrations, and What's new left the scope on 21 November 2026. `/<org>` opens the schedule until Calendar is built. | [Frontend preview](frontend-preview.md) |
 
 ## Deferred
 
-Waitlists, courses, staff calendars for appointments, recurring billing, a native mobile app, and a Flowfokus staging environment are not built.
+Waitlists, courses, staff calendars for appointments, recurring billing, a native mobile app, and a Flowfokus staging environment are not built. The Home, Inbox, Agents, Check-ins, and Reports pages are not built either. Check-in stays on the member page and ⌘K. Rails keeps the check-in endpoints, until [#81](https://github.com/kennedywee/flowfokus/issues/81) is decided.
 
 Only the local test payment provider exists. A real provider waits on [#9](https://github.com/kennedywee/flowfokus/issues/9).
 

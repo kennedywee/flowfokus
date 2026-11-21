@@ -9,12 +9,15 @@ and the Paper artboards.
 | --- | --- |
 | Members | [#17](https://github.com/kennedywee/flowfokus/issues/17) |
 | Sales and payments | [#18](https://github.com/kennedywee/flowfokus/issues/18) |
-| Check-ins | [#19](https://github.com/kennedywee/flowfokus/issues/19) |
+| Check-ins (page removed 21 Nov 2026) | [#19](https://github.com/kennedywee/flowfokus/issues/19) |
 | Schedule, sessions, and programs | [#20](https://github.com/kennedywee/flowfokus/issues/20) |
 | Products | [#21](https://github.com/kennedywee/flowfokus/issues/21) |
-| Home | [#22](https://github.com/kennedywee/flowfokus/issues/22) |
-| Reports | [#23](https://github.com/kennedywee/flowfokus/issues/23) |
+| Home (page removed 21 Nov 2026) | [#22](https://github.com/kennedywee/flowfokus/issues/22) |
+| Reports (removed 21 Nov 2026) | [#23](https://github.com/kennedywee/flowfokus/issues/23) |
 | Settings and staff | [#24](https://github.com/kennedywee/flowfokus/issues/24) |
+
+The issues of the removed pages (Check-ins, Home, Reports) are not work to do.
+Walk-in gym access waits on [#81](https://github.com/kennedywee/flowfokus/issues/81).
 
 Some items wait on an owner decision. Those decisions are listed in
 [README.md](README.md#decisions-the-user-still-owes).

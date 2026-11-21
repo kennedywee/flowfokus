@@ -14,7 +14,7 @@ are separate facts.
 
 ## How to reach it
 
-- Choose `Sell` in the top bar on Home.
+- Choose `New sale` in the top bar of `/chainsaw/sales`.
 - Choose `Sell` on a member's page. The member is already chosen.
 - Open `/chainsaw/sales/new` directly.
 

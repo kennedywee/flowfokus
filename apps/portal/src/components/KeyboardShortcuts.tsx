@@ -18,7 +18,6 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
   const lists = [
     can("members:read") ? "Members" : null,
     can("purchases:read") ? "Sales" : null,
-    can("check_ins:read") ? "Check-ins" : null,
     can("programs:read") ? "Programs" : null,
     can("products:read") ? "Products" : null,
   ].filter((name): name is string => name !== null);
@@ -33,7 +32,7 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
       ],
     },
     {
-      title: "Home and member page",
+      title: "Member page",
       items: [
         ...(can("check_ins:create") ? [{ keys: ["C"], label: "Check in" }] : []),
         ...(can("purchases:create") ? [{ keys: ["S"], label: "Sell" }] : []),

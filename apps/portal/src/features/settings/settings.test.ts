@@ -111,11 +111,6 @@ describe("roles view", () => {
     expect(reach(manager, ability("Change settings and locations"))).toBe("none");
     expect(reach(manager, ability("Create sales and record payments"))).toBe("some");
   });
-
-  test("a task that needs every permission is all or nothing", () => {
-    expect(reach({ permissions: ["purchases:read"] }, ability("See reports"))).toBe("none");
-    expect(reach(manager, ability("See reports"))).toBe("all");
-  });
 });
 
 describe("general facts", () => {

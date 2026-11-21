@@ -122,13 +122,6 @@ export const saveLocation = createServerFn({ method: "POST" })
       : callStaff(slug, (api) => api.POST("/staff/locations", { body }));
   });
 
-export const getOverview = createServerFn({ method: "GET" })
-  .validator((input: SlugInput) => slugInput(input))
-  .handler(
-    async ({ data }): Promise<Result<Schemas["StaffOverview"]>> =>
-      callStaff(data.slug, (api) => api.GET("/staff/overview")),
-  );
-
 export const listMembers = createServerFn({ method: "GET" })
   .validator((input: MemberSearchInput) => memberSearchInput(input))
   .handler(
@@ -315,17 +308,6 @@ export const revokeSale = createServerFn({ method: "POST" })
       ),
   );
 
-export const listCheckIns = createServerFn({ method: "GET" })
-  .validator((input: OptionalMemberInput) => optionalMemberInput(input))
-  .handler(
-    async ({ data }): Promise<Result<Schemas["CheckIn"][]>> =>
-      callStaff(data.slug, (api) =>
-        api.GET("/staff/check_ins", {
-          params: { query: data.memberId ? { member_id: data.memberId } : {} },
-        }),
-      ),
-  );
-
 export const createCheckIn = createServerFn({ method: "POST" })
   .validator((input: CreateCheckInInput) => createCheckInInput(input))
   .handler(
@@ -390,21 +372,6 @@ export const unlinkMember = createServerFn({ method: "POST" })
   .handler(
     async ({ data }): Promise<Result<Schemas["MemberDetail"]>> =>
       callStaff(data.slug, (api) => api.DELETE("/staff/members/{id}/link", { params: { path: { id: data.id } } })),
-  );
-
-export interface ReportInput extends SlugInput {
-  weeks: 1 | 2 | 4 | 12;
-}
-
-export const getReport = createServerFn({ method: "GET" })
-  .validator((input: ReportInput): ReportInput => {
-    const { slug } = slugInput(input);
-    const weeks = [1, 2, 4, 12].includes(input.weeks) ? input.weeks : 4;
-    return { slug, weeks };
-  })
-  .handler(
-    async ({ data }): Promise<Result<Schemas["Report"]>> =>
-      callStaff(data.slug, (api) => api.GET("/staff/report", { params: { query: { weeks: data.weeks } } })),
   );
 
 export const listPrograms = createServerFn({ method: "GET" })

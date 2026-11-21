@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
-  Plug,
   SlidersHorizontal,
   Users,
   type LucideIcon,
@@ -27,7 +26,6 @@ const ICON: Record<string, LucideIcon> = {
   locations: MapPin,
   staff: Users,
   notifications: Bell,
-  integrations: Plug,
 };
 
 const icon = {

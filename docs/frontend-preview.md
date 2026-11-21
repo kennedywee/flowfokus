@@ -20,14 +20,11 @@ live in [the design system](design-system.md) and `apps/portal/DESIGN.md`.
   location is an HttpOnly cookie per organization. It sets the default
   location for check-in and new sales. Add location opens
   Settings.
-- Home: today's sessions, what comes next, items that need attention, and
-  check-in.
-- Members: search, create, and view member records. Staff create gym site
-  link codes and unlink members from their sign-in.
+- Members: search, create, and view member records. Staff check a member in
+  from the member page or with Ctrl K. Staff create gym site link codes and
+  unlink members from their sign-in.
 - Sales: list and create sales, record payments, deliver access, renew,
   refund, void, and end access.
-- Check-ins: the same member and visit endpoints used by Home, with filters
-  and CSV export.
 - Schedule: sessions by day, the roster of each session, booking a member,
   cancelling a booking or a session, and marking attendance.
 - Programs: create and edit programs, add sessions, and add or change ticket
@@ -35,10 +32,6 @@ live in [the design system](design-system.md) and `apps/portal/DESIGN.md`.
 - Products: the membership catalog, prices, and availability. Staff with
   `products:create` add products. Staff with `products:update` edit products
   and benefits, add prices, take prices off sale, and archive them.
-- Reports: weekly sales, payments, refunds, check-ins, and new members from
-  `/staff/report`, in the organization time zone. Period and metric filters, a
-  breakdown by location and payment method, and CSV export of the shown weeks.
-  This is the page from before the redesign. See issue #23.
 - Settings, General and Locations: the time zone, gym site publication, and
   locations, from Rails. Staff with `settings:manage` change them. The name
   comes from WorkOS. The currency is fixed.
@@ -53,24 +46,24 @@ These actions persist in PostgreSQL, including during local demo development.
 
 ## Screens with sample data
 
-- Inbox: filter, read, resolve, and reopen sample updates.
-- Agents: suggested prompts, prepared replies, and message drafts. No AI service
-  is called and no message is sent.
-- Settings, Notifications and Integrations: sample notification switches and
-  integration states. Edits do not update Rails or contact external systems.
-- What's new: static notes for the preview and portal layout. It opens from
-  the account menu.
+- Settings, Notifications: sample notification switches. Edits do not update
+  Rails or contact external systems.
 - Component gallery, `/components`: live examples of each component with
   sample records. Local development only, outside any organization. See
   [the design system](design-system.md#component-gallery).
 
 These screens display a Sample data label. Local edits reset when the screen
-unmounts. The sample fixtures live in `src/features/preview/data.ts` and the
-individual preview components. Real check-in, report, and settings views live
-in their domain folders. Shared filters live in `components/Filters.tsx`, CSV
-export in `lib/export.ts`, and feature layouts in `styles/features.css`.
+unmounts. The sample screen lives in `src/features/preview`. Real settings
+views live in their domain folders. Shared filters live in
+`components/Filters.tsx`, and feature layouts in `styles/features.css`.
 
-Existing `/<org>/soon?page=…` bookmarks redirect to the new routes.
+## Removed screens
+
+Home, Inbox, Agents, Check-ins, Reports, Settings Integrations, and What's new
+left the product on 21 November 2026. See [Decisions](decisions.md). `/<org>`
+and the old URLs of these pages open the schedule (`lib/removed-pages.ts`).
+Rails keeps the check-in endpoints until
+[#81](https://github.com/kennedywee/flowfokus/issues/81) is decided.
 
 ## Run and verify
 

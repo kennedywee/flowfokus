@@ -12,13 +12,13 @@ describe("keyboard shortcuts sheet", () => {
       "payments:create", "purchases:fulfill", "programs:read", "bookings:manage",
     ));
     expect(keys(groups)).toEqual(["⌘K", "⌘,", "⌘B", "?", "C", "S", "/", "P", "F", "S", "B", "B", "A", "⌘↵"]);
-    expect(groups.map((group) => group.title)).toContain("Members, Sales, Check-ins and Programs");
+    expect(groups.map((group) => group.title)).toContain("Members, Sales and Programs");
   });
 
   test("leaves out keys the role cannot use, and empty groups", () => {
     const groups = shortcutGroups("Ctrl ", role("members:read", "check_ins:read", "check_ins:create"));
     expect(keys(groups)).toEqual(["Ctrl K", "Ctrl ,", "Ctrl B", "?", "C", "/", "Ctrl ↵"]);
-    expect(groups.map((group) => group.title)).toEqual(["Anywhere", "Home and member page", "Members and Check-ins", "Forms and dialogs"]);
+    expect(groups.map((group) => group.title)).toEqual(["Anywhere", "Member page", "Members", "Forms and dialogs"]);
   });
 
   test("lists the program page keys for a manager", () => {

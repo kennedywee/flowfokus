@@ -54,12 +54,22 @@ try {
   assert.equal(next.status, 200, 'The next request must accept the refreshed cookie')
   await next.arrayBuffer()
 
+  // The start page is Schedule. Pages that left the product open it too.
+  for (const path of ['/chainsaw', '/chainsaw/reports', '/chainsaw/check-in', '/chainsaw/settings?section=Integrations']) {
+    const start = await fetch(new URL(path, portal), {
+      headers: { Cookie: `hf_session=${encodeURIComponent(sealed)}` }, redirect: 'manual', signal: AbortSignal.timeout(15_000),
+    })
+    assert.ok([301, 302, 307, 308].includes(start.status), `${path} must redirect`)
+    assert.equal(new URL(start.headers.get('location'), portal).pathname, '/chainsaw/schedule', `${path} must open Schedule`)
+    await start.arrayBuffer()
+  }
+
   await workos.userManagement.revokeSession({ sessionId })
   const revoked = await request(await sealStaleSession(refreshed.refreshToken))
   assert.equal(revoked.status, 307, 'A rejected refresh must require sign-in')
   assert.ok(new URL(revoked.headers.get('location'), portal).pathname === '/sign-in')
   await revoked.arrayBuffer()
-  console.log('PASS: portal SDK refresh, rotated session cookie, HttpOnly/host-only flags, token-free HTML, next request, and rejected revoked refresh.')
+  console.log('PASS: portal SDK refresh, rotated session cookie, HttpOnly/host-only flags, token-free HTML, next request, start page redirects, and rejected revoked refresh.')
 } finally {
   await workos.userManagement.revokeSession({ sessionId }).catch(() => {})
 }

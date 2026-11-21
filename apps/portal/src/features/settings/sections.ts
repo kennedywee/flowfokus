@@ -1,15 +1,14 @@
 /*
  * The settings sections and their addresses. Real sections come first. The
- * sample sections (Notifications, Integrations) live in features/preview and
- * come after them, under their own heading.
+ * sample section (Notifications) lives in features/preview and comes after
+ * them, under its own heading.
  */
 
 export type SettingsPath =
   | "/$org/settings/general"
   | "/$org/settings/locations"
   | "/$org/settings/staff"
-  | "/$org/settings/notifications"
-  | "/$org/settings/integrations";
+  | "/$org/settings/notifications";
 
 export interface SettingsSection {
   label: string;
@@ -24,7 +23,6 @@ export const SETTINGS_SECTIONS: readonly SettingsSection[] = [
   { label: "Locations", to: "/$org/settings/locations", slug: "locations", sample: false },
   { label: "Staff", to: "/$org/settings/staff", slug: "staff", sample: false },
   { label: "Notifications", to: "/$org/settings/notifications", slug: "notifications", sample: true },
-  { label: "Integrations", to: "/$org/settings/integrations", slug: "integrations", sample: true },
 ];
 
 /**
@@ -38,7 +36,6 @@ const OLD_NAMES: Record<string, SettingsPath> = {
   team: "/$org/settings/staff",
   staff: "/$org/settings/staff",
   notifications: "/$org/settings/notifications",
-  integrations: "/$org/settings/integrations",
 };
 
 export function sectionFromOldLink(value: unknown): SettingsPath | undefined {

@@ -70,6 +70,8 @@ To change the API:
 
 CI repeats these checks. It also compares the contract with the last stable release tag. Without a tag, it compares with the pull request's base, or with the commit before a push. A breaking change, such as removing a field or a path, fails CI. Adding an optional field passes.
 
+A planned break goes in `apps/server/openapi-allowed-breaks.txt`. Add one line with the method, the path, and the message oasdiff prints, with a comment that names the issue. `scripts/contract-diff` passes the lines in that file and fails on every other break. Remove the line after the change ships.
+
 A new value in a response `enum` also fails CI, because an old client may not handle it. A value list that is meant to grow uses `x-extensible-enum` instead of `enum`. `ErrorCode` is such a list: clients must handle a code they do not know. Request specs check that every error code Rails returns is in the list. The generated types keep the known values, so the apps still catch typos. Keep `enum` for lists that requests send or that the apps map one by one.
 
 What these checks cannot catch:

@@ -109,14 +109,14 @@ Kumar and Sofia Wong.
 
 ### Stable handles
 
-- Portal routes: `/chainsaw`, `/chainsaw/members`, `/chainsaw/members/new`, `/chainsaw/sales/new`,
-  `/chainsaw/sales/<uuid>`, `/chainsaw/check-in`.
+- Portal routes: `/chainsaw` (it opens `/chainsaw/schedule`), `/chainsaw/members`,
+  `/chainsaw/members/new`, `/chainsaw/members/<uuid>`, `/chainsaw/sales/new`, `/chainsaw/sales/<uuid>`.
 - The sidebar is `getByRole('navigation', { name: 'Staff pages' })`. The top bar is
   `getByRole('banner')`. It holds page actions such as `Check in`, `Sell`, and `Create sale`.
 - Page titles are level-1 headings. Toasts appear in `getByRole('region', { name: /Notifications/ })`.
 - Buttons with a keyboard hint have extra text in the name, for example `Create member Ctrl ↵`.
   Match them with a regular expression: `{ name: /^Create member/ }`.
-- Inbox, Agents, and Reports are sample screens without Rails data. Do not use them as proof.
+- Settings › Notifications is a sample screen without Rails data. Do not use it as proof.
 
 ### Stored state
 
@@ -137,7 +137,7 @@ Put each run in `.artifacts/verify-flowfokus/runs/<timestamp>-<feature>/`. Git i
 `.artifacts/`. Keep the capture script next to its output, so the run can repeat. A complete run
 folder holds:
 
-- numbered screenshots, named after what they show: `01-signed-in-home.png`;
+- numbered screenshots, named after what they show: `01-signed-in-schedule.png`;
 - the Playwright video (`*.webm`);
 - `assertions.md`, with the commit and each assertion as `passed`, `failed`, or `untested` with a
   reason;
@@ -186,8 +186,8 @@ runner removes its own temporary folder on exit. Stop any other process you star
 - **Host names.** Use `localhost`, not `127.0.0.1`, for the portal. Sign-in redirects only to hosts in
   `FLOWFOKUS_DEV_AUTH_HOSTS`. The gym site needs the `chainsaw.localhost` host name; `localhost:4002`
   has no gym.
-- **The `Check in` button** is in the top bar on Home and on `/chainsaw/check-in`. It is not on sale
-  or member pages.
+- **The `Check in` button** is in the top bar on a member's page (`/chainsaw/members/<uuid>`). It is
+  not on sale pages. Ctrl K also offers `Check in <member>`. There is no check-in list page.
 - **Emulator restarts** clear its in-memory sessions. Restart Rails too
   (`docker compose restart server`), then sign in again.
 - **Fixed container names.** One Flowfokus stack can run on a machine. If another checkout started

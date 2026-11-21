@@ -12,4 +12,6 @@ temp_dir="$(mktemp -d)"
 trap 'rm -rf "$temp_dir"' EXIT
 git show "$base:$contract" > "$temp_dir/base.yaml"
 cp "$contract" "$temp_dir/current.yaml"
-docker run --rm -v "$temp_dir:/spec:ro" tufin/oasdiff:v1.33.0 breaking /spec/base.yaml /spec/current.yaml --fail-on ERR
+# Planned breaks are listed in this file. Everything else fails. See docs/monorepo.md.
+cp apps/server/openapi-allowed-breaks.txt "$temp_dir/allowed-breaks.txt"
+docker run --rm -v "$temp_dir:/spec:ro" tufin/oasdiff:v1.33.0 breaking /spec/base.yaml /spec/current.yaml --fail-on ERR --err-ignore /spec/allowed-breaks.txt

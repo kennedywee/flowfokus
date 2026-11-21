@@ -804,25 +804,11 @@
 .stack--tight {
   gap: var(--space-4);
 }
-.grid-2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
-  gap: var(--space-6);
-  align-items: start;
-}
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: var(--space-4);
   align-items: start;
-}
-@media (min-width: 1100px) {
-  .grid-2--wide-first {
-    grid-template-columns: minmax(0, 1.6fr) minmax(20rem, 1fr);
-  }
-  .grid-2--wide-last {
-    grid-template-columns: minmax(20rem, 1fr) minmax(0, 1.6fr);
-  }
 }
 
 /* ---------- Entry: sign-in, organization chooser, blocked states, 404, error ---------- */
@@ -1392,8 +1378,7 @@
 
 /*
  * Paper's phone tab bar (components/TabBar.tsx). Hidden from 768px. The
- * selected tab is ink; the others are grey. Check in is a dark pill on every
- * screen, as in Paper. Each tab is at least 44px tall to tap.
+ * selected tab is ink; the others are grey. Each tab is at least 44px tall to tap.
  */
 @media (min-width: 768px) {
   .tab-bar {
@@ -1420,8 +1405,7 @@
   cursor: pointer;
 }
 .tab-bar__tab[aria-current="page"],
-.tab-bar__tab[data-current],
-.tab-bar__tab[data-check-in] {
+.tab-bar__tab[data-current] {
   color: var(--color-ink);
 }
 .tab-bar__tab:focus-visible {
@@ -1437,14 +1421,4 @@
 .tab-bar__icon svg {
   width: 22px;
   height: 22px;
-}
-.tab-bar__tab[data-check-in] .tab-bar__icon {
-  width: 44px;
-  border-radius: 15px;
-  background: var(--color-ink);
-  color: var(--color-on-ink);
-}
-.tab-bar__tab[data-check-in] .tab-bar__icon svg {
-  width: 18px;
-  height: 18px;
 }
