@@ -54,13 +54,13 @@ try {
   assert.equal(next.status, 200, 'The next request must accept the refreshed cookie')
   await next.arrayBuffer()
 
-  // The start page is Schedule. Pages that left the product open it too.
-  for (const path of ['/chainsaw', '/chainsaw/reports', '/chainsaw/check-in', '/chainsaw/settings?section=Integrations']) {
+  // The start page is Calendar. Pages that left the product open it too, and so does the old Schedule path.
+  for (const path of ['/chainsaw', '/chainsaw/schedule', '/chainsaw/reports', '/chainsaw/check-in', '/chainsaw/settings?section=Integrations']) {
     const start = await fetch(new URL(path, portal), {
       headers: { Cookie: `hf_session=${encodeURIComponent(sealed)}` }, redirect: 'manual', signal: AbortSignal.timeout(15_000),
     })
     assert.ok([301, 302, 307, 308].includes(start.status), `${path} must redirect`)
-    assert.equal(new URL(start.headers.get('location'), portal).pathname, '/chainsaw/schedule', `${path} must open Schedule`)
+    assert.equal(new URL(start.headers.get('location'), portal).pathname, '/chainsaw/calendar', `${path} must open Calendar`)
     await start.arrayBuffer()
   }
 
