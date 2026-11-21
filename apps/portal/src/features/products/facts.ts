@@ -217,12 +217,6 @@ export function sortProducts(products: readonly Product[], sort: SortState): Pro
   return [...products].sort((a, b) => sign * compare(a, b) || byName(a, b));
 }
 
-/** "1–7 of 7 products". */
-export function productsRange(first: number, shown: number, total: number): string {
-  if (total === 0) return "0 products";
-  return `${first + 1}–${first + shown} of ${total} ${total === 1 ? "product" : "products"}`;
-}
-
 /* ---------- The form ---------- */
 
 /** Which programs a program benefit covers: every program, one kind, or a picked list. */

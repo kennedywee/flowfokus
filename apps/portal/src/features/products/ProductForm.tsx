@@ -199,11 +199,11 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
     const spec = priceSpec(draft.amount, draft.days, currency)!;
     const priced = await addingPrice.run({ slug: organization.slug, id: item.id, ...spec });
     if (!priced.ok) {
-      // The product exists now. Open it, so staff never create it twice; Edit sets the price.
+      // The product exists now. Open it, so staff never create it twice; Add price on that page sets the price.
       finish(item, {
         tone: "error",
         title: `${item.name} created. No price was added`,
-        body: `${priced.error.code === "validation_failed" ? "The price was not accepted." : ""} Edit the product to set its price.`.trim(),
+        body: `${priced.error.code === "validation_failed" ? "The price was not accepted." : ""} Select Add price on this page to set it.`.trim(),
       });
       return;
     }

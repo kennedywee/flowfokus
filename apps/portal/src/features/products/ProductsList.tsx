@@ -108,24 +108,24 @@ function ListHead({ count }: { count: string | null }) {
   );
 }
 
-/** A new product needs a price, and adding a price needs products:update. `shortcut` adds the N key; only the top bar action has it. */
+/** A new product needs a price, and adding a price needs products:update. The list needs products:read. `shortcut` adds the N key; only the top bar action has it. */
 function NewProductLink({ variant = "default", shortcut = false }: { variant?: "default" | "secondary"; shortcut?: boolean }) {
   const organization = useOrganization();
   const can = useCan();
   const navigate = useNavigate();
-  const allowed = can("products:create") && can("products:update");
+  const allowed = can("products:read") && can("products:create") && can("products:update");
   useShortcut("n", () => void navigate({ to: "/$org/products/new", params: { org: organization.slug } }), { enabled: shortcut && allowed });
-  if (!can("products:create")) return null;
+  if (!allowed) return null;
   return (
     <Link
       to="/$org/products/new"
       params={{ org: organization.slug }}
       className={buttonVariants({ variant, size: "compact" })}
-      aria-keyshortcuts={shortcut && allowed ? "N" : undefined}
+      aria-keyshortcuts={shortcut ? "N" : undefined}
     >
       <Icon name="plus" {...icon} />
       New product
-      {shortcut && allowed ? <Kbd>N</Kbd> : null}
+      {shortcut ? <Kbd>N</Kbd> : null}
     </Link>
   );
 }

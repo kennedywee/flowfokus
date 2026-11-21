@@ -6,6 +6,7 @@ import { formatDuration, formatMoney } from "../../lib/format";
 import { useAction } from "../../lib/hooks";
 import { useOrganization } from "../../lib/organization";
 import { createPrice } from "../../lib/staff.functions";
+import { useRestoreFocus } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { DialogFailure, SaleDialog } from "../sales/SaleDialogs";
 import { checkPrice, priceSpec, type Product } from "./facts";
@@ -19,6 +20,7 @@ const sendPrice = (input: Parameters<typeof createPrice>[0]["data"]) => createPr
  * prices stay as they are, so staff take them off sale or archive them.
  */
 export function AddPriceDialog({ product, onClose }: { product: Product; onClose: () => void }) {
+  useRestoreFocus();
   const organization = useOrganization();
   const currency = organization.currency;
   const router = useRouter();
