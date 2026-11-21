@@ -1,6 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
@@ -9,12 +8,13 @@ import { useAction } from "../../lib/hooks";
 import { useCan, useOrganization } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { createMember } from "../../lib/staff.functions";
+import { DetailHero, DetailLayout, HeroTile } from "@/components/parts/DetailLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkNewMember, fieldMessage, type NewMemberErrors } from "./list";
+import { Section } from "./Section";
 
 const sendMember = (input: Parameters<typeof createMember>[0]["data"]) => createMember({ data: input });
-const icon = { "aria-hidden": true, focusable: false } as const;
 const FORM_ID = "new-member";
 
 function focusField(id: string) {
@@ -31,26 +31,32 @@ export function NewMember() {
   const can = useCan();
   if (!can("members:create")) {
     return (
-      <div className="page new-member">
+      <NewMemberLayout>
         <NewMemberHead />
         <Notice tone="warning" title="You cannot add members">
           <p>Adding members needs the members:create permission. Ask an owner to change your role.</p>
         </Notice>
-      </div>
+      </NewMemberLayout>
     );
   }
   return <NewMemberForm />;
 }
 
+/** The page frame of a record: glyph dots behind a hero, then the content. */
+function NewMemberLayout({ children }: { children: ReactNode }) {
+  return (
+    <DetailLayout record="member" className="new-member">
+      {children}
+    </DetailLayout>
+  );
+}
+
 function NewMemberHead({ children }: { children?: ReactNode }) {
   return (
-    <header className="new-member__head">
-      <span className="new-member__icon" aria-hidden="true">
-        <Icon name="profile" {...icon} />
-      </span>
-      <h1>New member</h1>
+    <>
+      <DetailHero tile={<HeroTile icon="profile" />} title="New member" />
       {children ? <PageActions>{children}</PageActions> : null}
-    </header>
+    </>
   );
 }
 
@@ -112,7 +118,7 @@ function NewMemberForm() {
   }
 
   return (
-    <div className="page new-member">
+    <NewMemberLayout>
       <NewMemberHead>
         <Button
           type="submit"
@@ -161,11 +167,7 @@ function NewMemberForm() {
           <FailureNotice error={action.error} title="The member was not created" />
         ) : null}
 
-        <section className="mx-section" aria-labelledby="profile-title">
-          <div className="mx-section__head">
-            <Icon name="profile" {...icon} />
-            <h2 id="profile-title">Profile</h2>
-          </div>
+        <Section id="profile" title="Profile">
           <div className="new-member__fields">
             <Field id="member-name" label="Full name" error={nameError}>
               <Input
@@ -196,7 +198,7 @@ function NewMemberForm() {
               />
             </Field>
           </div>
-        </section>
+        </Section>
       </form>
 
       <ConfirmDialog
@@ -210,6 +212,6 @@ function NewMemberForm() {
       >
         <p>The details you entered{name.trim() ? ` for ${name.trim()}` : ""} will be lost.</p>
       </ConfirmDialog>
-    </div>
+    </NewMemberLayout>
   );
 }

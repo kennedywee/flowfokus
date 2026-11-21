@@ -78,7 +78,9 @@ export function ActivityFeed({
                   <Dot tone={item.tone ?? "neutral"} />
                 </span>
                 <span className="activity__text">{item.children}</span>
-                <time className="activity__time">{item.time}</time>
+                <time className="activity__time" suppressHydrationWarning>
+                  {item.time}
+                </time>
               </li>
             ) : (
               <li key={item.id} className="activity__row activity__row--comment">
@@ -92,7 +94,9 @@ export function ActivityFeed({
                   {"  "}
                   {item.children}
                 </span>
-                <time className="activity__time">{item.time}</time>
+                <time className="activity__time" suppressHydrationWarning>
+                  {item.time}
+                </time>
               </li>
             ),
           )}

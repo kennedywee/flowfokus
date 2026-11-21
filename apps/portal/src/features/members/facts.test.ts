@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { formatMoney, type Schemas } from "@flowfokus/api";
 import { fulfillmentFact, paymentFact, paymentMethods } from "../sales/facts";
-import { balanceDue, formatSpan, memberActivity, orderPeriods, periodState, periodText, totalPaid } from "./facts";
+import { balanceDue, formatSpan, holdRows, memberActivity, orderPeriods, periodState, periodText, saleMarks, totalPaid, visibleHolds } from "./facts";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -171,5 +171,84 @@ describe("memberActivity", () => {
       "Added as a member",
     ]);
     expect(events[1]!.tone).toBe("critical");
+  });
+});
+
+describe("holds", () => {
+  const shortDate = (at: string) => at.slice(5, 10);
+  const where = (id: string | null) => (id === null ? "All locations" : "Bangsar");
+  function right(overrides: Partial<Schemas["Entitlement"]> = {}): Schemas["Entitlement"] {
+    return {
+      id: "r1",
+      kind: "program_access",
+      name: "10 group classes",
+      starts_at: iso(NOW - DAY),
+      ends_at: iso(NOW + 60 * DAY),
+      location_id: null,
+      usage_limit: 10,
+      used_count: 7,
+      remaining: 3,
+      active: true,
+      program_ids: [],
+      program_kind: null,
+      occurrence_id: null,
+      ...overrides,
+    };
+  }
+  const member = (periods: Schemas["MembershipPeriod"][], entitlements: Schemas["Entitlement"][]) =>
+    ({ membership: { id: "ms", created_at: iso(NOW), periods }, entitlements, bookings: [] }) as unknown as Schemas["MemberDetail"];
+
+  test("a live period, a counted right, and an ended period make three rows in order", () => {
+    const rows = holdRows(
+      member([period(NOW - 90 * DAY, NOW - 60 * DAY), period(NOW - 10 * DAY, NOW + 20 * DAY)], [right()]),
+      [sale({ id: "s" })],
+      NOW,
+      shortDate,
+      where,
+    );
+    expect(rows.map((row) => [row.title, row.live])).toEqual([
+      ["Monthly unlimited", true],
+      ["10 group classes", true],
+      ["Monthly unlimited", false],
+    ]);
+    expect(rows[0]!.status).toMatchObject({ kind: "time", tone: "good", text: "Ends in 20d" });
+    expect(rows[1]!.status).toEqual({ kind: "credit", left: 3, total: 10 });
+    expect(rows[2]!.status).toMatchObject({ kind: "time", tone: "neutral" });
+  });
+
+  test("an unlimited right says so, and a right that has not started says when", () => {
+    const rows = holdRows(
+      member([], [right({ usage_limit: null, remaining: null, kind: "gym_access", name: "Gym access" }), right({ id: "r2", active: false, starts_at: iso(NOW + 3 * DAY) })]),
+      [],
+      NOW,
+      shortDate,
+      where,
+    );
+    expect(rows[0]!.status).toEqual({ kind: "text", text: "Unlimited visits" });
+    expect(rows[1]!.status).toMatchObject({ kind: "time", text: expect.stringContaining("Starts") });
+  });
+
+  test("a revoked period is critical and says Revoked", () => {
+    const rows = holdRows(member([period(NOW - DAY, NOW + DAY, true)], []), [], NOW, shortDate, where);
+    expect(rows[0]!.status).toMatchObject({ tone: "critical", text: "Revoked" });
+    expect(rows[0]!.title).toBe("Membership period");
+  });
+
+  test("with nothing live the list shows the latest period only", () => {
+    const rows = holdRows(member([period(NOW - 90 * DAY, NOW - 60 * DAY), period(NOW - 60 * DAY, NOW - 30 * DAY)], []), [], NOW, shortDate, where);
+    expect(visibleHolds(rows)).toHaveLength(1);
+    expect(visibleHolds(rows)[0]!.status).toMatchObject({ kind: "time" });
+  });
+});
+
+describe("saleMarks", () => {
+  test("keeps payment and fulfillment apart, with Rails words", () => {
+    expect(saleMarks(sale())).toEqual({
+      payment: { kind: "paid", tone: "good", label: "Paid" },
+      fulfillment: { kind: "fulfilled", tone: "good", label: "Fulfilled" },
+    });
+    const part = saleMarks(sale({ payment_status: "partially_paid", fulfilled: false }));
+    expect(part.payment).toMatchObject({ kind: "partlyPaid", tone: "warning", label: "Part paid" });
+    expect(part.fulfillment).toMatchObject({ kind: "unfulfilled", tone: "neutral" });
   });
 });

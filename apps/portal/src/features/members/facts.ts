@@ -1,5 +1,6 @@
 import type { Schemas } from "@flowfokus/api";
-import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, formatMoney } from "../../lib/format";
+import { BOOKING_STATUS_LABEL, DENIAL, PAYMENT_METHOD_LABEL, formatBenefitUsage, formatMoney } from "../../lib/format";
+import { fulfillmentFact, paymentFact, type FulfillmentState, type PaymentState } from "../sales/facts";
 
 /*
  * Facts for the member details page, read from Rails responses only. Each
@@ -166,4 +167,112 @@ export function memberActivity(
 
   events.push({ id: `joined-${member.id}`, at: member.created_at, tone: "neutral", text: "Added as a member" });
   return events.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+/* ---------- Holds ---------- */
+
+export type HoldTone = "good" | "warning" | "critical" | "neutral";
+
+/** What the right side of a hold row shows. The words come from Rails dates and counts. */
+export type HoldStatus =
+  | { kind: "time"; tone: HoldTone; fraction: number; text: string }
+  | { kind: "credit"; left: number; total: number }
+  | { kind: "text"; text: string };
+
+export interface HoldRow {
+  id: string;
+  title: string;
+  /** "Membership, 3 Nov – 2 Dec" or "Access, 14 Oct – 14 Jan · Bangsar". */
+  sub: string;
+  /** The sale that gave the period. Rights carry no sale yet (issue #17). */
+  saleId: string | null;
+  status: HoldStatus;
+  /** Covers now or starts later. A row that is not live shows only under "View all". */
+  live: boolean;
+}
+
+/**
+ * One row per membership period and one per access right. Live periods come
+ * first, newest first, then rights, then periods that are over. A period reads
+ * "Ends in 29d 16h": Rails has no renews state yet. A right with a limit
+ * shows what is left; an unlimited one says so.
+ */
+export function holdRows(
+  member: Schemas["MemberDetail"],
+  sales: Schemas["Sale"][],
+  now: number,
+  shortDate: (iso: string) => string,
+  locationName: (id: string | null) => string,
+): HoldRow[] {
+  const productName = (saleId: string) => sales.find((sale) => sale.id === saleId)?.line_item.product_name ?? "Membership period";
+  const { active, rest } = orderPeriods(member.membership?.periods ?? [], now);
+  const period = (item: Schemas["MembershipPeriod"], live: boolean): HoldRow => {
+    const { state, left } = periodState(item, now);
+    const tone: HoldTone = state === "current" ? "good" : state === "revoked" ? "critical" : "neutral";
+    return {
+      id: `period-${item.id}`,
+      title: productName(item.sale_id),
+      sub: `Membership, ${shortDate(item.starts_at)} – ${shortDate(item.ends_at)}`,
+      saleId: item.sale_id,
+      // A period that has not started shows an empty ring; the pie fills with the time left once it runs.
+      status: { kind: "time", tone, fraction: state === "upcoming" ? 0 : left, text: periodText(item, now, shortDate) },
+      live,
+    };
+  };
+  const rights: HoldRow[] = member.entitlements
+    .filter((right) => right.occurrence_id === null)
+    .map((right) => {
+      const status: HoldStatus = !right.active
+        ? { kind: "time", tone: "neutral", fraction: 0, text: `Starts ${shortDate(right.starts_at)}` }
+        : right.usage_limit !== null && right.remaining !== null
+          ? { kind: "credit", left: right.remaining, total: right.usage_limit }
+          : { kind: "text", text: formatBenefitUsage(right) };
+      return {
+        id: `right-${right.id}`,
+        title: right.name,
+        sub: `Access, ${shortDate(right.starts_at)} – ${shortDate(right.ends_at)} · ${locationName(right.location_id)}`,
+        saleId: null,
+        status,
+        live: true,
+      };
+    });
+  return [...active.map((item) => period(item, true)), ...rights, ...rest.map((item) => period(item, false))];
+}
+
+/** The rows a hold list shows before "View all": the live ones, or the latest period when none is live. */
+export function visibleHolds(rows: HoldRow[]): HoldRow[] {
+  const live = rows.filter((row) => row.live);
+  return live.length ? live : rows.slice(0, 1);
+}
+
+/* ---------- Sale marks ---------- */
+
+export interface SaleMark {
+  kind: "paid" | "partlyPaid" | "unpaid" | "fulfilled" | "unfulfilled";
+  tone: "good" | "warning" | "critical" | "neutral";
+  label: string;
+}
+
+const PAYMENT_MARK: Record<PaymentState, Omit<SaleMark, "label">> = {
+  paid: { kind: "paid", tone: "good" },
+  partial: { kind: "partlyPaid", tone: "warning" },
+  unpaid: { kind: "unpaid", tone: "critical" },
+  void: { kind: "unpaid", tone: "neutral" },
+};
+
+const FULFILLMENT_MARK: Record<FulfillmentState, Omit<SaleMark, "label">> = {
+  fulfilled: { kind: "fulfilled", tone: "good" },
+  waiting: { kind: "unfulfilled", tone: "neutral" },
+  revoked: { kind: "unfulfilled", tone: "critical" },
+  none: { kind: "unfulfilled", tone: "neutral" },
+};
+
+/** The sale's two facts as marks. The labels are the words Rails gives today (#14 is open). */
+export function saleMarks(sale: Schemas["Sale"]): { payment: SaleMark; fulfillment: SaleMark } {
+  const payment = paymentFact(sale);
+  const fulfillment = fulfillmentFact(sale);
+  return {
+    payment: { ...PAYMENT_MARK[payment.state], label: payment.label },
+    fulfillment: { ...FULFILLMENT_MARK[fulfillment.state], label: fulfillment.label },
+  };
 }

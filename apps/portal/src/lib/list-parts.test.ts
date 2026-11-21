@@ -176,6 +176,8 @@ describe("marks", () => {
     // 7 of 10 left: Paper draws "M8 8V4A4 4 0 1 1 4.2 9.24Z".
     expect(pieSlice(0.7)).toBe("M8 8V4A4 4 0 1 1 4.2 9.24Z");
     expect(pieSlice(0)).toBe("");
+    // Nearly full is drawn full, not as an arc that closes on itself and vanishes.
+    expect(pieSlice(0.9999)).toBe(pieSlice(1));
     expect(pieSlice(0.25)).toBe("M8 8V4A4 4 0 0 1 12 8Z");
   });
 

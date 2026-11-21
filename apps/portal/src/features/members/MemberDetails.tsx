@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
 import { PageActions } from "../../components/PageActions";
 import { useCheckIn } from "../check-ins/CheckInFlow";
@@ -10,10 +10,10 @@ import { Kbd, initials } from "../../components/ui";
 import {
   BOOKING_STATUS_LABEL,
   failureMessage,
-  formatBenefitUsage,
   formatDate,
   formatDuration,
   formatMoney,
+  formatTime,
   formatWhen,
 } from "../../lib/format";
 import { useAction, useIdempotencyKey } from "../../lib/hooks";
@@ -25,18 +25,34 @@ import { createLinkCode, renewMembership, unlinkMember } from "../../lib/staff.f
 import {
   balanceDue,
   formatSpan,
+  holdRows,
   isUpcoming,
   memberActivity,
-  orderPeriods,
-  periodState,
-  periodText,
+  saleMarks,
   totalPaid,
-  type ActivityEvent,
-  type PeriodState,
+  visibleHolds,
+  type HoldRow,
+  type SaleMark,
 } from "./facts";
+import { Horizon } from "./Horizon";
+import { Empty, Section } from "./Section";
+import { horizonFor } from "./timeline";
 import { paymentFact, paymentMethods } from "../sales/facts";
-import { FulfillmentMark, METHOD_ICON, PaymentMark } from "../sales/SaleFacts";
+import { METHOD_ICON } from "../sales/SaleFacts";
+import { ActivityFeed, type FeedItem } from "@/components/parts/Activity";
+import { DetailHero, DetailLayout, HeroTile, PanelGroup, PanelRow, PanelRows } from "@/components/parts/DetailLayout";
+import {
+  CellStack,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { CreditRing, StatusMark, TimeMark } from "@/components/parts/marks";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,80 +65,121 @@ const sendUnlink = (input: Parameters<typeof unlinkMember>[0]["data"]) => unlink
 const sendRenewal = (input: Parameters<typeof renewMembership>[0]["data"]) => renewMembership({ data: input });
 
 const icon = { "aria-hidden": true, focusable: false } as const;
-const statusIcon = { "aria-hidden": true, focusable: false } as const;
 
-/** Lists show this many rows until staff ask for the rest. */
+/** Lists show this many rows until staff choose View all. */
 const RECENT = 5;
+/** Rails returns at most this many sales per request (Staff::SalesController). A full list may be missing older sales. */
+const SALES_LIMIT = 100;
 
 /**
- * One page per member: membership, access, bookings, sales, and activity on
- * the left; the member's properties on the right. Check in and Sell start here.
+ * One page per member (Paper "Member details"): the hero, the Horizon, Holds,
+ * Recent sales, Bookings, and Activity on the left; Contact on the right. Check
+ * in (C) and Sell (S) are in the top bar; the other actions are in its more menu.
+ * It shows only what Rails returns: no tags, phone, home location, notes,
+ * comments, or spent total yet (issue #17).
  */
 export function MemberDetails({ record }: { record: MemberRecord }) {
-  const { member, sales, checkIns } = record;
+  const { member, sales } = record;
   const now = Date.now();
   return (
-    <div className="page member-page member-details">
-      <MemberHeader record={record} />
-      <div className="member-details__membership">
-        <MembershipSection member={member} sales={sales} now={now} />
-      </div>
-      <Properties record={record} />
-      <div className="member-details__rest">
-        <AccessSection member={member} />
-        <BookingsSection bookings={member.bookings} now={now} />
-        <SalesSection sales={sales} memberId={member.id} />
-        <ActivitySection record={{ member, sales, checkIns }} />
-      </div>
-    </div>
+    <DetailLayout record="member" className="member-details" panel={<Contact member={member} />}>
+      <MemberHero record={record} />
+      <MemberActions record={record} />
+      <HorizonSection member={member} sales={sales} now={now} />
+      <Holds member={member} sales={sales} now={now} />
+      <RecentSales sales={sales} memberId={member.id} />
+      <Bookings bookings={member.bookings} now={now} />
+      <Activity record={record} />
+    </DetailLayout>
   );
 }
 
-/* ---------- Header and actions ---------- */
+/* ---------- Hero ---------- */
 
-function MemberHeader({ record }: { record: MemberRecord }) {
-  const { member, sales, checkIns } = record;
+/** "Nov 2026", in the organization's time zone. */
+function useMonthYear() {
+  const { timezone } = useOrganization();
+  return (iso: string) => new Intl.DateTimeFormat("en-MY", { timeZone: timezone, month: "short", year: "numeric" }).format(new Date(iso));
+}
+
+/**
+ * The tile, the name, "Member since Nov 2026", and two stats from the member's
+ * sales: what they paid (less refunds) and what is still due. Rails has no
+ * spent total, so with 100 sales, the most it returns, the stats stay out.
+ */
+function MemberHero({ record }: { record: MemberRecord }) {
+  const { member, sales } = record;
+  const organization = useOrganization();
+  const monthYear = useMonthYear();
+  const paid = totalPaid(sales);
+  const due = balanceDue(sales);
+  const zero = formatMoney(0, organization.currency);
+  return (
+    <DetailHero
+      tile={<HeroTile initials={initials(member.name)} />}
+      title={member.name}
+      line={
+        <>
+          Member since{" "}
+          <time dateTime={member.created_at} suppressHydrationWarning>
+            {monthYear(member.created_at)}
+          </time>
+        </>
+      }
+      stats={
+        sales.length >= SALES_LIMIT
+          ? undefined
+          : [
+              { value: paid.length ? paid.join(" + ") : zero, label: "paid" },
+              { value: due.length ? due.join(" + ") : zero, label: "balance due" },
+            ]
+      }
+    />
+  );
+}
+
+/* ---------- Top bar actions ---------- */
+
+/**
+ * Check in (C, needs check_ins:create), Sell (S, needs purchases:create), and
+ * the more menu: Renew (purchases:create, when Rails offers renewal terms) and
+ * the gym site sign-in (members:link). Rails checks every request again.
+ */
+function MemberActions({ record }: { record: MemberRecord }) {
+  const { member } = record;
   const organization = useOrganization();
   const can = useCan();
   const navigate = useNavigate();
+  const router = useRouter();
+  const toast = useToast();
   const [renewing, setRenewing] = useState(false);
+  const [unlinking, setUnlinking] = useState(false);
+  const [code, setCode] = useState<Schemas["MemberLinkCode"] | null>(null);
+  const issue = useAction(sendLinkCode);
+  const unlink = useAction(sendUnlink);
   // C checks the member in at the top bar location: a toast, or the denial dialog.
   const flow = useCheckIn({ record });
   const canCheckIn = can("check_ins:create");
+  const canSell = can("purchases:create");
+  const canRenew = member.renewal !== null && canSell;
+  const canLink = can("members:link");
+  const linked = member.linked_email;
   const checkIn = () => {
     if (!flow.pending) void flow.checkIn(member);
   };
-  const due = balanceDue(sales);
-  const lastVisit = checkIns.find((checkIn) => checkIn.result === "granted");
-  const canRenew = member.renewal !== null && can("purchases:create");
-
   const sell = () =>
     void navigate({ to: "/$org/sales/new", params: { org: organization.slug }, search: { member: member.id } });
   useShortcut("c", checkIn, { enabled: canCheckIn });
-  useShortcut("s", sell);
+  useShortcut("s", sell, { enabled: canSell });
+
+  async function createCode() {
+    const result = await issue.run({ slug: organization.slug, id: member.id });
+    if (result.ok) setCode(result.data);
+    else toast.show({ tone: "error", title: "No code was created", body: failureMessage(result.error) });
+  }
 
   return (
-    <header className="member-head">
-      <span className="member-head__avatar" aria-hidden="true">
-        {initials(member.name)}
-      </span>
-      <div className="member-head__text">
-        <h1>{member.name}</h1>
-        <p className="member-head__meta">
-          {lastVisit ? (
-            <>
-              Last visit{" "}
-              <time dateTime={lastVisit.checked_in_at} suppressHydrationWarning>
-                {formatWhen(lastVisit.checked_in_at, organization.timezone)}
-              </time>
-            </>
-          ) : (
-            "No visits yet"
-          )}
-          {" · "}
-          {due.length ? <span className="member-head__due">{due.join(" + ")} due</span> : "No balance due"}
-        </p>
-      </div>
+    <>
       <PageActions>
         {canCheckIn ? (
           <Button
@@ -138,26 +195,42 @@ function MemberHeader({ record }: { record: MemberRecord }) {
             <Kbd>C</Kbd>
           </Button>
         ) : null}
-        <Link
-          to="/$org/sales/new"
-          params={{ org: organization.slug }}
-          search={{ member: member.id }}
-          className={buttonVariants({ variant: "secondary", size: "compact" })}
-          aria-keyshortcuts="S"
-        >
-          Sell
-          <Kbd>S</Kbd>
-        </Link>
-        {canRenew ? (
+        {canSell ? (
+          <Link
+            to="/$org/sales/new"
+            params={{ org: organization.slug }}
+            search={{ member: member.id }}
+            className={buttonVariants({ size: "compact" })}
+            aria-keyshortcuts="S"
+          >
+            Sell
+            <Kbd>S</Kbd>
+          </Link>
+        ) : null}
+        {canRenew || canLink ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="More actions">
               <Icon name="more" {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setRenewing(true)}>
-                <Icon name="sort" {...statusIcon} />
-                Renew membership…
-              </DropdownMenuItem>
+              {canRenew ? (
+                <DropdownMenuItem onClick={() => setRenewing(true)}>
+                  <Icon name="sort" {...icon} />
+                  Renew membership…
+                </DropdownMenuItem>
+              ) : null}
+              {canLink && linked ? (
+                <DropdownMenuItem onClick={() => setUnlinking(true)}>
+                  <Icon name="profile" {...icon} />
+                  Unlink sign-in…
+                </DropdownMenuItem>
+              ) : null}
+              {canLink && !linked ? (
+                <DropdownMenuItem disabled={issue.pending} onClick={() => void createCode()}>
+                  <Icon name="profile" {...icon} />
+                  Create link code
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
@@ -166,7 +239,54 @@ function MemberHeader({ record }: { record: MemberRecord }) {
       {member.renewal && canRenew ? (
         <RenewDialog member={member} renewal={member.renewal} open={renewing} onClose={() => setRenewing(false)} />
       ) : null}
-    </header>
+      {code && !linked ? <LinkCodeDialog member={member} code={code} onClose={() => setCode(null)} /> : null}
+      <ConfirmDialog
+        open={unlinking}
+        tone="critical"
+        title={`Unlink ${member.name}'s sign-in?`}
+        confirmLabel="Unlink"
+        pendingLabel="Unlinking…"
+        pending={unlink.pending}
+        onConfirm={async () => {
+          const result = await unlink.run({ slug: organization.slug, id: member.id });
+          setUnlinking(false);
+          if (result.ok) {
+            toast.show({ tone: "success", title: "Sign-in unlinked", body: "The member record and its history stay." });
+            void router.invalidate();
+          } else {
+            toast.show({ tone: "error", title: "The sign-in was not unlinked", body: failureMessage(result.error) });
+          }
+        }}
+        onCancel={() => setUnlinking(false)}
+      >
+        <p>They can no longer see this membership on the gym site until they link again with a new code.</p>
+      </ConfirmDialog>
+    </>
+  );
+}
+
+/** Rails shows a link code once. This dialog keeps it on screen until staff close it. */
+function LinkCodeDialog({ member, code, onClose }: { member: Schemas["MemberDetail"]; code: Schemas["MemberLinkCode"]; onClose: () => void }) {
+  const organization = useOrganization();
+  return (
+    <Dialog open onOpenChange={(open) => (open ? undefined : onClose())}>
+      <DialogContent>
+        <DialogBody>
+          <DialogTitle>Link code for {member.name}</DialogTitle>
+          <DialogDescription>
+            <p role="status">
+              Give {member.name} this code: <strong className="link-code">{code.code}</strong>. It works once, until{" "}
+              {formatDate(code.expires_at, organization.timezone)}. They enter it after signing in on the gym site.
+            </p>
+          </DialogDescription>
+        </DialogBody>
+        <DialogFooter>
+          <Button type="button" onClick={onClose}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -229,441 +349,267 @@ export function RenewDialog({
 
 /* ---------- Sections ---------- */
 
-/** A list section: a grey band with an icon, a title, and a count, then rows. */
-function Section({
-  id,
-  title,
-  icon: iconName,
-  count,
-  children,
-}: {
-  id: string;
-  title: string;
-  icon: IconName;
-  count?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="mx-section" aria-labelledby={`${id}-title`}>
-      <div className="mx-section__head">
-        <Icon name={iconName} {...icon} />
-        <h2 id={`${id}-title`}>{title}</h2>
-        {count ? <span className="mx-section__count">{count}</span> : null}
-      </div>
-      {children}
-    </section>
-  );
-}
+const HOLD_COLUMNS: ListColumn[] = [
+  { id: "hold", label: "Hold" },
+  { id: "status", label: "Status", width: "200px", align: "end" },
+];
 
-/** "Show all 11 sales" under a list. It shows the rest in place. */
-function ShowMore({ shown, total, noun, expanded, onToggle }: { shown: number; total: number; noun: string; expanded: boolean; onToggle: () => void }) {
-  if (total <= shown && !expanded) return null;
-  return (
-    <button type="button" className="mx-more" aria-expanded={expanded} onClick={onToggle}>
-      {expanded ? "Show fewer" : `Show all ${total} ${noun}`}
-      <Icon name="chevronDown" className="mx-more__icon" {...icon} />
-    </button>
-  );
-}
-
-/** A 16px ring that fills with the share of the period left. Colour marks the state; the text says it. */
-function PeriodMark({ state, left }: { state: PeriodState; left: number }) {
-  const r = 4.5;
-  const angle = Math.min(Math.max(left, 0), 0.9999) * 2 * Math.PI;
-  const x = 8 + r * Math.sin(angle);
-  const y = 8 - r * Math.cos(angle);
-  const large = angle > Math.PI ? 1 : 0;
-  return (
-    <svg className="period-mark" data-state={state} width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray={state === "upcoming" ? "2.2 2" : undefined} />
-      {state === "current" && left > 0 ? <path d={`M8 8 L8 3.5 A${r} ${r} 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`} fill="currentColor" /> : null}
-      {state === "revoked" ? <path d="M4.5 11.5 11.5 4.5" stroke="currentColor" strokeWidth="1.5" /> : null}
-    </svg>
-  );
-}
-
-function MembershipSection({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
-  const organization = useOrganization();
-  const shortDate = useShortDate();
-  const [all, setAll] = useState(false);
-  const periods = member.membership?.periods ?? [];
-  const { active, rest } = orderPeriods(periods, now);
-  // Show what covers now or starts later. With none, show the latest period.
-  const shown = all ? [...active, ...rest] : active.length ? active : rest.slice(0, 1);
+/** The Horizon, when the member has a booking, a period, or a pass in its window. */
+function HorizonSection({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
   const productName = (saleId: string) => sales.find((sale) => sale.id === saleId)?.line_item.product_name ?? "Membership period";
-
-  return (
-    <Section id="membership" title="Membership" icon="membership" count={periods.length ? `${active.length} active of ${periods.length}` : undefined}>
-      {periods.length ? (
-        <>
-          <ul className="mx-rows">
-            {shown.map((period) => {
-              const { state, left } = periodState(period, now);
-              return (
-                <li key={period.id} className="mx-row mx-row--tall">
-                  <div className="mx-row__main">
-                    <Link className="mx-row__title" to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: period.sale_id }}>
-                      {productName(period.sale_id)}
-                    </Link>
-                    <span className="mx-row__sub" suppressHydrationWarning>
-                      {shortDate(period.starts_at)} – {shortDate(period.ends_at)}
-                    </span>
-                  </div>
-                  <span className="mx-status" suppressHydrationWarning>
-                    <PeriodMark state={state} left={left} />
-                    {periodText(period, now, shortDate)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          <ShowMore shown={shown.length} total={periods.length} noun="periods" expanded={all} onToggle={() => setAll(!all)} />
-        </>
-      ) : (
-        <p className="mx-empty">No membership yet. The first fulfilled membership sale starts one.</p>
-      )}
-    </Section>
-  );
+  const horizon = horizonFor(member, productName, now);
+  // Today alone says nothing.
+  if (horizon.events.length < 2) return null;
+  return <Horizon horizon={horizon} />;
 }
 
-/** Rights to enter or book, from fulfilled memberships and passes. Ticket rights show on their booking. */
-function AccessSection({ member }: { member: Schemas["MemberDetail"] }) {
+function HoldStatusMark({ status }: { status: HoldRow["status"] }) {
+  if (status.kind === "credit") return <CreditRing left={status.left} total={status.total} />;
+  if (status.kind === "time") {
+    return (
+      <TimeMark fraction={status.fraction} tone={status.tone}>
+        <span suppressHydrationWarning>{status.text}</span>
+      </TimeMark>
+    );
+  }
+  return <span className="cell-muted">{status.text}</span>;
+}
+
+/** One row per membership period and access right, with Rails dates and counts. */
+function Holds({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
+  const organization = useOrganization();
   const locationName = useLocationName();
   const shortDate = useShortDate();
-  const rights = member.entitlements.filter((right) => right.occurrence_id === null);
-  const active = rights.filter((right) => right.active).length;
-
+  const [all, setAll] = useState(false);
+  const rows = holdRows(member, sales, now, shortDate, locationName);
+  const shown = all ? rows : visibleHolds(rows);
   return (
-    <Section id="access" title="Access" icon="pass" count={rights.length ? `${active} active of ${rights.length}` : undefined}>
-      {rights.length ? (
-        <ul className="mx-rows">
-          {rights.map((right) => {
-            const unit = right.kind === "gym_access" ? "visits" : "bookings";
-            return (
-              <li key={right.id} className="mx-row mx-row--tall">
-                <div className="mx-row__main">
-                  <span className="mx-row__title">{right.name}</span>
-                  <span className="mx-row__sub" suppressHydrationWarning>
-                    {shortDate(right.starts_at)} – {shortDate(right.ends_at)} · {locationName(right.location_id)}
-                  </span>
-                </div>
-                {!right.active ? (
-                  <span className="mx-status" suppressHydrationWarning>
-                    <PeriodMark state="upcoming" left={1} />
-                    Starts {shortDate(right.starts_at)}
-                  </span>
-                ) : right.usage_limit !== null && right.remaining !== null ? (
-                  <span className="mx-usage" data-empty={right.remaining === 0 || undefined}>
-                    <span
-                      className="mx-usage__track"
-                      role="meter"
-                      aria-valuemin={0}
-                      aria-valuemax={right.usage_limit}
-                      aria-valuenow={right.remaining}
-                      aria-label={`${right.name}: ${unit} left`}
-                    >
-                      <span
-                        className="mx-usage__fill"
-                        style={{ transform: `scaleX(${right.usage_limit ? right.remaining / right.usage_limit : 0})` }}
-                      />
-                    </span>
-                    <span className="mx-usage__text">
-                      {right.remaining} of {right.usage_limit} left
-                    </span>
-                  </span>
-                ) : (
-                  <span className="mx-usage__text">{formatBenefitUsage(right)}</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+    <Section id="holds" title="Holds" more={rows.length > shown.length || all ? { open: all, onToggle: () => setAll(!all) } : null}>
+      {rows.length ? (
+        <ListTable label="Holds" density="two-line" className="list-table--bare" columns={HOLD_COLUMNS}>
+          <ListTableBody>
+            {shown.map((row) => (
+              <ListTableRow key={row.id}>
+                <ListTableCell>
+                  <CellStack
+                    title={
+                      row.saleId ? (
+                        <Link to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: row.saleId }} className="list-table__link">
+                          {row.title}
+                        </Link>
+                      ) : (
+                        row.title
+                      )
+                    }
+                    sub={<span suppressHydrationWarning>{row.sub}</span>}
+                  />
+                </ListTableCell>
+                <ListTableCell align="end" className="member-status">
+                  <HoldStatusMark status={row.status} />
+                </ListTableCell>
+              </ListTableRow>
+            ))}
+          </ListTableBody>
+        </ListTable>
       ) : (
-        <p className="mx-empty">No access rights. A fulfilled membership or pass adds them.</p>
+        <Empty>No membership or pass yet. The first fulfilled sale of one starts it.</Empty>
       )}
     </Section>
   );
 }
 
-function BookingsSection({ bookings, now }: { bookings: Schemas["Booking"][]; now: number }) {
+const SALE_COLUMNS: ListColumn[] = [
+  { id: "sale", label: "Sale" },
+  { id: "payment", label: "Payment", width: "104px" },
+  { id: "fulfillment", label: "Fulfillment", width: "120px" },
+  { id: "method", label: "Method", width: "120px" },
+  { id: "amount", label: "Amount", width: "104px", align: "end" },
+];
+
+function MarkOf({ mark }: { mark: SaleMark }) {
+  return (
+    <StatusMark kind={mark.kind} tone={mark.tone}>
+      {mark.label}
+    </StatusMark>
+  );
+}
+
+/** The latest sales: product and date, payment and fulfillment as separate marks, method, amount. */
+function RecentSales({ sales, memberId }: { sales: Schemas["Sale"][]; memberId: string }) {
   const organization = useOrganization();
+  const can = useCan();
+  const shortDate = useShortDate();
+  const [all, setAll] = useState(false);
+  const shown = all ? sales : sales.slice(0, RECENT);
+  return (
+    <Section id="sales" title="Recent sales" more={sales.length > RECENT ? { open: all, onToggle: () => setAll(!all) } : null}>
+      {sales.length ? (
+        <ListTable label="Recent sales" density="two-line" className="list-table--bare member-sales" columns={SALE_COLUMNS}>
+          <ListTableBody>
+            {shown.map((sale) => {
+              const marks = saleMarks(sale);
+              const methods = paymentMethods(sale);
+              const methodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
+              const payment = paymentFact(sale);
+              return (
+                <ListTableRow key={sale.id}>
+                  <ListTableCell>
+                    <CellStack
+                      title={
+                        <Link to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: sale.id }} className="list-table__link">
+                          {sale.line_item.product_name}
+                        </Link>
+                      }
+                      sub={<span suppressHydrationWarning>Sold {shortDate(sale.purchased_at)}</span>}
+                    />
+                  </ListTableCell>
+                  <ListTableCell className="member-sales__payment">
+                    <MarkOf mark={marks.payment} />
+                  </ListTableCell>
+                  <ListTableCell className="member-sales__fulfillment">
+                    <MarkOf mark={marks.fulfillment} />
+                  </ListTableCell>
+                  <ListTableCell className="cell-muted member-sales__method">
+                    <span className="member-method">
+                      {methodIcon ? <Icon name={methodIcon} size={14} {...icon} /> : null}
+                      {methods ?? "—"}
+                    </span>
+                  </ListTableCell>
+                  <ListTableCell align="end" className="member-sales__amount">
+                    <span className="member-amount">
+                      <span className="cell-figure">{formatMoney(sale.total_minor, sale.currency)}</span>
+                      {!sale.voided_at && sale.balance_minor > 0 ? (
+                        <span className="member-amount__note" data-state={payment.state}>
+                          {formatMoney(sale.balance_minor, sale.currency)} due
+                        </span>
+                      ) : sale.refunded_minor > 0 ? (
+                        <span className="member-amount__note">{formatMoney(sale.refunded_minor, sale.currency)} refunded</span>
+                      ) : null}
+                    </span>
+                  </ListTableCell>
+                </ListTableRow>
+              );
+            })}
+          </ListTableBody>
+        </ListTable>
+      ) : (
+        <Empty>
+          No sales yet.
+          {can("purchases:create") ? (
+            <>
+              {" "}
+              <Link to="/$org/sales/new" params={{ org: organization.slug }} search={{ member: memberId }}>
+                Sell a membership or pass
+              </Link>
+              .
+            </>
+          ) : null}
+        </Empty>
+      )}
+    </Section>
+  );
+}
+
+const BOOKING_COLUMNS: ListColumn[] = [
+  { id: "booking", label: "Booking" },
+  { id: "right", label: "Right used", width: "240px" },
+  { id: "when", label: "When", width: "104px", align: "end" },
+];
+
+/** "Thu 5 Nov, 7:00 am – 8:00 am", in the organization's time zone. */
+function useBookingTime() {
+  const { timezone } = useOrganization();
+  const day = new Intl.DateTimeFormat("en-MY", { timeZone: timezone, weekday: "short", day: "numeric", month: "short" });
+  return (booking: Schemas["Booking"]) =>
+    `${day.format(new Date(booking.starts_at))}, ${formatTime(booking.starts_at, timezone)} – ${formatTime(booking.ends_at, timezone)}`;
+}
+
+function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: number }) {
+  const organization = useOrganization();
+  const bookingTime = useBookingTime();
   const [all, setAll] = useState(false);
   const upcoming = bookings.filter((booking) => isUpcoming(booking, now));
   const earlier = bookings.filter((booking) => !isUpcoming(booking, now));
-  const shown = all ? bookings : upcoming.length ? upcoming.slice(0, RECENT) : earlier.slice(0, 3);
-
+  const initial = upcoming.length ? upcoming.slice(0, RECENT) : earlier.slice(0, 3);
+  const shown = all ? bookings : initial;
   return (
-    <Section id="bookings" title="Bookings" icon="schedule" count={bookings.length ? `${upcoming.length} upcoming` : undefined}>
+    <Section id="bookings" title="Bookings" more={bookings.length > initial.length ? { open: all, onToggle: () => setAll(!all) } : null}>
       {bookings.length ? (
-        <>
-          <ul className="mx-rows">
+        <ListTable label="Bookings" density="two-line" className="list-table--bare member-bookings" columns={BOOKING_COLUMNS}>
+          <ListTableBody>
             {shown.map((booking) => (
-              <li key={booking.id} className="mx-row mx-row--tall mx-booking">
-                <div className="mx-row__main">
-                  <Link
-                    className="mx-row__title"
-                    to="/$org/schedule/$occurrenceId"
-                    params={{ org: organization.slug, occurrenceId: booking.occurrence_id }}
-                  >
-                    {booking.program.name}
-                  </Link>
-                  <time className="mx-row__sub" dateTime={booking.starts_at} suppressHydrationWarning>
-                    {formatWhen(booking.starts_at, organization.timezone)}
-                  </time>
-                </div>
-                <span className="mx-booking__right">
-                  {booking.source === "ticket" ? "Ticket" : booking.entitlement ? `Uses ${booking.entitlement.name}` : "Held for payment"}
-                </span>
-                <span className="mx-booking__when" suppressHydrationWarning>
-                  {isUpcoming(booking, now) ? `In ${formatSpan(Date.parse(booking.starts_at) - now)}` : BOOKING_STATUS_LABEL[booking.status]}
-                </span>
-              </li>
+              <ListTableRow key={booking.id}>
+                <ListTableCell>
+                  <CellStack
+                    title={
+                      <Link
+                        to="/$org/schedule/$occurrenceId"
+                        params={{ org: organization.slug, occurrenceId: booking.occurrence_id }}
+                        className="list-table__link"
+                      >
+                        {booking.program.name}
+                      </Link>
+                    }
+                    sub={
+                      <time dateTime={booking.starts_at} suppressHydrationWarning>
+                        {bookingTime(booking)}
+                      </time>
+                    }
+                  />
+                </ListTableCell>
+                <ListTableCell className="cell-muted member-bookings__right">
+                  <span className="member-bookings__text">
+                    {booking.source === "ticket" ? "Ticket" : booking.entitlement ? `Uses ${booking.entitlement.name}` : "Held for payment"}
+                  </span>
+                </ListTableCell>
+                <ListTableCell align="end" className="cell-figure member-bookings__when">
+                  <span suppressHydrationWarning>
+                    {isUpcoming(booking, now) ? `In ${formatSpan(Date.parse(booking.starts_at) - now)}` : BOOKING_STATUS_LABEL[booking.status]}
+                  </span>
+                </ListTableCell>
+              </ListTableRow>
             ))}
-          </ul>
-          <ShowMore shown={shown.length} total={bookings.length} noun="bookings" expanded={all} onToggle={() => setAll(!all)} />
-        </>
+          </ListTableBody>
+        </ListTable>
       ) : (
-        <p className="mx-empty">
+        <Empty>
           No bookings yet. Book from a session on the{" "}
           <Link to="/$org/schedule" params={{ org: organization.slug }}>
             schedule
           </Link>
           .
-        </p>
+        </Empty>
       )}
     </Section>
   );
 }
 
-function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId: string }) {
-  const organization = useOrganization();
-  const shortDate = useShortDate();
-  const [all, setAll] = useState(false);
-  const shown = all ? sales : sales.slice(0, RECENT);
-
-  return (
-    <Section
-      id="sales"
-      title="Sales"
-      icon="sales"
-      count={sales.length ? (sales.length > RECENT && !all ? `Recent ${RECENT} of ${sales.length}` : `${sales.length}`) : undefined}
-    >
-      {sales.length ? (
-        <>
-          <ul className="mx-rows mx-sales">
-            {shown.map((sale) => {
-              const methods = paymentMethods(sale);
-              const methodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
-              const payment = paymentFact(sale);
-              return (
-                <li key={sale.id}>
-                  <Link className="mx-sale" to="/$org/sales/$saleId" params={{ org: organization.slug, saleId: sale.id }}>
-                    <span className="mx-row__main">
-                      <span className="mx-row__title">{sale.line_item.product_name}</span>
-                      <span className="mx-row__sub" suppressHydrationWarning>
-                        Sold on {shortDate(sale.purchased_at)}
-                      </span>
-                    </span>
-                    <PaymentMark sale={sale} className="mx-sale__payment" />
-                    <FulfillmentMark sale={sale} className="mx-sale__fulfillment" />
-                    <span className="mx-fact mx-sale__method">
-                      {methodIcon ? <Icon name={methodIcon} {...statusIcon} /> : null}
-                      {methods ?? "—"}
-                    </span>
-                    <span className="mx-sale__amount">
-                      <span className="mx-sale__total">{formatMoney(sale.total_minor, sale.currency)}</span>
-                      {!sale.voided_at && sale.balance_minor > 0 ? (
-                        <span className="mx-sale__due" data-state={payment.state}>
-                          {formatMoney(sale.balance_minor, sale.currency)} due
-                        </span>
-                      ) : sale.refunded_minor > 0 ? (
-                        <span className="mx-sale__refunded">{formatMoney(sale.refunded_minor, sale.currency)} refunded</span>
-                      ) : null}
-                    </span>
-                    <Icon name="chevronRight" className="mx-sale__chevron" {...icon} />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-          <ShowMore shown={shown.length} total={sales.length} noun="sales" expanded={all} onToggle={() => setAll(!all)} />
-        </>
-      ) : (
-        <p className="mx-empty">
-          No sales yet.{" "}
-          <Link to="/$org/sales/new" params={{ org: organization.slug }} search={{ member: memberId }}>
-            Sell a membership or pass
-          </Link>
-          .
-        </p>
-      )}
-    </Section>
-  );
-}
-
-function ActivitySection({ record }: { record: MemberRecord }) {
+/** Check-ins, sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
+function Activity({ record }: { record: MemberRecord }) {
   const organization = useOrganization();
   const locationName = useLocationName();
-  const [all, setAll] = useState(false);
-  const events = memberActivity(record, locationName);
-  const shown: ActivityEvent[] = all ? events : events.slice(0, RECENT);
-  const earlier = events.length - RECENT;
-
-  return (
-    <section className="mx-section mx-activity" aria-labelledby="activity-title">
-      <div className="mx-activity__head">
-        <Icon name="activity" {...icon} />
-        <h2 id="activity-title">Activity</h2>
-      </div>
-      <ol className="mx-feed">
-        {shown.map((event) => (
-          <li key={event.id} className="mx-feed__item">
-            <span className="mx-feed__dot" data-tone={event.tone} aria-hidden="true" />
-            <span className="mx-feed__text">{event.text}</span>
-            <time className="mx-feed__when" dateTime={event.at} suppressHydrationWarning>
-              {formatWhen(event.at, organization.timezone)}
-            </time>
-          </li>
-        ))}
-      </ol>
-      {earlier > 0 ? (
-        <button type="button" className="mx-more mx-more--center" aria-expanded={all} onClick={() => setAll(!all)}>
-          {all ? "Show fewer events" : `Show ${earlier} earlier ${earlier === 1 ? "event" : "events"}`}
-          <Icon name="chevronDown" className="mx-more__icon" {...icon} />
-        </button>
-      ) : null}
-    </section>
+  const items = memberActivity(record, locationName).map(
+    (event): FeedItem => ({ kind: "event", id: event.id, tone: event.tone, time: formatWhen(event.at, organization.timezone), children: event.text }),
   );
+  return <ActivityFeed items={items} visible={RECENT} />;
 }
 
-/* ---------- Properties ---------- */
+/* ---------- Contact ---------- */
 
-function Property({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="mx-prop">
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
-
-function Properties({ record }: { record: MemberRecord }) {
-  const { member, sales } = record;
-  const organization = useOrganization();
-  const paid = totalPaid(sales);
-  return (
-    <aside className="mx-props" aria-label="Member properties">
-      <section className="mx-props__group" aria-labelledby="props-contact">
-        <h2 id="props-contact">Contact</h2>
-        <dl>
-          <Property label="Email">
-            <span className="mx-value">
-              <Icon name="send" {...statusIcon} />
-              <a href={`mailto:${member.email}`}>{member.email}</a>
-            </span>
-          </Property>
-          <Property label="Gym site">
-            <SignInValue member={member} />
-          </Property>
-        </dl>
-      </section>
-      <section className="mx-props__group" aria-labelledby="props-lifetime">
-        <h2 id="props-lifetime">Lifetime</h2>
-        <dl>
-          <Property label="Member since">
-            <span className="mx-value">
-              <time dateTime={member.created_at} suppressHydrationWarning>
-                {formatDate(member.created_at, organization.timezone)}
-              </time>
-            </span>
-          </Property>
-          <Property label="Total paid">
-            <span className="mx-value">{paid.length ? paid.join(" + ") : formatMoney(0, organization.currency)}</span>
-          </Property>
-        </dl>
-      </section>
-    </aside>
-  );
-}
-
-/**
- * The member's link to a gym site sign-in. Staff with members:link click the
- * value to create a one-time code or to unlink. Rails shows the code once.
- */
-function SignInValue({ member }: { member: Schemas["MemberDetail"] }) {
-  const organization = useOrganization();
-  const router = useRouter();
-  const toast = useToast();
-  const can = useCan();
-  const issue = useAction(sendLinkCode);
-  const unlink = useAction(sendUnlink);
-  const [code, setCode] = useState<Schemas["MemberLinkCode"] | null>(null);
-  const [confirming, setConfirming] = useState(false);
-  const allowed = can("members:link");
+/** The right panel: the email and the gym site link state. Rails has no phone, emergency contact, tags, home location, or notes yet. */
+function Contact({ member }: { member: Schemas["MemberDetail"] }) {
   const linked = member.linked_email;
-  const value = (
-    <>
-      {linked ? <Icon name="profile" {...statusIcon} /> : <Icon name="profile" {...statusIcon} />}
-      <span className="mx-value__text">{linked ? `Linked · ${linked}` : "Not linked"}</span>
-    </>
-  );
-
-  if (!allowed) return <span className="mx-value">{value}</span>;
-
-  async function createCode() {
-    const result = await issue.run({ slug: organization.slug, id: member.id });
-    if (result.ok) setCode(result.data);
-    else toast.show({ tone: "error", title: "No code was created", body: failureMessage(result.error) });
-  }
-
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="mx-value mx-value--edit" aria-label={`Gym site sign-in: ${linked ? `linked to ${linked}` : "not linked"}. Change`}>
-          {value}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {linked ? (
-            <DropdownMenuItem onClick={() => setConfirming(true)}>
-              <Icon name="profile" {...statusIcon} />
-              Unlink sign-in…
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem disabled={issue.pending} onClick={() => void createCode()}>
-              <Icon name="profile" {...statusIcon} />
-              Create link code
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {code && !linked ? (
-        <p className="mx-code" role="status">
-          Give {member.name} this code: <strong className="mx-code__value">{code.code}</strong>. It works once, until{" "}
-          {formatDate(code.expires_at, organization.timezone)}. They enter it after signing in on the gym site.
-        </p>
-      ) : null}
-      <ConfirmDialog
-        open={confirming}
-        tone="critical"
-        title={`Unlink ${member.name}'s sign-in?`}
-        confirmLabel="Unlink"
-        pendingLabel="Unlinking…"
-        pending={unlink.pending}
-        onConfirm={async () => {
-          const result = await unlink.run({ slug: organization.slug, id: member.id });
-          setConfirming(false);
-          if (result.ok) {
-            toast.show({ tone: "success", title: "Sign-in unlinked", body: "The member record and its history stay." });
-            void router.invalidate();
-          } else {
-            toast.show({ tone: "error", title: "The sign-in was not unlinked", body: failureMessage(result.error) });
-          }
-        }}
-        onCancel={() => setConfirming(false)}
-      >
-        <p>They can no longer see this membership on the gym site until they link again with a new code.</p>
-      </ConfirmDialog>
-    </>
+    <PanelGroup title="Contact">
+      <PanelRows>
+        <PanelRow label="Email">
+          <a className="panel-link" href={`mailto:${member.email}`}>
+            {member.email}
+          </a>
+        </PanelRow>
+        <PanelRow label="Gym site">{linked ? `Linked · ${linked}` : "Not linked"}</PanelRow>
+      </PanelRows>
+    </PanelGroup>
   );
 }
 
@@ -672,23 +618,26 @@ function SignInValue({ member }: { member: Schemas["MemberDetail"] }) {
 /** Keeps the page shape while the member loads, so nothing jumps. */
 export function MemberDetailsLoading() {
   return (
-    <div className="page member-page member-details" role="status" aria-busy="true" aria-label="Loading member">
-      <div className="member-head">
-        <span className="member-head__avatar skeleton-block" />
-        <div className="member-head__text">
-          <span className="skeleton-line" style={{ width: 180 }} />
-          <span className="skeleton-line skeleton-line--small" style={{ width: 240 }} />
-        </div>
-      </div>
-      <div className="member-details__membership">
-        {[0, 1].map((index) => (
-          <div key={index} className="mx-section">
-            <div className="mx-section__head" />
-            <span className="skeleton-line" style={{ width: "60%" }} />
-            <span className="skeleton-line skeleton-line--small" style={{ width: "40%" }} />
+    <DetailLayout record="member" className="member-details">
+      <div role="status" aria-busy="true" aria-label="Loading member" className="member-loading">
+        <header className="hero">
+          <span className="tile tile--hero skeleton" />
+          <div className="hero__text">
+            <span className="skeleton member-loading__title" />
+            <span className="skeleton member-loading__line" />
           </div>
+        </header>
+        {["Holds", "Recent sales"].map((title) => (
+          <section key={title} className="member-section">
+            <div className="member-section__head">
+              <h2>{title}</h2>
+            </div>
+            <ListTable label={`${title} (loading)`} density="two-line" className="list-table--bare" columns={HOLD_COLUMNS}>
+              <ListTableLoading rows={2} label={`Loading ${title.toLowerCase()}`} />
+            </ListTable>
+          </section>
         ))}
       </div>
-    </div>
+    </DetailLayout>
   );
 }

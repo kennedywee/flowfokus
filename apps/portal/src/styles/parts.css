@@ -886,6 +886,15 @@
   min-height: 0;
   background: radial-gradient(circle farthest-corner at 50% 0% in oklab, color-mix(in srgb, var(--color-ink) 3%, transparent), transparent);
 }
+/* A record page fills the main column; the layout pads its own sides. */
+.main:has(> .detail) {
+  display: flex;
+  padding-inline: 0;
+  padding-top: 0;
+}
+.main > .detail {
+  flex: 1 1 0;
+}
 .detail__main {
   position: relative;
   display: flex;
