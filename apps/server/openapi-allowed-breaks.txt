@@ -1,0 +1,8 @@
+# Planned breaking API changes. scripts/contract-diff passes these and fails on any other break.
+#
+# One line per break: METHOD, path, and the message oasdiff prints for it. Run
+# `bash scripts/contract-diff origin/master` without this file to see the message.
+# Remove the line when the break has shipped, so the file stays short.
+#
+# Issue #84: Reports left the product. Nothing else calls /staff/report.
+GET /staff/report api path removed without deprecation

@@ -185,10 +185,4 @@ await call('GET', '/staff/members', { token: member, status: 403 })
 await call('GET', '/member/account', { token: owner, status: 403 })
 step('member: one-time code links the sign-in, the account loads, staff and member access stay apart')
 
-// Report
-const report = (await call('GET', '/staff/report?weeks=4', as(owner))).data
-assert.equal(report.weeks.length, 4)
-assert.ok(report.weeks.at(-1).sale_count >= 2, 'This week includes the smoke sales')
-step('report: weekly figures include this run')
-
 console.log('Workflow smoke check passed.')
