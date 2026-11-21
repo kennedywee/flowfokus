@@ -235,13 +235,14 @@
 
 /* Critical: a wash, never solid red. */
 .button--critical {
-  background: var(--color-critical-wash-strong);
+  /* Red text keeps 4.5:1 on both washes, in both themes. */
+  background: var(--color-critical-wash);
   box-shadow: none;
   border-color: var(--color-critical-line-strong);
   color: var(--color-critical);
 }
 .button--critical:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--color-critical-line);
+  background: var(--color-critical-wash-strong);
   border-color: var(--color-critical);
   color: var(--color-critical);
 }
@@ -1973,14 +1974,16 @@ section.table-state {
   --table-state-strong: color-mix(in srgb, var(--color-line) 70%, var(--color-surface));
   --table-state-soft: color-mix(in srgb, var(--color-line) 45%, var(--color-surface));
   --table-state-faint: color-mix(in srgb, var(--color-line) 40%, var(--color-surface));
+  /* An opaque well, so the fade behind the message hides the skeleton lines. */
+  --table-state-fill: color-mix(in srgb, var(--color-ink) 4%, var(--color-surface));
   container: table-state / inline-size;
   position: relative;
   display: grid;
   padding: var(--space-2);
   overflow: hidden;
-  border: 1px solid var(--color-well);
+  border: 1px solid var(--table-state-fill);
   border-radius: 12px;
-  background: var(--color-well);
+  background: var(--table-state-fill);
 }
 .table-state__panel[data-skeleton] {
   height: 360px;
@@ -2067,9 +2070,9 @@ section.table-state {
   padding-block: 0;
   background: radial-gradient(
     ellipse 46% 62% at 50% 50%,
-    var(--color-well) 42%,
-    color-mix(in srgb, var(--color-well) 85%, transparent) 62%,
-    color-mix(in srgb, var(--color-well) 35%, transparent) 82%,
+    var(--table-state-fill) 42%,
+    color-mix(in srgb, var(--table-state-fill) 85%, transparent) 62%,
+    color-mix(in srgb, var(--table-state-fill) 35%, transparent) 82%,
     transparent 100%
   );
 }
@@ -2100,9 +2103,9 @@ section.table-state {
   .table-state__panel[data-skeleton] .table-state__message {
     background: radial-gradient(
       ellipse 85% 46% at 50% 50%,
-      var(--color-well) 50%,
-      color-mix(in srgb, var(--color-well) 85%, transparent) 68%,
-      color-mix(in srgb, var(--color-well) 35%, transparent) 86%,
+      var(--table-state-fill) 50%,
+      color-mix(in srgb, var(--table-state-fill) 85%, transparent) 68%,
+      color-mix(in srgb, var(--table-state-fill) 35%, transparent) 86%,
       transparent 100%
     );
   }

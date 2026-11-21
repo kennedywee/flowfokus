@@ -198,7 +198,7 @@ export function Plate({
   title: string;
   description?: ReactNode;
   action?: ReactNode;
-  /** A Lucide icon element for the tile left of the title, for example `<Icon name="length" />`. */
+  /** An `<Icon>` element for the tile left of the title, for example `<Icon name="length" />`. */
   icon?: ReactNode;
   /** Remove the body padding, for a table or list that runs edge to edge. */
   flush?: boolean;

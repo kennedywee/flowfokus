@@ -541,8 +541,8 @@ tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
 
 - Programs: the title, New program (programs:manage) in the top bar, Filter
   (Kind, Visibility, with counts and chips) and a "/" search over names and
-  hosts. A header band, then 52px rows: the kind tile (two people, ticket,
-  clock), the name with Staff only, kind and length (and the location when
+  hosts. A header band, then 52px rows: the kind tile (the set's groupClass, event,
+  and appointment icons), the name with Staff only, kind and length (and the location when
   there are several), the host with an initial, and the upcoming count. Rails
   returns every program; the list sorts by name, filters, and pages 50 at a
   time in the browser. The URL keeps `kind`, `visibility`, and `q`. Phones

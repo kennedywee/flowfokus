@@ -92,7 +92,7 @@
   --color-critical: light-dark(var(--swatch-c62e28), var(--swatch-f0706a));
   --color-critical-wash: color-mix(in srgb, var(--color-critical) 8%, transparent);
   --color-critical-line: color-mix(in srgb, var(--color-critical) 26%, transparent);
-  --color-critical-wash-strong: color-mix(in srgb, var(--color-critical) 14%, transparent);
+  --color-critical-wash-strong: color-mix(in srgb, var(--color-critical) 12%, transparent);
   --color-critical-line-strong: color-mix(in srgb, var(--color-critical) 42%, transparent);
 
   --color-series-1: var(--swatch-9085e9);

@@ -1,11 +1,11 @@
 import type { Schemas } from "@flowfokus/api";
 import { Icon, type IconName } from "@/components/ui/icon";
 
-/** Paper's kind icons: two people for a group class, a ticket for an event, a clock for an appointment. */
+/** Paper's kind icons: the set's group class, event, and appointment glyphs. */
 export const KIND_ICON: Record<Schemas["ProgramKind"], IconName> = {
-  group_class: "members",
-  event: "pass",
-  appointment: "length",
+  group_class: "groupClass",
+  event: "event",
+  appointment: "appointment",
 };
 
 /** The grey tile before a program's name. `size` is 28 on list rows and 40 on the page head. */

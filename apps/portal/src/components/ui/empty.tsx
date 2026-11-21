@@ -9,7 +9,7 @@ function Empty({ className, ...props }: React.ComponentProps<"div">) {
   return <div data-slot="empty" className={cn("empty", className)} {...props} />
 }
 
-/** The icon above the title. Pass a Lucide icon element. */
+/** The icon above the title. Pass an `<Icon>` element. */
 function EmptyMedia({ className, ...props }: React.ComponentProps<"span">) {
   return <span data-slot="empty-media" aria-hidden="true" className={cn("empty__icon", className)} {...props} />
 }

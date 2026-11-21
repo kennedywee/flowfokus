@@ -150,9 +150,12 @@
   .product-head__sell {
     order: -1;
     border-color: transparent;
-    background: var(--color-ink);
+    background: var(--gradient-primary);
     color: var(--color-on-ink);
     box-shadow: none;
+  }
+  .product-head__sell:hover {
+    background: var(--gradient-primary-hover);
   }
   .product-benefit {
     grid-template-columns: 28px minmax(0, 1fr);
