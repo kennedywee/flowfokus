@@ -300,8 +300,9 @@ export function LoadMore({
 }: {
   /** How many rows are loaded now. A change re-arms the scroll trigger. */
   loaded: number;
-  onLoadMore: () => void;
-  /** True while a request is out. Required: when it ends without new rows, Show more works again. */
+  /** Return the request's promise: when it settles, even with an error, Show more works again. */
+  onLoadMore: () => void | Promise<unknown>;
+  /** True while a request is out. The button is disabled meanwhile. */
   loading: boolean;
   done?: boolean;
   label?: string;
@@ -311,20 +312,29 @@ export function LoadMore({
   latest.current = onLoadMore;
   // `asked`: the scroll trigger already asked for this page. `pending`: a
   // request is out, from the trigger or the button, so neither asks again.
+  // It clears when the request settles, so a failed load frees the button.
   const asked = useRef(false);
   const pending = useRef(false);
-  const wasLoading = useRef(loading);
   // The table to focus when the button, holding focus, goes away at the end.
   const focusTable = useRef<HTMLElement | null>(null);
   useEffect(() => {
     asked.current = false;
     pending.current = false;
   }, [loaded]);
-  useEffect(() => {
-    // A request that ends without new rows (it failed) frees the button again.
-    if (wasLoading.current && !loading) pending.current = false;
-    wasLoading.current = loading;
-  }, [loading]);
+  const ask = (load: () => void | Promise<unknown>) => {
+    pending.current = true;
+    try {
+      // The caller shows its own error; here a settled request only frees the button.
+      Promise.resolve(load())
+        .finally(() => {
+          pending.current = false;
+        })
+        .catch(() => undefined);
+    } catch (error) {
+      pending.current = false;
+      throw error;
+    }
+  };
   useEffect(() => {
     if (!done || !focusTable.current) return;
     const table = focusTable.current;
@@ -339,8 +349,7 @@ export function LoadMore({
     const observer = new IntersectionObserver((entries) => {
       if (asked.current || pending.current || !entries.some((entry) => entry.isIntersecting)) return;
       asked.current = true;
-      pending.current = true;
-      latest.current();
+      ask(latest.current);
     });
     observer.observe(node);
     return () => observer.disconnect();
@@ -362,8 +371,7 @@ export function LoadMore({
         onClick={() => {
           if (pending.current) return;
           asked.current = true;
-          pending.current = true;
-          onLoadMore();
+          ask(onLoadMore);
         }}
       >
         {loading ? "Loading…" : label}
