@@ -9,7 +9,7 @@
 - Send `Flowfokus-Organization: <slug>` on every `/public/*`, `/staff/*`, and `/member/*` call.
 - Send `Authorization: Bearer <token>` on `/staff/*` and `/member/*`.
 - Send `Content-Type: application/json` on writes. Bodies are flat objects (no `{ member: {...} }` wrapper).
-- Send `Idempotency-Key: <uuid>` on `POST /staff/sales`, `POST /staff/sales/:id/payments`, and `POST /staff/check_ins`. Reuse the same key only to retry the same request.
+- Send `Idempotency-Key: <uuid>` on `POST /staff/sales`, and `POST /staff/sales/:id/payments`. Reuse the same key only to retry the same request.
 - Success: `{ "data": <object or array> }`. Error: `{ "error": { "code", "message", "details"? } }`.
 - Money: integer minor units plus ISO 4217 currency, for example `{ "amount_minor": 12000, "currency": "MYR" }` is RM120.00.
 - Times: UTC ISO 8601. Show them in the organization `timezone`.
@@ -68,8 +68,6 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, Patrick Ng. Irongate has it
 | GET | `/staff/sales/:id` | `purchases:read` | 200 `Sale` | |
 | POST | `/staff/sales/:id/payments` | `payments:create` | 201 `Sale` (200 on replay) | `{ amount_minor, method, reference? }` |
 | POST | `/staff/sales/:id/fulfill` | `purchases:fulfill` | 201 `Sale` (200 if already fulfilled) | none |
-| GET | `/staff/check_ins?member_id=` | `check_ins:read` | 200 `CheckIn[]` (max 100) | |
-| POST | `/staff/check_ins` | `check_ins:create` | 201 `CheckIn` (200 on replay) | `{ member_id, location_id }` |
 | GET | `/member/profile` | member | always fails closed in Sprint 1 | |
 | POST | `/webhooks/workos` | WorkOS signature | 200 `WorkosWebhookReceipt` | a WorkOS event |
 
@@ -99,17 +97,6 @@ Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, Patrick Ng. Irongate has it
   "fulfillment": null                         // or { id, sale_line_item_id, membership_id, membership_period, fulfilled_at }
 }
 
-// CheckIn
-{
-  "id": "uuid",
-  "member": { "id": "uuid", "name": "...", "email": "..." },
-  "location_id": "uuid",
-  "result": "denied",                         // granted | denied
-  "denial_reason": "usage_limit_reached",     // no_entitlement | location_not_allowed | usage_limit_reached | null
-  "entitlement_id": null,
-  "checked_in_at": "..."
-}
-
 // MemberDetail = Member + membership (periods oldest first) + current_period + entitlements
 // Entitlement: { id, kind, name, starts_at, ends_at, location_id|null, usage_limit|null, used_count, remaining|null, active }
 ```
@@ -136,7 +123,7 @@ Body references to another organization's member, price, or location return `422
 - Payments: cash or bank transfer only. Partial payments are allowed. Overpayment gives `422 overpayment`.
 - Fulfill only when `balance_minor` is 0. Fulfillment is idempotent.
 - One membership per member per organization. A new period starts at `max(purchased_at, end of latest period)`. Periods never overlap.
-- Check-in picks an unlimited right first, then the counted right that ends soonest. Denied attempts consume nothing.
+- A booking uses one right that covers the time. Walk-in gym check-in is not in the API (issue #81).
 
 ## WorkOS sync
 

@@ -27,7 +27,7 @@ screen follows the new file as its issue lands. See
 | Home and app chrome, the ten-item sidebar, dark frame. **Home removed 21 Nov 2026.** | Home | `reports/home.md` |
 | Inbox and Agents. **Removed 21 Nov 2026.** | Inbox, Agents | `reports/inbox-agents.md` |
 | Members and Sales states | Members, Member details, New member, Sales, Sale details, New sale | `reports/members-sales.md` |
-| Check-ins. **Page removed 21 Nov 2026.** Check-in stays on the member page and ⌘K. | Check-ins | `reports/check-ins.md` |
+| Check-ins. **Page removed 21 Nov 2026**, and walk-in check-in with it (#81). | Check-ins | `reports/check-ins.md` |
 | Schedule (new page) and sessions | Schedule, Session details | `reports/schedule.md` |
 | Programs | Programs, Program details, New program, Booking rules & settings | `reports/programs.md` |
 | Products, with an "Option B" block for the Rails model | Products | `reports/products.md` |

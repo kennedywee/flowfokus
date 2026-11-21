@@ -45,8 +45,7 @@ Steps:
 - **Switch.** Open the organization combobox in the banner and choose Chainsaw. The URL becomes
   `/chainsaw/schedule`.
 - **Role.** Sign in as `aiman@flowfokus.com`. On `/chainsaw/members` there is no `New member`
-  link. On a member's page the banner has `Check in`. ⌘K offers `Check in` for a member but no
-  `New sale` action.
+  link. On a member's page the banner has no `Sell` button. ⌘K offers no `New sale` action.
 - **Sign out.** Open the account menu in the sidebar and choose the sign-out item. The start page
   shows `Sign in to Flowfokus` again. Opening `/chainsaw/members` asks you to sign in.
 - **Proof.** Screenshots of the emulator pages, Schedule with the organization combobox, and the

@@ -52,7 +52,7 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 
 ## Scope
 
-- Standalone passes, classes, events, reservations, waitlists, recurring billing, and a native mobile app are deferred. So are the Home, Inbox, Agents, Check-ins, and Reports pages. Do not build placeholders for them.
+- Standalone passes, classes, events, reservations, waitlists, recurring billing, walk-in gym check-in, and a native mobile app are deferred. So are the Home, Inbox, Agents, Check-ins, and Reports pages. Do not build placeholders for them.
 
 ## UI design system
 

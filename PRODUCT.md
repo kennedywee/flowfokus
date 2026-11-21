@@ -11,15 +11,15 @@ web
 - **Front-desk staff** (confirmed). They work at a gym's front desk on a laptop or tablet. They create members, sell memberships, record cash or bank-transfer payments, deliver access, and check members in. A customer often waits in front of them, so tasks must be quick and errors must be clear.
 - **Gym owners and managers** (confirmed). They use the same staff portal. They review members, sales that still have a balance, and sales that wait for fulfillment. They have more time but need accurate facts.
 - **The public** (from docs). They visit a gym's site at `<slug>.flowfokus.com` to see the gym's locations and membership offers.
-- **Members** (from docs). They sign in on their gym's site, link their sign-in with a code from the front desk, and see their membership, visits left, and payments.
+- **Members** (from docs). They sign in on their gym's site, link their sign-in with a code from the front desk, and see their membership, rights left, bookings, and payments.
 
 ## Product Purpose
 
-Flowfokus is a membership platform for service businesses, starting with gyms. It records the full Benefit Delivery Cycle: an offer is sold, paid, fulfilled into a membership period with entitlements, and used at check-in. Success in Sprint 1: a developer starts three apps and completes the workflow end to end with real data in PostgreSQL.
+Flowfokus is a membership platform for service businesses, starting with gyms. It records the full Benefit Delivery Cycle: an offer is sold, paid, fulfilled into a membership period with entitlements, and used for bookings. Success in Sprint 1: a developer starts three apps and completes the workflow end to end with real data in PostgreSQL.
 
 ## Positioning
 
-Every right a member uses traces back to a purchase. Sale, payment, fulfillment, and entitlement are separate, recorded facts. A check-in is granted or denied from entitlements, and a denial always has a stated reason. Past sales keep their price and terms.
+Every right a member uses traces back to a purchase. Sale, payment, fulfillment, and entitlement are separate, recorded facts. A booking is granted or refused from entitlements, and a refusal always has a stated reason. Past sales keep their price and terms.
 
 ## Operating Context
 

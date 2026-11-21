@@ -12,7 +12,7 @@ and task-specific skills. This repository implements those layers as follows.
 | Primitives: raw palette | `apps/portal/src/styles/primitives.css` | `apps/site/src/styles/primitives.css` |
 | Foundations: semantic color roles and type, space, radius, motion scales | `apps/portal/src/styles/tokens.css` | `apps/site/src/styles/tokens.css` |
 | Components: small reusable pieces, and the one icon set (`components/ui/icon.tsx`) | `apps/portal/src/components/ui/` and `components/ui.tsx` | CSS patterns in `apps/site/src/styles.css` |
-| Blocks: composed sections | `PageHead`, `Plate`, `StatusMark` with `saleMarks`, `ListToolbar`, `ListPager`, `useCheckIn`, `ConfirmDialog`, and the shared parts in `components/parts/` (list table, filter bar, detail layout, activity, data marks) | Opening, offer board, locations, member account |
+| Blocks: composed sections | `PageHead`, `Plate`, `StatusMark` with `saleMarks`, `ListToolbar`, `ListPager`, `ConfirmDialog`, and the shared parts in `components/parts/` (list table, filter bar, detail layout, activity, data marks) | Opening, offer board, locations, member account |
 | Rules and review skill | Root `AGENTS.md`, app `DESIGN.md`, `.agents/skills/flowfokus-review-screen/SKILL.md` | Same entry points, with the site design file |
 
 ## Reference
@@ -63,10 +63,10 @@ Use `PageHead` for a title and actions. Actions show in the top bar after
 Search, as in the Paper redesign; on phones they stay in the page. Its optional `meta` slot holds record
 metadata, such as a sale date or program location. It has no description prop.
 Show dependent controls when their prerequisite is chosen. Keep labels and
-validation attached to the controls. Show check-in feedback after an attempt;
+validation attached to the controls. Show feedback after an attempt;
 do not fill the idle form with a description of where the result will appear.
 
-Prefer one implementation with one owner. Real views live in `features/check-ins` (the check-in flow), `features/schedule`, `features/programs`, `features/products`,
+Prefer one implementation with one owner. Real views live in `features/schedule`, `features/programs`, `features/products`,
 and `features/settings`. `features/preview` owns simulated
 features only. `components/Filters.tsx` owns selection filters. Keep fetching and mutations at their current request boundaries.
 Feature layout styles live in `styles/features.css`. No new service layer, UI
@@ -82,7 +82,7 @@ Do not promise perfection from a build or a visual inspection alone.
 The current app design files describe the implementation, not a final visual
 choice. The [component lab](explorations/check-in/PLAN.md) explores three new
 directions with Stageshow. Open `explorations/check-in/index.html` to compare
-components and simulated check-in states. No direction has been selected or
+components and simulated states. The lab is a historical exploration of the removed walk-in check-in. No direction has been selected or
 applied to production screens.
 
 ## How to change a screen

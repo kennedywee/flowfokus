@@ -92,7 +92,7 @@ Each fake user has the password `123123qwe`:
 | Aiman | `aiman@flowfokus.com` | Chainsaw | Receptionist |
 
 - Kennedy can use the complete membership sale, payment, access delivery, and
-  check-in workflow. Kennedy is also the fixed demo actor.
+  booking workflow. Kennedy is also the fixed demo actor.
 - Rachel works at both gyms. Use her account to test organization selection and
   switching.
 - Aiman can read members, offers, and sales, and check members in. Aiman cannot
@@ -190,7 +190,7 @@ host-only cookie. The emulator allows `*.localhost` callbacks.
 2. Open `http://chainsaw.localhost:4002/sign-in` and sign in as
    `patrick@example.com` with password `123123qwe`. This user has no staff
    membership.
-3. Enter the code. The account page then shows the membership, rights, visits,
+3. Enter the code. The account page then shows the membership, rights, bookings,
    and purchases that the desk recorded.
 4. **Sign out** ends the session on this gym host only.
 

@@ -78,7 +78,7 @@ The portal builds its components on [ui-sdk](https://ui-sdk.dev) (`@ui-sdk/react
 
 - The browser calls only fixed server functions in `src/lib/staff.functions.ts`. Each one calls one `/staff/*` endpoint through `@flowfokus/api`. There is no general proxy. The browser cannot choose an upstream path, a token, or a `Flowfokus-*` header.
 - Reads are GET. Writes are POST with `application/json`; other methods and content types get `405` or `415`. `createCsrfMiddleware()` rejects cross-site calls.
-- Sales, payments, and check-ins send an `Idempotency-Key`. The form keeps the key for retries and renews it after success or after an edit.
+- Sales and payments send an `Idempotency-Key`. The form keeps the key for retries and renews it after success or after an edit.
 - Every response carries `Cache-Control: private, no-store`, a Content Security Policy with a per-response script nonce, and frame, referrer, and content-type headers.
 
 ## Commands

@@ -72,8 +72,8 @@ const SALES_LIMIT = 100;
 
 /**
  * One page per member (Paper "Member details"): the hero, the Horizon, Holds,
- * Recent sales, Bookings, and Activity on the left; Contact on the right. Check
- * in (C) and Sell (S) are in the top bar; the other actions are in its more menu.
+ * Recent sales, Bookings, and Activity on the left; Contact on the right. Sell
+ * (S) is in the top bar; the other actions are in its more menu.
  * It shows only what Rails returns: no tags, phone, home location, notes,
  * comments, or spent total yet (issue #17).
  */
@@ -559,7 +559,7 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
   );
 }
 
-/** Check-ins, sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
+/** Sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
 function Activity({ record, now }: { record: MemberRecord; now: number }) {
   const organization = useOrganization();
   const locationName = useLocationName();
