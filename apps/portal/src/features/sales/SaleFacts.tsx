@@ -1,27 +1,13 @@
-import { Icon, type IconName } from "@/components/ui/icon";
+import { type IconName } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
-import { fulfillmentFact, paymentFact, type FulfillmentState, type PaymentState } from "./facts";
+import { formatMoney } from "../../lib/format";
+import { paymentFact } from "./facts";
 
 /*
- * Sale facts as a small coloured mark and grey text. Colour marks the state;
- * the text says it. Payment and fulfillment are always two separate marks.
+ * Small pieces the sales screens share. A sale's two facts, payment and
+ * fulfillment, are drawn with `StatusMark` from `components/parts/marks`; the
+ * words come from `paymentFact` and `fulfillmentFact`.
  */
-
-const markProps = { "aria-hidden": true, focusable: false } as const;
-
-const PAYMENT_ICON: Record<PaymentState, IconName> = {
-  paid: "paid",
-  partial: "partlyPaid",
-  unpaid: "payments",
-  void: "close",
-};
-
-const FULFILLMENT_ICON: Record<FulfillmentState, IconName> = {
-  fulfilled: "fulfilled",
-  waiting: "unfulfilled",
-  revoked: "close",
-  none: "unfulfilled",
-};
 
 export const METHOD_ICON: Record<Schemas["PaymentMethod"], IconName> = {
   cash: "cash",
@@ -29,26 +15,24 @@ export const METHOD_ICON: Record<Schemas["PaymentMethod"], IconName> = {
   online: "gymSite",
 };
 
-/** "Paid", "Part paid", "Unpaid", or "Void", with its mark. */
-export function PaymentMark({ sale, className = "" }: { sale: Schemas["Sale"]; className?: string }) {
-  const fact = paymentFact(sale);
-  const iconName = PAYMENT_ICON[fact.state];
+/**
+ * A sale's total, with the balance still due or the amount refunded under it.
+ * A void sale shows its total struck through.
+ */
+export function SaleAmount({ sale }: { sale: Schemas["Sale"] }) {
+  const payment = paymentFact(sale);
   return (
-    <span className={`mx-fact ${className}`} data-state={fact.state}>
-      <Icon name={iconName} {...markProps} />
-      {fact.label}
-    </span>
-  );
-}
-
-/** "Fulfilled", "Unfulfilled", or "Access revoked", with its mark. */
-export function FulfillmentMark({ sale, className = "" }: { sale: Schemas["Sale"]; className?: string }) {
-  const fact = fulfillmentFact(sale);
-  const iconName = FULFILLMENT_ICON[fact.state];
-  return (
-    <span className={`mx-fact ${className}`} data-state={fact.state}>
-      <Icon name={iconName} {...markProps} />
-      {fact.label}
+    <span className="sale-amount">
+      <span className="sale-amount__total" data-void={sale.voided_at ? true : undefined}>
+        {formatMoney(sale.total_minor, sale.currency)}
+      </span>
+      {!sale.voided_at && sale.balance_minor > 0 ? (
+        <span className="sale-amount__note" data-state={payment.state}>
+          {formatMoney(sale.balance_minor, sale.currency)} due
+        </span>
+      ) : sale.refunded_minor > 0 ? (
+        <span className="sale-amount__note">{formatMoney(sale.refunded_minor, sale.currency)} refunded</span>
+      ) : null}
     </span>
   );
 }

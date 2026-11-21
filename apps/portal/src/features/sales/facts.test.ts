@@ -1,15 +1,21 @@
 import { describe, expect, test } from "bun:test";
 import { formatMoney, type Permission, type Schemas } from "@flowfokus/api";
 import {
+  DEFAULT_SALE_COLUMNS,
+  DEFAULT_SALE_SORT,
+  activeFilters,
   factCounts,
   filterFromSearch,
   filterSales,
+  isDefaultDisplay,
   readSalesSearch,
   refundablePayments,
   saleActions,
   saleActivity,
-  salesRange,
+  salesFilterFields,
+  searchFromFilters,
   shortSaleDate,
+  sortSales,
 } from "./facts";
 
 const HOUR = 3_600_000;
@@ -121,9 +127,60 @@ describe("filterSales", () => {
     expect([counts.waiting, counts.fulfilled, counts.none]).toEqual([3, 1, 1]);
   });
 
-  test("the footer counts sales", () => {
-    expect(salesRange(0, 1, 1)).toBe("1 sale");
-    expect(salesRange(50, 50, 212)).toBe("51–100 of 212 sales");
+  test("the filter bar offers Payment and Fulfillment with a count per value", () => {
+    const fields = salesFilterFields(factCounts(all));
+    expect(fields.map((field) => field.key)).toEqual(["payment", "fulfillment"]);
+    expect(fields[0]!.options.map((option) => [option.value, option.count])).toEqual([
+      ["unpaid", 1],
+      ["partial", 1],
+      ["paid", 2],
+      ["void", 1],
+    ]);
+  });
+
+  test("chips round-trip through the URL, payment first", () => {
+    const filter = filterFromSearch({ fulfillment: "waiting", payment: "unpaid,partial" });
+    const chips = activeFilters(filter);
+    expect(chips.map((chip) => [chip.field, chip.values])).toEqual([
+      ["payment", ["unpaid", "partial"]],
+      ["fulfillment", ["waiting"]],
+    ]);
+    expect(searchFromFilters(chips, "mei")).toEqual({ payment: "unpaid,partial", fulfillment: "waiting", q: "mei" });
+    expect(searchFromFilters([], undefined)).toEqual({});
+  });
+
+  test("a chip flipped to 'is not' becomes the values it leaves in", () => {
+    const flipped = [{ field: "payment", values: ["paid"], negated: true }];
+    expect(searchFromFilters(flipped, undefined)).toEqual({ payment: "unpaid,partial,void" });
+    // Every value ruled out leaves a filter that matches nothing, so it is dropped.
+    const none = [{ field: "fulfillment", values: ["waiting", "fulfilled", "revoked"], negated: true }];
+    expect(searchFromFilters(none, undefined)).toEqual({});
+  });
+});
+
+describe("sortSales", () => {
+  const rows = [
+    sale({ id: "a", member: { id: "m1", name: "Zoe", email: "z@x.com" }, total_minor: 100, purchased_at: iso(NOW - 3 * DAY) }),
+    sale({ id: "b", member: { id: "m2", name: "álvaro", email: "a@x.com" }, total_minor: 300, purchased_at: iso(NOW - DAY) }),
+    sale({ id: "c", member: { id: "m3", name: "Bea", email: "b@x.com" }, total_minor: 300, purchased_at: iso(NOW - 2 * DAY) }),
+  ];
+  const ids = (sort: Parameters<typeof sortSales>[1]) => sortSales(rows, sort).map((item) => item.id);
+
+  test("date sorts by the moment of sale, newest first by default", () => {
+    expect(ids(DEFAULT_SALE_SORT)).toEqual(["b", "c", "a"]);
+    expect(ids({ column: "date", direction: "asc" })).toEqual(["a", "c", "b"]);
+  });
+  test("member sorts without regard to case or accents", () => {
+    expect(ids({ column: "member", direction: "asc" })).toEqual(["b", "c", "a"]);
+  });
+  test("amount sorts by total, and a tie keeps the order Rails sent", () => {
+    expect(ids({ column: "amount", direction: "desc" })).toEqual(["b", "c", "a"]);
+    expect(ids({ column: "amount", direction: "asc" })).toEqual(["a", "b", "c"]);
+  });
+  test("reset is inert at the default sort and columns only", () => {
+    expect(isDefaultDisplay(DEFAULT_SALE_SORT, DEFAULT_SALE_COLUMNS)).toBe(true);
+    expect(isDefaultDisplay({ column: "member", direction: "asc" }, DEFAULT_SALE_COLUMNS)).toBe(false);
+    expect(isDefaultDisplay(DEFAULT_SALE_SORT, { ...DEFAULT_SALE_COLUMNS, method: false })).toBe(false);
   });
 });
 

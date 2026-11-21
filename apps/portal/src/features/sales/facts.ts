@@ -1,4 +1,6 @@
 import type { Permission, Schemas } from "@flowfokus/api";
+import type { FilterField } from "@/components/parts/FilterBar";
+import { matchesFilter, type ActiveFilter, type SortState } from "@/lib/list-parts";
 import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_LABEL, formatMoney, formatTime } from "../../lib/format";
 
 /*
@@ -132,11 +134,79 @@ export function factCounts(sales: Schemas["Sale"][]): Record<PaymentState | Fulf
   return counts;
 }
 
-/** The list footer: "16 sales", or "1–50 of 212 sales" when there are pages. */
-export function salesRange(first: number, shown: number, total: number): string {
-  const noun = total === 1 ? "sale" : "sales";
-  if (shown >= total) return `${total} ${noun}`;
-  return `${first + 1}–${first + shown} of ${total} ${noun}`;
+/** The filter fields the bar offers, with a count per value. */
+export function salesFilterFields(counts: Record<PaymentState | FulfillmentState, number>): FilterField[] {
+  return [
+    { key: "payment", label: "Payment", options: PAYMENT_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+    { key: "fulfillment", label: "Fulfillment", options: FULFILLMENT_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+  ];
+}
+
+/** The chips for the filters in the URL, payment first. */
+export function activeFilters(filter: SalesFilter): ActiveFilter[] {
+  return [
+    ...(filter.payment.length ? [{ field: "payment", values: filter.payment }] : []),
+    ...(filter.fulfillment.length ? [{ field: "fulfillment", values: filter.fulfillment }] : []),
+  ];
+}
+
+/**
+ * The URL search for the chips. The URL holds only "is any of" lists, so a chip
+ * flipped to "is not" becomes the values it leaves in. A chip that leaves
+ * nothing in has no values and stays out.
+ */
+export function searchFromFilters(filters: readonly ActiveFilter[], q: string | undefined): SalesSearch {
+  const values = (field: string, all: readonly string[]) => {
+    const chip = filters.find((filter) => filter.field === field);
+    if (!chip) return [];
+    return all.filter((value) => matchesFilter(chip, value));
+  };
+  const payment = values("payment", PAYMENT_FILTERS.map((item) => item.value));
+  const fulfillment = values("fulfillment", FULFILLMENT_FILTERS.map((item) => item.value));
+  return {
+    ...(payment.length ? { payment: payment.join(",") } : {}),
+    ...(fulfillment.length ? { fulfillment: fulfillment.join(",") } : {}),
+    ...(q ? { q } : {}),
+  };
+}
+
+/* ---------- Display: sort and columns ---------- */
+
+/** The columns staff can sort by. The ids are the list table's column ids. */
+export const SALE_SORT_FIELDS = [
+  { value: "date", label: "Date" },
+  { value: "member", label: "Member" },
+  { value: "amount", label: "Amount" },
+] as const;
+
+/** Rails returns sales newest first, so that is the order staff see until they sort. */
+export const DEFAULT_SALE_SORT: SortState = { column: "date", direction: "desc" };
+
+/** The Display popover's column chips. Member, Product, Payment, and Amount always show. */
+export type SaleColumnId = "date" | "fulfillment" | "method";
+export const DEFAULT_SALE_COLUMNS: Record<SaleColumnId, boolean> = { date: true, fulfillment: true, method: true };
+
+/** The sales in the chosen order. A tie keeps the order Rails sent. */
+export function sortSales(sales: readonly Schemas["Sale"][], sort: SortState): Schemas["Sale"][] {
+  const sign = sort.direction === "asc" ? 1 : -1;
+  const compare = (a: Schemas["Sale"], b: Schemas["Sale"]) => {
+    if (sort.column === "member") return a.member.name.localeCompare(b.member.name, undefined, { sensitivity: "base" });
+    if (sort.column === "amount") return a.total_minor - b.total_minor;
+    return Date.parse(a.purchased_at) - Date.parse(b.purchased_at);
+  };
+  return sales
+    .map((sale, index) => ({ sale, index }))
+    .sort((a, b) => sign * compare(a.sale, b.sale) || a.index - b.index)
+    .map(({ sale }) => sale);
+}
+
+/** True when sort and columns are what the page starts with. Reset to default then does nothing. */
+export function isDefaultDisplay(sort: SortState, columns: Record<SaleColumnId, boolean>): boolean {
+  return (
+    sort.column === DEFAULT_SALE_SORT.column &&
+    sort.direction === DEFAULT_SALE_SORT.direction &&
+    (Object.keys(DEFAULT_SALE_COLUMNS) as SaleColumnId[]).every((id) => columns[id] === DEFAULT_SALE_COLUMNS[id])
+  );
 }
 
 /* ---------- Dates ---------- */
