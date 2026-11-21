@@ -270,49 +270,26 @@ a.programs-row:focus-visible {
 
 /* ---------- New program and Edit program (redesign) ---------- */
 /*
- * Paper "New program": a tile and the title with Create program (⌘↵), then
- * the Details and Schedule bands on the left, and Location, Visibility, and
- * Note on the right from 1100px. Fields are 32px with a 13px label above.
+ * The record frame of a program: orbit dots, a hero with an icon tile and the
+ * title, then Details and Schedule as sections, with Location, Visibility, and
+ * Note in the right panel from 1100px. Fields are 32px with a 13px label above.
  */
 
-.program-form {
-  max-width: 1280px;
+.program-form .detail__main {
   gap: var(--space-6);
+}
+.program-form__form {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 756px;
+  min-width: 0;
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
-}
-.program-form__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-}
-.program-form__head h1 {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.program-form__layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-6);
-  align-items: start;
-}
-.program-form__main {
-  display: grid;
-  gap: var(--space-6);
-  min-width: 0;
-}
-.program-form__section {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
 }
 .program-form__fields {
   display: grid;
   gap: var(--space-4);
-  max-width: 756px;
-  padding-block: var(--space-3) 0;
+  padding-block: var(--space-1) 0;
 }
 .program-form__row {
   display: grid;
@@ -482,22 +459,6 @@ a.programs-row:focus-visible {
   line-height: 16px;
 }
 
-/* The right column: groups split by hairlines, as in Paper. */
-.program-form__side {
-  display: grid;
-  align-content: start;
-  min-width: 0;
-}
-.program-form__side-group {
-  padding: var(--space-4) var(--space-2);
-  border-bottom: 1px solid var(--color-line);
-}
-.program-form__side-group:first-child {
-  padding-top: 0;
-}
-.program-form__side-group:last-child {
-  border-bottom: 0;
-}
 .program-select {
   position: relative;
   display: block;
@@ -515,40 +476,11 @@ a.programs-row:focus-visible {
 .program-form .program-select__control {
   padding-left: 30px;
 }
-.program-form__note {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  row-gap: 4px;
-}
 .program-form__no-note {
-  grid-column: 1 / -1;
+  margin: 0;
   color: var(--color-ink-3);
   font-size: var(--text-xs);
   line-height: 16px;
-}
-.program-form__add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-ink-2);
-  cursor: pointer;
-}
-.program-form__add:hover {
-  background: var(--color-hover);
-}
-.program-form__add:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
-}
-.program-form__add svg {
-  width: 14px;
-  height: 14px;
 }
 .program-form__link {
   color: var(--color-ink);
@@ -565,24 +497,11 @@ a.programs-row:focus-visible {
   }
 }
 
-@media (min-width: 1100px) {
-  .program-form__layout {
-    grid-template-columns: minmax(0, 1fr) 268px;
-    column-gap: var(--space-8);
-  }
-  .program-form__side {
-    position: sticky;
-    top: calc(var(--topbar-height) + var(--space-5));
-  }
-}
-
-/* Phones: properties first, one column, and the create bar at the bottom of the screen. */
+/* Phones: one column, the panel first, and the create bar at the bottom of the screen. */
 @media (max-width: 1099.98px) {
-  .program-form__side {
-    order: -1;
-  }
-  .program-form__side-group {
-    padding-inline: 0;
+  .program-form .detail__main > .detail__panel {
+    width: auto;
+    padding: 0;
   }
 }
 @media (max-width: 767.98px) {
@@ -604,10 +523,10 @@ a.programs-row:focus-visible {
   .program-input__bare {
     font-size: 16px;
   }
-  .program-form {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  .program-form .detail__main {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
-  .program-form__head .page-actions {
+  .program-form .page-actions {
     position: fixed;
     right: 0;
     bottom: 0;

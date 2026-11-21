@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
@@ -12,6 +12,7 @@ import { useAction, useIdempotencyKey } from "../../lib/hooks";
 import { useCan, useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Result } from "../../lib/result";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
+import { useWide } from "../../lib/use-wide";
 import { createSale, recordPayment } from "../../lib/staff.functions";
 import { Section } from "../members/Section";
 import { DetailHero, DetailLayout, HeroTile, PanelGroup } from "@/components/parts/DetailLayout";
@@ -79,23 +80,6 @@ export function NewSale({ data, memberId, priceId }: { data: NewSaleData; member
     );
   }
   return <NewSaleForm members={data.members.data} options={saleOptions(data.products.data)} initialMemberId={memberId} initialPriceId={priceId} />;
-}
-
-const WIDE = "(min-width: 1100px)";
-
-function subscribeWide(onChange: () => void) {
-  const query = window.matchMedia(WIDE);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-/** True from 1100px, where the panel sits beside the form. The server renders the wide layout. */
-function useWide(): boolean {
-  return useSyncExternalStore(
-    subscribeWide,
-    () => window.matchMedia(WIDE).matches,
-    () => true,
-  );
 }
 
 /**
