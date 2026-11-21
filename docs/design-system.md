@@ -66,7 +66,7 @@ Show dependent controls when their prerequisite is chosen. Keep labels and
 validation attached to the controls. Show feedback after an attempt;
 do not fill the idle form with a description of where the result will appear.
 
-Prefer one implementation with one owner. Real views live in `features/schedule`, `features/programs`, `features/products`,
+Prefer one implementation with one owner. Real views live in `features/calendar`, `features/schedule` (Session details), `features/programs`, `features/products`,
 and `features/settings`. `features/preview` owns simulated
 features only. `components/Filters.tsx` owns selection filters. Keep fetching and mutations at their current request boundaries.
 Feature layout styles live in `styles/features.css`. No new service layer, UI
