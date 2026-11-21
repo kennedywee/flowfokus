@@ -50,9 +50,18 @@ before it) is history. The visual rules live in
   cancelling a booking or a session, and marking attendance.
 - Programs: create and edit programs, add sessions, and add or change ticket
   prices.
-- Products: the membership catalog, prices, and availability. Staff with
-  `products:create` add products. Staff with `products:update` edit products
-  and benefits, add prices, take prices off sale, and archive them.
+- Products: the list (the product count, Filter by Type and Status, search,
+  Display, sortable Status, Name, and Price, and a page range), Product details,
+  and New and Edit product. Staff with `products:create` add products. Staff with
+  `products:update` edit products and benefits, add prices, take prices off sale,
+  and archive them. A product has many prices; a new amount or length is a new
+  price, added on the product page. The screens show only what Rails returns. They
+  leave out the active member or pass count, Revenue, Sales, and Average, credits
+  left on passes, "Ending in 7 days", product activity and comments, and the
+  active count and archive date of each price
+  ([#21](https://github.com/kennedywee/flowfokus/issues/21)). The note is the
+  hero's line. Sell (S) and Edit (E) are in the top bar; Add price is in the Prices
+  header.
 - Settings, General and Locations: the time zone, gym site publication, and
   locations, from Rails. Staff with `settings:manage` change them. The name
   comes from WorkOS. The currency is fixed.
@@ -75,8 +84,8 @@ These actions persist in PostgreSQL, including during local demo development.
   parts for the redesign (list table, filter bar, Display popover, row
   selection, groups, detail layout, hero, activity, background patterns, and
   data marks) on labelled sample members, bookings, and events. The
-  Members list, Member details, and the Sales screens use them with real Rails
-  data; the other screens follow in the issues #91 to #94. It also shows the Horizon and the
+  Members list, Member details, the Sales screens, and the Products screens use them
+  with real Rails data; the other screens follow in the issues #91, #92, and #94. It also shows the Horizon and the
   record section that Member details adds. See
   [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 
