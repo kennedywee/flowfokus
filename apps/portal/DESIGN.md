@@ -701,7 +701,9 @@ frames before a screen review:
   an arrow key moves it). Up and Down walk a column or a day cell in time order
   and step to the next row on Week. Left and Right move to the nearest column
   with a session in the same row and pick the one closest in time. Home and End
-  go to the ends of the column. Enter opens the session. A hint for assistive
+  go to the ends of the column. When a key has no target that way, Right and Down
+  go to the next block in reading order and Left and Up to the previous one, so
+  every block is reachable. Enter opens the session. A hint for assistive
   technology describes the keys (`moveFocus` in `facts.ts`).
 - Phones and narrow windows (below 768px): the grid is hidden and a list shows
   one band per day with time, program, kind and host, and the status. The list is

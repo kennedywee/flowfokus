@@ -246,7 +246,7 @@ describe("keyboard", () => {
   test("Down and Up walk a column in time order and stop at the ends", () => {
     expect(moveFocus(day, "a", "ArrowDown")).toBe("b");
     expect(moveFocus(day, "b", "ArrowUp")).toBe("a");
-    expect(moveFocus(day, "b", "ArrowDown")).toBeNull();
+    expect(moveFocus(day, "d", "ArrowDown")).toBeNull();
     expect(moveFocus(day, "a", "ArrowUp")).toBeNull();
   });
 
@@ -272,11 +272,27 @@ describe("keyboard", () => {
       { id: "thu2", x: 3, y: 1, start: 10 },
     ];
     expect(moveFocus(week, "mon", "ArrowRight")).toBe("wed");
-    expect(moveFocus(week, "wed", "ArrowRight")).toBeNull();
+    expect(moveFocus(week, "thu2", "ArrowRight")).toBeNull();
     expect(moveFocus(week, "mon", "ArrowDown")).toBe("mon2");
     expect(moveFocus(week, "mon2", "ArrowUp")).toBe("mon");
-    expect(moveFocus(week, "wed", "ArrowDown")).toBeNull();
     expect(moveFocus(week, "mon2", "ArrowRight")).toBe("thu2");
+  });
+
+  test("a key with no target in its direction goes to the next or previous block in reading order", () => {
+    // One host on Monday, another on Tuesday: no arrow reaches Tuesday by row or column.
+    const split: NavItem[] = [
+      { id: "mon", x: 0, y: 0, start: 10 },
+      { id: "tue", x: 1, y: 1, start: 10 },
+    ];
+    expect(moveFocus(split, "mon", "ArrowRight")).toBe("tue");
+    expect(moveFocus(split, "mon", "ArrowDown")).toBe("tue");
+    expect(moveFocus(split, "tue", "ArrowLeft")).toBe("mon");
+    expect(moveFocus(split, "tue", "ArrowUp")).toBe("mon");
+    // The ends of the reading order stay put, and on Day the last block of a column goes to the next column.
+    expect(moveFocus(split, "mon", "ArrowLeft")).toBeNull();
+    expect(moveFocus(split, "tue", "ArrowDown")).toBeNull();
+    expect(moveFocus(day, "b", "ArrowDown")).toBe("c");
+    expect(moveFocus(day, "c", "ArrowUp")).toBe("b");
   });
 
   test("other keys and unknown ids do nothing", () => {

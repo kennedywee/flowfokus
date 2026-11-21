@@ -336,16 +336,33 @@ function nearest(candidates: readonly NavItem[], start: number): NavItem | undef
   return [...candidates].sort((a, b) => Math.abs(a.start - start) - Math.abs(b.start - start) || a.start - b.start)[0];
 }
 
+/** Every block in reading order: by row, then column, then start. */
+function readingOrder(items: readonly NavItem[]): NavItem[] {
+  return [...items].sort((a, b) => a.y - b.y || a.x - b.x || a.start - b.start || a.id.localeCompare(b.id));
+}
+
 /**
  * The block an arrow key moves to, or null when the key stays put.
  * Up and Down walk one column or one day cell in time order, then step to the
  * next row on Week. Left and Right move to the nearest column that has a
- * session in the same row, and pick the session closest in time. Home and End
- * jump to the first and last session of the cell.
+ * session in the same row, and pick the session closest in time. When a key
+ * has no target that way, Right and Down go to the next block in reading order
+ * and Left and Up to the previous one, so every block can be reached with the
+ * arrow keys. Home and End jump to the first and last session of the cell.
  */
 export function moveFocus(items: readonly NavItem[], currentId: string, key: string): string | null {
   const current = items.find((item) => item.id === currentId);
   if (!current) return null;
+  const toward = directional(items, current, key);
+  if (toward) return toward;
+  if (key !== "ArrowRight" && key !== "ArrowDown" && key !== "ArrowLeft" && key !== "ArrowUp") return null;
+  const order = readingOrder(items);
+  const index = order.findIndex((item) => item.id === current.id);
+  const step = key === "ArrowRight" || key === "ArrowDown" ? 1 : -1;
+  return order[index + step]?.id ?? null;
+}
+
+function directional(items: readonly NavItem[], current: NavItem, key: string): string | null {
   const here = cell(items, current.x, current.y);
   const index = here.findIndex((item) => item.id === current.id);
   switch (key) {
@@ -378,5 +395,5 @@ export function moveFocus(items: readonly NavItem[], currentId: string, key: str
 
 /** The first block in reading order: by row, then column, then start. The one tab stop before an arrow key moves it. */
 export function firstItem(items: readonly NavItem[]): string | null {
-  return [...items].sort((a, b) => a.y - b.y || a.x - b.x || a.start - b.start || a.id.localeCompare(b.id))[0]?.id ?? null;
+  return readingOrder(items)[0]?.id ?? null;
 }
