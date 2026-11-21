@@ -69,6 +69,7 @@ export default function Example() {
               <div className="topbar__end">
                 <Button size="compact" variant="secondary">
                   <Icon name="search" aria-hidden="true" focusable="false" />
+                  <span className="visually-hidden">Search</span>
                   <Kbd>⌘K</Kbd>
                 </Button>
                 <Button size="compact">

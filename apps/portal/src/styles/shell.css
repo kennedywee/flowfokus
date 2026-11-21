@@ -47,6 +47,8 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* Skip to content and focus land below the sticky top bar. */
+    scroll-padding-top: var(--topbar-height);
   }
 }
 @media (min-width: 1181px) {
@@ -59,7 +61,12 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+}
+/* On a phone the page scrolls, so the column fills the viewport. From 768px it fills the window. */
+@media (max-width: 767.98px) {
+  .shell__main {
+    min-height: 100dvh;
+  }
 }
 
 .main {
