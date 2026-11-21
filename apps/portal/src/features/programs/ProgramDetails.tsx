@@ -268,7 +268,7 @@ function SessionRow({ session, now, tz }: { session: Occurrence; now: number; tz
     <ListTableRow className="program-session" >
       <ListTableCell>
         <Link
-          to="/$org/schedule/$occurrenceId"
+          to="/$org/calendar/$occurrenceId"
           params={{ org: organization.slug, occurrenceId: session.id }}
           className="list-table__link program-session__day"
           data-past={over || cancelled || undefined}

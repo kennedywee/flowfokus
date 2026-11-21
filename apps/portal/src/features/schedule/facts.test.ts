@@ -7,17 +7,13 @@ import {
   capacityText,
   clockTime,
   clockRange,
-  dayTitle,
   filterPrograms,
-  groupByDay,
   holderNote,
   lengthLabel,
   missingSpot,
   programCounts,
-  rangeLabel,
-  readScheduleSearch,
+  readPrograms,
   resizeSpots,
-  rowStatusText,
   saleAttempt,
   sellLabel,
   sessionName,
@@ -88,21 +84,15 @@ describe("clockTime", () => {
   });
 });
 
-describe("schedule URL", () => {
-  test("keeps a valid day and known program IDs only", () => {
-    expect(readScheduleSearch({ from: "2026-11-05", program: `${PROGRAM_A},nope,${PROGRAM_A}` })).toEqual({
-      from: "2026-11-05",
-      program: PROGRAM_A,
-    });
-    expect(readScheduleSearch({ from: "5 Nov", program: 3 })).toEqual({});
+describe("program IDs in the URL", () => {
+  test("keeps known program IDs once", () => {
+    expect(readPrograms(`${PROGRAM_A},nope,${PROGRAM_A}`)).toEqual([PROGRAM_A]);
+    expect(readPrograms(undefined)).toEqual([]);
   });
 });
 
 describe("days and times", () => {
-  test("names the range, the day bands, and the session", () => {
-    expect(rangeLabel("2026-11-05")).toBe("Thu 5 Nov – Wed 18 Nov");
-    expect(dayTitle("2026-11-05", "2026-11-05")).toBe("Today, Thursday 5 November");
-    expect(dayTitle("2026-11-06", "2026-11-05")).toBe("Friday 6 November");
+  test("names the time range and the session", () => {
     const session = entry();
     expect(clockRange(session.starts_at, session.ends_at, TZ)).toBe("07:00 – 08:00");
     expect(sessionName(session.starts_at, TZ)).toBe("Thu 5 Nov, 07:00");
@@ -131,11 +121,7 @@ describe("session state", () => {
     expect(sessionState(entry(), before)).toBe("open");
   });
 
-  test("row and property words match Paper", () => {
-    expect(rowStatusText(entry(), after)).toBe("Ended · 11 of 12 booked");
-    expect(rowStatusText(entry({ cancelled_at: "x", cancel_reason: "Coach unwell" }), before)).toBe("Cancelled · Coach unwell");
-    expect(rowStatusText(entry({ spots_left: 0, spots_taken: 12 }), before)).toBe("Full");
-    expect(rowStatusText(entry(), before)).toBe("11 of 12 booked");
+  test("property words match Paper", () => {
     expect(sessionStatusText(entry(), after)).toBe("Ended");
     expect(capacityText(entry(), before)).toBe("12 spots");
     expect(capacityText(entry({ spots_left: 0, spots_taken: 12 }), before)).toBe("12 spots · 12 booked");
@@ -161,13 +147,6 @@ describe("schedule list", () => {
     ]);
     expect(filterPrograms(list, [PROGRAM_B]).map((item) => item.id)).toEqual(["b"]);
     expect(filterPrograms(list, [])).toHaveLength(3);
-  });
-
-  test("groups sessions by the gym's day", () => {
-    expect(groupByDay(list, TZ).map(([day, items]) => [day, items.length])).toEqual([
-      ["2026-11-05", 1],
-      ["2026-11-06", 2],
-    ]);
   });
 });
 

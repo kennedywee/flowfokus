@@ -556,7 +556,7 @@ export function SessionDidNotLoad({ notFound, message }: { notFound: boolean; me
         <p className="list-state__title">{notFound ? "This session was not found." : "This session did not load."}</p>
         {notFound ? null : <p className="list-state__text">{message}</p>}
         {notFound ? (
-          <Link to="/$org/schedule" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
+          <Link to="/$org/calendar" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
             Back to Schedule
           </Link>
         ) : (

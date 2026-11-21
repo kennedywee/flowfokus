@@ -217,7 +217,7 @@ export const AXIS_END = 22;
 export const MIN_MINUTES = 30;
 
 export function minutesOfDay(iso: string, timeZone: string): number {
-  const [hours, minutes] = clockTime(iso, timeZone).split(":").map(Number);
+  const [hours = 0, minutes = 0] = clockTime(iso, timeZone).split(":").map(Number);
   return hours * 60 + minutes;
 }
 
@@ -352,7 +352,8 @@ export function moveFocus(items: readonly NavItem[], currentId: string, key: str
     case "ArrowDown":
     case "ArrowUp": {
       const step = key === "ArrowDown" ? 1 : -1;
-      if (here[index + step]) return here[index + step].id;
+      const neighbour = here[index + step];
+      if (neighbour) return neighbour.id;
       const rows = [...new Set(items.filter((item) => item.x === current.x).map((item) => item.y))].sort((a, b) => a - b);
       const next = step > 0 ? rows.find((y) => y > current.y) : [...rows].reverse().find((y) => y < current.y);
       if (next === undefined) return null;
