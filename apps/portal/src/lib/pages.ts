@@ -2,7 +2,7 @@ import type { Permission } from "@flowfokus/api";
 import type { IconName } from "@/components/ui/icon";
 
 /** The pages in the sidebar, as route paths. */
-export type PagePath = "/$org/schedule" | "/$org/members" | "/$org/sales" | "/$org/programs" | "/$org/products";
+export type PagePath = "/$org/calendar" | "/$org/members" | "/$org/sales" | "/$org/programs" | "/$org/products";
 
 export type Page = {
   label: string;
@@ -15,12 +15,11 @@ export type Page = {
 };
 
 /**
- * The five pages, in sidebar order. Calendar opens today's schedule; the route
- * is renamed in the Calendar issue (#91). Rails still checks every request:
- * the permission only hides a page the person cannot open.
+ * The five pages, in sidebar order. Rails still checks every request: the
+ * permission only hides a page the person cannot open.
  */
 export const PAGES: readonly Page[] = [
-  { label: "Calendar", icon: "schedule", to: "/$org/schedule", path: "/schedule", permission: "programs:read" },
+  { label: "Calendar", icon: "schedule", to: "/$org/calendar", path: "/calendar", permission: "programs:read" },
   { label: "Members", icon: "members", to: "/$org/members", path: "/members", permission: "members:read" },
   { label: "Sales", icon: "sales", to: "/$org/sales", path: "/sales", permission: "purchases:read" },
   { label: "Programs", icon: "programs", to: "/$org/programs", path: "/programs", permission: "programs:read" },

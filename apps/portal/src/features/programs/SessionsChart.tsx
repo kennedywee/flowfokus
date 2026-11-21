@@ -45,7 +45,7 @@ export function SessionsChart({ chart, now }: { chart: Chart; now: number }) {
                 {day.sessions.map((session) => (
                   <Link
                     key={session.id}
-                    to="/$org/schedule/$occurrenceId"
+                    to="/$org/calendar/$occurrenceId"
                     params={{ org: organization.slug, occurrenceId: session.id }}
                     className="program-chart__column"
                     tabIndex={-1}

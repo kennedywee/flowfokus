@@ -522,7 +522,7 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
                   <CellStack
                     title={
                       <Link
-                        to="/$org/schedule/$occurrenceId"
+                        to="/$org/calendar/$occurrenceId"
                         params={{ org: organization.slug, occurrenceId: booking.occurrence_id }}
                         className="list-table__link"
                       >
@@ -549,8 +549,8 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
       ) : (
         <Empty>
           No bookings yet. Book from a session on the{" "}
-          <Link to="/$org/schedule" params={{ org: organization.slug }}>
-            schedule
+          <Link to="/$org/calendar" params={{ org: organization.slug }}>
+            Calendar
           </Link>
           .
         </Empty>

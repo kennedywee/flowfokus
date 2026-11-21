@@ -7,8 +7,8 @@ describe("sidebar pages", () => {
     expect(PAGES.map((page) => page.label)).toEqual(["Calendar", "Members", "Sales", "Programs", "Products"]);
   });
 
-  test("Calendar opens the schedule route until the Calendar issue renames it", () => {
-    expect(PAGES[0]).toMatchObject({ label: "Calendar", to: "/$org/schedule", path: "/schedule" });
+  test("Calendar is the first page and opens the calendar route", () => {
+    expect(PAGES[0]).toMatchObject({ label: "Calendar", to: "/$org/calendar", path: "/calendar" });
   });
 });
 
@@ -31,7 +31,7 @@ describe("readablePages", () => {
 
 describe("startPage", () => {
   test("is Calendar when the role can read programs", () => {
-    expect(startPage(["programs:read", "members:read"])?.to).toBe("/$org/schedule");
+    expect(startPage(["programs:read", "members:read"])?.to).toBe("/$org/calendar");
   });
 
   test("skips Calendar for a custom role without programs:read, and opens Members", () => {

@@ -281,7 +281,7 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
       {fulfillment && !fulfillment.revoked_at && !sale.voided_at ? (
         <p className="sale-note">
           {sale.occurrence ? (
-            <Link to="/$org/schedule/$occurrenceId" params={{ org: organization.slug, occurrenceId: sale.occurrence.id }}>
+            <Link to="/$org/calendar/$occurrenceId" params={{ org: organization.slug, occurrenceId: sale.occurrence.id }}>
               Open the roster
             </Link>
           ) : (

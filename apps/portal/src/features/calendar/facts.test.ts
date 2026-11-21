@@ -23,7 +23,7 @@ import {
   weekLabel,
   weekStart,
   type NavItem,
-} from "./calendar";
+} from "./facts";
 
 const TZ = "Asia/Kuala_Lumpur";
 const A = "11111111-1111-4111-8111-111111111111";
@@ -193,13 +193,13 @@ describe("Day grid layout", () => {
 
   test("a short session is drawn at least half an hour tall and cannot hide the next one", () => {
     const placed = placeColumn([entry("a", "07:00", "07:10"), entry("b", "07:20", "08:00")], TZ);
-    expect(placed[0].end - placed[0].start).toBe(30);
+    expect(placed[0]!.end - placed[0]!.start).toBe(30);
     expect(placed.map((item) => item.lanes)).toEqual([2, 2]);
   });
 
   test("a session that runs past midnight stops at midnight", () => {
     const placed = placeColumn([entry("a", "23:30", "23:59", {}, { ends_at: new Date("2026-11-22T01:00:00+08:00").toISOString() })], TZ);
-    expect(placed[0].end).toBe(24 * 60);
+    expect(placed[0]!.end).toBe(24 * 60);
   });
 
   test("the axis is 06 to 22 and grows to hold a session outside it", () => {
