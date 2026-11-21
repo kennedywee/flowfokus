@@ -164,6 +164,8 @@ function Bookings({ roster, now, canBook, onBook }: { roster: Roster; now: numbe
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const anchor = useRef<string | null>(null);
   const [bulk, setBulk] = useState(false);
+  // The live lock: a Try again from an older toast must not run beside a batch.
+  const running = useRef(false);
   // Rows that left To arrive (checked in, cancelled) drop out of the selection by themselves.
   const chosen = useMemo(() => new Set(order.filter((id) => picked.has(id))), [order, picked]);
 
@@ -181,7 +183,8 @@ function Bookings({ roster, now, canBook, onBook }: { roster: Roster; now: numbe
   // `retry` holds the ids that failed last time, so Try again never resends the ones that worked.
   async function checkInChosen(retry?: readonly string[]) {
     const ids = retry ? [...retry] : order.filter((id) => chosen.has(id));
-    if (bulk || !ids.length) return;
+    if (running.current || !ids.length) return;
+    running.current = true;
     setBulk(true);
     const failed: { id: string; name: string; message: string }[] = [];
     for (const id of ids) {
@@ -194,6 +197,7 @@ function Bookings({ roster, now, canBook, onBook }: { roster: Roster; now: numbe
         failed.push({ id, name, message: "The connection failed." });
       }
     }
+    running.current = false;
     setBulk(false);
     const done = ids.length - failed.length;
     setPicked(new Set(failed.map((item) => item.id)));
