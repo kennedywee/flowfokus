@@ -36,17 +36,11 @@ Early renewal appends a period after the last one. It does not change the curren
 
 `POST /staff/members/{id}/renewals` copies the line item behind the member's latest delivered period: the same price, amount, and terms. It works after that price is archived. The sale records which line item it renews. Expired renewal follows the same rule: the new period starts when it is delivered.
 
-## Check in
+## Mark attendance
 
-1. Identify the member and location.
-2. Find entitlements valid at that time and location.
-3. Apply the usage limit.
-4. Record the check-in.
-5. If access is granted, record usage once. Authorization and consumption are atomic.
+Staff mark a booked member as here on the Session details page. This is the only check-in. It needs `bookings:manage`. See [Book](#book).
 
-Denied access records a reason. A staff override needs a permission and a reason.
-
-An override sends `override_reason` with the check-in and needs `check_ins:override`. When the rights would deny entry, the check-in is granted, keeps its `denial_reason`, records the reason and the actor, and consumes nothing. When a right allows entry, it is used as usual and no reason is recorded. A database check keeps these three shapes apart.
+A walk-in visit with no booking is not recorded. Gym access check-in left the scope on 21 November 2026 ([#81](https://github.com/kennedywee/flowfokus/issues/81)).
 
 ## Run a program
 

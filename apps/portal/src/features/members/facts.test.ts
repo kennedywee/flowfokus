@@ -132,45 +132,22 @@ describe("sale facts", () => {
 });
 
 describe("memberActivity", () => {
-  test("merges check-ins, sales, payments, and the join date, newest first", () => {
+  test("merges sales, payments, and the join date, newest first", () => {
     const member = {
       id: "member-1",
       created_at: iso(NOW - 10 * DAY),
       entitlements: [{ id: "right-1", name: "8 gym visits" }],
       bookings: [],
     } as unknown as Schemas["MemberDetail"];
-    const checkIns = [
-      {
-        id: "c1",
-        location_id: "loc-1",
-        result: "granted",
-        denial_reason: null,
-        entitlement_id: "right-1",
-        override_reason: null,
-        checked_in_at: iso(NOW - HOUR),
-      },
-      {
-        id: "c2",
-        location_id: "loc-1",
-        result: "denied",
-        denial_reason: "usage_limit_reached",
-        entitlement_id: null,
-        override_reason: null,
-        checked_in_at: iso(NOW - 2 * HOUR),
-      },
-    ] as Schemas["CheckIn"][];
     const events = memberActivity(
-      { member, sales: [sale({ payments: [payment("cash")] })], checkIns },
+      { member, sales: [sale({ payments: [payment("cash")] })] },
       () => "Bangsar",
     );
     expect(events.map((event) => event.text)).toEqual([
-      "Checked in at Bangsar · 8 gym visits",
-      "Check-in denied at Bangsar · No visits left this period",
       `Paid ${formatMoney(10000, "MYR")} by cash · Monthly unlimited`,
       `Sold Monthly unlimited · ${formatMoney(20000, "MYR")}`,
       "Added as a member",
     ]);
-    expect(events[1]!.tone).toBe("critical");
   });
 });
 

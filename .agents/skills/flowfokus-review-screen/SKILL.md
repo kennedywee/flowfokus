@@ -20,8 +20,8 @@ and action flow; static appearance alone cannot establish correctness.
 4. Check loading, no records, load failure, mutation pending, mutation failure,
    and success at the request owner. Identify states that cannot apply. Do not
    show Empty while a request has failed or is still loading.
-5. Trace displayed statuses to API fields. Paid is not delivered. Granted
-   check-in is not a general membership status. Verify void/revoked precedence,
+5. Trace displayed statuses to API fields. Paid is not delivered. Attended
+   is not a general membership status. Verify void/revoked precedence,
    currency, organization time zone, and preview labels where applicable.
 6. Check labels and error associations, visible focus, keyboard operation,
    icon names, pending repeat-submit prevention, and dialog focus behavior.

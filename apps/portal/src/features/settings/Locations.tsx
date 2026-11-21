@@ -57,7 +57,7 @@ export function Locations() {
     >
       {locations.length === 0 ? (
         <p className="settings-empty">
-          No locations yet. Add one before the first sale or check-in.
+          No locations yet. Add one before the first sale.
         </p>
       ) : (
         <section className="settings-table" aria-label="Locations">

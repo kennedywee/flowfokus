@@ -8,8 +8,8 @@ The agreed design is in [docs](docs/README.md). Work to do and open decisions ar
 
 Flowfokus runs locally as a tested deployment candidate. It is not deployed.
 
-- **Built and backed by Rails:** members, membership products and prices, sales, manual payments, fulfillment, renewal, refunds, check-in, programs, sessions, bookings, passes, tickets, locations, settings, and the staff team. Members can sign in on the gym site, buy online through a local test payment provider, and book sessions.
-- **Staff portal redesign:** the portal follows the Paper file "Flowfokus Redesign" and is moving to "Flowfokus Design". Home, Inbox, Agents, Check-ins, and Reports left the scope on 21 November 2026. The [Paper redesign](docs/paper-redesign/README.md) notes record what is settled. The [Rails gaps](docs/paper-redesign/rails-gaps.md) list what the new screens show that Rails cannot supply yet.
+- **Built and backed by Rails:** members, membership products and prices, sales, manual payments, fulfillment, renewal, refunds, programs, sessions, bookings, passes, tickets, locations, settings, and the staff team. Members can sign in on the gym site, buy online through a local test payment provider, and book sessions.
+- **Staff portal redesign:** the portal follows the Paper file "Flowfokus Redesign" and is moving to "Flowfokus Design". Home, Inbox, Agents, Check-ins, and Reports left the scope on 21 November 2026, and so did walk-in gym check-in. The [Paper redesign](docs/paper-redesign/README.md) notes record what is settled. The [Rails gaps](docs/paper-redesign/rails-gaps.md) list what the new screens show that Rails cannot supply yet.
 - **Sample data only:** Notifications settings. See [Frontend preview](docs/frontend-preview.md).
 - **Next:** the Rails work for the redesigned screens, the open `decision` issues, live WorkOS verification, and the first deployment.
 

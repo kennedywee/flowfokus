@@ -1,5 +1,5 @@
 import type { Schemas } from "@flowfokus/api";
-import { clockTime } from "../check-ins/facts";
+import { clockTime } from "./facts";
 import { dayKey, shortDay } from "./facts";
 
 /*

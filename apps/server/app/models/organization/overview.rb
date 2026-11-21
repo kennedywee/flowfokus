@@ -26,7 +26,6 @@ class Organization::Overview
       new_members_today: @organization.members.where(created_at: today).count,
       unpaid_sale_count: unpaid_sales.count,
       awaiting_fulfillment_count: awaiting_fulfillment.count,
-      check_ins_today: check_ins_today,
       setup: setup,
       **(@money ? { money: money } : {})
     }
@@ -39,11 +38,6 @@ class Organization::Overview
 
     def awaiting_fulfillment
       @organization.sales.open.where("sales.paid_minor = sales.total_minor").where.missing(:fulfillment)
-    end
-
-    def check_ins_today
-      counts = @organization.check_ins.where(checked_in_at: today).group(:result).count
-      { granted: counts.fetch("granted", 0), denied: counts.fetch("denied", 0) }
     end
 
     def memberships_ending_count

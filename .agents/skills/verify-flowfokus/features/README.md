@@ -55,15 +55,21 @@ commands, and observable proof.
 - [Members](members.md): create a member, validation, the list, and the stored row. Has a ready proof
   script.
 - [Desk sale](desk-sale.md): sell a product, record a payment, and fulfill the sale.
-- [Check-in](check-in.md): check in a member with active access, and the refused case.
+- [Session check-in](session-check-in.md): mark booked members as here on Session details, one by one
+  or in bulk, and confirm the member page and Ctrl K have no walk-in check-in.
 - [Gym site member](gym-site-member.md): public catalog, member sign-in, account linking, and online
   checkout.
+
+## Driven on 21 November 2026
+
+- Session check-in: the bulk `Check in` bar, the member page, Ctrl K, and the shortcuts sheet were driven
+  in a real browser. Screenshots stayed outside the repository. The single-row status mark was not driven.
 
 ## Driven on 19 November 2026
 
 - Members: driven end to end with `scripts/proof-create-member.mjs`.
-- Staff sign-in as Kennedy, desk sale with cash and fulfillment, check-in from a member's page, the gym
+- Staff sign-in as Kennedy, desk sale with cash and fulfillment, the gym
   site catalog, and member sign-in up to the link-code form: driven while writing the recipes, without
   saved evidence.
 - Not driven yet: organization choice for `rachel@flowfokus.com`, receptionist limits, sign-out,
-  refused check-in, link codes, and online checkout.
+  link codes, and online checkout.

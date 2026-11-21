@@ -15,7 +15,6 @@ import {
 
 /** What staff can do with the first member found. Each is present only when the role allows it. */
 export interface CommandMemberActions {
-  checkIn?: (member: Schemas["Member"]) => void;
   sell?: (member: Schemas["Member"]) => void;
 }
 
@@ -130,22 +129,9 @@ export function CommandMenu({
             ))}
           </CommandGroup>
         ) : null}
-        {/* Paper's Actions group: check in or sell to the first member found. */}
-        {members[0] && (actions.checkIn || actions.sell) ? (
+        {/* Paper's Actions group: sell to the first member found. */}
+        {members[0] && actions.sell ? (
           <CommandGroup heading="Actions">
-            {actions.checkIn ? (
-              <CommandItem
-                value={`check-in-${members[0].id}`}
-                onSelect={() => {
-                  const member = members[0]!;
-                  close();
-                  actions.checkIn?.(member);
-                }}
-              >
-                <Icon name="checkIns" {...icon} />
-                <span className="command__label">Check in {members[0].name}</span>
-              </CommandItem>
-            ) : null}
             {actions.sell ? (
               <CommandItem
                 value={`sell-${members[0].id}`}

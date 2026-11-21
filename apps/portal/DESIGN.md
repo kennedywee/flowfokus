@@ -107,8 +107,7 @@ Use the existing `--space-*` scale. Note that `--space-7` is 32px and
 Separate ordinary sections with surface color and thin borders. Use the existing
 popover, dialog, and toast shadow tokens only for those floating surfaces.
 Use `--duration-press` and `--duration-hover` for repeated control feedback.
-`HoldButton` uses `--duration-hold` (600ms, `--ease-in`) and `--duration-drain` (200ms);
-`SwipeConfirm` springs back over `--duration-spring` (250ms).
+`HoldButton` uses `--duration-hold` (600ms, `--ease-in`) and `--duration-drain` (200ms).
 Special transitions retain their existing timing. Preserve reduced-motion rules.
 
 ## Shapes
@@ -174,7 +173,6 @@ live, with code, at `localhost:4001/components` (local development only; see
 | Action | `Button`: `variant="default"`, `size="default"` | CSS supplies hover, press, focus and disabled. Use `SubmitButton` for pending forms. |
 | Alternative / destructive action | `secondary` (`outline` is an alias), `ghost`, `destructive` | Confirm consequential changes with `ConfirmDialog`; critical tone starts focus on Cancel. |
 | Safe action that must not fire on a stray click | `HoldButton` (`components/ui/hold-button.tsx`): `variant="secondary"`, or `"default"` for a top-bar action | Hold 600ms to confirm. See [Hold to confirm](#hold-to-confirm). |
-| The same, on a phone or tablet | `SwipeConfirm` (`components/ui/swipe-confirm.tsx`) | Drag to the end to confirm. See [Hold to confirm](#hold-to-confirm). |
 | Navigation styled as an action | Router `Link` with `buttonVariants()` | Keep link semantics; do not nest a button in a link. |
 | Status | `Status state={…}` with visible label | Use the current response, not the requested outcome. `Pill` defaults to neutral for other labels. |
 | Form field | `Field`, `describedBy`, `ui/input`, `ui/native-select` | Match input ID to field ID. Link hint/error IDs and set `aria-invalid`. |
@@ -208,8 +206,6 @@ Existing blocks to compose before adding another abstraction:
   footer of the new `ListTable`.
 - `FormNotice`: a form's failed request in one bordered line (red icon, title,
   staff sentence). The fields keep their values.
-- `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and
-  shows the toast or the denial dialog. The member page and ⌘K use it.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
 
@@ -222,7 +218,7 @@ pieces do not each need their own request.
 `HoldButton` sits between a plain button and `ConfirmDialog`. The user presses
 and holds for 600ms while a fill sweeps across the button. Space and Enter hold
 the same way. Releasing early, or moving off the button, drains the fill in
-200ms and shows the `holdLabel` hint ("Hold to check in") for 1.5s. There is no
+200ms and shows the `holdLabel` hint ("Hold to confirm") for 1.5s. There is no
 error color and no shake. A click from a screen reader or switch control
 (`detail` 0, or no mouse, touch or pen) confirms at once, because those users
 cannot hold. The action stays the accessible name; the hint is the description.
@@ -236,17 +232,11 @@ line under the label. `shortcut="c"` holds the button while C is held anywhere
 on the page, under the single-key rules in `lib/shortcuts.ts`; pair it with
 `line`. A tap of the key does nothing and shows the hint.
 
-`SwipeConfirm` (`components/ui/swipe-confirm.tsx`) is the touch form for phone
-and tablet check-in: drag the knob to the end. A release before 90% springs it
-back over `--duration-spring` (250ms). The knob is a button named for the
-action; holding Space or Enter slides it across over 600ms, and a click from
-assistive tech confirms at once.
-
 After the hold, the button shows `confirmedLabel` in the success color until
 the Promise from `onConfirm` settles. `onConfirm` owns its failure path, such
 as `FormNotice` or a toast.
 
-Use it for safe actions that change state: check in, mark attended, publish a
+Use it for safe actions that change state: mark attended, publish a
 program, send an invoice. Keep `ConfirmDialog` for destructive, money-out, bulk
 and input-taking actions. Before a screen swaps a dialog for a hold, it needs
 an Undo, or its issue must say why it does not. Design: Paper page
@@ -304,7 +294,7 @@ Information:
 Structure:
 
 - Keep one page per member. Membership, passes, bookings, sales, activity, and
-  details sit on that page. Check in, Sell, and Book start there.
+  details sit on that page. Sell and Renew start there.
 - Show details as Linear-style properties: a grey label, then a value with a
   small icon. Click the value to edit it. Do not use pencil buttons.
 - Show comments, pinned comments, and system events in one feed. Filter it by
@@ -373,7 +363,7 @@ field behind the window are not built.
   (`ContextSwitcher`); the location list ends with Manage locations. A detail
   route names its page with `staticData.crumb(loaderData)`.
 - Page actions show their letter on the button (`Kbd`, with `aria-keyshortcuts`):
-  Check in C and Sell S (member page), New member N (members list), Record
+  Sell S (member page), New member N (members list), Record
   payment P and Fulfill F (sale page), Add sessions T, Sell ticket S, and Book
   member B (program page), Book member B (session page), Sell S and Edit E
   (product page). A letter works only where its hint shows
@@ -479,8 +469,8 @@ the tokens and shared parts built from Paper in #85 and #87.
   paid) and "balance due" (sales that are not void). Paper's "spent" is not a
   Rails field, so the label stays "paid". With 100 sales, the most Rails
   returns, the stats are left out, because the sums would be partial.
-- Top bar: Check in (C, check_ins:create) and Sell (S, the primary button,
-  purchases:create; it and its key were open to every role before). The more
+- Top bar: Sell (S, the primary button, purchases:create; it and its key
+  were open to every role before). The more
   menu holds Renew membership (purchases:create, when Rails returns renewal
   terms) and Create link code or Unlink sign-in (members:link). A role with
   none of these sees no menu. A link code opens in a dialog that stays until
@@ -506,7 +496,7 @@ the tokens and shared parts built from Paper in #85 and #87.
 - Bookings: program, day and time range, the right it uses (or Ticket, or Held
   for payment), and how soon ("In 1d 16h") or its status. Left out: the
   location, which a booking does not carry.
-- Activity: the shared feed with real events (check-ins, sales, payments,
+- Activity: the shared feed with real events (sales, payments,
   fulfillments, refunds, voids, bookings, and the join date). No comment box,
   and no All, Comments, Activity control: Rails has no comments.
 - Contact (the right panel): email and the gym site link state. Left out:
@@ -656,24 +646,9 @@ member (#89) with the sale page's rows.
   one line on New sale, card or e-wallet payments, member numbers and phones, "Add
   new member" from the search, and server-side filters and paging for the list.
 
-The check-in flow (`features/check-ins/CheckInFlow.tsx`, facts in `facts.ts`,
-idempotency in `attempt.ts`, member search in `useMemberSearch.ts`) has no page
-of its own. The Check-ins page left the product on 21 November 2026. The member
-page (Check in, or C) and ⌘K (Check in, for the first member found) start it.
-It shows only Rails data:
-
-- Check in records the visit at the top bar location at once. The result is
-  a toast. A failed request shows an error toast with Try again, which
-  resends the same idempotency key. A denial opens the denial dialog: the
-  access fact from the Rails reason, the balance due when the role can read
-  sales, then New sale (no access) or Renew (no visits left). "Let in
-  anyway…" (check_ins:override) asks for a reason and lets the member in with
-  the neutral primary button.
-- No location: an error toast names the organization and says to add one.
-- No check_ins:create: no Check in.
-- Not shown, because Rails has no data for them: the right used, credits
-  used, access hours, the cause behind "no active access", Undo, member
-  numbers and phones, and walk-ins.
+Walk-in gym check-in is not in the portal. The member page and ⌘K have no
+Check in action, and Rails has no check-in endpoint (issue #81). Staff mark a
+booked member as here on Session details only.
 
 Schedule and Session details are the next redesigned screens
 (`features/schedule/Schedule.tsx`, `SessionDetails.tsx`, `BookMember.tsx`,
@@ -717,8 +692,7 @@ styles in `styles/schedule.css`). They show only Rails data:
   Here (checked in, in arrival order, with the time in green), To arrive (booked
   or held, not checked in, with the day it was booked), and Cancelled (cancelled
   or expired; folded unless the session is cancelled or it is all there is).
-  The words are Rails' "attended" shown as "Here": a gym check-in is a separate
-  fact. A row has a checkbox, a status mark, a 28px initials tile and the name
+  The words are Rails' "attended" shown as "Here". A row has a checkbox, a status mark, a 28px initials tile and the name
   (a link to the member), "Guest of …" or "Booked by …" from the holder, what
   happened to a cancelled spot (reason, "Credit returned", "Refund from the
   sale", "Hold expired, payment not received"), the right used (the pass,

@@ -3,7 +3,6 @@ import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
 import { PageActions } from "../../components/PageActions";
-import { useCheckIn } from "../check-ins/CheckInFlow";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import { Kbd, initials } from "../../components/ui";
@@ -73,8 +72,8 @@ const SALES_LIMIT = 100;
 
 /**
  * One page per member (Paper "Member details"): the hero, the Horizon, Holds,
- * Recent sales, Bookings, and Activity on the left; Contact on the right. Check
- * in (C) and Sell (S) are in the top bar; the other actions are in its more menu.
+ * Recent sales, Bookings, and Activity on the left; Contact on the right. Sell
+ * (S) is in the top bar; the other actions are in its more menu.
  * It shows only what Rails returns: no tags, phone, home location, notes,
  * comments, or spent total yet (issue #17).
  */
@@ -142,7 +141,7 @@ function MemberHero({ record }: { record: MemberRecord }) {
 /* ---------- Top bar actions ---------- */
 
 /**
- * Check in (C, needs check_ins:create), Sell (S, needs purchases:create), and
+ * Sell (S, needs purchases:create) and
  * the more menu: Renew (purchases:create, when Rails offers renewal terms) and
  * the gym site sign-in (members:link). Rails checks every request again.
  */
@@ -158,19 +157,12 @@ function MemberActions({ record }: { record: MemberRecord }) {
   const [code, setCode] = useState<Schemas["MemberLinkCode"] | null>(null);
   const issue = useAction(sendLinkCode);
   const unlink = useAction(sendUnlink);
-  // C checks the member in at the top bar location: a toast, or the denial dialog.
-  const flow = useCheckIn({ record });
-  const canCheckIn = can("check_ins:create");
   const canSell = can("purchases:create");
   const canRenew = member.renewal !== null && canSell;
   const canLink = can("members:link");
   const linked = member.linked_email;
-  const checkIn = () => {
-    if (!flow.pending) void flow.checkIn(member);
-  };
   const sell = () =>
     void navigate({ to: "/$org/sales/new", params: { org: organization.slug }, search: { member: member.id } });
-  useShortcut("c", checkIn, { enabled: canCheckIn });
   useShortcut("s", sell, { enabled: canSell });
 
   async function createCode() {
@@ -182,20 +174,6 @@ function MemberActions({ record }: { record: MemberRecord }) {
   return (
     <>
       <PageActions>
-        {canCheckIn ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="compact"
-            aria-keyshortcuts="C"
-            disabled={flow.pending}
-            aria-busy={flow.pending || undefined}
-            onClick={checkIn}
-          >
-            {flow.pending ? "Checking in…" : "Check in"}
-            <Kbd>C</Kbd>
-          </Button>
-        ) : null}
         {canSell ? (
           <Link
             to="/$org/sales/new"
@@ -236,7 +214,6 @@ function MemberActions({ record }: { record: MemberRecord }) {
           </DropdownMenu>
         ) : null}
       </PageActions>
-      {flow.dialog}
       {member.renewal && canRenew ? (
         <RenewDialog member={member} renewal={member.renewal} open={renewing} onClose={() => setRenewing(false)} />
       ) : null}
@@ -582,7 +559,7 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
   );
 }
 
-/** Check-ins, sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
+/** Sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
 function Activity({ record, now }: { record: MemberRecord; now: number }) {
   const organization = useOrganization();
   const locationName = useLocationName();

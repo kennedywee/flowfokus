@@ -31,7 +31,7 @@ bun run check
 docker build -t flowfokus-server:local apps/server
 ```
 
-With the apps running through `bun run dev`, run `bun run smoke:auth` in another terminal. This creates a test member and records a sale, partial payments, fulfillment, and check-ins in the local demo database. It checks retries as well as successful access. It refuses a remote API URL.
+With the apps running through `bun run dev`, run `bun run smoke:auth` in another terminal. This creates a test member and records a sale, partial payments, and fulfillment in the local demo database. It checks retries. It refuses a remote API URL.
 
 CI runs these checks on pushes to `master` and pull requests. It skips changes that touch only documentation; see [Release](release.md#workflows). A tag matching `v*` or a manual run of **Build release candidate** packages the verified image, Worker outputs, OpenAPI contract, and a SHA-256 manifest as one workflow artifact. This workflow needs no cloud account credentials. It does not publish a GitHub Release or registry image yet.
 

@@ -6,3 +6,10 @@
 #
 # Issue #84: Reports left the product. Nothing else calls /staff/report.
 GET /staff/report api path removed without deprecation
+#
+# Issue #81: Walk-in gym check-in left the product. Nothing else calls these.
+GET /staff/check_ins api path removed without deprecation
+POST /staff/check_ins api path removed without deprecation
+GET /staff/overview removed the required property `data/check_ins_today` from the response with the `200` status
+GET /member/account removed the required property `data/check_ins` from the response with the `200` status
+POST /member/link removed the required property `data/check_ins` from the response with the `201` status

@@ -9,7 +9,7 @@ Flowfokus's domain has exactly four stages:
 | Product | What the business offers. | Product, Price, ProductBenefit |
 | Purchase | What the customer bought. | Sale, SaleLineItem, Payment, Refund, Checkout |
 | Fulfillment | How Flowfokus delivers it. | Fulfillment, Membership, MembershipPeriod, BenefitGrant |
-| Entitlement | What the member can now use. | Entitlement, EntitlementUsage, CheckIn, Booking |
+| Entitlement | What the member can now use. | Entitlement, EntitlementUsage, Booking |
 
 Catalog records grant nothing. A purchase grants nothing until it is fulfilled. Usage belongs to the Entitlement stage; it is not a fifth stage. Bookings are usage too.
 
@@ -29,7 +29,7 @@ flowchart TD
   MembershipPeriod --> BenefitGrant
   BenefitGrant --> Entitlement
   Entitlement --> EntitlementUsage
-  EntitlementUsage --> CheckIn
+  EntitlementUsage --> Booking
 ```
 
 The diagram shows relationships, not a full schema. See [Models](models.md) for details.
@@ -41,7 +41,7 @@ The diagram shows relationships, not a full schema. See [Models](models.md) for 
 | Product | Monthly Membership. Price RM120. Benefit: gym access for one month. |
 | Purchase | The member buys it. The line item references the RM120 price. Payment completes. |
 | Fulfillment | Create the membership, its October period, and a benefit grant. |
-| Entitlement | Gym access valid from 1 October 00:00 until 1 November 00:00. Check-ins record use. |
+| Entitlement | Gym access valid from 1 October 00:00 until 1 November 00:00. Nothing records walk-in use. See [Models](models.md#entitlement-stage). |
 
 ## Example: ten-class pass
 

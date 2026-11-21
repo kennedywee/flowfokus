@@ -80,9 +80,6 @@ roles:
       - purchases:refund
       - purchases:void
       - memberships:revoke
-      - check_ins:read
-      - check_ins:create
-      - check_ins:override
       - programs:read
       - programs:manage
       - bookings:create
@@ -100,8 +97,6 @@ roles:
       - purchases:create
       - purchases:fulfill
       - payments:create
-      - check_ins:read
-      - check_ins:create
       - programs:read
       - bookings:create
       - bookings:manage
@@ -112,8 +107,6 @@ roles:
       - members:read
       - products:read
       - purchases:read
-      - check_ins:read
-      - check_ins:create
       - programs:read
       - bookings:create
       - bookings:manage
@@ -147,12 +140,6 @@ permissions:
     name: Void sales
   - slug: memberships:revoke
     name: Revoke delivered access
-  - slug: check_ins:read
-    name: Read check-ins
-  - slug: check_ins:create
-    name: Check in members
-  - slug: check_ins:override
-    name: Let a member in despite a denial, with a reason
   - slug: programs:read
     name: Read programs, the schedule, and rosters
   - slug: programs:manage

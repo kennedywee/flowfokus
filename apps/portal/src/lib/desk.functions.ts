@@ -1,7 +1,7 @@
 /**
  * The desk location: the branch this browser works at. It is a display
  * preference only. It sets the top bar label and the default location for
- * check-in and new sales. Rails still validates every location on each write.
+ * new sales. Rails still validates every location on each write.
  *
  * It lives in an httpOnly cookie per organization, so the server render
  * already knows it and no script can read it.

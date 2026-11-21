@@ -34,7 +34,6 @@ export function shortcutGroups(mod: string, can: (permission: Permission) => boo
     {
       title: "Member page",
       items: [
-        ...(can("check_ins:create") ? [{ keys: ["C"], label: "Check in" }] : []),
         ...(can("purchases:create") ? [{ keys: ["S"], label: "Sell" }] : []),
       ],
     },

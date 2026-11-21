@@ -1,5 +1,5 @@
 module Staff
-  # Locations keep their history: sales, check-ins, and benefits point at
+  # Locations keep their history: sales and benefits point at
   # them, so there is no delete.
   class LocationsController < BaseController
     before_action { require_permission! "settings:manage" }

@@ -95,6 +95,21 @@
   stroke: var(--color-surface);
 }
 
+/* Paper's attended mark: a filled circle with a tick. */
+.granted-mark {
+  flex: none;
+}
+.granted-mark circle {
+  fill: var(--color-good);
+}
+.granted-mark path {
+  fill: none;
+  stroke: var(--color-surface);
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* ---------- Schedule toolbar ---------- */
 
 .schedule-toolbar {

@@ -1,7 +1,11 @@
 import type { Schemas } from "@flowfokus/api";
 import { formatMoney } from "../../lib/format";
 import { createIdempotencyKey } from "../../lib/idempotency";
-import { clockTime } from "../check-ins/facts";
+
+/** "07:42": a 24-hour clock time in the organization's time zone, as in Paper. */
+export function clockTime(iso: string, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+}
 
 type Occurrence = Schemas["Occurrence"];
 type Entry = Schemas["ScheduleEntry"];

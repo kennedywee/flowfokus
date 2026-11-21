@@ -315,7 +315,7 @@ function MemberRow({
       >
         <p>
           {firstName(member.name)} can no longer open {organization.name}. This
-          can take a few minutes. Their past sales and check-ins stay.
+          can take a few minutes. Their past sales stay.
         </p>
       </ConfirmDialog>
     </li>

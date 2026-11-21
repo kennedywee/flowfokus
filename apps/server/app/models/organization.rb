@@ -18,7 +18,6 @@ class Organization < ApplicationRecord
   has_many :memberships, dependent: :restrict_with_exception
   has_many :membership_periods, dependent: :restrict_with_exception
   has_many :entitlements, dependent: :restrict_with_exception
-  has_many :check_ins, dependent: :restrict_with_exception
   has_many :member_link_codes, dependent: :restrict_with_exception
   has_many :programs, dependent: :restrict_with_exception
   has_many :occurrences, dependent: :restrict_with_exception

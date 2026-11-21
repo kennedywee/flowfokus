@@ -93,22 +93,6 @@ export const PAYMENT_STATUS_LABEL: Record<Schemas["PaymentStatus"], string> = {
   void: "Void",
 };
 
-/** What a denial means at the desk, and what staff can do next. */
-export const DENIAL: Record<Schemas["DenialReason"], { title: string; next: string }> = {
-  no_entitlement: {
-    title: "No active membership right",
-    next: "Nothing covers this time. Sell a membership, or fulfill a paid sale first.",
-  },
-  location_not_allowed: {
-    title: "Not valid at this location",
-    next: "Their membership covers other locations only.",
-  },
-  usage_limit_reached: {
-    title: "No visits left this period",
-    next: "Every visit in the current period is used. A new period starts after renewal.",
-  },
-};
-
 /**
  * A short, specific message for a failed call, in staff words. It never names
  * the API, Rails, or the database. Field errors are shown by the form.

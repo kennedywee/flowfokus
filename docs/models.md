@@ -17,7 +17,7 @@ This follows [Stripe's product and price model](https://docs.stripe.com/products
 
 - A ticket price has no duration. Its validity comes from the time it is bought for.
 
-**ProductBenefit.** A promised benefit, such as gym access for a period or ten class bookings. A catalog template, not a usable right. `gym_access` opens the gym floor. `program_access` books programs: every program, every program of one kind, or selected programs.
+**ProductBenefit.** A promised benefit, such as gym access for a period or ten class bookings. A catalog template, not a usable right. `gym_access` is gym access that a product grants. No screen records a visit against it. `program_access` books programs: every program, every program of one kind, or selected programs.
 
 ## Program stage
 
@@ -53,9 +53,9 @@ Programs sit beside the cycle. They describe what people attend. They sell nothi
 
 **Entitlement.** A usable right. Belongs to a grant. Has validity, location scope, and a usage limit (counted or unlimited). Access rules live here, not on memberships or grants.
 
-**EntitlementUsage.** One authorization or consumption of an entitlement, linked to a check-in or a booking. Unlimited access still records usage. Processing the same access twice must not consume twice.
+**EntitlementUsage.** One authorization or consumption of an entitlement, linked to a booking. Older rows can link to a walk-in check-in. Unlimited access still records usage. Processing the same access twice must not consume twice.
 
-**CheckIn.** An access attempt by a member at a location: time, method, result. Denied attempts and staff overrides record a reason and do not consume an entitlement. Only `gym_access` rights open the gym floor.
+**Walk-in check-in.** Left the scope on 21 November 2026 ([decisions](decisions.md), issue #81). Rails keeps the `check_ins` table and `entitlement_usages.check_in_id` as history. No endpoint or screen reads or writes them.
 
 **Booking.** One spot in one occurrence. The holder is the member whose right pays for the spot; the attendee takes it, as a member or a guest known by name. They differ only when one ticket purchase booked several spots. A confirmed booking uses one entitlement when the spot is taken. Cancelling can return the use; the usage row keeps its return time. A held booking waits for a checkout and stops counting when the hold ends. One live booking per member attendee and occurrence. Staff mark attendance on the booking.
 
@@ -63,7 +63,7 @@ Programs sit beside the cycle. They describe what people attend. They sell nothi
 
 **Time boundaries.** Periods and entitlements include the start and exclude the end: `start <= time < end`. Consecutive periods share a boundary instant. Overlap must still be prevented separately.
 
-**Locations.** Three separate facts: where a sale happened (sale), where access happened (check-in), and where access is allowed (entitlement scope).
+**Locations.** Three separate facts: where a sale happened (sale), where access happened (the booking's program), and where access is allowed (entitlement scope).
 
 **History.**
 

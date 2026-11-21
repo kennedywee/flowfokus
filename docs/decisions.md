@@ -52,12 +52,12 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | A booking always uses one entitlement. Program benefits cover every program, one kind, or selected programs. | [Workflows](workflows.md#book) |
 | Members book and pay on the gym site. Online checkout holds the spot; the sale is created when payment succeeds. | [Workflows](workflows.md#buy-online) |
 | One ticket purchase can book up to ten spots. The buyer holds the right; attendees are members or guests by name. Online buyers name only themselves and guests. | [Workflows](workflows.md#book) |
-| Entitlements authorize check-ins. Membership status alone grants no access. | [Models](models.md#entitlement-stage) |
+| Entitlements authorize access. Membership status alone grants no access. | [Models](models.md#entitlement-stage) |
 | A right with no usage limit is unlimited. A right with no location is valid at every location. | [Models](models.md#entitlement-stage) |
 | A sale line saves its purchased terms. Later catalog edits never change it. | [Models](models.md#purchase-stage) |
 | A refund never changes access. Revocation is a separate action and ends only one sale's delivery. | [Workflows](workflows.md#refund-or-revoke) |
 | A sale can be voided only before delivery, when it keeps no money. | [Workflows](workflows.md#refund-or-revoke) |
-| Staff with `check_ins:override` can let a denied member in once, with a reason. It uses no right. | [Workflows](workflows.md#check-in) |
+| Walk-in gym check-in left the scope on 21 November 2026 ([#81](https://github.com/kennedywee/flowfokus/issues/81)). Rails removed `/staff/check_ins`, the `check_ins:*` permissions, and the check-in lists in the overview and the member account. The `check_ins` table and `entitlement_usages.check_in_id` stay as history. The `gym_access` benefit stays in data, and no screen records a visit against it. The Check-ins CSV export, "Visit totals", and the override went with it. | [Workflows](workflows.md#mark-attendance) |
 | A member links a sign-in with a one-time code that staff issue. A matching email is not enough. | [Identity](identity.md#member-customer) |
 | Three default roles: Owner, Manager, Receptionist. | [Authorization](authorization.md#implemented-permissions) |
 | The staff portal sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Home, Inbox, Agents, the Check-ins page, Reports, Integrations, and What's new left the scope on 21 November 2026. `/<org>` opens the first page the role can read, which is Calendar (the schedule route) until it is built. | [Frontend preview](frontend-preview.md) |
@@ -65,11 +65,11 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | The redesigned screens share one set of parts (list table, filter bar, Display popover, row selection, groups, detail layout, hero, activity, background patterns, data marks) in `components/parts/`. Each screen issue moves a screen onto them; the older list toolbar, pager, and table state stay until then. A status mark always has a text label from Rails. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
 | A sale has no number in Rails yet, so the sale page title is the product name. "Sale #1058" waits for sale numbers. Record payment (P) and Fulfill items (F) are in the page's section headers; Refund, Revoke access, and Void stay in its more menu. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
 | A product page lists every price (Name, Length, Status, Price). A new amount or length is a new price that staff add on that page; they then take the old one off sale or archive it. Edit product has no price fields, because Rails never changes a price a sale may use. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
-| Check-in for a booked member is on the Session details page only: the row's status mark, A, the row menu, and Check in on the floating bar over chosen rows. Rails has no bulk call, so the bar sends its single attend call once per row; attending a member who is already here changes nothing, so a retry or a stale page is safe. No-show waits for Rails. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
+| Marking a booked member as here is on the Session details page only: the row's status mark, A, the row menu, and Check in on the floating bar over chosen rows. Rails has no bulk call, so the bar sends its single attend call once per row; attending a member who is already here changes nothing, so a retry or a stale page is safe. No-show waits for Rails. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
 
 ## Deferred
 
-Waitlists, courses, staff calendars for appointments, recurring billing, a native mobile app, and a Flowfokus staging environment are not built. The Home, Inbox, Agents, Check-ins, and Reports pages are not built either. Check-in stays on the member page and ⌘K. Rails keeps the check-in endpoints, until [#81](https://github.com/kennedywee/flowfokus/issues/81) is decided.
+Waitlists, courses, staff calendars for appointments, recurring billing, a native mobile app, and a Flowfokus staging environment are not built. The Home, Inbox, Agents, Check-ins, and Reports pages are not built either. Walk-in gym check-in is not built: no screen or endpoint records a visit with no booking. Staff mark a booked member as here on Session details only.
 
 Only the local test payment provider exists. A real provider waits on [#9](https://github.com/kennedywee/flowfokus/issues/9).
 

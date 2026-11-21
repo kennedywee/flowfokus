@@ -6,7 +6,6 @@ class Member < ApplicationRecord
   has_one :membership, dependent: :restrict_with_exception
   has_many :sales, dependent: :restrict_with_exception
   has_many :entitlements, dependent: :restrict_with_exception
-  has_many :check_ins, dependent: :restrict_with_exception
   has_many :link_codes, class_name: "MemberLinkCode", dependent: :restrict_with_exception
   has_many :bookings, dependent: :restrict_with_exception
   # Bookings this member's rights paid for, including spots for other people.
@@ -75,10 +74,9 @@ class Member < ApplicationRecord
     end
   end
 
-  # The member's own view: membership, rights, visits, and purchases.
+  # The member's own view: membership, rights, bookings, and purchases.
   def as_account_api(at: Time.current)
     as_detail_api(at:).except(:renewal, :linked_email).merge(
-      check_ins: check_ins.newest_first.limit(20).map { |check_in| check_in.as_member_api },
       sales: sales.open.newest_first.includes(:line_item).limit(20).map(&:as_member_api),
       bookings: recent_bookings(at:).map { _1.as_member_api(at:) }
     )

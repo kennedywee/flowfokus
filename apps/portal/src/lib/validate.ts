@@ -203,20 +203,6 @@ export function fulfillInput(value: unknown): FulfillInput {
   return reason ? { ...base, early_reason: reason } : base;
 }
 
-export type CreateCheckInInput = IdempotentInput & Schemas["CheckInInput"];
-
-export function createCheckInInput(value: unknown): CreateCheckInInput {
-  const input = record(value);
-  const reason = input.override_reason === undefined ? "" : textField(input, "override_reason", 500).trim();
-  return {
-    slug: slugField(input),
-    idempotencyKey: idempotencyKeyField(input),
-    member_id: uuidField(input, "member_id"),
-    location_id: uuidField(input, "location_id"),
-    ...(reason ? { override_reason: reason } : {}),
-  };
-}
-
 function optionalBoolean(input: Record<string, unknown>, name: string): boolean | undefined {
   const value = input[name];
   if (value === undefined) return undefined;

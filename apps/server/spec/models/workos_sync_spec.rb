@@ -33,10 +33,8 @@ RSpec.describe "WorkOS event sync" do
 
     it "keeps a deleted user for history, and no later event brings it back" do
       user = staff_user("user_gone")
-      location = create_location(chainsaw)
-      member = create_member(chainsaw)
-      CheckIn.create!(organization: chainsaw, member:, location:, recorded_by_user: user, result: "denied",
-        denial_reason: "no_entitlement", checked_in_at: Time.current, idempotency_key: SecureRandom.uuid, request_fingerprint: "x")
+      sale = record_sale(chainsaw, member: create_member(chainsaw), price: create_offer(chainsaw), location: create_location(chainsaw))
+      sale.record_payment!(actor: user, idempotency_key: SecureRandom.uuid, amount_minor: 100, method: "cash")
       membership = chainsaw.organization_memberships.create!(user:, role: "owner")
 
       deleted = deliver_workos_event("user.deleted", workos_user_data("user_gone", updated_at: 1.hour.ago))
@@ -47,7 +45,7 @@ RSpec.describe "WorkOS event sync" do
       expect(user.reload).to have_attributes(email: "user_gone@example.test")
       expect(user.workos_deleted_at).to be_present
       expect(membership.reload.workos_deleted_at).to be_present
-      expect(CheckIn.where(recorded_by_user: user)).to exist
+      expect(Payment.where(recorded_by_user: user)).to exist
     end
 
     it "keeps a deleted reference when deletion arrives before creation" do

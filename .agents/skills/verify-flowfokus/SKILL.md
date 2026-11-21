@@ -8,7 +8,7 @@ description: Launch the Flowfokus Docker stack, drive the staff portal (localhos
 Flowfokus is a membership platform for gyms. Users touch two web apps:
 
 - **Staff portal** at `http://localhost:4001`. Staff sell memberships, record payments, fulfill
-  sales, and check members in. This is the main surface.
+  sales, and mark booked members as here. This is the main surface.
 - **Gym site** at `http://chainsaw.localhost:4002`. The public catalog, member sign-in, and member
   self-service. The host name picks the gym.
 
@@ -97,9 +97,9 @@ Every password is `123123qwe`. The emulator seed is `workos-emulate.config.yaml`
 
 | Email | Where | Role |
 | --- | --- | --- |
-| `kennedy@flowfokus.com` | Chainsaw | Owner. Can do the full sale, payment, fulfillment, and check-in flow. |
+| `kennedy@flowfokus.com` | Chainsaw | Owner. Can do the full sale, payment, fulfillment, and booking flow. |
 | `rachel@flowfokus.com` | Both | Owner at Irongate, Manager at Chainsaw. Must pick an organization. |
-| `aiman@flowfokus.com` | Chainsaw | Receptionist. Reads, and checks members in. Cannot create members or sales. |
+| `aiman@flowfokus.com` | Chainsaw | Receptionist. Reads, books members, and marks them as here. Cannot create members or sales. |
 | `patrick@example.com` | Gym site | No staff access. Matches the seeded member Patrick Ng after a link code. |
 
 Seeded Chainsaw members: Aisyah Rahman, Ben Tan, Chloe Lim, and Patrick Ng. Seeded products:
@@ -112,7 +112,7 @@ Kumar and Sofia Wong.
 - Portal routes: `/chainsaw` (it opens `/chainsaw/schedule`), `/chainsaw/members`,
   `/chainsaw/members/new`, `/chainsaw/members/<uuid>`, `/chainsaw/sales/new`, `/chainsaw/sales/<uuid>`.
 - The sidebar is `getByRole('navigation', { name: 'Staff pages' })`. The top bar is
-  `getByRole('banner')`. It holds page actions such as `Check in`, `Sell`, and `Create sale`.
+  `getByRole('banner')`. It holds page actions such as `Sell`, `Book member`, and `Create sale`.
 - Page titles are level-1 headings. Toasts appear in `getByRole('region', { name: /Notifications/ })`.
 - Buttons with a keyboard hint have extra text in the name, for example `Create member Ctrl ↵`.
   Match them with a regular expression: `{ name: /^Create member/ }`.
@@ -128,7 +128,7 @@ docker exec flowfokus-db psql -U flowfokus -d flowfokus_development -Atc "select
 ```
 
 Useful tables: `members`, `sales`, `sale_line_items`, `payments`, `fulfillments`,
-`membership_periods`, `check_ins`, `member_link_codes`. Every tenant row has `organization_id`; join
+`membership_periods`, `bookings`, `member_link_codes`. Every tenant row has `organization_id`; join
 `organizations` and filter on `slug`.
 
 ## Evidence
@@ -150,7 +150,7 @@ Proof rules:
   the WorkOS Emulate page, not with a sealed cookie or the demo token.
 - Capture the action and the resulting state, not only the final screen.
 - Check the side effects next to what is visible: rows inserted, payments stored, fulfillments and
-  membership periods created, check-ins recorded.
+  membership periods created, bookings marked attended.
 - Use a mock only where production already isolates the external system. Here that is WorkOS
   Emulate for WorkOS, and the local test payment provider for online payments.
 - When the safe path is a dry run or a test mode, observe what it skips. Do not trust its name. The
@@ -186,8 +186,8 @@ runner removes its own temporary folder on exit. Stop any other process you star
 - **Host names.** Use `localhost`, not `127.0.0.1`, for the portal. Sign-in redirects only to hosts in
   `FLOWFOKUS_DEV_AUTH_HOSTS`. The gym site needs the `chainsaw.localhost` host name; `localhost:4002`
   has no gym.
-- **The `Check in` button** is in the top bar on a member's page (`/chainsaw/members/<uuid>`). It is
-  not on sale pages. Ctrl K also offers `Check in <member>`. There is no check-in list page.
+- **Check in** is on Session details only, for a booked member. A member's page and Ctrl K have no
+  Check in action. Walk-in gym check-in left the product (issue #81).
 - **Emulator restarts** clear its in-memory sessions. Restart Rails too
   (`docker compose restart server`), then sign in again.
 - **Fixed container names.** One Flowfokus stack can run on a machine. If another checkout started

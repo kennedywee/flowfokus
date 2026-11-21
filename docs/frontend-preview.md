@@ -24,7 +24,7 @@ before it) is history. The visual rules live in
   fallback when no organization is selected and several memberships are available.
   The optional fixed demo actor opens Chainsaw directly. The chosen desk
   location is an HttpOnly cookie per organization. It sets the default
-  location for check-in and new sales. Add location opens
+  location for new sales. Add location opens
   Settings.
 - Members: the list (the member count, search, Display, sortable Member and
   Member since, and a page range), create, and view member records. The list
@@ -49,8 +49,8 @@ before it) is history. The visual rules live in
 - Calendar (the schedule route): sessions by day.
 - Session details: the date and time with "Starts in", the arrival ribbon (the
   members who are here, how many are still to arrive, and the spots open), and
-  the bookings as Here, To arrive, and Cancelled. This is the only check-in
-  screen for booked members: a row's status mark, A, the row menu, or Check in
+  the bookings as Here, To arrive, and Cancelled. Staff mark a booked
+  member as here on this page only: a row's status mark, A, the row menu, or Check in
   on the floating bar for chosen rows (one Rails attend call per row; Rails
   ignores a member who is already here). Staff also book a member, cancel a
   booking, and cancel the session. It leaves out No-show, a bulk check-in call,
@@ -115,8 +115,9 @@ Home, Inbox, Agents, Check-ins, Reports, Settings Integrations, and What's new
 left the product on 21 November 2026. See [Decisions](decisions.md). `/<org>`
 and the old URLs of these pages open the first page in the sidebar the role can
 read, which is Calendar for most roles (`lib/removed-pages.ts`, `lib/pages.ts`).
-Rails keeps the check-in endpoints until
-[#81](https://github.com/kennedywee/flowfokus/issues/81) is decided.
+Walk-in gym check-in left the product too ([#81](https://github.com/kennedywee/flowfokus/issues/81)):
+there is no Check in action on the member page or in ⌘K, and Rails has no
+check-in endpoint.
 
 ## Run and verify
 

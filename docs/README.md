@@ -24,7 +24,7 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 | [Authorization](authorization.md) | Permissions, enforcement, tenant isolation, staff management. |
 | [Benefit Delivery Cycle](benefit-delivery-cycle.md) | The four stages of the business domain. |
 | [Models](models.md) | Domain records and their rules. |
-| [Workflows](workflows.md) | Purchase, renewal, check-in, refund, and adjustment flows. |
+| [Workflows](workflows.md) | Purchase, renewal, attendance, refund, and adjustment flows. |
 | [Decisions](decisions.md) | Accepted decisions and deferred scope. |
 
 ## First release
@@ -35,10 +35,10 @@ These documents describe the design. Implementation starts with [Sprint 1](sprin
 - Membership products with many immutable prices and benefits.
 - Sales, line items, and payment recording.
 - Membership fulfillment, periods, activation, renewal, and expiry.
-- Benefit grants, entitlements, limited and unlimited access, and check-ins.
+- Benefit grants, entitlements, limited and unlimited access, and bookings.
 - Manual adjustments and basic refunds.
 
-Standalone passes, classes, events, reservations, waitlists, recurring billing, and a native mobile app are deferred. So are the Home, Inbox, Agents, Check-ins, and Reports pages. Do not build placeholders for them.
+Standalone passes, classes, events, reservations, waitlists, recurring billing, walk-in gym check-in, and a native mobile app are deferred. So are the Home, Inbox, Agents, Check-ins, and Reports pages. Do not build placeholders for them.
 
 ## Rules for these documents
 

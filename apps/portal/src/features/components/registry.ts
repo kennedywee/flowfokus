@@ -359,21 +359,6 @@ export const GALLERY: readonly GalleryEntry[] = [
     ],
   },
   {
-    slug: "swipe-confirm",
-    name: "Swipe to confirm",
-    group: "Complex",
-    summary: "Drag the knob to the end to confirm. Distance, not time: for phone and tablet check-in.",
-    source: ["components/ui/swipe-confirm.tsx"],
-    paper: { page: "Flowfokus Redesign — Experimental — Hold to confirm", board: "B · Variants" },
-    examples: [{ file: "swipe-confirm-basic", title: "Swipe to check in", note: "Let go before 90% and the knob springs back." }],
-    props: [
-      { name: "label", type: "string", note: "The action. It names the knob." },
-      { name: "slideLabel", type: "string", note: "The track's text. It is also the knob's description." },
-      { name: "confirmedLabel", type: "ReactNode", note: "Shown while the request runs." },
-      { name: "onConfirm", type: "() => unknown", note: "Return a Promise to keep the success state until it settles." },
-    ],
-  },
-  {
     slug: "popover",
     name: "Popover",
     group: "Complex",

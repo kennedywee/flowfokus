@@ -134,8 +134,6 @@ RSpec.describe "Authentication and permissions" do
         expect(response).to have_http_status(:forbidden)
         api :post, "/staff/sales/#{sale.id}/fulfill"
         expect(response).to have_http_status(:forbidden)
-        api :post, "/staff/check_ins", key: SecureRandom.uuid, body: { member_id: member.id, location_id: location.id }
-        expect(response).to have_http_status(:forbidden)
         api :get, "/staff/products"
         expect(response).to have_http_status(:forbidden)
       end

@@ -629,7 +629,7 @@ const REASON_COPY = {
   },
   revoke: {
     title: "Revoke access?",
-    body: "The period and access rights from this sale end now. Payments, other periods, and past visits stay.",
+    body: "The period and access rights from this sale end now. Payments, other periods, and past bookings stay.",
     submit: "Revoke access",
     pending: "Revoking…",
     done: "Access revoked",

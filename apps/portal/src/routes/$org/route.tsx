@@ -19,7 +19,6 @@ import { Blocked } from "../../components/Blocked";
 import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
 import { KeyboardShortcuts } from "../../components/KeyboardShortcuts";
-import { useCheckIn } from "../../features/check-ins/CheckInFlow";
 import { SettingsNav } from "../../features/settings/SettingsNav";
 import { isSettingsPath } from "../../features/settings/sections";
 import { PageActionsSlot } from "../../components/PageActions";
@@ -173,8 +172,6 @@ function Shell({
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const modKey = useModKeyLabel();
   const [shortcuts, setShortcuts] = useState(false);
-  // ⌘K checks a member in with the same flow as the Session page: a toast, or the denial dialog.
-  const checkInFlow = useCheckIn();
   useShortcut("k", () => setSearching((open) => !open), { mod: true });
   useShortcut(",", () => void navigate({ to: "/$org/settings", params: { org: data.slug } }), { mod: true });
   useShortcut("?", () => setShortcuts(true));
@@ -376,13 +373,11 @@ function Shell({
         pages={pages}
         canSearchMembers={data.actor.permissions.includes("members:read")}
         actions={{
-          checkIn: data.actor.permissions.includes("check_ins:create") ? (member) => void checkInFlow.checkIn(member) : undefined,
           sell: data.actor.permissions.includes("purchases:create")
             ? (member) => void navigate({ to: "/$org/sales/new", params: { org: data.slug }, search: { member: member.id } })
             : undefined,
         }}
       />
-      {checkInFlow.dialog}
     </SidebarProvider>
   );
 }
