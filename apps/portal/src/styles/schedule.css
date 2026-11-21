@@ -1077,8 +1077,10 @@ a.session-row__name:hover {
     color: var(--color-on-ink);
     box-shadow: none;
   }
-  .session-head__book:hover {
+  /* Beats the secondary button's hover, which would drop the gradient. */
+  .button.session-head__book:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--gradient-primary-hover);
+    color: var(--color-on-ink);
   }
   .session-head__book .kbd {
     display: none;

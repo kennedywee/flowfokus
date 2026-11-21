@@ -154,8 +154,10 @@
     color: var(--color-on-ink);
     box-shadow: none;
   }
-  .product-head__sell:hover {
+  /* Beats the secondary button's hover, which would drop the gradient. */
+  .button.product-head__sell:hover:not(:disabled, [aria-disabled="true"]) {
     background: var(--gradient-primary-hover);
+    color: var(--color-on-ink);
   }
   .product-benefit {
     grid-template-columns: 28px minmax(0, 1fr);
