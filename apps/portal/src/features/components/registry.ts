@@ -548,7 +548,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Calendar block",
     group: "Blocks",
     summary:
-      "One session on the Calendar. A class is a white card with its spot stack and a count, an appointment a flat grey block (Booked or Open), an event a dark one with its tickets sold. Full is amber, an ended session is washed out, and a cancelled one is a dashed red outline with a struck name. With a link it opens the session page.",
+      "One session on the Calendar. A class is a white card with its spot stack and a count, an appointment a flat grey block (Booked or Open), an event a dark one with its spots taken. Full is amber, an ended session is washed out, and a cancelled one is a dashed red outline with a struck name. With a link it opens the session page.",
     source: ["features/calendar/Block.tsx", "features/calendar/Calendar.tsx", "styles/calendar.css"],
     paper: { page: "Flowfokus Design — Calendar", board: "Calendar · K2 · Day, kinds" },
     examples: [{ file: "calendar-blocks", title: "Each kind and state", note: "Sample data." }],

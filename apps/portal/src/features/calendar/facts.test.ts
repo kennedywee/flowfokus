@@ -217,11 +217,17 @@ describe("Day grid layout", () => {
 });
 
 describe("block text", () => {
-  test("a class says how many are booked, an event how many are sold, an appointment booked or open", () => {
+  test("a class and an event say how many spots are taken, an appointment booked or open", () => {
     expect(blockStatus(entry("a", "07:00", "08:00"), NOW)).toBe("3 of 12");
-    expect(blockStatus(entry("a", "07:00", "08:00", { kind: "event" }, { capacity: 50, spots_taken: 41 }), NOW)).toBe("41 of 50 sold");
+    expect(blockStatus(entry("a", "07:00", "08:00", { kind: "event" }, { capacity: 50, spots_taken: 41 }), NOW)).toBe("41 of 50");
     expect(blockStatus(entry("a", "07:00", "08:00", { kind: "appointment" }, { capacity: 1, spots_taken: 0, spots_left: 1 }), NOW)).toBe("Open");
     expect(blockStatus(entry("a", "07:00", "08:00", { kind: "appointment" }, { capacity: 1, spots_taken: 1, spots_left: 0 }), NOW)).toBe("Booked");
+  });
+
+  test("an event's accessible name says spots taken, not tickets sold", () => {
+    const seminar = entry("a", "18:00", "21:00", { kind: "event" }, { capacity: 50, spots_taken: 41 });
+    expect(blockLabel(seminar, TZ, "Event", NOW)).toContain("41 of 50 spots taken");
+    expect(blockLabel(seminar, TZ, "Event", NOW)).not.toContain("sold");
   });
 
   test("cancelled gives the reason", () => {

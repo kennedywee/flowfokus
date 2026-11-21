@@ -301,7 +301,7 @@ export function blockStatus(entry: Entry, now: Date): string {
   const { kind } = entry.program;
   if (state === "cancelled") return entry.cancel_reason ? `Cancelled · ${entry.cancel_reason}` : "Cancelled";
   if (kind === "appointment") return entry.spots_taken > 0 ? "Booked" : "Open";
-  if (kind === "event") return `${entry.spots_taken} of ${entry.capacity} sold`;
+  // Rails counts membership bookings and active holds in `spots_taken`, so an event's count is spots, not tickets sold.
   return `${entry.spots_taken} of ${entry.capacity}`;
 }
 
@@ -316,7 +316,7 @@ export function blockLabel(entry: Entry, timeZone: string, kindLabel: string, no
   ];
   if (state === "cancelled") parts.push(entry.cancel_reason ? `cancelled, ${entry.cancel_reason}` : "cancelled");
   else if (entry.program.kind === "appointment") parts.push(entry.spots_taken > 0 ? "booked" : "open");
-  else if (entry.program.kind === "event") parts.push(`${entry.spots_taken} of ${entry.capacity} tickets sold`);
+  else if (entry.program.kind === "event") parts.push(`${entry.spots_taken} of ${entry.capacity} spots taken`);
   else parts.push(`${entry.spots_taken} of ${entry.capacity} booked`);
   if (state === "full" && entry.program.kind !== "appointment") parts.push("full");
   if (state === "ended") parts.push("ended");

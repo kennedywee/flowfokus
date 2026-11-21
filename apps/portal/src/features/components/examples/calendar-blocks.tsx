@@ -6,7 +6,7 @@ const BLOCKS = [
   { caption: "Class, full", kind: "group_class", state: "full", time: "19:00 – 20:00", name: "HIIT Express", status: "12 of 12", spots: { capacity: 12, booked: 12 } },
   { caption: "Appointment", kind: "appointment", state: "open", time: "09:00 – 10:00", name: "PT with Aina", status: "Open" },
   { caption: "Appointment, booked", kind: "appointment", state: "full", time: "10:00 – 11:00", name: "PT with Aina", status: "Booked" },
-  { caption: "Event", kind: "event", state: "open", time: "18:00 – 21:00", name: "Deadlift Seminar", status: "18 of 30 sold" },
+  { caption: "Event", kind: "event", state: "open", time: "18:00 – 21:00", name: "Deadlift Seminar", status: "18 of 30" },
   { caption: "Ended", kind: "group_class", state: "ended", time: "07:00 – 08:00", name: "Yoga Flow", status: "9 of 12", spots: { capacity: 12, booked: 9 } },
   { caption: "Cancelled", kind: "group_class", state: "cancelled", time: "19:00 – 20:00", name: "Yoga Flow", status: "Cancelled · Coach unwell" },
 ] as const;

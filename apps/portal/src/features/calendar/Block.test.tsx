@@ -17,11 +17,11 @@ describe("calendar block", () => {
 
   test("an appointment and an event draw no spot stack", () => {
     const appointment = renderToStaticMarkup(<CalendarBlock kind="appointment" state="open" time="09:00" name="PT with Aina" status="Open" />);
-    const event = renderToStaticMarkup(<CalendarBlock kind="event" state="open" time="18:00" name="Seminar" status="18 of 30 sold" />);
+    const event = renderToStaticMarkup(<CalendarBlock kind="event" state="open" time="18:00" name="Seminar" status="18 of 30" />);
     expect(appointment).not.toContain("spot-row");
     expect(event).not.toContain("spot-row");
     expect(appointment).toContain('data-kind="appointment"');
-    expect(event).toContain("18 of 30 sold");
+    expect(event).toContain("18 of 30");
   });
 
   test("a cancelled class says it was cancelled", () => {

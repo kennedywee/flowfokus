@@ -692,7 +692,7 @@ frames before a screen review:
 - Blocks (`CalendarBlock`, in the gallery): a class is a white card with a
   spot stack on the Day grid and "11 of 12" as text; an appointment is flat grey
   and says "Booked" or "Open" (Rails sends no member name); an event is dark and
-  says "41 of 50 sold". Full is amber (a class or an event; a booked appointment
+  says "41 of 50" (spots taken: Rails counts membership bookings and holds too). Full is amber (a class or an event; a booked appointment
   is not full). An ended session is washed out. A cancelled one is a dashed red
   outline with a struck name and "Cancelled · reason". The block names its
   program, or the host under a program grouping, because the column says the
