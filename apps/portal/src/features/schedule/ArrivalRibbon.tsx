@@ -3,7 +3,7 @@ import type { Schemas } from "@flowfokus/api";
 import { initials } from "../../components/ui";
 import { useOrganization } from "../../lib/organization";
 import { clockTime } from "../check-ins/facts";
-import { arrivalCounts, arrivals, axisFor, axisPosition, placeAvatars, ribbonText } from "./arrival";
+import { arrivalCounts, arrivals, axisFor, axisPosition, onRibbon, placeAvatars, ribbonText } from "./arrival";
 
 type Roster = Schemas["Roster"];
 
@@ -24,9 +24,9 @@ const MAX_DOTS = 24;
  */
 export function ArrivalRibbon({ roster, now }: { roster: Roster; now: number }) {
   const tz = useOrganization().timezone;
-  const here = useMemo(() => arrivals(roster.bookings), [roster.bookings]);
+  const here = useMemo(() => onRibbon(arrivals(roster.bookings), roster), [roster]);
   const counts = arrivalCounts(roster);
-  const axis = useMemo(() => axisFor(roster, here, tz), [roster.starts_at, roster.ends_at, here, tz]);
+  const axis = useMemo(() => axisFor(roster, here, tz), [roster, here, tz]);
   const over = Date.parse(roster.ends_at) <= now;
   const text = ribbonText(counts, over);
   // The plot's width places the avatars. It is read after the page mounts.
@@ -52,7 +52,8 @@ export function ArrivalRibbon({ roster, now }: { roster: Roster; now: number }) 
     AVATAR,
     LANES,
   );
-  const lanes = Math.max(1, ...placed.map((item) => item.lane + 1));
+  // No avatars: the axis sits right under the Now pill, so an empty ribbon stays short.
+  const lanes = Math.max(0, ...placed.map((item) => item.lane + 1));
   const byId = new Map(here.map((arrival) => [arrival.id, arrival]));
   const startsAt = Date.parse(roster.starts_at);
   const nowOnAxis = now >= axis.start && now <= axis.end;

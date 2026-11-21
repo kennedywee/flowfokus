@@ -476,6 +476,30 @@ a.programs-row:focus-visible {
 .program-form .program-select__control {
   padding-left: 30px;
 }
+/* A 24px icon button: the Products form uses it to remove a benefit. */
+.program-form__add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-2);
+  cursor: pointer;
+}
+.program-form__add:hover {
+  background: var(--color-hover);
+}
+.program-form__add:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+.program-form__add svg {
+  width: 14px;
+  height: 14px;
+}
 .program-form__no-note {
   margin: 0;
   color: var(--color-ink-3);
@@ -1044,9 +1068,18 @@ a.program-row:focus-visible {
 .program-chart__cancelled {
   color: var(--color-critical);
 }
+/* A label at either end stays inside the plot. */
+.program-chart__label[data-edge="end"] {
+  justify-self: end;
+}
+.program-chart__label[data-edge="start"] {
+  justify-self: start;
+}
 .program-chart__last {
   display: grid;
   justify-items: end;
+  justify-self: end;
+  max-width: none;
   margin: 0;
   color: var(--color-ink);
   font-size: var(--text-xs);

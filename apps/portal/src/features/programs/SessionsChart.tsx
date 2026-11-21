@@ -69,7 +69,12 @@ export function SessionsChart({ chart, now }: { chart: Chart; now: number }) {
           </div>
           <div className="program-chart__labels">
             {chart.ticks.map((tick) => (
-              <span key={tick.index} className="program-chart__label" style={{ gridColumn: tick.index + 1 }}>
+              <span
+                key={tick.index}
+                className="program-chart__label"
+                data-edge={tick.index >= count - 2 ? "end" : tick.index <= 1 ? "start" : undefined}
+                style={{ gridColumn: tick.index + 1 }}
+              >
                 {tick.label}
               </span>
             ))}

@@ -1,5 +1,6 @@
 import type { Schemas } from "@flowfokus/api";
 import { clockTime } from "../check-ins/facts";
+import { dayKey, shortDay } from "./facts";
 
 /*
  * Pure rules for the session page: the "Starts in" stat and the arrival
@@ -54,6 +55,22 @@ export function arrivals(bookings: readonly Booking[]): Arrival[] {
     .filter((booking) => booking.status === "attended" && booking.attended_at)
     .map((booking) => ({ id: booking.id, name: booking.attendee_name, at: Date.parse(booking.attended_at as string) }))
     .sort((a, b) => a.at - b.at || a.id.localeCompare(b.id));
+}
+
+/** The ribbon reaches back this far before the start, at most, and on past the end by this much. */
+const EARLY = 3 * 60 * MINUTE;
+const LATE = 60 * MINUTE;
+
+/**
+ * Who sits on the ribbon: those checked in from three hours before the start
+ * to one hour after the end. Rails also lets staff check a member in days
+ * ahead; stretching the axis to that day would squeeze the session into a
+ * sliver, so those members stay in the Here group only.
+ */
+export function onRibbon(here: readonly Arrival[], roster: Pick<Roster, "starts_at" | "ends_at">): Arrival[] {
+  const from = Date.parse(roster.starts_at) - EARLY;
+  const to = Date.parse(roster.ends_at) + LATE;
+  return here.filter((arrival) => arrival.at >= from && arrival.at <= to);
 }
 
 export interface ArrivalCounts {
@@ -162,4 +179,15 @@ export function placeAvatars(items: readonly { id: string; x: number }[], width:
     placed.push({ id: item.id, x: item.x, lane });
   }
   return placed;
+}
+
+/**
+ * When a member was checked in: "06:31" today, "Yesterday 18:02" or "21 Nov
+ * 08:14" before. Staff may check a member in ahead of the session, so the day
+ * matters.
+ */
+export function arrivedText(attendedAt: string, timeZone: string, now: number): string {
+  const clock = clockTime(attendedAt, timeZone);
+  if (dayKey(attendedAt, timeZone) === dayKey(new Date(now).toISOString(), timeZone)) return clock;
+  return `${shortDay(attendedAt, timeZone, new Date(now))} ${clock}`;
 }

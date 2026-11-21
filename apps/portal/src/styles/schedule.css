@@ -290,318 +290,387 @@ a.schedule-row:focus-visible {
 }
 
 /* ---------- Session details ---------- */
+/*
+ * Paper "Session details" on the shared DetailLayout: the date and time at
+ * display size with the "Starts in" stat, the arrival ribbon, the bookings in
+ * three groups, and clock ticks behind them. Sizes come from the tokens and
+ * the shared parts (Paper could not be read; see DESIGN.md).
+ */
 
-.session-page {
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "head" "props" "roster";
-  gap: var(--space-6);
+.session-details .detail__main {
+  gap: var(--space-8, 40px);
 }
-.session-head {
-  grid-area: head;
+.session-details__program {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.session-details__program:hover {
+  text-decoration: underline;
+}
+.session-details__status[data-state="cancelled"] > span:last-child {
+  color: var(--color-critical);
+}
+.session-details__status[data-state="full"] > span:last-child {
+  color: var(--color-warning);
+}
+
+/* The arrival ribbon: counts, then a time axis with a Now pin and the members who are here. */
+.ribbon {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.ribbon__text {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
-}
-.session-head__tile {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
-  background: var(--color-well);
+  gap: 4px 8px;
+  margin: 0;
   color: var(--color-ink-2);
-}
-.session-head__tile svg {
-  width: 18px;
-  height: 18px;
-}
-.session-head__text {
-  flex: 1 1 12rem;
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.session-head__text h1 {
-  font-variant-numeric: tabular-nums;
-}
-.session-head__meta {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.session-page > .session-props {
-  grid-area: props;
-}
-.session-page__roster {
-  grid-area: roster;
-  min-width: 0;
-}
-.session-props__status[data-state="ended"] .session-mark,
-.session-props__reason {
-  color: var(--color-ink);
-}
-.session-props .money {
-  font-variant-numeric: tabular-nums;
-}
-@media (min-width: 1100px) {
-  .session-page {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "head props" "roster props";
-    column-gap: var(--space-6);
-  }
-  .session-page > .session-props {
-    align-self: start;
-    position: sticky;
-    top: calc(var(--topbar-height) + var(--space-5));
-  }
-}
-
-/* Roster bands: a chevron, the group mark, the title, and the count. */
-.session-roster {
-  display: grid;
-  gap: var(--space-4);
-  margin-inline: -12px;
-}
-.session-group {
-  display: grid;
-  gap: var(--space-1);
-}
-.session-band {
-  display: flex;
-  align-items: center;
-  height: 36px;
-  border-radius: 6px;
-  background: var(--color-well);
-}
-.session-band__toggle {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 10px;
-  height: 100%;
-  padding-inline: 12px;
-  border: 0;
-  border-radius: inherit;
-  background: transparent;
-  color: var(--color-ink);
-  font: inherit;
   font-size: var(--text-sm);
   line-height: 20px;
-  text-align: left;
-  cursor: pointer;
 }
-.session-band__toggle:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
+.ribbon__text strong {
+  color: var(--color-ink);
+  font-weight: var(--font-weight-semibold);
+  font-variant-numeric: tabular-nums;
 }
-.session-band__chevron {
+.ribbon__dots {
   display: inline-flex;
-  justify-content: center;
-  width: 14px;
-  color: var(--color-ink-4);
+  flex-wrap: wrap;
+  gap: 3px;
 }
-.session-band__chevron svg {
+.ribbon__dot {
+  box-sizing: border-box;
   width: 12px;
   height: 12px;
+  border: 1.25px solid var(--color-ink-3);
+  border-radius: 50%;
 }
-.session-band__mark {
-  display: inline-flex;
-  justify-content: center;
-  width: 20px;
+.ribbon__dot[data-kind="open"] {
+  border-style: dashed;
+  border-color: var(--color-line-strong);
 }
-.session-band__title {
-  font-weight: var(--font-weight-semibold);
+.ribbon__plot {
+  --axis: calc(var(--lanes) * 34px + 24px);
+  position: relative;
+  height: calc(var(--axis) + 40px);
+  min-width: 0;
 }
-.session-band__count {
-  color: var(--color-ink-2);
+.ribbon__line {
+  position: absolute;
+  top: var(--axis);
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--color-line);
+}
+/* The session itself: a hatched run from its start to its end. */
+.ribbon__session {
+  position: absolute;
+  top: calc(var(--axis) - 3px);
+  height: 7px;
+  background: repeating-linear-gradient(115deg, var(--color-line-strong) 0 1px, transparent 1px 4px);
+}
+.ribbon__tick {
+  position: absolute;
+  top: calc(var(--axis) + 10px);
+  color: var(--color-ink-3);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   line-height: 16px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.ribbon__tick::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 1px;
+  height: 5px;
+  background: var(--color-line-strong);
+}
+.ribbon__tick[data-edge="start"] {
+  transform: none;
+}
+.ribbon__tick[data-edge="start"]::before {
+  left: 0;
+}
+.ribbon__tick[data-edge="end"] {
+  transform: translateX(-100%);
+}
+.ribbon__tick[data-edge="end"]::before {
+  left: 100%;
+}
+.ribbon__tick[data-hidden] {
+  visibility: hidden;
+}
+.ribbon__avatar {
+  position: absolute;
+  top: calc(var(--axis) - 36px - var(--lane) * 34px);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1.25px solid var(--color-good);
+  border-radius: 50%;
+  background: var(--color-page);
+  transform: translateX(-50%);
+}
+/* The stem from the avatar down to its time on the axis, with a dot where it lands. */
+.ribbon__avatar::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: -1;
+  width: 1px;
+  height: calc(8px + var(--lane) * 34px);
+  background: var(--color-good);
+  transform: translateX(-50%);
+}
+.ribbon__avatar::before {
+  content: "";
+  position: absolute;
+  top: calc(100% + 8px + var(--lane) * 34px - 2px);
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-good);
+  transform: translateX(-50%);
+}
+.ribbon__initials {
+  color: var(--color-ink);
+  font-size: var(--text-2xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 1;
+}
+.ribbon__now {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  width: 1px;
+  height: calc(var(--axis) + 4px);
+  background: var(--color-ink);
+}
+.ribbon__now::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border: 1.25px solid var(--color-ink);
+  border-radius: 50%;
+  background: var(--color-page);
+}
+.ribbon__now-pill {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 18px;
+  transform: translateX(-50%);
+}
+.ribbon__now-time {
+  position: absolute;
+  top: calc(var(--axis) + 10px);
+  left: 50%;
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+  transform: translateX(-50%);
 }
 
-/* Booking rows: the slot under the chevron, the mark, initials, who, chips, the day, ⋯. */
-.session-rows {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* Bookings: a status mark, the member, the right used, and the time. */
+.session-bookings {
+  container: session-bookings / inline-size;
 }
-.session-row {
-  display: flex;
-  align-items: center;
+.session-row__who-cell {
   gap: 10px;
-  min-height: 40px;
-  padding-inline: 12px;
-  border-radius: 6px;
-}
-.session-row:hover,
-.session-row:focus-within {
-  background: var(--color-hover);
-}
-.session-row__slot {
-  flex: none;
-  width: 14px;
 }
 .session-row__mark {
+  position: relative;
+  display: inline-grid;
   flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-}
-.session-row__mark-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  place-items: center;
   width: 20px;
   height: 20px;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: 50%;
   background: transparent;
+  color: inherit;
+}
+button.session-row__mark {
   cursor: pointer;
 }
-.session-row__mark-button:hover {
-  background: var(--color-line);
+button.session-row__mark:hover:not(:disabled) {
+  background: var(--color-hover);
 }
-.session-row__mark-button:focus-visible,
-.session-row__more:focus-visible {
+button.session-row__mark:focus-visible {
   outline: var(--focus-ring);
-  outline-offset: var(--focus-offset);
+  outline-offset: 1px;
 }
-.session-row__avatar {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
-  background: var(--color-avatar);
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: 16px;
+.session-row__tick {
+  position: absolute;
+  color: var(--color-good);
+  opacity: 0;
+  transition: opacity var(--duration-hover) var(--ease-out);
+}
+button.session-row__mark:hover:not(:disabled) .session-row__tick,
+button.session-row__mark:focus-visible .session-row__tick {
+  opacity: 1;
+}
+button.session-row__mark:hover:not(:disabled) .attendance-mark,
+button.session-row__mark:focus-visible .attendance-mark {
+  opacity: 0;
 }
 .session-row__who {
-  flex: 1 1 0;
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: 8px;
   min-width: 0;
 }
 .session-row__name {
-  flex: none;
+  overflow: hidden;
   color: var(--color-ink);
+  font-size: var(--text-base);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 a.session-row__name:hover {
   text-decoration: underline;
 }
-.session-row__phone-line {
-  display: none;
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
 .session-row__note {
   overflow: hidden;
-  color: var(--color-ink-2);
+  color: var(--color-ink-3);
   font-size: var(--text-xs);
-  line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.session-row__chips {
-  flex: none;
-  display: flex;
-  gap: 6px;
-}
-.session-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 22px;
-  padding-inline: 8px;
-  border-radius: var(--radius-full);
-  box-shadow: inset 0 0 0 1px var(--color-line);
+.session-row__right {
+  gap: 12px;
   color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
   white-space: nowrap;
 }
-.session-chip svg {
-  width: 12px;
-  height: 12px;
-}
-.session-chip__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: var(--radius-full);
-  background: var(--color-ink-4);
-}
-.session-chip__dot[data-tone="warning"] {
-  background: var(--color-warning);
-}
-.session-row__day {
-  flex: none;
-  width: 64px;
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  line-height: 16px;
-  text-align: right;
-}
-.session-row__menu {
-  flex: none;
-  width: 24px;
-}
-.session-row__more {
+.session-row__chip,
+.session-row__waiting {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+.session-row__chip {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.session-row__chip svg {
+  flex: none;
+  color: var(--color-ink-3);
+}
+.session-row__waiting {
+  flex: none;
+  color: var(--color-warning);
+}
+.session-row__when {
+  color: var(--color-ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.session-row__when[data-kind="here"] {
+  color: var(--color-good);
+}
+.session-row__more {
+  display: inline-grid;
+  place-items: center;
   width: 24px;
   height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-ink-2);
+  color: var(--color-ink-3);
   cursor: pointer;
   opacity: 0;
 }
-.session-row:hover .session-row__more,
-.session-row:focus-within .session-row__more,
-.session-row__more[data-open] {
+.list-table__row:hover .session-row__more,
+.session-row__more:focus-visible,
+.session-row__more[data-popup-open] {
   opacity: 1;
 }
 .session-row__more:hover {
-  background: var(--color-line);
+  background: var(--color-hover);
+  color: var(--color-ink);
 }
-.session-row__more svg {
-  width: 14px;
-  height: 14px;
+.session-row__more:focus-visible {
+  outline: var(--focus-ring);
 }
-.session-row--skeleton {
-  gap: 12px;
+@media (hover: none) {
+  .session-row__more {
+    opacity: 1;
+  }
 }
-.session-row__chip-skeleton {
-  width: 120px;
-  height: 20px;
-  margin-left: auto;
-  border-radius: var(--radius-full);
+/* A narrow table: the member and the time on line one, the right used under them. */
+@container session-bookings (max-width: 600px) {
+  .session-bookings .list-table__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--space-3);
+    padding-block: var(--space-2);
+  }
+  .session-bookings .list-table__row > .list-table__check {
+    flex: none;
+  }
+  .session-bookings .list-table__row > :nth-child(2),
+  .session-bookings .list-table__row > .list-table__check + * {
+    flex: 1 1 0;
+  }
+  .session-bookings .list-table__row > .session-row__right {
+    order: 3;
+    flex-basis: 100%;
+    padding-left: 30px;
+    font-size: var(--text-xs);
+  }
+  .session-bookings .list-table__row > .session-row__when {
+    order: 2;
+  }
+  .session-bookings .list-table__row > :last-child {
+    order: 2;
+  }
+  .session-row__more {
+    opacity: 1;
+  }
+  .session-row__who {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
 }
-.attendance-menu .granted-mark,
-.attendance-menu .attendance-mark {
-  width: 14px;
-  height: 14px;
+
+.session-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.session-loading__title {
+  display: block;
+  width: 320px;
+  max-width: 100%;
+  height: 36px;
 }
 
 /* ---------- Cancel dialogs ---------- */
@@ -759,19 +828,6 @@ a.session-row__name:hover {
   color: var(--color-ink-2);
   font-size: var(--text-xs);
   line-height: 16px;
-}
-.book-dialog__avatar {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
-  background: var(--color-avatar);
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
 }
 .book-dialog__name {
   flex: none;
@@ -1018,71 +1074,6 @@ a.session-row__name:hover {
     height: 8px;
   }
   .schedule-row__chevron {
-    display: none;
-  }
-
-  /* Phone session: the Details band first, then two-line rows. */
-  .session-props .mx-props__group h2 {
-    height: 32px;
-    border-radius: 8px;
-    background: var(--color-well);
-    color: var(--color-ink);
-    font-size: var(--text-sm);
-  }
-  .session-props .mx-props__group {
-    margin-inline: -8px;
-  }
-  .session-row {
-    align-items: flex-start;
-    padding-block: 8px;
-  }
-  .session-row__slot,
-  .session-row__avatar,
-  .session-row__chips,
-  .session-row__day {
-    display: none;
-  }
-  .session-row__who {
-    flex-direction: column;
-    gap: 2px;
-  }
-  .session-row__note {
-    white-space: normal;
-  }
-  .session-row__phone-line {
-    display: block;
-  }
-  .session-row__more {
-    opacity: 1;
-  }
-  .session-row__mark,
-  .session-row__mark-button,
-  .session-row__more,
-  .session-row__menu {
-    width: 40px;
-    height: 40px;
-    margin-block: -10px;
-  }
-  .session-row__mark {
-    margin-left: -10px;
-  }
-  /* Paper's phone frame makes Book member the dark primary action under the title. */
-  .session-head .page-actions {
-    flex-basis: 100%;
-  }
-  .session-head__book {
-    flex: 1;
-    border-color: transparent;
-    background: var(--gradient-primary);
-    color: var(--color-on-ink);
-    box-shadow: none;
-  }
-  /* Beats the secondary button's hover, which would drop the gradient. */
-  .button.session-head__book:hover:not(:disabled, [aria-disabled="true"]) {
-    background: var(--gradient-primary-hover);
-    color: var(--color-on-ink);
-  }
-  .session-head__book .kbd {
     display: none;
   }
 

@@ -20,9 +20,9 @@ export default function Example() {
       <DetailHero
         size="display"
         title="Morning strength"
-        line="Mondays, Wednesdays, Thursdays and Fridays at 07:00"
-        stats={[{ value: "78%", label: "filled, last 4 weeks" }]}
+                stats={[{ value: "78%", label: "filled, last 4 weeks" }]}
       />
+      <DetailHero size="display" title="Thu 5 Nov, 07:00" stats={[{ value: "20 min", label: "Starts in", above: true }]} />
       <p className="gallery-caption">On a list page: the title, and the count beside it (HeroStats)</p>
       <header className="hero">
         <div className="hero__text">

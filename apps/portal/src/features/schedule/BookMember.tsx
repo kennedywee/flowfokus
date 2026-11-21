@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
+import { Tile } from "@/components/parts/marks";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "../../components/Toast";
 import { SubmitButton, initials } from "../../components/ui";
@@ -219,9 +220,7 @@ export function BookMemberDialog({
         </span>
         {member ? (
           <div className="book-dialog__chosen">
-            <span className="book-dialog__avatar" aria-hidden="true">
-              {initials(member.name).slice(0, 1)}
-            </span>
+            <Tile size="small">{initials(member.name).slice(0, 2)}</Tile>
             <span className="book-dialog__name">{member.name}</span>
             <span className="book-dialog__email">{member.email}</span>
             <button ref={changeRef} type="button" className="book-dialog__change" disabled={pending} onClick={() => void choose(null)}>
@@ -381,9 +380,7 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
         <CommandList className="command__items">
           {members.map((member) => (
             <CommandItem key={member.id} value={member.id} className="book-search__item" onSelect={() => onPick(member)}>
-              <span className="book-dialog__avatar" aria-hidden="true">
-                {initials(member.name).slice(0, 1)}
-              </span>
+              <Tile size="small">{initials(member.name).slice(0, 2)}</Tile>
               <span className="book-dialog__name">{member.name}</span>
               <span className="book-dialog__email">{member.email}</span>
             </CommandItem>

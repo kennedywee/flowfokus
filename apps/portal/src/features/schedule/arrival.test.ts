@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Schemas } from "@flowfokus/api";
-import { arrivalCounts, arrivals, axisFor, axisPosition, clockStat, placeAvatars, ribbonText, spanText } from "./arrival";
+import { arrivalCounts, arrivals, arrivedText, axisFor, axisPosition, clockStat, onRibbon, placeAvatars, ribbonText, spanText } from "./arrival";
 
 const TZ = "Asia/Kuala_Lumpur";
 const at = (clock: string) => new Date(`2026-11-05T${clock}:00+08:00`).getTime();
@@ -72,6 +72,20 @@ describe("the axis", () => {
   });
 });
 
+describe("the ribbon window", () => {
+  test("keeps arrivals from three hours before the start to an hour after the end", () => {
+    const day = 24 * 3_600_000;
+    const here = [
+      { id: "days", name: "Days early", at: at("07:00") - 3 * day },
+      { id: "early", name: "Early", at: at("04:30") },
+      { id: "on", name: "On time", at: at("06:55") },
+      { id: "late", name: "Late", at: at("08:50") },
+      { id: "after", name: "After", at: at("09:30") },
+    ];
+    expect(onRibbon(here, roster).map((item) => item.id)).toEqual(["early", "on", "late"]);
+  });
+});
+
 describe("avatars", () => {
   test("stack in the lowest lane that is clear and drop what does not fit", () => {
     const placed = placeAvatars(
@@ -91,5 +105,14 @@ describe("avatars", () => {
       ["c", 2],
       ["e", 0],
     ]);
+  });
+});
+
+describe("arrival time", () => {
+  test("shows the clock today and the day before it", () => {
+    const now = at("07:10");
+    expect(arrivedText(new Date(at("06:31")).toISOString(), TZ, now)).toBe("06:31");
+    expect(arrivedText(new Date(at("06:31") - 24 * 3_600_000).toISOString(), TZ, now)).toBe("Yesterday 06:31");
+    expect(arrivedText(new Date(at("06:31") - 5 * 24 * 3_600_000).toISOString(), TZ, now)).toBe("31 Oct 06:31");
   });
 });

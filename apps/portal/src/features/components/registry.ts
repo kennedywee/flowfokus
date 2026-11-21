@@ -480,7 +480,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     paper: { page: "Flowfokus Design — Members", board: "Members — few filters + Display open" },
     examples: [
       { file: "list-table-members", title: "Two-line rows with sort and footer", note: "Rows are 56px. The footer is ListPager. A row that opens a record puts one Link with class list-table__link in its first cell; the link covers the row." },
-      { file: "list-table-selection", title: "Row selection", note: "Adjacent chosen rows merge into one band. Shift-click chooses a range. The bar is announced as you choose." },
+      { file: "list-table-selection", title: "Row selection", note: "Adjacent chosen rows merge into one band. Shift-click chooses a range. The bar is announced as you choose. A row that no bulk action covers is `unselectable`: it keeps the checkbox column and shows no box." },
       { file: "list-table-groups", title: "Collapsible groups", note: "One-line rows are 44px, for a detail page." },
       { file: "list-table-states", title: "States", note: "Default, hover, focus, selected, loading, and empty." },
       { file: "list-table-load-more", title: "Load more on scroll", note: "For a list inside a detail page." },
@@ -490,6 +490,8 @@ export const GALLERY: readonly GalleryEntry[] = [
       { name: "sort / onSort", type: "SortState", note: "Sortable headers are buttons. Only the sorted header cell carries aria-sort." },
       { name: "selection", type: "{ chosen, total, onToggleAll }", note: "Adds a checkbox column. The header box shows none, some (mixed), or all." },
       { name: "density", type: '"two-line" | "one-line"', default: '"two-line"', note: "56px or 44px rows." },
+      { name: "row: unselectable", type: "boolean", note: "In a table with a selection column: no checkbox on this row. Its width stays, so the columns line up." },
+      { name: "row: onKeyDown / onContextMenu", type: "handlers", note: "Keys pressed in the row and a right-click on it, for a row shortcut and a row menu." },
     ],
   },
   {
@@ -546,7 +548,8 @@ export const GALLERY: readonly GalleryEntry[] = [
     slug: "spot-stack",
     name: "Spot stack",
     group: "Data",
-    summary: "Slanted segments, one per spot. Booked is ink, open is faint, full is amber, past is grey. Chart size and row size.",
+    summary:
+      "Slanted segments, one per spot. Booked is ink, open is faint, full is amber, past is grey. Chart size and row size. A cancelled session is a flat faint line. A session with more spots than a stack can draw (16 in a column, 20 in a row) is drawn smaller: it never shows full unless it is, and never shows empty with a booking.",
     source: ["components/parts/marks.tsx", "lib/list-parts.ts"],
     paper: { page: "Flowfokus Design — Program details", board: "Program" },
     examples: [{ file: "spot-stack-sizes", title: "Chart size and row size" }],
@@ -593,18 +596,6 @@ export const GALLERY: readonly GalleryEntry[] = [
     examples: [{ file: "list-toolbar-basic", title: "Filter, chips and search" }],
   },
   {
-    slug: "table-state",
-    name: "Table state",
-    group: "Data",
-    summary: "A list with no rows: empty keeps the header band and a skeleton; no results shows the panel alone.",
-    source: ["components/TableState.tsx"],
-    paper: { page: "Flowfokus Redesign — Components — Data", board: "Table" },
-    examples: [
-      { file: "table-state-empty", title: "Empty" },
-      { file: "table-state-no-results", title: "No results" },
-    ],
-  },
-  {
     slug: "list-pager",
     name: "List pager",
     group: "Data",
@@ -648,7 +639,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Detail hero",
     group: "Blocks",
     summary:
-      "An avatar or icon tile, the title, one muted line, and up to two stats on the right. The display size is for a program or session. HeroStats is the same figures on their own: the Members list shows its count with it.",
+      "An avatar or icon tile, the title, one muted line, and up to two stats on the right. The display size is for a program or session. A stat with `above` puts its label over the figure: \"Starts in\" over \"20 min\". HeroStats is the same figures on their own: the Members list shows its count with it.",
     source: ["components/parts/DetailLayout.tsx"],
     paper: { page: "Flowfokus Design — Program details", board: "Program" },
     examples: [{ file: "detail-hero-variants", title: "Member, sale, program, and list title", note: "The last one is HeroStats beside a list title." }],
