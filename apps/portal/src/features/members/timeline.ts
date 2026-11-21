@@ -7,12 +7,38 @@ import type { Schemas } from "@flowfokus/api";
  * so a period that is followed by another one shows no end mark.
  */
 
-const DAY = 24 * 3_600_000;
 const MINUTE = 60_000;
 export const PAST_DAYS = 7;
 export const AHEAD_DAYS = 30;
-/** Rails returns the 10 latest bookings before now (MemberDetail.bookings). */
-const EARLIER_BOOKINGS = 10;
+
+const wallClock = (at: number, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+  }).formatToParts(at);
+  const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
+  return Date.UTC(part("year"), part("month") - 1, part("day"), part("hour"), part("minute"), part("second"));
+};
+
+/**
+ * The same wall-clock time, `days` calendar days away, in the organization's
+ * time zone. A day is not always 24 hours there: clocks change.
+ */
+export function shiftDays(at: number, days: number, timeZone: string): number {
+  const ms = ((at % 1000) + 1000) % 1000;
+  const second = at - ms;
+  const wall = wallClock(second, timeZone) + days * 24 * 3_600_000;
+  // The offset at the wanted time, found from a first guess, then checked once.
+  const offsetAt = (instant: number) => wallClock(instant, timeZone) - instant;
+  const guess = wall - offsetAt(wall);
+  return wall - offsetAt(guess) + ms;
+}
 
 export type HorizonTone = "neutral" | "warning" | "critical";
 
@@ -29,8 +55,8 @@ export interface HorizonEvent {
 export interface Horizon {
   start: number;
   end: number;
-  /** True when Rails returned fewer earlier bookings than the week holds, so the window starts later. */
-  shortened: boolean;
+  /** One per calendar day, from `start` to `end`. */
+  ticks: number[];
   events: HorizonEvent[];
 }
 
@@ -39,20 +65,11 @@ export function horizonFor(
   member: Schemas["MemberDetail"],
   productName: (saleId: string) => string,
   now: number,
+  timeZone: string,
 ): Horizon {
-  let start = now - PAST_DAYS * DAY;
-  const end = now + AHEAD_DAYS * DAY;
-
-  // Rails sends only the latest 10 earlier bookings. If all 10 sit inside the week, older ones may be missing.
-  const earlier = member.bookings.filter((booking) => Date.parse(booking.starts_at) <= now);
-  let shortened = false;
-  if (earlier.length >= EARLIER_BOOKINGS) {
-    const oldest = Math.min(...earlier.map((booking) => Date.parse(booking.starts_at)));
-    if (oldest > start) {
-      start = oldest;
-      shortened = true;
-    }
-  }
+  const ticks = Array.from({ length: PAST_DAYS + AHEAD_DAYS + 1 }, (_, index) => shiftDays(now, index - PAST_DAYS, timeZone));
+  const start = shiftDays(now, -PAST_DAYS, timeZone);
+  const end = shiftDays(now, AHEAD_DAYS, timeZone);
   const inside = (at: number) => at >= start && at <= end;
   const events: HorizonEvent[] = [{ id: "today", kind: "today", at: now, past: false, tone: "neutral", title: "Today" }];
 
@@ -63,7 +80,6 @@ export function horizonFor(
   }
 
   const periods = member.membership?.periods ?? [];
-  const periodEnds: number[] = [];
   for (const period of periods) {
     const ends = Date.parse(period.ends_at);
     if (period.revoked_at) {
@@ -71,7 +87,6 @@ export function horizonFor(
       if (inside(at)) events.push({ id: `revoked-${period.id}`, kind: "end", at, past: at <= now, tone: "critical", title: `${productName(period.sale_id)} revoked` });
       continue;
     }
-    periodEnds.push(ends);
     // Another period that starts as this one ends keeps the access going: nothing ends.
     const followed = periods.some(
       (other) => other.id !== period.id && !other.revoked_at && Math.abs(Date.parse(other.starts_at) - ends) <= MINUTE,
@@ -83,13 +98,13 @@ export function horizonFor(
   for (const right of member.entitlements) {
     if (right.occurrence_id !== null) continue;
     const ends = Date.parse(right.ends_at);
-    // A right that ends with its membership period is the same end.
-    if (!inside(ends) || periodEnds.some((at) => Math.abs(at - ends) <= MINUTE)) continue;
+    // Rails does not say which period gave a right, so a right's end stays even when a period ends then.
+    if (!inside(ends)) continue;
     events.push({ id: `right-${right.id}`, kind: "end", at: ends, past: ends <= now, tone: ends <= now ? "neutral" : "warning", title: `${right.name} ends` });
   }
 
   events.sort((a, b) => a.at - b.at);
-  return { start, end, shortened, events };
+  return { start, end, ticks, events };
 }
 
 /** Where a time sits on the track, 0 to 1. */

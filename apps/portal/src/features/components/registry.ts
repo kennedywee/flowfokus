@@ -668,12 +668,12 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Horizon",
     group: "Blocks",
     summary:
-      "A line of the last week and the next 30 days. Today is a ringed dot, coming bookings are rings, earlier ones are small dots, and a membership or pass that ends is an amber ring. Labels sit above and below; one that would overlap is left out, and a hidden list names every mark for assistive technology.",
+      "A line of the last week and the next 30 days. Today is a ringed dot, coming bookings are rings, earlier ones are small dots, and a membership or pass that ends is an amber ring. Labels sit above and below; one that would overlap is left out, and \"Show all N events\" lists every mark with its date.",
     source: ["features/members/Horizon.tsx", "features/members/timeline.ts", "styles/members.css"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
     examples: [{ file: "horizon-basic", title: "Bookings, and passes that end", note: "Sample data. A real page marks only bookings, periods, and rights that Rails returned." }],
     props: [
-      { name: "horizon", type: "Horizon", note: "From horizonFor(member, productName, now): the window, and the marks in time order. Show it only when it has a mark besides today." },
+      { name: "horizon", type: "Horizon", note: "From horizonFor(member, productName, now, timezone): the window, one tick per calendar day, and the marks in time order. Show it only when it has a mark besides today." },
       { name: "timezone", type: "string", note: "The organization's time zone, for the day and time labels." },
     ],
   },

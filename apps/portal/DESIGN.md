@@ -490,13 +490,13 @@ the tokens and shared parts built from Paper in #85 and #87.
   yet: Rails has no member update endpoint, and the page never had one.
 - Horizon: a line of the last week and the next 30 days with today, bookings
   (rings ahead, small dots behind), and the end of each membership period or
-  pass. A period followed by another one, and a right that ends with its period, add no mark. Rails
-  has no "renews" state, so a period followed by another shows no end. When
-  Rails sent 10 earlier bookings that all fall inside the week, older ones may be
-  missing, so the window starts at the oldest one and the title says "Recent
-  bookings". Labels alternate above and below; one that would overlap is left
-  out (its mark stays, and a hidden list names every mark). The section is left
-  out when nothing but today is in the window.
+  pass. The window is always the last 7 and the next 30 calendar days in the
+  organization's time zone, so a clock change does not shift it. A period
+  followed by another one adds no end mark, because Rails has no "renews"
+  state. A right's end always shows: Rails does not say which period gave a
+  right. Labels alternate above and below; one that would overlap is left out
+  (its mark stays), and "Show all N events" lists every mark with its date.
+  The section is left out when nothing but today is in the window.
 - Holds: one row per membership period and per access right, with Rails dates
   and the words the page had before (#14 is open): "Ends in 29d 16h",
   "Starts in 2d", "Ended 3 Nov", "Revoked", "Starts 21 Dec", "Unlimited visits",

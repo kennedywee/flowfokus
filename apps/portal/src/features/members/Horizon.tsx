@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Icon } from "@/components/ui/icon";
 import { formatTime } from "../../lib/format";
 import { placeLabels, position, type Horizon as HorizonData, type HorizonEvent } from "./timeline";
-
-const DAY = 24 * 3_600_000;
 
 /** A 7px-wide estimate of one character, for placing labels before they paint. */
 const CHAR = 6.4;
@@ -12,12 +12,12 @@ const MAX_LABEL = 168;
  * The Horizon (Paper "Member details"): a line of the last week and the next
  * 30 days. Today is a ringed dot, coming bookings are rings, earlier ones are
  * small dots, and a membership or pass that ends is an amber ring. Labels sit
- * above and below the line; one that would overlap is left out, and the list
- * for assistive technology names every mark. The marks come from the member
+ * above and below the line. A label that would overlap is left out; then
+ * "Show all" lists every mark with its date. The marks come from the member
  * record Rails returned (bookings, periods, and rights).
  */
 export function Horizon({ horizon, timezone }: { horizon: HorizonData; /** The organization's time zone. */ timezone: string }) {
-  const { start, end, events } = horizon;
+  const { start, end, ticks, events } = horizon;
   // The marks come from the clock, so the server and the browser would place them differently. They draw after hydration.
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -52,36 +52,33 @@ export function Horizon({ horizon, timezone }: { horizon: HorizonData; /** The o
     width: Math.min(MAX_LABEL, Math.max(event.title.length, sub(event).length) * CHAR) + 2,
   }));
   const places = placeLabels(boxes, width, "today");
-  const days = Math.round((end - start) / DAY);
+  const omitted = events.some((event) => !places.get(event.id));
+  const listed = events.map((event) => (
+    <li key={event.id}>
+      {event.title}, {sub(event)}
+      {event.past && event.kind !== "today" ? ", earlier" : ""}
+    </li>
+  ));
 
   return (
     <section className="horizon" aria-labelledby="horizon-title">
       <div className="horizon__head">
-        <h2 id="horizon-title">{horizon.shortened ? "Recent bookings and the next 30 days" : "Last week and the next 30 days"}</h2>
-        <span className="horizon__range" suppressHydrationWarning>
+        <h2 id="horizon-title">Last week and the next 30 days</h2>
+        <span className="horizon__range">
           {range.format(start)} – {range.format(end)}
         </span>
       </div>
-      {mounted ? (
-        <ol className="visually-hidden">
-          {events.map((event) => (
-            <li key={event.id}>
-              {event.title}, {sub(event)}
-              {event.past && event.kind !== "today" ? ", earlier" : ""}
-            </li>
-          ))}
-        </ol>
-      ) : null}
+      {mounted && !omitted ? <ol className="visually-hidden">{listed}</ol> : null}
       <div className="horizon__plot" ref={track} aria-hidden="true">
         {mounted ? (
           <>
             <span className="horizon__line" />
-            {Array.from({ length: days + 1 }, (_, index) => (
+            {ticks.map((at, index) => (
               <i
-                key={index}
+                key={at}
                 className="horizon__tick"
                 data-week={index % 7 === 0 || undefined}
-                style={{ left: `${(index / days) * 100}%` }}
+                style={{ left: `${position(at, start, end) * 100}%` }}
               />
             ))}
             {events.map((event) => {
@@ -116,6 +113,17 @@ export function Horizon({ horizon, timezone }: { horizon: HorizonData; /** The o
           </>
         ) : null}
       </div>
+      {mounted && omitted ? (
+        <Collapsible className="horizon__all">
+          <CollapsibleTrigger className="member-section__more">
+            Show all {events.length} events
+            <Icon name="chevronDown" size={12} aria-hidden focusable={false} />
+          </CollapsibleTrigger>
+          <CollapsiblePanel>
+            <ol className="horizon__list">{listed}</ol>
+          </CollapsiblePanel>
+        </Collapsible>
+      ) : null}
     </section>
   );
 }
