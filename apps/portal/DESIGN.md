@@ -204,7 +204,8 @@ Existing blocks to compose before adding another abstraction:
   (28px, "/" hint) on the right. Phones put a full-width Filter, then search,
   then the chips on their own rows. `useSetListSearch` keeps filters and search
   in the URL. Each screen keeps its own filter groups and query params.
-- `ListPager`: the range and page buttons under a redesigned list.
+- `ListPager`: the range and page buttons under a redesigned list. It is also the
+  footer of the new `ListTable`.
 - `TableState`: a list with no rows. Paper "Table · Empty" keeps the header band
   and fills a grey panel with generic skeleton lines that fade in an oval toward
   the message; "No results" shows the panel alone, with Clear search or Clear
@@ -406,6 +407,65 @@ Shell decisions, 21 November 2026 (issue #86):
 - Labels stay as the screens have them ("New member", "Fulfill"). Paper's "Add
   member" and "Fulfill items" are screen wording for the Members and Sales
   issues.
+
+## Shared parts (issue #87)
+
+The redesigned screens share a small set of parts. Each is in the gallery
+(`localhost:4001/components`) with its states: default, hover, focus, selected,
+empty, and loading. Sizes and colours come from the Paper pages Members,
+Session details, Member details, Sale details, Program details, Product
+details, and Pass credits. The screen issues (#88 to #94) move each screen onto
+them. Until then the older `ListToolbar`, `FilterChips`, `ListPager`, and
+`TableState` stay as they are, and the existing screens use them. The new parts
+add no sample data to a screen; the gallery examples carry labelled sample data.
+
+Code: `components/parts/` (`ListTable`, `FilterBar`, `DetailLayout`,
+`Activity`, `Backdrop`, `marks`), the ui-sdk wrappers `components/ui/popover`,
+`segmented-control`, and `collapsible` (part of #69), rules in `lib/list-parts.ts`
+and `lib/paging.ts`, styles in `styles/parts.css`.
+
+| Part | Rule |
+| --- | --- |
+| List table (`ListTable`, `ListTableBody`, `ListTableRow`, `ListTableCell`) | Table roles on a grid. Column labels are 12px muted text on a 30px header with one hairline. Rows sit flush with the content edge: no grey band, no row dividers, no inset. Two-line rows are 56px (a list page); one-line rows are 44px (a detail page). A sortable header is a button; its `columnheader` has `aria-sort`, and only the sorted column has one. The count and pager under a list page are the existing `ListPager`. A list inside a detail page loads more on scroll (`LoadMore`, with a button for keyboard users; `loaded` re-arms the trigger after each append, and Show more is free again when the promise `onLoadMore` returns settles, also on failure). Loading is skeleton rows in the same columns (`ListTableLoading`); empty is `ListTableEmpty` under the labels. |
+| Row selection | `ListTable selection` adds a checkbox column and a header box (none, mixed, all). Chosen rows get `--color-selected`. Adjacent chosen rows merge into one band: `bandPositions` gives each row first, middle, last, or alone, so only the outer corners round (8px). Shift-click chooses a range. `SelectionBar` floats at the bottom with "2 selected" and the bulk actions; a live region announces the count, and Escape in the bar clears it. |
+| Collapsible groups (`ListGroup`) | A 36px heading button with a chevron, a mark, a label, and a count: "Here 2", "To arrive 9", "Fulfilled 1". The group is a ui-sdk Collapsible, so the button has `aria-expanded`. |
+| Filter bar (`FilterBar`) | A Filter button, then a chip per filter, then search (`SearchField`, with its "/" hint) and Display on the right. A chip reads field, operator, value, remove. A click on the operator flips "is" and "is not", or "is any of" and "is none of" (`filterOperator`, `toggleOperator`); there is no operator menu. The value opens the same checkbox list as the Filter menu. The filter state is `ActiveFilter[]` ({ field, values, negated }). |
+| Display popover (`DisplayPopover`) | Sort by with a direction button, one toggle, column chips (`aria-pressed`), and "Reset to default" (dimmed and inert at the default, but still focusable). A ui-sdk Popover with `modal="trap-focus"`: focus moves in, Escape closes, and focus returns to the Display button. |
+| Segmented control (`ui/segmented-control`) | Two to four views where one is chosen: All, Comments, Activity. One tab stop, arrow keys between items. |
+| Detail layout (`DetailLayout`) | A main column (28px top, 36px sides, 40px between sections) and a 296px right panel. Below 1100px the panel sits under the main column. The panel holds `PanelGroup` (a grey 12px title) with `PanelRow` label and value rows (96px label), and `PanelAddGroup` for Tags and Notes with a "+" button. Leave the button out when the person cannot add. |
+| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. |
+| Activity (`ActivityFeed`) | A comment box (`CommentComposer`, ⌘↵), the All, Comments, Activity control, event rows with a coloured dot, comment rows with a 24px avatar, and "Show N earlier events". Rails has no comments yet, so a screen leaves the composer out and shows events only; the control then hides too. |
+| Background pattern (`RecordBackdrop`, via `DetailLayout record`) | One faint pattern per record: glyph dots (member), ledger rules (sale), orbit dots (program), clock ticks (session), barcode (product). Drawn from the Paper "Atmosphere" frames in `--color-pattern`. Decoration: `aria-hidden`, no pointer events, hidden under `prefers-contrast: more`. |
+| Status marks (`StatusMark`, `TimeMark`) | A ring or pie with its label: Paid, Partly paid, Unpaid, Fulfilled, Partly fulfilled, Unfulfilled (the icon set), and Renews or Ends (a pie of the time left). The label is the word Rails returns (#14 is open). Payment, fulfillment, and access stay separate marks. `boxed` is the pill of a hero. |
+| Credit ring (`CreditRing`) | "7 of 10 left" with a ring. Amber at two or fewer left, and at none. |
+| Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross. Chart size is a 10px column per session; row size is 60 x 12 for twelve spots. Put the count beside it as text. |
+| Mix bar (`MixBar`) | Slanted stripes sized by share, darkest first. Put the numbers beside it as text. |
+| Tag chip (`TagChip`) | A 20px pill with a 6px dot (`DotTone`: neutral, good, warning, critical, info, violet) and the tag name. The dot never carries the meaning alone. |
+
+Differences from Paper, and why:
+
+- Inactive column labels use `--color-ink-3` (Paper's #A1A1AA is 2.6:1 on white).
+  The sorted label uses `--color-ink-2`.
+- The row checkbox is 14px with an ink fill, as in Paper. Other checkboxes keep
+  their 20px accent fill.
+- The selected band is `--color-selected` (black 5% in light, white 10% in
+  dark). Paper's frame is light and draws ink at 5%; the dark value follows the
+  token.
+- Paper's comment box shows attach and mention icons. They do nothing yet, so
+  they are not built.
+- The patterns are drawn in `--color-pattern` (zinc 600 in light, zinc 500 in
+  dark) with the alpha of the Paper SVGs. They are faint in both themes by design.
+- Paper's group heading uses a dashed ring for "To arrive". The icon set has
+  `unfulfilled` (a dashed ring), so groups use that icon.
+- A hero's tile is a gradient from `--color-raised` toward a 4% ink tint, not
+  Paper's literal #FFFFFF to #F4F4F5, so it follows both themes.
+
+Keyboard and screen reader checks (run in the gallery, recorded in
+[Frontend preview](../../docs/frontend-preview.md)): Tab reaches each sort
+button, row checkbox, chip operator, value, and remove button in reading order;
+Space toggles a checkbox or presses a button; the Display popover keeps focus
+inside and Escape returns it; the selection count and the bulk bar are announced
+by a live region.
 
 Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
 facts in `features/members/facts.ts`, styles in `styles/members.css`). It shows
