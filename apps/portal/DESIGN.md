@@ -350,7 +350,7 @@ field behind the window are not built.
   selected item has `--color-selected`, ink text, and an ink icon.
 - Pages, in order: Calendar, Members, Sales, Programs, Products
   (`PAGES` in `lib/pages.ts`). Calendar uses the calendar icon and opens
-  `/<org>/schedule` until the Calendar issue (#91) renames the route. A role
+  `/<org>/calendar`. A role
   sees only the pages it can read: Calendar and Programs need `programs:read`,
   Members `members:read`, Sales `purchases:read`, Products `products:read`. ⌘K
   lists the same pages. Rails still checks every request.
@@ -650,22 +650,68 @@ Walk-in gym check-in is not in the portal. The member page and ⌘K have no
 Check in action, and Rails has no check-in endpoint (issue #81). Staff mark a
 booked member as here on Session details only.
 
-Schedule and Session details are the next redesigned screens
-(`features/schedule/Schedule.tsx`, `SessionDetails.tsx`, `BookMember.tsx`,
-and `SessionDialogs.tsx`; facts in `facts.ts`, status marks in `marks.tsx`,
-styles in `styles/schedule.css`). They show only Rails data:
+Calendar (issue #91, replacing Schedule) and Session details are redesigned
+screens. Calendar is `features/calendar/` (`Calendar.tsx`, `Block.tsx`, rules in
+`facts.ts`, styles in `styles/calendar.css`); Session details is
+`features/schedule/` (`SessionDetails.tsx`, `BookMember.tsx`, `SessionDialogs.tsx`,
+facts in `facts.ts`, status marks in `marks.tsx`, styles in `styles/schedule.css`).
+They show only Rails data. Paper could not be read while Calendar was built (the
+Paper server timed out on every call), so the layout and content follow the
+issue and the Paper frame names ("Calendar · K2 · Day, kinds" and "Week, kinds");
+sizes and colours come from the tokens and the shared parts. Compare with the
+frames before a screen review:
 
-- Schedule: the title, Programs in the top bar, then Filter and the range
-  with Earlier, Today (off today), and Later. Two weeks at the top bar
-  location, one grey band per day with its session count, then 52px rows:
-  time, program, kind and host (or length), and the status mark: a green pie
-  for "9 of 14 booked", an amber dot for Full, a red cross for "Cancelled ·
-  reason", and a grey tick for "Ended · 11 of 12 booked". Ended and cancelled
-  rows are grey. Filter has a Program submenu with counts; the URL keeps
-  `from` and `program`. Phones show the start time, then "Until …", and the
-  status under the name.
-- Nothing scheduled: one line and "Add sessions from a program". No match:
-  one line and Clear filters. Did not load: one line, the reason, Try again.
+- Route: `/<org>/calendar`, and a session at `/<org>/calendar/<id>`. `/schedule`
+  and `/schedule/<id>` redirect. `/<org>` opens Calendar for a role that reads
+  programs (`startPage`). The sidebar item and the title are Calendar.
+- Toolbar: Previous and Next (a day or a week), Today, the date with the session
+  count ("Sun 22 Nov · 6 sessions"), Group by (None, Program, Host), Filter with a
+  Program submenu and its chip, and the Day and Week segmented control. Month is
+  not built: no frame exists, and the switch holds Day and Week only.
+- Kinds row: Classes, Appointments, and Events are toggles (`aria-pressed`) with
+  a count. A count is of the sessions the program filter keeps, so it does not
+  drop when its own kind is switched off. All three off shows "No sessions match."
+  with Clear filters.
+- URL: `date` (any day; `week` shows its Monday to Sunday), `view=week`,
+  `group=none|program`, `program=<ids>`, and `hide=class,appointment,event`. A
+  value that equals its default is left out, so `/calendar` is today, by host,
+  with every kind. Group, program, kinds, and view change the URL with `replace`;
+  Previous, Next, and Today are links. Only the view and the date reload from
+  Rails (`/staff/occurrences` with `from` and `days` of 1 or 7); the rest work on
+  the loaded range. Sessions are those at the top bar location.
+- Day: one column per group on a 64px hour axis from 06 to 22. It grows to whole
+  hours when a session falls outside. A group is a host (`host_name`, with "No
+  host" last), a program, or one column for None. Sessions that overlap share the
+  column side by side (`placeColumn`). A short session is drawn 30 minutes tall.
+  On today, a red now tag and line cross the grid and the time before it is
+  washed grey. The grid scrolls the now line into view when it is below the fold,
+  or the first session on another day.
+- Week: one row per group by Monday to Sunday, in the same blocks, one cell per
+  day. Today's column is tinted and past days are grey. None is a single row with
+  no label.
+- Blocks (`CalendarBlock`, in the gallery): a class is a white card with a
+  spot stack on the Day grid and "11 of 12" as text; an appointment is flat grey
+  and says "Booked" or "Open" (Rails sends no member name); an event is dark and
+  says "41 of 50 sold". Full is amber (a class or an event; a booked appointment
+  is not full). An ended session is washed out. A cancelled one is a dashed red
+  outline with a struck name and "Cancelled · reason". The block names its
+  program, or the host under a program grouping, because the column says the
+  program. Every block is a link to Session details with a full accessible name.
+- Keyboard: the grid has one tab stop, on the active block (the first one until
+  an arrow key moves it). Up and Down walk a column or a day cell in time order
+  and step to the next row on Week. Left and Right move to the nearest column
+  with a session in the same row and pick the one closest in time. Home and End
+  go to the ends of the column. Enter opens the session. A hint for assistive
+  technology describes the keys (`moveFocus` in `facts.ts`).
+- Phones and narrow windows (below 768px): the grid is hidden and a list shows
+  one band per day with time, program, kind and host, and the status. The list is
+  CSS-only, so a screen reader on a wide window reads the labelled grid.
+- Not shown, because Rails cannot supply them (issue #20): the booked member's
+  name on an appointment (it says "Booked"), staff hosts (a host is the program's
+  text), host availability and open times (#99), and the month view.
+- Nothing scheduled: one line and "Add sessions from a program". Did not load: one
+  line, the reason, and Try again. "Book member" is not in the top bar: Book
+  member needs a session, and there is no member-first flow.
 - Session details (issue #92, Paper "Session · A3 · Chosen (clock ticks)",
   light and dark): `DetailLayout` with the clock-tick pattern. The hero is
   the date and time at display size ("Tue 24 Nov, 19:00") with one stat on the
