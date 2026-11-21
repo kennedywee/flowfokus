@@ -136,7 +136,8 @@ export function creditTone(left: number): CreditTone {
 export function pieSlice(fraction: number, radius = 4, center = 8): string {
   const part = Math.min(1, Math.max(0, fraction));
   if (part === 0) return "";
-  if (part === 1) return `M${center} ${center - radius}A${radius} ${radius} 0 1 1 ${center - 0.001} ${center - radius}Z`;
+  // Within a hair of full, an arc would close on itself and draw nothing.
+  if (part >= 0.999) return `M${center} ${center - radius}A${radius} ${radius} 0 1 1 ${center - 0.001} ${center - radius}Z`;
   const angle = part * 2 * Math.PI;
   const x = round(center + radius * Math.sin(angle));
   const y = round(center - radius * Math.cos(angle));
