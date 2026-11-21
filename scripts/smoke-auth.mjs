@@ -58,10 +58,11 @@ async function checkRails(path, token, organization, status, body) {
   return response.json()
 }
 
-// Kennedy and Aiman work at Chainsaw only. Rachel owns Irongate and manages Chainsaw.
+// Kennedy, Aiman, and Dana work at Chainsaw only. Rachel owns Irongate and manages Chainsaw.
 const owner = await authenticate('kennedy@flowfokus.com', 'org_chainsaw')
 const receptionist = await authenticate('aiman@flowfokus.com', 'org_chainsaw')
 const rachel = await authenticate('rachel@flowfokus.com', 'org_irongate', true)
+const developer = await authenticate('dana@flowfokus.com', 'org_chainsaw')
 const ownerMemberships = await checkRails('/staff/memberships', owner.access_token, undefined, 200)
 assert.deepEqual(ownerMemberships.data.map(item => item.slug), ['chainsaw'])
 const rachelMemberships = await checkRails('/staff/memberships', rachel.access_token, undefined, 200)
@@ -75,6 +76,10 @@ await checkRails('/staff/organization', rachel.access_token, 'irongate', 200)
 await checkRails('/staff/organization', rachel.access_token, 'chainsaw', 403)
 await checkRails('/staff/members', receptionist.access_token, 'chainsaw', 200)
 await checkRails('/staff/members', receptionist.access_token, 'chainsaw', 403, { name: 'Must not be created' })
+// Only the Developer role holds features:manage. An Owner cannot see or set feature states.
+const features = await checkRails('/staff/features', developer.access_token, 'chainsaw', 200)
+assert.equal(features.data.workos_organization_id, 'org_chainsaw')
+await checkRails('/staff/features', owner.access_token, 'chainsaw', 403)
 
 const renewed = await refresh(owner.refresh_token)
 assert.notEqual(renewed.refresh_token, owner.refresh_token, 'Refresh must rotate the token')
@@ -93,7 +98,7 @@ process.env.FLOWFOKUS_ACCESS_TOKEN = renewed.access_token
 await import('./smoke.mjs')
 delete process.env.FLOWFOKUS_ACCESS_TOKEN
 
-for (const session of [renewed, receptionist, switched]) {
+for (const session of [renewed, receptionist, switched, developer]) {
   // Reading sid is only for cleanup. Rails performs the cryptographic verification.
   const { sid } = JSON.parse(Buffer.from(session.access_token.split('.')[1], 'base64url').toString())
   await workosCall('/user_management/sessions/revoke', { session_id: sid })

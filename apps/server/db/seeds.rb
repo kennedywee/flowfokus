@@ -8,11 +8,13 @@ demo = Flowfokus::DemoIdentity
 
 # Local staff identities. IDs and emails match workos-emulate.config.yaml at the
 # repository root, so emulator sign-ins find these users. Fake data only.
-# Kennedy (the fixed demo actor) and Aiman work at Chainsaw only. Rachel works at both gyms.
+# Kennedy (the fixed demo actor), Aiman, and Dana work at Chainsaw only. Rachel works at both gyms.
 LOCAL_STAFF = [
   demo::USER,
   { workos_id: "user_rachel", email: "rachel@flowfokus.com", first_name: "Rachel", last_name: "Lim" },
-  { workos_id: "user_aiman", email: "aiman@flowfokus.com", first_name: "Aiman", last_name: "Hakim" }
+  { workos_id: "user_aiman", email: "aiman@flowfokus.com", first_name: "Aiman", last_name: "Hakim" },
+  # A Flowfokus developer. WorkOS gives the Developer role; gyms cannot.
+  { workos_id: "user_dana", email: "dana@flowfokus.com", first_name: "Dana", last_name: "Chong" }
 ].freeze
 
 ActiveRecord::Base.transaction do
@@ -104,6 +106,9 @@ ActiveRecord::Base.transaction do
   seed_membership.(chainsaw, owner.workos_id, "owner")
   seed_membership.(chainsaw, "user_rachel", "manager")
   seed_membership.(chainsaw, "user_aiman", "receptionist")
+  seed_membership.(chainsaw, "user_dana", "developer")
+  # Chainsaw has its gym site, so the site checks and smoke runs work.
+  chainsaw.change_feature!("gym_site", state: "on")
   bangsar = seed_location.(chainsaw, "Bangsar", "12 Jalan Telawi, Bangsar, Kuala Lumpur")
   seed_location.(chainsaw, "Mont Kiara", "3 Jalan Kiara, Mont Kiara, Kuala Lumpur")
 
