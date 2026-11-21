@@ -24,8 +24,7 @@ before it) is history. The visual rules live in
   fallback when no organization is selected and several memberships are available.
   The optional fixed demo actor opens Chainsaw directly. The chosen desk
   location is an HttpOnly cookie per organization. It sets the default
-  location for new sales. Add location opens
-  Settings.
+  location for new sales. Manage locations opens Settings on Locations.
 - Members: the list (the member count, search, Display, sortable Member and
   Member since, and a page range), create, and view member records. The list
   has no Filter button and no Holds, Spent, or Balance due columns, because
@@ -88,12 +87,16 @@ before it) is history. The visual rules live in
   ([#21](https://github.com/kennedywee/flowfokus/issues/21)). The note is the
   hero's line. Sell (S) and Edit (E) are in the top bar; Add price is in the Prices
   header.
-- Settings, General and Locations: the time zone, gym site publication, and
-  locations, from Rails. Staff with `settings:manage` change them. The name
-  comes from WorkOS. The currency is fixed.
-- Settings, Staff and Roles: staff, pending invitations, and roles, through
-  Rails and WorkOS. Staff with `staff:manage` invite, revoke, change roles, and
-  remove access.
+- Settings: a dialog over the current page, at `?settings=<page>` on any
+  organization address (`/<org>/settings/<page>` redirects there). Appearance
+  sets the theme cookie. General shows the name and currency and changes the
+  time zone; Gym site shows the address and changes publication; Locations
+  adds and edits locations. Staff with `settings:manage` change these; others
+  see them with a lock line. Staff and Roles show staff, pending invitations,
+  and roles through Rails and WorkOS; staff with `staff:manage` invite, revoke,
+  change roles, and remove access. Each change saves when it is made. Profile,
+  Notifications, Payments, and Booking rules are left out until Rails supplies
+  them.
 
 `apps/portal/src/lib/staff.functions.ts` holds the server functions for these
 screens. They call Rails through the existing server boundary. The browser never
@@ -102,8 +105,6 @@ These actions persist in PostgreSQL, including during local demo development.
 
 ## Screens with sample data
 
-- Settings, Notifications: sample notification switches. Edits do not update
-  Rails or contact external systems.
 - Component gallery, `/components`: live examples of each component with
   sample records. Local development only, outside any organization. See
   [the design system](design-system.md#component-gallery). It shows the shared
@@ -111,14 +112,14 @@ These actions persist in PostgreSQL, including during local demo development.
   selection, groups, detail layout, hero, activity, background patterns, and
   data marks) on labelled sample members, bookings, and events. The
   Members list, Member details, the Sales screens, and the Products screens use them
-  with real Rails data; the other screens follow in the issues #91, #92, and #94. It also shows the Horizon and the
+  with real Rails data; the other screens follow in the issues #91 and #92. It also shows the Horizon and the
   record section that Member details adds. See
   [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 
-These screens display a Sample data label. Local edits reset when the screen
-unmounts. The sample screen lives in `src/features/preview`. Real settings
-views live in their domain folders. Shared filters live in
-`components/Filters.tsx`, and feature layouts in `styles/features.css`.
+Sample screens display a Sample data label and live in `src/features/preview`;
+no portal screen uses sample data now. Real settings views live in
+`features/settings`. Shared filters live in `components/Filters.tsx`, and
+feature layouts in `styles/features.css`.
 
 ## Removed screens
 

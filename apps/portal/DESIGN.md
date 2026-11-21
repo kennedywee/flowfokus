@@ -382,7 +382,7 @@ Shell decisions, 21 November 2026 (issue #86):
 
 - The location crumb shows on every page, including Calendar. Paper's Calendar
   frames leave it out, but sessions belong to a location and the switcher must
-  stay reachable. Settings has no location crumb, as in Paper.
+  stay reachable.
 - A page with no extra actions has no ⋯ button. Paper's frames show one on
   every page, but a menu with nothing in it would be a control that does
   nothing.
@@ -930,37 +930,77 @@ no Paper frame; they use the same parts.
   beyond the gym site, product-level locations, "valid from first use", and
   archive and restore of a whole product.
 
-Settings and the sign-in screens are the last redesigned screens
-(`features/settings/`: `General.tsx`, `Locations.tsx`, `Staff.tsx`,
-`Roles.tsx`, the sidebar in `SettingsNav.tsx`, the page frame in
-`SettingsPage.tsx`; rules in `facts.ts`, `team.ts`, `abilities.ts`, and
-`sections.ts`; styles in `styles/settings.css`). They show only Rails data:
+Settings is a dialog over the page staff are on (issue #94; `features/settings/`:
+the dialog in `SettingsDialog.tsx`, the page parts in `SettingsPage.tsx`, the
+pages `Appearance.tsx`, `General.tsx`, `GymSite.tsx`, `Locations.tsx`,
+`Staff.tsx`, and `Roles.tsx`; the page list in `sections.ts`; rules in
+`facts.ts`, `team.ts`, and `abilities.ts`; styles in `styles/settings.css`).
+It was built from the issue and the recorded Settings rules while Paper was
+unreachable; [#113](https://github.com/kennedywee/flowfokus/issues/113)
+compares it with the Paper page "Settings". It shows only Rails data:
 
-- The settings sidebar replaces the page list: Back to app, the organization's
-  General, Locations, and Staff, then Notifications under
-  "Samples" (`features/preview/SettingsSamples.tsx`, with the Sample data
-  pill). Section icons show on the rail only. The breadcrumb is the
-  organization, then Settings, with no location switcher. ⌘, opens Settings.
-  Old `?section=` links still work. Phones get a section list and "‹ Settings".
-- General: the name and currency as text, the gym site address
-  (`<slug>.flowfokus.com`) with a Public switch, and the time zone. Changes wait
-  in Paper's save bar (what changed, Discard, Save changes); leaving asks to
-  discard. Roles without settings:manage see the values and the lock line.
-- Locations: pin, name, address, and a chevron. A row opens the edit dialog
-  (no detail page). New location in the top bar. A taken name reads "Another
-  location is already called Bangsar". No remove: Rails keeps every location.
-- Staff: name and email, role, and status ("Active", or a coloured icon with
-  grey text for "Not synced yet" and "Inactive"). Invitations show "Invite
-  expires …" in warning colour and "Not joined". A pending member with an
-  invitation for the same email shows once, as the invitation. The ⋯ menu
+- The dialog: 1120 by 800 pixels at most, a 240px side in the sidebar colour,
+  and a close button at the top right. The side has "Settings", a search that
+  keeps the pages whose name or other words match (Enter opens the first), and
+  the pages in groups with icons: You (Appearance), Gym (General, Gym site,
+  Locations), and Team (Staff, Roles). Profile, Notifications, Payments, and
+  Booking rules have no item until Rails supplies them. The open page shows in
+  a 720px column.
+- Address: the page is a search value on any organization address,
+  `?settings=staff`. A link opens the dialog on that page. Close, Escape, and
+  Back return to the page behind it; moving between settings pages replaces
+  the history entry. `/<org>/settings/<page>` and old `?section=` links open
+  the dialog over the first page the role can read. A role that can read no
+  page has an empty page behind it, so closing opens General again. The
+  account menu, ⌘, (or Ctrl ,), Ctrl K, Manage locations, and a program's Add
+  a location open it. A form's unsaved-changes guard lets Settings open over
+  it (`onlySettingsChanged`).
+- ui-sdk traps focus and closes on Escape. Focus starts on the dialog, so Tab
+  reaches the search first. A dialog or menu inside it (New location, Invite
+  staff, a staff row's ⋯) closes first on Escape. Toasts show above it.
+- Page: the title is 30px / 36px, weight 500, -0.035em on every page. A page
+  action sits beside it as a 32px secondary button with a plus (New location,
+  Invite staff). Sections have a 15px header with the only hairline, 12px
+  under the text. A row is a title, one line of description, and one control:
+  a value, a select, or a switch. No lines between rows.
+- A change saves when it is made: the time zone, the gym site's Public switch,
+  and the theme. The control shows the new value at once and a toast confirms
+  it; a refusal puts the old value back with an error toast. There is no save
+  bar.
+- Appearance: Theme, System, Light, or Dark, the same choice as the account
+  menu (`lib/use-theme-choice.ts`). Every role can change it.
+- General: the name and currency as values, and the time zone. Gym site: the
+  address (`<slug>.flowfokus.com`) and the Public switch. Roles without
+  settings:manage see the values and the lock line.
+- Locations: pin, name, address, and a chevron, with no section header. A
+  row opens the edit dialog. A taken name reads "Another location is already
+  called Bangsar". No remove: Rails keeps every location.
+- Staff: no section header; Invite staff beside the title; a table with Name,
+  Role, and Status and a hairline under the headings, 20px under the title.
+  Rows show name and email, role, and status ("Active", or a coloured icon
+  with grey text for "Not synced yet" and "Inactive"). Invitations show
+  "Invite expires …" in warning colour and "Not joined". A pending member with
+  an invitation for the same email shows once, as the invitation. The ⋯ menu
   holds Role (only roles the viewer may grant) and Remove access…; an
   invitation's ⋯ holds Revoke invitation. Rails' `manageable` decides the ⋯.
-  Toasts use Paper's words ("This can take a few minutes"). A refusal never
-  shows Rails' text, which can name permission codes: `team.ts` maps it to a
-  staff sentence and reloads the list when it is out of date.
-- Roles: a table of what each role can do. Columns and ticks come from the
-  WorkOS roles in `/staff/team`; `abilities.ts` only names groups of
-  permissions. It needs staff:manage, like the staff list.
+  The dialog loads the list when Staff or Roles opens and again after each
+  change. A refusal never shows Rails' text, which can name permission codes:
+  `team.ts` maps it to a staff sentence and reloads the list when it is out
+  of date.
+- Roles: a table of what each role can do, from the WorkOS roles in
+  `/staff/team`; `abilities.ts` only names groups of permissions. It needs
+  staff:manage, like Staff. There is no New role: WorkOS holds the roles and
+  Rails has no endpoint to add one.
+- Phones (until #95): the dialog fills the screen, and the pages scroll in one
+  row under the title, without the search. A select takes the full width.
+- Not shown, because Rails has no data for them: logo, editable name,
+  contact email, week start, member ID prefix, location hours and counts,
+  removing a location, staff last active and locations, the day an invite was
+  sent, resend invitation, role descriptions, New role, and the Profile,
+  Notifications, Payments, and Booking rules pages.
+
+The sign-in screens:
+
 - Sign-in card (`components/Blocked.tsx`): the mark, a 16px title, one
   message (a red or amber icon for errors and warnings), one dark 36px
   button, and the account line with an underlined Sign out (still a POST
@@ -968,8 +1008,3 @@ Settings and the sign-in screens are the last redesigned screens
   password form in the portal. Staff access is turned off shows one plain
   message for every reason. `__root.tsx` has Page not found and the app error
   screen ("Something went wrong", Reload).
-- Not shown, because Rails has no data for them: logo, editable name,
-  contact email, week start, member ID prefix, location hours and counts,
-  removing a location, staff last active and locations, the day an invite was
-  sent, resend invitation, role descriptions, and the Payments, Booking rules,
-  and Profile screens.

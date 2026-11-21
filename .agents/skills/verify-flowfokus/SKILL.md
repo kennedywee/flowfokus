@@ -116,7 +116,9 @@ Kumar and Sofia Wong.
 - Page titles are level-1 headings. Toasts appear in `getByRole('region', { name: /Notifications/ })`.
 - Buttons with a keyboard hint have extra text in the name, for example `Create member Ctrl ↵`.
   Match them with a regular expression: `{ name: /^Create member/ }`.
-- Settings › Notifications is a sample screen without Rails data. Do not use it as proof.
+- Settings is a dialog: `getByRole('dialog', { name: 'Settings' })`. Open a page by URL, such as
+  `/chainsaw/members?settings=staff`. Its pages are in `getByRole('navigation', { name: 'Settings
+  pages' })`, and each page title is a level-2 heading inside the dialog.
 
 ### Stored state
 
