@@ -35,9 +35,11 @@ Steps:
   count in the ribbon drop by three.
 - **One row.** Click the status mark of a `To arrive` row, named `Check in <name>`. The member moves
   to `Here`.
-- **No walk-in.** Open a member's page. The top bar has `Sell` and no `Check in`. Press C: nothing
-  happens. Press Ctrl K and type the name: the options are the member and `New sale for <name>`.
-  Press `?`: the sheet lists no `Check in`.
+- **No walk-in.** Sign in as `kennedy@flowfokus.com` for this step: other roles may not see `Sell`
+  or `New sale for <name>`. Open a member's page. The top bar has `Sell` and no `Check in`. Press C:
+  nothing happens. Press Ctrl K and type the name: the options are the member and
+  `New sale for <name>`. Press Escape to close the menu, because it blocks single-key shortcuts.
+  Then press `?`: the sheet lists no `Check in`.
 - **Confirm the stored rows.** Run:
   `docker exec flowfokus-db psql -U flowfokus -d flowfokus_development -Atc "select m.name, b.attended_at from bookings b join members m on m.id = b.member_id where b.occurrence_id = '<uuid>' order by b.attended_at"`.
   The marked members have an `attended_at` time.
