@@ -390,6 +390,21 @@
   }
 }
 
+/* Every mark, when the line leaves some labels out. */
+.horizon__all [aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.horizon__list {
+  display: grid;
+  gap: 2px;
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  list-style: none;
+}
+
 /* Contact: a link in the panel, the link code, and the loading state. */
 .panel-link {
   overflow: hidden;
@@ -447,11 +462,9 @@
     height: 0;
   }
   .member-sales .list-table__row > .member-sales__payment,
-  .member-sales .list-table__row > .member-sales__fulfillment {
-    order: 4;
-  }
+  .member-sales .list-table__row > .member-sales__fulfillment,
   .member-sales .list-table__row > .member-sales__method {
-    display: none;
+    order: 4;
   }
   .member-bookings .list-table__row > .member-bookings__right {
     order: 4;
@@ -688,4 +701,3 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-

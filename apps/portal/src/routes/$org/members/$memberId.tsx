@@ -7,11 +7,13 @@ import { isUuid } from "../../../lib/validate";
 type Loaded = Awaited<ReturnType<typeof getMemberRecord>>;
 
 export const Route = createFileRoute("/$org/members/$memberId")({
-  loader: async ({ params }): Promise<Loaded> => {
+  // `loadedAt` is the one clock for the server render and the first browser render.
+  loader: async ({ params }): Promise<Loaded & { loadedAt: number }> => {
+    const loadedAt = Date.now();
     if (!isUuid(params.memberId)) {
-      return { ok: false as const, error: { status: 404, code: "not_found" as const, message: "Member not found" } };
+      return { ok: false as const, error: { status: 404, code: "not_found" as const, message: "Member not found" }, loadedAt };
     }
-    return getMemberRecord({ data: { slug: params.org, id: params.memberId } });
+    return { ...(await getMemberRecord({ data: { slug: params.org, id: params.memberId } })), loadedAt };
   },
   // The top bar breadcrumb ends with the member's name.
   staticData: {
@@ -33,5 +35,5 @@ function MemberPage() {
       </div>
     );
   }
-  return <MemberDetails record={record.data} />;
+  return <MemberDetails record={record.data} loadedAt={record.loadedAt} />;
 }

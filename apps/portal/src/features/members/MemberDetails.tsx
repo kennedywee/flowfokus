@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Icon } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
@@ -78,18 +78,21 @@ const SALES_LIMIT = 100;
  * It shows only what Rails returns: no tags, phone, home location, notes,
  * comments, or spent total yet (issue #17).
  */
-export function MemberDetails({ record }: { record: MemberRecord }) {
+export function MemberDetails({ record, loadedAt }: { record: MemberRecord; /** When the route loaded the record. The server render and the first browser render both use it. */ loadedAt: number }) {
   const { member, sales } = record;
-  const now = Date.now();
+  // Every time on the page reads this one clock. It moves to the browser's own after hydration.
+  const [clock, setClock] = useState<number | null>(null);
+  useEffect(() => setClock(Date.now()), [loadedAt]);
+  const now = clock ?? loadedAt;
   return (
     <DetailLayout record="member" className="member-details" panel={<Contact member={member} />}>
       <MemberHero record={record} />
-      <MemberActions record={record} />
+      <MemberActions key={member.id} record={record} />
       <HorizonSection member={member} sales={sales} now={now} />
       <Holds member={member} sales={sales} now={now} />
-      <RecentSales sales={sales} memberId={member.id} />
+      <RecentSales sales={sales} memberId={member.id} now={now} />
       <Bookings bookings={member.bookings} now={now} />
-      <Activity record={record} />
+      <Activity record={record} now={now} />
     </DetailLayout>
   );
 }
@@ -121,9 +124,7 @@ function MemberHero({ record }: { record: MemberRecord }) {
       line={
         <>
           Member since{" "}
-          <time dateTime={member.created_at} suppressHydrationWarning>
-            {monthYear(member.created_at)}
-          </time>
+          <time dateTime={member.created_at}>{monthYear(member.created_at)}</time>
         </>
       }
       stats={
@@ -239,7 +240,7 @@ function MemberActions({ record }: { record: MemberRecord }) {
       {member.renewal && canRenew ? (
         <RenewDialog member={member} renewal={member.renewal} open={renewing} onClose={() => setRenewing(false)} />
       ) : null}
-      {code && !linked ? <LinkCodeDialog member={member} code={code} onClose={() => setCode(null)} /> : null}
+      {code && canLink && !linked ? <LinkCodeDialog member={member} code={code} onClose={() => setCode(null)} /> : null}
       <ConfirmDialog
         open={unlinking}
         tone="critical"
@@ -358,7 +359,7 @@ const HOLD_COLUMNS: ListColumn[] = [
 function HorizonSection({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
   const { timezone } = useOrganization();
   const productName = (saleId: string) => sales.find((sale) => sale.id === saleId)?.line_item.product_name ?? "Membership period";
-  const horizon = horizonFor(member, productName, now);
+  const horizon = horizonFor(member, productName, now, timezone);
   // Today alone says nothing.
   if (horizon.events.length < 2) return null;
   return <Horizon horizon={horizon} timezone={timezone} />;
@@ -369,7 +370,7 @@ function HoldStatusMark({ status }: { status: HoldRow["status"] }) {
   if (status.kind === "time") {
     return (
       <TimeMark fraction={status.fraction} tone={status.tone}>
-        <span suppressHydrationWarning>{status.text}</span>
+        {status.text}
       </TimeMark>
     );
   }
@@ -380,7 +381,7 @@ function HoldStatusMark({ status }: { status: HoldRow["status"] }) {
 function Holds({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
   const organization = useOrganization();
   const locationName = useLocationName();
-  const shortDate = useShortDate();
+  const shortDate = useShortDate(now);
   const [all, setAll] = useState(false);
   const rows = holdRows(member, sales, now, shortDate, locationName);
   const shown = all ? rows : visibleHolds(rows);
@@ -402,7 +403,7 @@ function Holds({ member, sales, now }: { member: Schemas["MemberDetail"]; sales:
                         row.title
                       )
                     }
-                    sub={<span suppressHydrationWarning>{row.sub}</span>}
+                    sub={row.sub}
                   />
                 </ListTableCell>
                 <ListTableCell align="end" className="member-status">
@@ -436,10 +437,10 @@ function MarkOf({ mark }: { mark: SaleMark }) {
 }
 
 /** The latest sales: product and date, payment and fulfillment as separate marks, method, amount. */
-function RecentSales({ sales, memberId }: { sales: Schemas["Sale"][]; memberId: string }) {
+function RecentSales({ sales, memberId, now }: { sales: Schemas["Sale"][]; memberId: string; now: number }) {
   const organization = useOrganization();
   const can = useCan();
-  const shortDate = useShortDate();
+  const shortDate = useShortDate(now);
   const [all, setAll] = useState(false);
   const shown = all ? sales : sales.slice(0, RECENT);
   return (
@@ -461,7 +462,7 @@ function RecentSales({ sales, memberId }: { sales: Schemas["Sale"][]; memberId: 
                           {sale.line_item.product_name}
                         </Link>
                       }
-                      sub={<span suppressHydrationWarning>Sold {shortDate(sale.purchased_at)}</span>}
+                      sub={`Sold ${shortDate(sale.purchased_at)}`}
                     />
                   </ListTableCell>
                   <ListTableCell className="member-sales__payment">
@@ -552,9 +553,7 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
                       </Link>
                     }
                     sub={
-                      <time dateTime={booking.starts_at} suppressHydrationWarning>
-                        {bookingTime(booking)}
-                      </time>
+                      <time dateTime={booking.starts_at}>{bookingTime(booking)}</time>
                     }
                   />
                 </ListTableCell>
@@ -564,9 +563,7 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
                   </span>
                 </ListTableCell>
                 <ListTableCell align="end" className="cell-figure member-bookings__when">
-                  <span suppressHydrationWarning>
-                    {isUpcoming(booking, now) ? `In ${formatSpan(Date.parse(booking.starts_at) - now)}` : BOOKING_STATUS_LABEL[booking.status]}
-                  </span>
+                  {isUpcoming(booking, now) ? `In ${formatSpan(Date.parse(booking.starts_at) - now)}` : BOOKING_STATUS_LABEL[booking.status]}
                 </ListTableCell>
               </ListTableRow>
             ))}
@@ -586,11 +583,11 @@ function Bookings({ bookings, now }: { bookings: Schemas["Booking"][]; now: numb
 }
 
 /** Check-ins, sales, payments, fulfillments, refunds, voids, bookings, and the join date. No comment box: Rails has no comments. */
-function Activity({ record }: { record: MemberRecord }) {
+function Activity({ record, now }: { record: MemberRecord; now: number }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const items = memberActivity(record, locationName).map(
-    (event): FeedItem => ({ kind: "event", id: event.id, tone: event.tone, time: formatWhen(event.at, organization.timezone), children: event.text }),
+    (event): FeedItem => ({ kind: "event", id: event.id, tone: event.tone, time: formatWhen(event.at, organization.timezone, new Date(now)), children: event.text }),
   );
   return <ActivityFeed items={items} visible={RECENT} />;
 }
