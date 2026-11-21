@@ -1,46 +1,10 @@
-/* Feature layouts. The sample settings screen is here. Shared controls live in components.css. */
+/* Feature layouts. Shared controls live in components.css. */
 .page svg {
   flex-shrink: 0;
 }
 .page .page-head__actions > .pill {
   align-self: center;
 }
-.page .preview-footnote {
-  padding: 16px 24px;
-  color: var(--color-ink-3);
-  font-size: var(--text-xs);
-  line-height: 18px;
-}
-.page > .preview-footnote {
-  padding-inline: 0;
-}
-
-/* Sample settings use Paper's separated, fixed-slot rows. */
-.page .preview-setting {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding-block: 20px;
-  border-bottom: 1px solid var(--color-line);
-}
-.page .preview-setting:first-child {
-  padding-top: 0;
-}
-.page .preview-setting:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
-}
-.page .preview-setting label {
-  color: var(--color-ink);
-  font-weight: 500;
-}
-.page .preview-setting p {
-  margin: 4px 0 0;
-  color: var(--color-ink-3);
-  font-size: var(--text-sm);
-}
-
 @media (max-width: 767.98px) {
   .page .filters .toggle-group__item {
     min-height: 44px;

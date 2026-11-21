@@ -39,6 +39,7 @@ import {
   type Scope,
 } from "./facts";
 import { PRODUCT_ICON } from "./kinds";
+import { onlySettingsChanged } from "../settings/sections";
 
 const sendNew = (input: Parameters<typeof createProduct>[0]["data"]) => createProduct({ data: input });
 const sendEdit = (input: Parameters<typeof updateProduct>[0]["data"]) => updateProduct({ data: input });
@@ -134,7 +135,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
 
   const dirty = draftChanged(draft, start);
   const blocker = useBlocker({
-    shouldBlockFn: () => dirty && !saved.current,
+    shouldBlockFn: ({ current, next }) => dirty && !saved.current && !onlySettingsChanged(current, next),
     enableBeforeUnload: () => dirty && !saved.current,
     withResolver: true,
   });

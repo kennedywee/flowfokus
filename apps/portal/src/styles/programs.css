@@ -507,8 +507,14 @@ a.programs-row:focus-visible {
   line-height: 16px;
 }
 .program-form__link {
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--color-ink);
+  font: inherit;
   font-size: var(--text-xs);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 @media (pointer: coarse) {

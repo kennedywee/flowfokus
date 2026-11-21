@@ -1,33 +1,51 @@
 import { describe, expect, test } from "bun:test";
-import { changeSummary, gymSiteAddress, locationCount, locationFieldError, zoneChoices, zoneLabel } from "./facts";
+import { gymSiteAddress, locationCount, locationFieldError, zoneChoices, zoneLabel } from "./facts";
 import type { Failure } from "../../lib/result";
 import { ABILITIES, reach } from "./abilities";
-import { isSettingsPath, sectionFromOldLink, settingsSectionFor } from "./sections";
+import { SETTINGS_PAGES, matchSettingsPages, onlySettingsChanged, readSettingsSearch, settingsFromOldLink } from "./sections";
 import { firstName, invitationLine, listedMembers, inviteFailure, memberStatus, roleChoices, roleName, staffChangeFailure, staffCount } from "./team";
 
 const failure = (code: Failure["code"], message = ""): Failure => ({ status: 422, code, message });
 
-describe("settings sections", () => {
-  test("old section links open the renamed sections", () => {
-    expect(sectionFromOldLink("Organization")).toBe("/$org/settings/general");
-    expect(sectionFromOldLink("team")).toBe("/$org/settings/staff");
-    expect(sectionFromOldLink("Locations")).toBe("/$org/settings/locations");
-    expect(sectionFromOldLink("Notifications")).toBe("/$org/settings/notifications");
-    expect(sectionFromOldLink("billing")).toBeUndefined();
-    expect(sectionFromOldLink(3)).toBeUndefined();
+describe("settings pages", () => {
+  test("old settings links open their page in the dialog", () => {
+    expect(settingsFromOldLink("Organization")).toBe("general");
+    expect(settingsFromOldLink("team")).toBe("staff");
+    expect(settingsFromOldLink("Locations")).toBe("locations");
+    expect(settingsFromOldLink("roles")).toBe("roles");
+    // Notifications was a sample page.
+    expect(settingsFromOldLink("notifications")).toBe("general");
+    expect(settingsFromOldLink("integrations")).toBeUndefined();
+    expect(settingsFromOldLink("billing")).toBeUndefined();
+    expect(settingsFromOldLink(3)).toBeUndefined();
   });
 
-  test("Roles belongs to Staff, and the index belongs to no section", () => {
-    expect(settingsSectionFor("/chainsaw/settings/roles", "chainsaw")?.label).toBe("Staff");
-    expect(settingsSectionFor("/chainsaw/settings/locations/", "chainsaw")?.label).toBe("Locations");
-    expect(settingsSectionFor("/chainsaw/settings", "chainsaw")).toBeUndefined();
+  test("the address keeps only a real settings page", () => {
+    expect(readSettingsSearch({ settings: "staff" })).toEqual({ settings: "staff" });
+    expect(readSettingsSearch({ settings: "notifications" })).toEqual({});
+    expect(readSettingsSearch({ settings: 1 })).toEqual({});
+    expect(readSettingsSearch({})).toEqual({});
   });
 
-  test("settings pages are told apart from other pages", () => {
-    expect(isSettingsPath("/chainsaw/settings", "chainsaw")).toBe(true);
-    expect(isSettingsPath("/chainsaw/settings/staff", "chainsaw")).toBe(true);
-    expect(isSettingsPath("/chainsaw/settingsx", "chainsaw")).toBe(false);
-    expect(isSettingsPath("/chainsaw/members", "chainsaw")).toBe(false);
+  test("search finds pages by name and by other words", () => {
+    expect(matchSettingsPages("").map((page) => page.slug)).toEqual(["appearance", "general", "gym-site", "locations", "staff", "roles"]);
+    expect(matchSettingsPages("theme").map((page) => page.slug)).toEqual(["appearance"]);
+    expect(matchSettingsPages(" Staff ").map((page) => page.slug)).toEqual(["staff"]);
+    expect(matchSettingsPages("permissions").map((page) => page.slug)).toEqual(["roles"]);
+    expect(matchSettingsPages("billing")).toEqual([]);
+  });
+
+  test("leaves only pages that exist out of sample data", () => {
+    const labels = SETTINGS_PAGES.map((page) => page.label);
+    for (const missing of ["Profile", "Notifications", "Payments", "Booking rules"]) expect(labels).not.toContain(missing);
+  });
+
+  test("a form guard lets Settings open and close over the same page", () => {
+    const page = { pathname: "/chainsaw/members/new", search: {} };
+    expect(onlySettingsChanged(page, { ...page, search: { settings: "general" } })).toBe(true);
+    expect(onlySettingsChanged({ ...page, search: { settings: "staff" } }, page)).toBe(true);
+    expect(onlySettingsChanged(page, { pathname: "/chainsaw/members", search: { settings: "general" } })).toBe(false);
+    expect(onlySettingsChanged({ pathname: "/chainsaw/sales/new", search: { member: "a" } }, { pathname: "/chainsaw/sales/new", search: { member: "b" } })).toBe(false);
   });
 });
 
@@ -123,11 +141,6 @@ describe("general facts", () => {
   test("keeps the organization's own zone in the list", () => {
     expect(zoneChoices("America/Lima")[0]).toBe("America/Lima");
     expect(zoneChoices("UTC")).not.toContain("America/Lima");
-  });
-
-  test("says what the save bar holds", () => {
-    expect(changeSummary({ timezone: true, published: false })).toBe("Time zone changed");
-    expect(changeSummary({ timezone: true, published: true })).toBe("2 changes");
   });
 
   test("says a taken location name in Paper's words", () => {

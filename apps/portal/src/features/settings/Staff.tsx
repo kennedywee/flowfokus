@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { Link, useRouter } from "@tanstack/react-router";
+import { createContext, useContext, useState } from "react";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
-import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
 import { SubmitButton, initials } from "../../components/ui";
 import { useAction } from "../../lib/hooks";
@@ -16,7 +14,7 @@ import {
   removeStaff,
   revokeInvitation,
 } from "../../lib/staff.functions";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { SaleDialog } from "../sales/SaleDialogs";
 import { FieldError } from "./Locations";
-import { LockLine, SettingsPage } from "./SettingsPage";
+import { LockLine, SettingsPage, SettingsPageAction } from "./SettingsPage";
 import {
   firstName,
   invitationLine,
@@ -62,22 +60,34 @@ const icon = {
 } as const;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Reloads the staff list after a change. The Settings dialog owns the list. */
+const ReloadTeam = createContext<() => Promise<void>>(async () => {});
+
 /**
- * Paper "Settings — Staff". WorkOS holds staff access: every change goes
- * through Rails, which refuses escalation and keeps someone who can manage
- * staff. Rows show only what Rails returns: name, email, role, and status.
+ * Staff. WorkOS holds staff access: every change goes through Rails, which
+ * refuses escalation and keeps someone who can manage staff. Rows show only
+ * what Rails returns: name, email, role, and status. `team` is null while it
+ * loads.
  */
-export function Staff({ team }: { team: Result<Schemas["Team"]> }) {
-  const organization = useOrganization();
+export function Staff({ team, reload }: { team: Result<Schemas["Team"]> | null; reload: () => Promise<void> }) {
   const [inviting, setInviting] = useState(false);
 
+  if (!team) {
+    return (
+      <SettingsPage title="Staff">
+        <p className="settings-state" role="status">
+          Loading staff…
+        </p>
+      </SettingsPage>
+    );
+  }
   if (!team.ok) {
     return (
-      <SettingsPage title="Staff" className="settings-page--wide">
+      <SettingsPage title="Staff">
         {team.error.code === "forbidden" ? (
           <LockLine>Seeing staff needs a role that can manage staff.</LockLine>
         ) : (
-          <DidNotLoad />
+          <DidNotLoad what="Staff" reload={reload} />
         )}
       </SettingsPage>
     );
@@ -87,71 +97,40 @@ export function Staff({ team }: { team: Result<Schemas["Team"]> }) {
   const members = listedMembers(team.data);
   const grantable = roles.filter((role) => role.grantable);
   return (
-    <SettingsPage
-      title="Staff"
-      className="settings-page--wide"
-      actions={
-        <PageActions>
-          <Link
-            to="/$org/settings/roles"
-            params={{ org: organization.slug }}
-            className={buttonVariants({
-              variant: "secondary",
-              size: "compact",
-            })}
-          >
-            Roles
-          </Link>
-          {grantable.length ? (
-            <Button
-              type="button"
-              size="compact"
-              onClick={() => setInviting(true)}
-            >
-              <Icon name="plus" {...icon} />
-              Invite staff
-            </Button>
-          ) : null}
-        </PageActions>
-      }
-    >
-      <section className="settings-table" aria-label="Staff">
-        <div
-          className="settings-table__head settings-staff__grid"
-          aria-hidden="true"
-        >
-          <span>Name</span>
-          <span className="settings-col--wide">Role</span>
-          <span className="settings-col--wide">Status</span>
-          <span />
-        </div>
-        <ul className="settings-rows">
-          {members.map((member) => (
-            <MemberRow key={member.id} member={member} roles={roles} />
-          ))}
-          {invitations.map((invitation) => (
-            <InvitationRow
-              key={invitation.id}
-              invitation={invitation}
-              roles={roles}
-            />
-          ))}
-        </ul>
-        <p className="settings-foot">{staffCount(team.data)}</p>
-      </section>
-      {inviting ? (
-        <InviteDialog roles={grantable} onClose={() => setInviting(false)} />
-      ) : null}
-    </SettingsPage>
+    <ReloadTeam.Provider value={reload}>
+      <SettingsPage
+        title="Staff"
+        action={grantable.length ? <SettingsPageAction onClick={() => setInviting(true)}>Invite staff</SettingsPageAction> : null}
+      >
+        <section className="settings-table" aria-label="Staff">
+          <div className="settings-table__head settings-staff__grid" aria-hidden="true">
+            <span>Name</span>
+            <span className="settings-col--wide">Role</span>
+            <span className="settings-col--wide">Status</span>
+            <span />
+          </div>
+          <ul className="settings-rows">
+            {members.map((member) => (
+              <MemberRow key={member.id} member={member} roles={roles} />
+            ))}
+            {invitations.map((invitation) => (
+              <InvitationRow key={invitation.id} invitation={invitation} roles={roles} />
+            ))}
+          </ul>
+          <p className="settings-foot">{staffCount(team.data)}</p>
+        </section>
+        {inviting ? <InviteDialog roles={grantable} onClose={() => setInviting(false)} /> : null}
+      </SettingsPage>
+    </ReloadTeam.Provider>
   );
 }
 
-function DidNotLoad() {
-  const router = useRouter();
+/** The list did not load: say so, with Reload. Roles uses it too. */
+export function DidNotLoad({ what, reload }: { what: string; reload: () => Promise<void> }) {
   const [retrying, setRetrying] = useState(false);
   return (
     <div className="settings-state" role="alert">
-      <p>Staff did not load. Reload the page to try again.</p>
+      <p>{what} did not load.</p>
       <Button
         type="button"
         variant="secondary"
@@ -160,7 +139,7 @@ function DidNotLoad() {
         aria-busy={retrying || undefined}
         onClick={async () => {
           setRetrying(true);
-          await router.invalidate();
+          await reload();
           setRetrying(false);
         }}
       >
@@ -191,7 +170,7 @@ function MemberRow({
   roles: TeamRole[];
 }) {
   const organization = useOrganization();
-  const router = useRouter();
+  const reload = useContext(ReloadTeam);
   const toast = useToast();
   const changing = useAction(sendRole);
   const removing = useAction(sendRemove);
@@ -211,12 +190,12 @@ function MemberRow({
         tone: "success",
         title: `${member.name} is now ${roleName(roles, role)}. This can take a few minutes.`,
       });
-      void router.invalidate();
+      void reload();
       return;
     }
     const failure = staffChangeFailure(result.error, member.name);
     toast.show({ tone: "error", title: `Role not changed. ${failure.text}` });
-    if (failure.reload) void router.invalidate();
+    if (failure.reload) void reload();
   }
 
   async function remove() {
@@ -227,7 +206,7 @@ function MemberRow({
     setConfirming(false);
     if (result.ok) {
       toast.show({ tone: "success", title: `Access removed · ${member.name}` });
-      void router.invalidate();
+      void reload();
       return;
     }
     const failure = staffChangeFailure(result.error, member.name);
@@ -235,7 +214,7 @@ function MemberRow({
       tone: "error",
       title: `Access was not removed. ${failure.text}`,
     });
-    if (failure.reload) void router.invalidate();
+    if (failure.reload) void reload();
   }
 
   return (
@@ -330,7 +309,7 @@ function InvitationRow({
   roles: TeamRole[];
 }) {
   const organization = useOrganization();
-  const router = useRouter();
+  const reload = useContext(ReloadTeam);
   const toast = useToast();
   const action = useAction(sendRevoke);
   const role = roles.find((item) => item.slug === invitation.role);
@@ -349,7 +328,7 @@ function InvitationRow({
         tone: "success",
         title: `Invitation revoked · ${invitation.email}`,
       });
-      void router.invalidate();
+      void reload();
       return;
     }
     const failure = staffChangeFailure(
@@ -361,7 +340,7 @@ function InvitationRow({
       tone: "error",
       title: `The invitation was not revoked. ${failure.text}`,
     });
-    if (failure.reload) void router.invalidate();
+    if (failure.reload) void reload();
   }
 
   return (
@@ -413,7 +392,7 @@ function InvitationRow({
   );
 }
 
-/** Paper "Settings — Invite staff": an email and one role card. Only roles the viewer may grant. */
+/** Invite staff: an email and one role card. Only roles the viewer may grant. */
 function InviteDialog({
   roles,
   onClose,
@@ -422,7 +401,7 @@ function InviteDialog({
   onClose: () => void;
 }) {
   const organization = useOrganization();
-  const router = useRouter();
+  const reload = useContext(ReloadTeam);
   const toast = useToast();
   const action = useAction(sendInvite);
   const [email, setEmail] = useState("");
@@ -450,7 +429,7 @@ function InviteDialog({
     if (result.ok) {
       toast.show({ tone: "success", title: `Invitation sent · ${sent}` });
       onClose();
-      void router.invalidate();
+      void reload();
     }
   }
 
@@ -458,7 +437,7 @@ function InviteDialog({
     <SaleDialog
       title="Invite staff"
       wide
-      className="settings-dialog settings-dialog--invite"
+      className="settings-form-dialog"
       pending={action.pending}
       onClose={onClose}
       onSubmit={() => void submit()}

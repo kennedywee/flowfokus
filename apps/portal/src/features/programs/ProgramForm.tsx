@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
+import { useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -40,6 +40,8 @@ import {
 import { Section } from "../members/Section";
 import { KIND_ICON } from "./kinds";
 import { usePublishProgram } from "./publish";
+import { onlySettingsChanged } from "../settings/sections";
+import { useSettings } from "../settings/SettingsDialog";
 
 type Kind = Schemas["ProgramKind"];
 
@@ -120,6 +122,7 @@ function FormFrame({
 
 function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
   const organization = useOrganization();
+  const settings = useSettings();
   const desk = useDeskLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -159,7 +162,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
 
   const dirty = draftChanged(draft, start, planTouched);
   const blocker = useBlocker({
-    shouldBlockFn: () => dirty && !saved.current,
+    shouldBlockFn: ({ current, next }) => dirty && !saved.current && !onlySettingsChanged(current, next),
     enableBeforeUnload: () => dirty && !saved.current,
     withResolver: true,
   });
@@ -268,9 +271,9 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
             </NativeSelect>
           </span>
           {organization.locations.length ? null : (
-            <Link to="/$org/settings/locations" params={{ org: organization.slug }} className="program-form__link">
+            <button type="button" className="program-form__link" onClick={() => settings.open("locations")}>
               Add a location
-            </Link>
+            </button>
           )}
         </FieldBox>
       </div>
