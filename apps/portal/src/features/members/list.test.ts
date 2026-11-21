@@ -1,17 +1,40 @@
 import { describe, expect, test } from "bun:test";
 import { pageItems } from "../../lib/paging";
-import { checkNewMember, fieldMessage, rangeLabel } from "./list";
+import { DEFAULT_MEMBER_COLUMNS, DEFAULT_MEMBER_SORT, checkNewMember, fieldMessage, isDefaultDisplay, sortMembers } from "./list";
 
-describe("rangeLabel", () => {
-  test("counts all members when they fit on one page", () => {
-    expect(rangeLabel(0, 16, 16)).toBe("16 members");
-    expect(rangeLabel(0, 1, 1)).toBe("1 member");
-    expect(rangeLabel(0, 0, 0)).toBe("0 members");
+describe("sortMembers", () => {
+  const members = [
+    { name: "ben tan", created_at: "2026-11-20T10:00:00Z" },
+    { name: "Ánh Nguyen", created_at: "2026-11-21T10:00:00Z" },
+    { name: "Chloe Lim", created_at: "2026-11-19T10:00:00Z" },
+  ];
+
+  test("sorts by name without regard to case, both ways", () => {
+    expect(sortMembers(members, { column: "name", direction: "asc" }).map((m) => m.name)).toEqual(["Ánh Nguyen", "ben tan", "Chloe Lim"]);
+    expect(sortMembers(members, { column: "name", direction: "desc" }).map((m) => m.name)).toEqual(["Chloe Lim", "ben tan", "Ánh Nguyen"]);
   });
 
-  test("shows the range when there are more pages", () => {
-    expect(rangeLabel(0, 50, 212)).toBe("1–50 of 212 members");
-    expect(rangeLabel(200, 12, 212)).toBe("201–212 of 212 members");
+  test("sorts by the moment the member joined", () => {
+    expect(sortMembers(members, { column: "since", direction: "desc" }).map((m) => m.name)).toEqual(["Ánh Nguyen", "ben tan", "Chloe Lim"]);
+    expect(sortMembers(members, { column: "since", direction: "asc" }).map((m) => m.name)).toEqual(["Chloe Lim", "ben tan", "Ánh Nguyen"]);
+  });
+
+  test("keeps the order Rails sent for equal values and leaves the input alone", () => {
+    const same = [
+      { name: "A", created_at: "2026-11-20T10:00:00Z" },
+      { name: "B", created_at: "2026-11-20T10:00:00Z" },
+    ];
+    expect(sortMembers(same, DEFAULT_MEMBER_SORT).map((m) => m.name)).toEqual(["A", "B"]);
+    expect(sortMembers(same, { column: "since", direction: "asc" }).map((m) => m.name)).toEqual(["A", "B"]);
+    expect(members[0]!.name).toBe("ben tan");
+  });
+});
+
+describe("isDefaultDisplay", () => {
+  test("is true only for the starting sort and columns", () => {
+    expect(isDefaultDisplay(DEFAULT_MEMBER_SORT, DEFAULT_MEMBER_COLUMNS)).toBe(true);
+    expect(isDefaultDisplay({ column: "name", direction: "asc" }, DEFAULT_MEMBER_COLUMNS)).toBe(false);
+    expect(isDefaultDisplay(DEFAULT_MEMBER_SORT, { email: false, since: true })).toBe(false);
   });
 });
 

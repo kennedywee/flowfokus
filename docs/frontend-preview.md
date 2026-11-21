@@ -26,8 +26,11 @@ before it) is history. The visual rules live in
   location is an HttpOnly cookie per organization. It sets the default
   location for check-in and new sales. Add location opens
   Settings.
-- Members: search, create, and view member records. Staff check a member in
-  from the member page or with Ctrl K. Staff create gym site link codes and
+- Members: the list (the member count, search, Display, sortable Member and
+  Member since, and a page range), create, and view member records. The list
+  has no Filter button and no Holds, Spent, or Balance due columns, because
+  Rails does not supply them yet ([#17](https://github.com/kennedywee/flowfokus/issues/17)).
+  Staff check a member in from the member page or with Ctrl K. Staff create gym site link codes and
   unlink members from their sign-in.
 - Sales: list and create sales, record payments, deliver access, renew,
   refund, void, and end access.
@@ -59,8 +62,9 @@ These actions persist in PostgreSQL, including during local demo development.
   [the design system](design-system.md#component-gallery). It shows the shared
   parts for the redesign (list table, filter bar, Display popover, row
   selection, groups, detail layout, hero, activity, background patterns, and
-  data marks) on labelled sample members, bookings, and events. No product
-  screen uses these parts yet; the screen issues #88 to #94 do. See
+  data marks) on labelled sample members, bookings, and events. The
+  Members list uses them with real Rails data; the other screens follow in the
+  issues #89 to #94. See
   [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 
 These screens display a Sample data label. Local edits reset when the screen

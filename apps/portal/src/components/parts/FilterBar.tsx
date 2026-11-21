@@ -52,6 +52,7 @@ export function FilterBar({
   display,
   className,
 }: {
+  /** The fields staff can filter by. With none, the Filter button is left out and search and Display remain. */
   fields: readonly FilterField[];
   filters: readonly ActiveFilter[];
   onChange: (filters: ActiveFilter[]) => void;
@@ -79,28 +80,30 @@ export function FilterBar({
   const valuesOf = (field: string) => filters.find((filter) => filter.field === field);
   return (
     <div className={cn("filter-bar", className)} role="group" aria-label="Filters">
-      <DropdownMenu>
-        <DropdownMenuTrigger ref={filterButton} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-          <Icon name="filter" size={14} {...icon} />
-          Filter
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="filter-menu">
-          {fields.map((field) => (
-            <DropdownMenuSub key={field.key}>
-              <DropdownMenuSubTrigger>
-                {field.icon ? <Icon name={field.icon} size={14} {...icon} /> : null}
-                {field.label}
-                <DropdownMenuShortcut>
-                  <Icon name="chevronRight" {...icon} />
-                </DropdownMenuShortcut>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="filter-menu">
-                <FieldOptions field={field} filter={valuesOf(field.key)} onChange={(next) => setFilter(field.key, next)} />
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {fields.length ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger ref={filterButton} className={buttonVariants({ variant: "secondary", size: "compact" })}>
+            <Icon name="filter" size={14} {...icon} />
+            Filter
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="filter-menu">
+            {fields.map((field) => (
+              <DropdownMenuSub key={field.key}>
+                <DropdownMenuSubTrigger>
+                  {field.icon ? <Icon name={field.icon} size={14} {...icon} /> : null}
+                  {field.label}
+                  <DropdownMenuShortcut>
+                    <Icon name="chevronRight" {...icon} />
+                  </DropdownMenuShortcut>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="filter-menu">
+                  <FieldOptions field={field} filter={valuesOf(field.key)} onChange={(next) => setFilter(field.key, next)} />
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
       {filters.map((filter) => {
         const field = fields.find((item) => item.key === filter.field);
         if (!field) return null;

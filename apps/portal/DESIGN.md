@@ -416,8 +416,9 @@ empty, and loading. Sizes and colours come from the Paper pages Members,
 Session details, Member details, Sale details, Program details, Product
 details, and Pass credits. The screen issues (#88 to #94) move each screen onto
 them. Until then the older `ListToolbar`, `FilterChips`, `ListPager`, and
-`TableState` stay as they are, and the existing screens use them. The new parts
-add no sample data to a screen; the gallery examples carry labelled sample data.
+`TableState` stay as they are, and the existing screens use them. The Members
+list is the first screen on the new parts (#88). The new parts add no sample
+data to a screen; the gallery examples carry labelled sample data.
 
 Code: `components/parts/` (`ListTable`, `FilterBar`, `DetailLayout`,
 `Activity`, `Backdrop`, `marks`), the ui-sdk wrappers `components/ui/popover`,
@@ -429,11 +430,11 @@ and `lib/paging.ts`, styles in `styles/parts.css`.
 | List table (`ListTable`, `ListTableBody`, `ListTableRow`, `ListTableCell`) | Table roles on a grid. Column labels are 12px muted text on a 30px header with one hairline. Rows sit flush with the content edge: no grey band, no row dividers, no inset. Two-line rows are 56px (a list page); one-line rows are 44px (a detail page). A sortable header is a button; its `columnheader` has `aria-sort`, and only the sorted column has one. The count and pager under a list page are the existing `ListPager`. A list inside a detail page loads more on scroll (`LoadMore`, with a button for keyboard users; `loaded` re-arms the trigger after each append, and Show more is free again when the promise `onLoadMore` returns settles, also on failure). Loading is skeleton rows in the same columns (`ListTableLoading`); empty is `ListTableEmpty` under the labels. |
 | Row selection | `ListTable selection` adds a checkbox column and a header box (none, mixed, all). Chosen rows get `--color-selected`. Adjacent chosen rows merge into one band: `bandPositions` gives each row first, middle, last, or alone, so only the outer corners round (8px). Shift-click chooses a range. `SelectionBar` floats at the bottom with "2 selected" and the bulk actions; a live region announces the count, and Escape in the bar clears it. |
 | Collapsible groups (`ListGroup`) | A 36px heading button with a chevron, a mark, a label, and a count: "Here 2", "To arrive 9", "Fulfilled 1". The group is a ui-sdk Collapsible, so the button has `aria-expanded`. |
-| Filter bar (`FilterBar`) | A Filter button, then a chip per filter, then search (`SearchField`, with its "/" hint) and Display on the right. A chip reads field, operator, value, remove. A click on the operator flips "is" and "is not", or "is any of" and "is none of" (`filterOperator`, `toggleOperator`); there is no operator menu. The value opens the same checkbox list as the Filter menu. The filter state is `ActiveFilter[]` ({ field, values, negated }). |
+| Filter bar (`FilterBar`) | A Filter button, then a chip per filter, then search (`SearchField`, with its "/" hint) and Display on the right. A chip reads field, operator, value, remove. A click on the operator flips "is" and "is not", or "is any of" and "is none of" (`filterOperator`, `toggleOperator`); there is no operator menu. The value opens the same checkbox list as the Filter menu. The filter state is `ActiveFilter[]` ({ field, values, negated }). With no `fields`, the Filter button is left out and search and Display remain (the Members list, until Rails has member filters). |
 | Display popover (`DisplayPopover`) | Sort by with a direction button, one toggle, column chips (`aria-pressed`), and "Reset to default" (dimmed and inert at the default, but still focusable). A ui-sdk Popover with `modal="trap-focus"`: focus moves in, Escape closes, and focus returns to the Display button. |
 | Segmented control (`ui/segmented-control`) | Two to four views where one is chosen: All, Comments, Activity. One tab stop, arrow keys between items. |
 | Detail layout (`DetailLayout`) | A main column (28px top, 36px sides, 40px between sections) and a 296px right panel. Below 1100px the panel sits under the main column. The panel holds `PanelGroup` (a grey 12px title) with `PanelRow` label and value rows (96px label), and `PanelAddGroup` for Tags and Notes with a "+" button. Leave the button out when the person cannot add. |
-| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. |
+| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. `HeroStats` is the stats alone: the Members list shows its count with it. |
 | Activity (`ActivityFeed`) | A comment box (`CommentComposer`, ⌘↵), the All, Comments, Activity control, event rows with a coloured dot, comment rows with a 24px avatar, and "Show N earlier events". Rails has no comments yet, so a screen leaves the composer out and shows events only; the control then hides too. |
 | Background pattern (`RecordBackdrop`, via `DetailLayout record`) | One faint pattern per record: glyph dots (member), ledger rules (sale), orbit dots (program), clock ticks (session), barcode (product). Drawn from the Paper "Atmosphere" frames in `--color-pattern`. Decoration: `aria-hidden`, no pointer events, hidden under `prefers-contrast: more`. |
 | Status marks (`StatusMark`, `TimeMark`) | A ring or pie with its label: Paid, Partly paid, Unpaid, Fulfilled, Partly fulfilled, Unfulfilled (the icon set), and Renews or Ends (a pie of the time left). The label is the word Rails returns (#14 is open). Payment, fulfillment, and access stay separate marks. `boxed` is the pill of a hero. |
@@ -486,18 +487,32 @@ only Rails data:
 - Properties: email, gym site sign-in (click the value to create a link code
   or unlink, with members:link), member since, and total paid.
 
-The members list and New member are the next redesigned screens
+The members list and New member are redesigned screens
 (`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
 `features/members/list.ts`). They show only Rails data:
 
-- Members list: the title, New member (members:create only) in the top bar,
-  then a 28px search field with a "/" hint. Rails searches name and email as
-  staff type; Escape clears. A grey header band, then 52px rows with the
-  initials, name, email, and join date. Each row opens the member. The footer
-  counts members and pages them 50 at a time. Phones hide the join date.
-  There is no Filter, Display, selection, or bulk action, because Rails has no
-  member status, filters, or bulk endpoints.
-- No results: one line and Clear search. No members: one line and New member.
+- Members list (issue #88, Paper "Members"): the title with the member
+  count on the right (`HeroStats`; a search hides it, because Rails then
+  returns only the matches), New member in the top bar (it and its N key need members:create and members:read),
+  and a filter bar with search (a "/" hint; Rails searches name and email as
+  staff type; Escape clears) and Display. Then the list table: a 30px label
+  row with Member and Member since as sortable headers, and 56px two-line rows
+  with initials, name, and the email under it, then the join date. Each row
+  opens the member (one link covers the row). The footer reads "1–50 of 186
+  members" and pages 50 at a time. Sorting, columns, and paging work on the
+  rows Rails returned, in the page; the URL keeps only `q`. Display has Sort by
+  (Name or Member since; newest first is the start) and the chips Member
+  since and Email (the line under the name), with Reset to default. The page
+  shows the faint glyph-dot pattern behind the header.
+  Left out, because Rails cannot supply them (issue #17): the Filter button
+  and its fields (Status, Product, Tag, Home location, Ends, Balance), Show
+  ended members, the balance due stat, the Holds, Spent, and Balance due
+  columns, tags, member numbers, phone, and bulk actions. The Filter button
+  returns when a filter field is real: `FilterBar` leaves it out when `fields`
+  is empty.
+- No results: the label row, one line, and Clear search. No members: the label
+  row, one line, and New member. Loading: skeleton rows in the same columns.
+  A load error: the label row and the failure notice.
 - New member: a page, not a dialog. An icon tile and the title, Create member
   (⌘↵) in the top bar, then the Profile band with Full name and Email.
   Email is required because Rails requires it. Errors show on the fields, with
