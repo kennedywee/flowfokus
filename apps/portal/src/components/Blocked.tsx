@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CircleAlert, TriangleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { SignOutForm } from "./Session";
 
 /*
@@ -36,7 +36,6 @@ export function Blocked({
   /** The action, such as Sign in or Go to the staff portal, or the organization list. */
   children?: ReactNode;
 }) {
-  const Icon = tone === "warning" ? TriangleAlert : CircleAlert;
   return (
     <main className="entry" id="main">
       <div className="entry__card">
@@ -47,7 +46,7 @@ export function Blocked({
         {message ? (
           tone ? (
             <p className="entry__message" data-tone={tone} role={tone === "error" ? "alert" : undefined}>
-              <Icon className="entry__icon" strokeWidth={2} aria-hidden="true" focusable="false" />
+              <Icon name="notifications" className="entry__icon" aria-hidden="true" focusable="false" />
               <span>{message}</span>
             </p>
           ) : (

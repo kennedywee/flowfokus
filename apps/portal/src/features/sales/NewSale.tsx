@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Banknote, MapPin, Plus, Receipt, Search, Tag, X } from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Combobox } from "../../components/Combobox";
 import { PageActions } from "../../components/PageActions";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -36,8 +36,8 @@ import { METHOD_ICON } from "./SaleFacts";
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
 const sendPayment = (input: Parameters<typeof recordPayment>[0]["data"]) => recordPayment({ data: input });
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
-const markIcon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
+const markIcon = { "aria-hidden": true, focusable: false } as const;
 const FORM_ID = "new-sale";
 
 function focusField(id: string) {
@@ -84,7 +84,7 @@ function NewSaleHead({ children }: { children?: ReactNode }) {
   return (
     <header className="new-sale__head">
       <span className="new-sale__icon" aria-hidden="true">
-        <Receipt {...icon} />
+        <Icon name="sales" {...icon} />
       </span>
       <h1>New sale</h1>
       {children ? <PageActions>{children}</PageActions> : null}
@@ -92,10 +92,10 @@ function NewSaleHead({ children }: { children?: ReactNode }) {
   );
 }
 
-function Band({ id, title, icon: Icon, action }: { id: string; title: string; icon: typeof Tag; action?: ReactNode }) {
+function Band({ id, title, icon: iconName, action }: { id: string; title: string; icon: IconName; action?: ReactNode }) {
   return (
     <div className="mx-section__head sale-band">
-      <Icon {...icon} />
+      <Icon name={iconName} {...icon} />
       <h2 id={`${id}-title`}>{title}</h2>
       {action}
     </div>
@@ -283,7 +283,7 @@ function NewSaleForm({
           <Band
             id="products"
             title="Products"
-            icon={Tag}
+            icon="products"
             action={
               option ? (
                 <Button
@@ -334,7 +334,7 @@ function NewSaleForm({
                 aria-describedby={productError ? "sale-add-product-error" : undefined}
                 onClick={() => setDialog("product")}
               >
-                <Plus {...markIcon} />
+                <Icon name="plus" {...markIcon} />
                 Product
               </Button>
             </div>
@@ -354,7 +354,7 @@ function NewSaleForm({
           <Band
             id="payment"
             title="Payment"
-            icon={Banknote}
+            icon="cash"
             action={
               canPay && !payment ? (
                 <Button
@@ -365,7 +365,7 @@ function NewSaleForm({
                   disabled={!option || pending}
                   onClick={() => setDialog("payment")}
                 >
-                  <Plus {...markIcon} />
+                  <Icon name="plus" {...markIcon} />
                   Record payment
                 </Button>
               ) : null
@@ -406,7 +406,7 @@ function NewSaleForm({
                     edited();
                   }}
                 >
-                  <X {...markIcon} />
+                  <Icon name="close" {...markIcon} />
                   <span className="visually-hidden">Change member: {member.name}</span>
                 </button>
               </div>
@@ -457,7 +457,7 @@ function NewSaleForm({
             <label htmlFor="sale-location">Location</label>
           </div>
           <div className="new-sale__select">
-            <MapPin {...markIcon} />
+            <Icon name="location" {...markIcon} />
             <NativeSelect
               id="sale-location"
               className="new-sale__native"
@@ -521,14 +521,14 @@ function NewSaleForm({
 }
 
 function ProductIcon({ kind }: { kind: SaleKind }) {
-  const Icon = KIND_ICON[kind];
-  return <Icon {...markIcon} />;
+  const iconName = KIND_ICON[kind];
+  return <Icon name={iconName} {...markIcon} />;
 }
 
 function RemoveButton({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
   return (
     <button type="button" className="new-sale__icon-button" disabled={disabled} onClick={onClick}>
-      <X {...markIcon} />
+      <Icon name="close" {...markIcon} />
       <span className="visually-hidden">{label}</span>
     </button>
   );
@@ -545,12 +545,12 @@ function PaymentRow({
   disabled: boolean;
   onRemove: () => void;
 }) {
-  const MethodIcon = METHOD_ICON[payment.method];
+  const methodIcon = METHOD_ICON[payment.method];
   const label = PAYMENT_METHOD_LABEL[payment.method];
   return (
     <li className="sale-line">
       <span className="sale-tile" aria-hidden="true">
-        <MethodIcon {...markIcon} />
+        <Icon name={methodIcon} {...markIcon} />
       </span>
       <div className="sale-line__main">
         <span className="sale-line__name">{label}</span>
@@ -619,7 +619,7 @@ function AddProductDialog({
       )}
     >
       <div className="list-search new-sale__search">
-        <Search className="list-search__icon" strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name="search" className="list-search__icon" aria-hidden="true" focusable="false" />
         <input
           ref={searchRef}
           className="list-search__input"

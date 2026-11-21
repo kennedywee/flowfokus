@@ -1,5 +1,5 @@
 import * as React from "react"
-import { TriangleAlert } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
@@ -36,7 +36,7 @@ function FieldError({ className, children, ...props }: React.ComponentProps<"p">
   if (!children) return null
   return (
     <p data-slot="field-error" className={cn("field__error", className)} {...props}>
-      <TriangleAlert strokeWidth={2} aria-hidden="true" focusable="false" />
+      <Icon name="notifications" aria-hidden="true" focusable="false" />
       <span>{children}</span>
     </p>
   )

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { ArrowDown, ChevronRight, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -28,7 +28,7 @@ import {
 } from "./facts";
 import { PRODUCT_ICON } from "./kinds";
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /**
  * Paper "Products — list": Filter and search, a header band, then one row per
@@ -76,7 +76,7 @@ function ListHead() {
       {can("products:create") ? (
         <PageActions>
           <Link to="/$org/products/new" params={{ org: organization.slug }} className={buttonVariants({ size: "compact" })}>
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             New product
           </Link>
         </PageActions>
@@ -172,7 +172,7 @@ function ProductRows({ products }: { products: Product[] }) {
                 <span className="products-row__fact products-col--wide">{termsText(product)}</span>
                 <span className="products-row__fact products-col--wide">{SALE_STATE_LABEL[state]}</span>
                 <span className="products-row__price products-col--num">{price ? formatMoney(price.amount_minor, price.currency) : "No price"}</span>
-                <ChevronRight className="programs-row__chevron" {...icon} />
+                <Icon name="chevronRight" className="programs-row__chevron" {...icon} />
               </Link>
             </li>
           );
@@ -184,8 +184,8 @@ function ProductRows({ products }: { products: Product[] }) {
 }
 
 function ProductIcon({ kind }: { kind: Product["kind"] }) {
-  const Icon = PRODUCT_ICON[kind];
-  return <Icon className="products-row__icon" {...icon} />;
+  const iconName = PRODUCT_ICON[kind];
+  return <Icon name={iconName} className="products-row__icon" {...icon} />;
 }
 
 /** Column titles for sighted staff. Each row link reads its own facts. */
@@ -194,7 +194,7 @@ function ProductsHead() {
     <div className="programs-table__head products-grid" aria-hidden="true">
       <span className="programs-table__sort">
         Product
-        <ArrowDown {...icon} />
+        <Icon name="arrowDown" {...icon} />
       </span>
       <span className="products-col--wide">Type</span>
       <span className="products-col--wide">Terms</span>
@@ -219,7 +219,7 @@ function NoProducts() {
       action={
         create ? (
           <Link to="/$org/products/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             New product
           </Link>
         ) : null

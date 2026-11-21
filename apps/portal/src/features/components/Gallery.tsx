@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter, useRouterState, rootRouteId, useLoaderData } from "@tanstack/react-router";
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { isTheme, type Theme } from "@/lib/validate";
 import { loadExample } from "./examples";
 import { GALLERY, PAPER_PAGES, groupedEntries, type GalleryEntry, type GalleryExample } from "./registry";
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** The gallery frame: a side list of components and the page. */
 export function GalleryLayout({ children }: { children: ReactNode }) {
@@ -209,7 +209,7 @@ export function GalleryEntryPage({ entry }: { entry: GalleryEntry }) {
             <li>
               <a href={PAPER_PAGES[entry.paper.page]} target="_blank" rel="noreferrer">
                 Paper: {entry.paper.page} › {entry.paper.board}
-                <ExternalLink className="gallery-links__icon" {...icon} />
+                <Icon name="openExternally" className="gallery-links__icon" {...icon} />
               </a>
             </li>
           ) : null}
@@ -279,7 +279,7 @@ function CodeBlock({ code }: { code: string }) {
   return (
     <div className="gallery-code">
       <Button size="icon-compact" variant="ghost" className="gallery-code__copy" aria-label="Copy code" onClick={() => void copy()}>
-        {copied ? <Check {...icon} /> : <Copy {...icon} />}
+        {copied ? <Icon name="check" {...icon} /> : <Icon name="copy" {...icon} />}
       </Button>
       <pre>
         <code>{code}</code>

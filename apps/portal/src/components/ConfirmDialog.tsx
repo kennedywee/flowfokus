@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from "react";
-import { ArrowRightLeft, TriangleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,7 +62,7 @@ export function ConfirmDialog({
   const confirmRef = useRef<HTMLButtonElement>(null);
   const critical = tone === "critical";
 
-  const Icon = critical ? TriangleAlert : ArrowRightLeft;
+  const iconName = critical ? "notifications" : "sort";
 
   return (
     <AlertDialog
@@ -74,7 +74,7 @@ export function ConfirmDialog({
       <AlertDialogContent tone={tone} initialFocus={critical ? cancelRef : confirmRef}>
         <AlertDialogHeader>
           <AlertDialogMedia>
-            <Icon strokeWidth={1.75} focusable="false" />
+            <Icon name={iconName} focusable="false" />
           </AlertDialogMedia>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {children ? <AlertDialogDescription>{children}</AlertDialogDescription> : null}

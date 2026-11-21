@@ -1,4 +1,4 @@
-import { Ellipsis } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 
 export default function Example() {
@@ -9,7 +9,7 @@ export default function Example() {
       <Button size="compact">Add member</Button>
       <Button size="sm">Export</Button>
       <Button size="icon-compact" variant="ghost" aria-label="More actions">
-        <Ellipsis strokeWidth={1.75} aria-hidden="true" focusable="false" />
+        <Icon name="more" aria-hidden="true" focusable="false" />
       </Button>
     </>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { CircleAlert, CreditCard, Search, Ticket } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { useToast } from "../../components/Toast";
 import { SubmitButton, initials } from "../../components/ui";
 import { failureMessage } from "../../lib/format";
@@ -32,7 +32,7 @@ const sendBooking = (input: Parameters<typeof createBooking>[0]["data"]) => crea
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
 const loadOptions = (input: Parameters<typeof getBookingOptions>[0]["data"]) => getBookingOptions({ data: input });
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 type Choice = { kind: "right"; id: string } | { kind: "price"; id: string };
 
@@ -252,7 +252,7 @@ export function BookMemberDialog({
                   {rights.map((right) => (
                     <label key={right.id} className="book-choice" data-disabled={full || undefined}>
                       <span className="book-choice__tile" aria-hidden="true">
-                        {right.remaining === null ? <CreditCard {...icon} /> : <Ticket {...icon} />}
+                        {right.remaining === null ? <Icon name="payments" {...icon} /> : <Icon name="pass" {...icon} />}
                       </span>
                       <span className="book-choice__text">
                         <span className="book-choice__name">{right.name}</span>
@@ -368,7 +368,7 @@ function MemberSearch({ onPick }: { onPick: (member: Schemas["Member"]) => void 
   return (
     <Command filter={false} query={query} onQueryChange={setQuery} className="book-search">
       <div className="book-search__field">
-        <Search className="book-search__icon" {...icon} />
+        <Icon name="search" className="book-search__icon" {...icon} />
         <CommandInputPrimitive
           className="book-search__input"
           placeholder="Search by name or email"
@@ -488,7 +488,7 @@ function WhoIsComing({
       </ol>
       {error ? (
         <p id="book-spots-error" className="book-dialog__line book-spots__error" data-tone="critical" role="alert">
-          <CircleAlert {...icon} />
+          <Icon name="notifications" {...icon} />
           {error}
         </p>
       ) : null}
@@ -518,7 +518,7 @@ function useOtherMembers(buyerId: string): Schemas["Member"][] {
 function Line({ tone, children }: { tone: "critical" | "warning" | "info"; children: string }) {
   return (
     <p className="book-dialog__line" data-tone={tone} role={tone === "critical" ? "alert" : "status"}>
-      {tone === "critical" ? <CircleAlert {...icon} /> : <span className="book-dialog__dot" aria-hidden="true" />}
+      {tone === "critical" ? <Icon name="notifications" {...icon} /> : <span className="book-dialog__dot" aria-hidden="true" />}
       {children}
     </p>
   );
@@ -527,7 +527,7 @@ function Line({ tone, children }: { tone: "critical" | "warning" | "info"; child
 function Failed({ title, error }: { title: string; error: Failure }) {
   return (
     <p className="book-dialog__line" data-tone="critical" role="alert">
-      <CircleAlert {...icon} />
+      <Icon name="notifications" {...icon} />
       {title} {failureMessage(error)}
     </p>
   );

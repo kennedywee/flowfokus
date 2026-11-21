@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute, useRouterState, type ErrorComponentProps } from "@tanstack/react-router";
-import sansFont from "@fontsource-variable/figtree/index.css?url";
+import sansFont from "@fontsource-variable/geist/index.css?url";
+import monoFont from "@fontsource-variable/geist-mono/index.css?url";
 // Emitted as files, not inlined, so browsers can cache them.
 import faviconSvg from "../assets/flowfokus-mark.svg?url&no-inline";
 import faviconPng from "../assets/favicon-32.png?url&no-inline";
@@ -14,7 +15,7 @@ import appCss from "../styles.css?url";
 import { buttonVariants } from "@/components/ui/button";
 
 /** The page colour of each theme, for the browser bar. Matches `--color-page` in tokens.css. */
-const PAGE_COLOUR = { light: "#f6f6f4", dark: "#000000" } as const;
+const PAGE_COLOUR = { light: "#ffffff", dark: "#09090b" } as const;
 
 function themeMeta(theme: Theme) {
   if (theme !== "system") {
@@ -46,6 +47,7 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/png", sizes: "32x32", href: faviconPng },
       { rel: "apple-touch-icon", href: appleTouchIcon },
       { rel: "stylesheet", href: sansFont },
+      { rel: "stylesheet", href: monoFont },
       { rel: "stylesheet", href: appCss },
     ],
   }),

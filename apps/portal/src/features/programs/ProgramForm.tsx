@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { AlignLeft, CalendarCheck, CalendarDays, EyeOff, Globe, MapPin, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
 import { PageActions } from "../../components/PageActions";
@@ -44,7 +44,7 @@ const sendNew = (input: Parameters<typeof createProgram>[0]["data"]) => createPr
 const sendEdit = (input: Parameters<typeof updateProgram>[0]["data"]) => updateProgram({ data: input });
 const sendSchedule = (input: Parameters<typeof scheduleProgram>[0]["data"]) => scheduleProgram({ data: input });
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 const FORM_ID = "program-form";
 
 const KIND_META: Record<Kind, string> = {
@@ -88,7 +88,7 @@ function FormHead({ title, children }: { title: string; children?: ReactNode }) 
   return (
     <header className="program-form__head">
       <span className="program-tile" data-size={40} aria-hidden="true">
-        <CalendarCheck {...icon} />
+        <Icon name="programs" {...icon} />
       </span>
       <h1>{title}</h1>
       {children ? <PageActions>{children}</PageActions> : null}
@@ -261,7 +261,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
 
           <section className="program-form__section" aria-labelledby="program-details-title">
             <div className="mx-section__head">
-              <AlignLeft {...icon} />
+              <Icon name="edit" {...icon} />
               <h2 id="program-details-title">Details</h2>
             </div>
             <div className="program-form__fields">
@@ -284,7 +284,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
                   <legend className="program-field__label">Kind</legend>
                   <div className="program-kinds__cards">
                     {PROGRAM_KINDS.map((kind) => {
-                      const Icon = KIND_ICON[kind];
+                      const iconName = KIND_ICON[kind];
                       return (
                         <label key={kind} className="program-kind">
                           <input
@@ -295,7 +295,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
                             checked={draft.kind === kind}
                             onChange={() => chooseKind(kind)}
                           />
-                          <Icon className="program-kind__icon" {...icon} />
+                          <Icon name={iconName} className="program-kind__icon" {...icon} />
                           <span className="program-kind__title">{PROGRAM_KIND_LABEL[kind]}</span>
                           <span className="program-kind__meta">{KIND_META[kind]}</span>
                         </label>
@@ -359,7 +359,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
           {program ? null : (
             <section className="program-form__section" aria-labelledby="program-schedule-title">
               <div className="mx-section__head">
-                <CalendarDays {...icon} />
+                <Icon name="schedule" {...icon} />
                 <h2 id="program-schedule-title">Schedule</h2>
               </div>
               <div className="program-form__fields">
@@ -427,7 +427,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
           <div className="program-form__side-group">
             <FieldBox id="program-location" label="Location" error={errors.location}>
               <span className="program-select">
-                <MapPin className="program-select__icon" {...icon} />
+                <Icon name="location" className="program-select__icon" {...icon} />
                 <NativeSelect
                   id="program-location"
                   className="program-input program-select__control"
@@ -454,7 +454,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
           <div className="program-form__side-group">
             <FieldBox id="program-visibility" label="Visibility">
               <span className="program-select">
-                {draft.published ? <Globe className="program-select__icon" {...icon} /> : <EyeOff className="program-select__icon" {...icon} />}
+                {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
                 <NativeSelect
                   id="program-visibility"
                   className="program-input program-select__control"
@@ -493,7 +493,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
                     requestAnimationFrame(() => document.getElementById("program-note")?.focus());
                   }}
                 >
-                  <Plus {...icon} />
+                  <Icon name="plus" {...icon} />
                 </button>
                 <span className="program-form__no-note">No note</span>
               </div>

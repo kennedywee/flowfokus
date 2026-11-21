@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Search } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import {
   Combobox as ComboboxRoot,
   ComboboxContent,
@@ -107,7 +107,7 @@ export function Combobox({
       >
         <div className="combobox">
           <div className="combobox__field">
-            <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
+            <Icon name="search" aria-hidden="true" focusable="false" />
             <ComboboxInput
               className="input combobox__input"
               autoComplete="off"

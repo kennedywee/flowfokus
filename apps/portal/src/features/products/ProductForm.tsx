@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { AlignLeft, Clock, EyeOff, Gift, Globe, Plus, Trash2 } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
 import { PageActions } from "../../components/PageActions";
@@ -44,7 +44,7 @@ const sendNew = (input: Parameters<typeof createProduct>[0]["data"]) => createPr
 const sendEdit = (input: Parameters<typeof updateProduct>[0]["data"]) => updateProduct({ data: input });
 const sendPrice = (input: Parameters<typeof createPrice>[0]["data"]) => createPrice({ data: input });
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 const FORM_ID = "product-form";
 
 const KIND_META: Record<ProductKind, string> = { membership: "Access for a set time", pass: "A set number of uses" };
@@ -341,7 +341,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
 
           <section className="program-form__section" aria-labelledby="product-details-title">
             <div className="mx-section__head">
-              <AlignLeft {...icon} />
+              <Icon name="edit" {...icon} />
               <h2 id="product-details-title">Details</h2>
             </div>
             <div className="program-form__fields">
@@ -392,7 +392,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
                   <legend className="program-field__label">Type</legend>
                   <div className="program-kinds__cards product-kinds">
                     {(["membership", "pass"] as const).map((kind) => {
-                      const Icon = PRODUCT_ICON[kind];
+                      const iconName = PRODUCT_ICON[kind];
                       return (
                         <label key={kind} className="program-kind">
                           <input
@@ -403,7 +403,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
                             checked={draft.kind === kind}
                             onChange={() => chooseKind(kind)}
                           />
-                          <Icon className="program-kind__icon" {...icon} />
+                          <Icon name={iconName} className="program-kind__icon" {...icon} />
                           <span className="program-kind__title">{kind === "membership" ? "Membership" : "Pass"}</span>
                           <span className="program-kind__meta">{KIND_META[kind]}</span>
                         </label>
@@ -417,7 +417,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
 
           <section className="program-form__section" aria-labelledby="product-terms-title">
             <div className="mx-section__head">
-              <Clock {...icon} />
+              <Icon name="length" {...icon} />
               <h2 id="product-terms-title">Terms</h2>
             </div>
             <div className="program-form__fields">
@@ -450,7 +450,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
           <div className="program-form__side-group">
             <FieldBox id="product-visibility" label="Gym site">
               <span className="program-select">
-                {draft.published ? <Globe className="program-select__icon" {...icon} /> : <EyeOff className="program-select__icon" {...icon} />}
+                {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
                 <NativeSelect
                   id="product-visibility"
                   className="program-input program-select__control"
@@ -487,7 +487,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
                     requestAnimationFrame(() => document.getElementById("product-note")?.focus());
                   }}
                 >
-                  <Plus {...icon} />
+                  <Icon name="plus" {...icon} />
                 </button>
                 <span className="program-form__no-note">No note</span>
               </div>
@@ -531,7 +531,7 @@ function BenefitsFields({
   return (
     <section className="program-form__section" aria-labelledby="product-benefits-title">
       <div className="mx-section__head">
-        <Gift {...icon} />
+        <Icon name="pass" {...icon} />
         <h2 id="product-benefits-title">Benefits</h2>
         {draft.benefits.length < MAX_BENEFITS ? (
           <Button
@@ -541,7 +541,7 @@ function BenefitsFields({
             size="compact"
             onClick={() => onSet([...draft.benefits, benefitDraft()])}
           >
-            <Plus {...icon} />
+            <Icon name="plus" {...icon} />
             Add benefit
           </Button>
         ) : null}
@@ -566,7 +566,7 @@ function BenefitsFields({
                   disabled={draft.benefits.length === 1}
                   onClick={() => onSet(draft.benefits.filter((item) => item.key !== benefit.key))}
                 >
-                  <Trash2 {...icon} />
+                  <Icon name="close" {...icon} />
                 </button>
               </legend>
               <div className="product-benefit-fields__row">

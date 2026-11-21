@@ -1,6 +1,6 @@
 import * as React from "react"
 import { bindDrag, bindHold } from "@ui-sdk/core"
-import { Check, ChevronRight } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 import { HOLD_MS, isAssistiveClick } from "@/components/ui/hold-button"
 import { cn } from "@/lib/utils"
 
@@ -131,7 +131,7 @@ function SwipeConfirm({ label, slideLabel, confirmedLabel, onConfirm, disabled, 
       <span className="swipe__text" aria-hidden="true">
         {confirmed ? (
           <>
-            <Check />
+            <Icon name="check" />
             {confirmedLabel}
           </>
         ) : (
@@ -150,7 +150,7 @@ function SwipeConfirm({ label, slideLabel, confirmedLabel, onConfirm, disabled, 
           onPointerDown={onPointerDown}
           onClick={onClick}
         >
-          <ChevronRight aria-hidden="true" />
+          <Icon name="chevronRight" aria-hidden="true" />
         </button>
       </span>
       <span id={hintId} hidden>

@@ -10,13 +10,19 @@ export type GalleryGroup = "Core" | "Complex" | "Data" | "Blocks";
 
 export const GALLERY_GROUPS: readonly GalleryGroup[] = ["Core", "Complex", "Data", "Blocks"];
 
-/** The component pages in the Paper file "Flowfokus Redesign". */
-const PAPER_FILE = "https://app.paper.design/file/01M6FWEABX58V0RANJNQW72ZPN";
+/**
+ * Paper boards. "Flowfokus Design" is the reference for the portal. Its file
+ * has no component boards yet; the Core, Complex, Data, and Hold-to-confirm
+ * boards are still in the earlier file "Flowfokus Redesign".
+ */
+const DESIGN_FILE = "https://app.paper.design/file/01M7X4HENFQVWCFYKJH6A9QSXD";
+const REDESIGN_FILE = "https://app.paper.design/file/01M6FWEABX58V0RANJNQW72ZPN";
 export const PAPER_PAGES = {
-  "Components — Core": `${PAPER_FILE}/p-Z-0`,
-  "Components — Complex": `${PAPER_FILE}/p-10-0`,
-  "Components — Data": `${PAPER_FILE}/p-11-0`,
-  "Experimental — Hold to confirm": `${PAPER_FILE}/p-13-0`,
+  "Flowfokus Design — Icons": `${DESIGN_FILE}/p-6-0`,
+  "Flowfokus Redesign — Components — Core": `${REDESIGN_FILE}/p-Z-0`,
+  "Flowfokus Redesign — Components — Complex": `${REDESIGN_FILE}/p-10-0`,
+  "Flowfokus Redesign — Components — Data": `${REDESIGN_FILE}/p-11-0`,
+  "Flowfokus Redesign — Experimental — Hold to confirm": `${REDESIGN_FILE}/p-13-0`,
 } as const;
 
 export type PaperPage = keyof typeof PAPER_PAGES;
@@ -58,7 +64,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "An action. One primary per decision group; alternatives are secondary or ghost.",
     source: ["components/ui/button.tsx", "components/ui.tsx"],
-    paper: { page: "Components — Core", board: "Buttons" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Buttons" },
     examples: [
       { file: "button-variants", title: "Variants" },
       { file: "button-sizes", title: "Sizes" },
@@ -72,12 +78,29 @@ export const GALLERY: readonly GalleryEntry[] = [
     ],
   },
   {
+    slug: "icon",
+    name: "Icon",
+    group: "Core",
+    summary: "One icon from the portal's own set. Every icon in the portal comes from here; there is no other icon library.",
+    source: ["components/ui/icon.tsx"],
+    paper: { page: "Flowfokus Design — Icons", board: "Icon set — Attuna" },
+    examples: [
+      { file: "icon-set", title: "The set", note: "A 16px grid, a 1.25 stroke, and round ends. Icons draw in the text colour." },
+      { file: "icon-status", title: "Status icons", note: "The parent sets the tone. A grey part uses --color-ink-3." },
+    ],
+    props: [
+      { name: "name", type: "IconName", note: "A name from ICON_NAMES. Add a new icon to the Paper page first." },
+      { name: "size", type: "number", default: "16", note: "Width and height in px." },
+      { name: "aria-label", type: "string", note: "Hidden from assistive technology unless named. Put a text label beside it, or name the control." },
+    ],
+  },
+  {
     slug: "badge",
     name: "Badge",
     group: "Core",
     summary: "A short label. A pill always shows an icon and a label, never colour alone.",
     source: ["components/ui/badge.tsx"],
-    paper: { page: "Components — Core", board: "Badges, status, tags, small parts" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Badges, status, tags, small parts" },
     examples: [
       { file: "badge-tones", title: "Tones" },
       { file: "badge-variants", title: "Variants" },
@@ -93,7 +116,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A record's state as an icon and a label. Use the Rails response, not the requested outcome.",
     source: ["components/ui.tsx"],
-    paper: { page: "Components — Core", board: "Badges, status, tags, small parts" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Badges, status, tags, small parts" },
     examples: [
       { file: "status-states", title: "Status" },
       { file: "status-pill", title: "Pill with your own icon" },
@@ -110,7 +133,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "Text entry. Put it in a Field so the label, hint and error are linked.",
     source: ["components/ui/input.tsx", "components/ui/textarea.tsx"],
-    paper: { page: "Components — Core", board: "Text fields" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Text fields" },
     examples: [
       { file: "input-basic", title: "Input" },
       { file: "input-textarea", title: "Textarea" },
@@ -123,7 +146,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A label, a control, an optional hint and an optional error, wired for assistive technology.",
     source: ["components/ui.tsx", "components/ui/field.tsx", "components/ui/label.tsx"],
-    paper: { page: "Components — Core", board: "Text fields" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Text fields" },
     examples: [
       { file: "field-hint", title: "With a hint" },
       { file: "field-error", title: "With an error", note: "describedBy links the hint and the error; aria-invalid marks the control." },
@@ -141,7 +164,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A choice from a short list, with the platform picker.",
     source: ["components/ui/native-select.tsx"],
-    paper: { page: "Components — Core", board: "Text fields" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Text fields" },
     examples: [{ file: "native-select-basic", title: "Select" }],
   },
   {
@@ -150,7 +173,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "An on/off choice in a form or a list. Name it with a label.",
     source: ["components/ui/checkbox.tsx"],
-    paper: { page: "Components — Core", board: "Checkbox, radio, switch" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Checkbox, radio, switch" },
     examples: [{ file: "checkbox-states", title: "States" }],
     props: [
       { name: "checked", type: "boolean", note: "Controlled value." },
@@ -164,7 +187,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A setting that applies at once.",
     source: ["components/ui/switch.tsx"],
-    paper: { page: "Components — Core", board: "Checkbox, radio, switch" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Checkbox, radio, switch" },
     examples: [{ file: "switch-basic", title: "Switch" }],
   },
   {
@@ -181,7 +204,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A person's initials in a neutral circle.",
     source: ["components/ui.tsx", "components/ui/avatar.tsx"],
-    paper: { page: "Components — Core", board: "Badges, status, tags, small parts" },
+    paper: { page: "Flowfokus Redesign — Components — Core", board: "Badges, status, tags, small parts" },
     examples: [{ file: "avatar-sizes", title: "Sizes" }],
     props: [
       { name: "name", type: "string", note: "Initials come from it." },
@@ -255,7 +278,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Core",
     summary: "A collection with nothing to show: no records, a failed load, or a load in progress.",
     source: ["components/ui.tsx", "components/ui/empty.tsx"],
-    paper: { page: "Components — Complex", board: "Page states" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Page states" },
     examples: [
       { file: "empty-basic", title: "Empty" },
       { file: "empty-error", title: "ErrorState" },
@@ -270,7 +293,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "A modal for one task or a picker. Creation is a full page, not a dialog.",
     source: ["components/ui/dialog.tsx"],
-    paper: { page: "Components — Complex", board: "Dialogs and side panel" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Dialogs and side panel" },
     examples: [{ file: "dialog-basic", title: "Dialog" }],
   },
   {
@@ -279,7 +302,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "One consequential decision. Critical tone starts focus on Cancel.",
     source: ["components/ConfirmDialog.tsx", "components/ui/alert-dialog.tsx"],
-    paper: { page: "Components — Complex", board: "Dialogs and side panel" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Dialogs and side panel" },
     examples: [
       { file: "confirm-dialog-default", title: "Default" },
       { file: "confirm-dialog-critical", title: "Critical" },
@@ -298,7 +321,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "A safe action that must not fire on a stray click. Press and hold for 600 ms to confirm.",
     source: ["components/ui/hold-button.tsx"],
-    paper: { page: "Experimental — Hold to confirm", board: "A · Hold button — frames" },
+    paper: { page: "Flowfokus Redesign — Experimental — Hold to confirm", board: "A · Hold button — frames" },
     examples: [
       { file: "hold-button-variants", title: "Variants", note: "Secondary for row and card actions; primary for a top-bar action that commits a record." },
       { file: "hold-button-request", title: "Confirmed until the request settles" },
@@ -321,7 +344,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "Drag the knob to the end to confirm. Distance, not time: for phone and tablet check-in.",
     source: ["components/ui/swipe-confirm.tsx"],
-    paper: { page: "Experimental — Hold to confirm", board: "B · Variants" },
+    paper: { page: "Flowfokus Redesign — Experimental — Hold to confirm", board: "B · Variants" },
     examples: [{ file: "swipe-confirm-basic", title: "Swipe to check in", note: "Let go before 90% and the knob springs back." }],
     props: [
       { name: "label", type: "string", note: "The action. It names the knob." },
@@ -336,7 +359,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "A menu from a button: commands, one choice, or several checks.",
     source: ["components/ui/dropdown-menu.tsx"],
-    paper: { page: "Components — Complex", board: "Menus" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Menus" },
     examples: [
       { file: "dropdown-menu-basic", title: "Commands" },
       { file: "dropdown-menu-choices", title: "Radio and checkbox items" },
@@ -361,7 +384,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "A searchable list of actions. In a dialog, it is the ⌘K palette.",
     source: ["components/ui/command.tsx", "components/CommandMenu.tsx"],
-    paper: { page: "Components — Complex", board: "Search palette and toasts" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Search palette and toasts" },
     examples: [{ file: "command-basic", title: "Inline list" }],
   },
   {
@@ -370,7 +393,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "A panel that slides in from the left: the phone navigation drawer.",
     source: ["components/ui/sheet.tsx", "styles/shell.css"],
-    paper: { page: "Components — Complex", board: "Sidebar" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Sidebar" },
     examples: [{ file: "sheet-basic", title: "Drawer" }],
   },
   {
@@ -379,7 +402,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Complex",
     summary: "Feedback after an action, at the bottom, with at most one action.",
     source: ["components/Toast.tsx"],
-    paper: { page: "Components — Complex", board: "Search palette and toasts" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Search palette and toasts" },
     examples: [{ file: "toast-tones", title: "Tones" }],
     props: [
       { name: "tone", type: '"success" | "error" | "info"', note: "Sets the icon." },
@@ -396,7 +419,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Data",
     summary: "Filter and chips on the left, search on the right, above every list.",
     source: ["components/ListToolbar.tsx"],
-    paper: { page: "Components — Data", board: "Table toolbar" },
+    paper: { page: "Flowfokus Redesign — Components — Data", board: "Table toolbar" },
     examples: [{ file: "list-toolbar-basic", title: "Filter, chips and search" }],
   },
   {
@@ -405,7 +428,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Data",
     summary: "A list with no rows: empty keeps the header band and a skeleton; no results shows the panel alone.",
     source: ["components/TableState.tsx"],
-    paper: { page: "Components — Data", board: "Table" },
+    paper: { page: "Flowfokus Redesign — Components — Data", board: "Table" },
     examples: [
       { file: "table-state-empty", title: "Empty" },
       { file: "table-state-no-results", title: "No results" },
@@ -417,7 +440,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Data",
     summary: "The footer of a top-level list: the range and the page buttons.",
     source: ["components/ListPager.tsx"],
-    paper: { page: "Components — Data", board: "Table" },
+    paper: { page: "Flowfokus Redesign — Components — Data", board: "Table" },
     examples: [{ file: "list-pager-basic", title: "Pages" }],
   },
 
@@ -428,7 +451,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Blocks",
     summary: "A page's title, record facts and actions. Actions move to the top bar on wider screens.",
     source: ["components/ui.tsx", "components/PageActions.tsx"],
-    paper: { page: "Components — Complex", board: "Page head and tabs" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Page head and tabs" },
     examples: [{ file: "page-head-basic", title: "Title, meta and actions" }],
     props: [
       { name: "title", type: "string", note: "The page title." },
@@ -451,7 +474,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     group: "Blocks",
     summary: "A form's failed request in one line. The fields keep their values.",
     source: ["components/FormNotice.tsx"],
-    paper: { page: "Components — Complex", board: "Forms" },
+    paper: { page: "Flowfokus Redesign — Components — Complex", board: "Forms" },
     examples: [{ file: "form-notice-basic", title: "Failed save" }],
   },
   {

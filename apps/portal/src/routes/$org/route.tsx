@@ -12,28 +12,7 @@ import {
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import {
-  CalendarCheck,
-  CalendarClock,
-  ChevronDown,
-  ChevronRight,
-  LogOut,
-  MapPin,
-  Menu,
-  Monitor,
-  MoonStar,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Receipt,
-  Search,
-  Keyboard,
-  Settings,
-  Sun,
-  Tag,
-  Users,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
@@ -120,15 +99,15 @@ export const Route = createFileRoute("/$org")({
 
 type RoutedPath = "/$org/members" | "/$org/sales" | "/$org/products" | "/$org/schedule" | "/$org/programs" | "/$org/settings";
 
-type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean; path: string };
+type NavItem = { label: string; icon: IconName; to: RoutedPath; exact: boolean; path: string };
 
 /* One list, no group titles. */
 const NAV_ITEMS: NavItem[] = [
-  { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
-  { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
-  { to: "/$org/schedule", label: "Schedule", icon: CalendarClock, exact: false, path: "/schedule" },
-  { to: "/$org/programs", label: "Programs", icon: CalendarCheck, exact: false, path: "/programs" },
-  { to: "/$org/products", label: "Products", icon: Tag, exact: false, path: "/products" },
+  { to: "/$org/members", label: "Members", icon: "members", exact: false, path: "/members" },
+  { to: "/$org/sales", label: "Sales", icon: "sales", exact: false, path: "/sales" },
+  { to: "/$org/schedule", label: "Schedule", icon: "schedule", exact: false, path: "/schedule" },
+  { to: "/$org/programs", label: "Programs", icon: "bookingRules", exact: false, path: "/programs" },
+  { to: "/$org/products", label: "Products", icon: "products", exact: false, path: "/products" },
 ];
 
 function OrganizationLayout() {
@@ -252,7 +231,7 @@ function Shell({
       icon: item.icon,
       open: () => void navigate({ to: item.to, params: { org: data.slug } }),
     })),
-    { label: "Settings", icon: Settings, open: () => void navigate({ to: "/$org/settings", params: { org: data.slug } }) },
+    { label: "Settings", icon: "general", open: () => void navigate({ to: "/$org/settings", params: { org: data.slug } }) },
   ];
 
   return (
@@ -265,7 +244,7 @@ function Shell({
         <header className="topbar">
           <div className="topbar__start">
             <SidebarTrigger className="nav-toggle" aria-controls="app-sidebar">
-              <Menu strokeWidth={1.75} aria-hidden="true" focusable="false" />
+              <Icon name="sidebar" aria-hidden="true" focusable="false" />
               <span className="visually-hidden">Navigation menu</span>
             </SidebarTrigger>
             <div className="topbar__context">
@@ -307,12 +286,12 @@ function Shell({
               {inSettings ? null : shownLocation ? (
                 <ContextSwitcher
                   label="Location"
-                  icon={<MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />}
+                  icon={<Icon name="location" aria-hidden="true" focusable="false" />}
                   current={shownLocation.name}
                   options={data.locations.map((location) => ({
                     value: location.id,
                     label: location.name,
-                    icon: <MapPin strokeWidth={1.75} aria-hidden="true" focusable="false" />,
+                    icon: <Icon name="location" aria-hidden="true" focusable="false" />,
                   }))}
                   value={shownLocation.id}
                   onSelect={(id) => void chooseLocation(id)}
@@ -325,7 +304,7 @@ function Shell({
                       className="switcher__action"
                       onClick={close}
                     >
-                      <Settings strokeWidth={1.75} aria-hidden="true" focusable="false" />
+                      <Icon name="general" aria-hidden="true" focusable="false" />
                       Manage locations
                     </Link>
                   )}
@@ -381,7 +360,7 @@ function Shell({
               aria-haspopup="dialog"
               onClick={() => setSearching(true)}
             >
-              <Search strokeWidth={1.75} aria-hidden="true" focusable="false" />
+              <Icon name="search" aria-hidden="true" focusable="false" />
               <span className="visually-hidden">Search</span>
               <Kbd>{modKey}K</Kbd>
             </button>
@@ -460,11 +439,11 @@ function AppSidebar({
           aria-controls="app-sidebar"
         >
           <img className="sidebar__collapse-mark" src={markUrl} width={20} height={20} alt="" />
-          <PanelLeftClose className="sidebar__collapse-close" strokeWidth={1.5} aria-hidden="true" focusable="false" />
-          <PanelLeftOpen className="sidebar__collapse-open" strokeWidth={1.5} aria-hidden="true" focusable="false" />
+          <Icon name="sidebar" className="sidebar__collapse-close" aria-hidden="true" focusable="false" />
+          <Icon name="sidebar" className="sidebar__collapse-open" aria-hidden="true" focusable="false" />
         </SidebarTrigger>
         <button type="button" className="sidebar__close" onClick={closeDrawer}>
-          <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <Icon name="close" aria-hidden="true" focusable="false" />
           <span className="visually-hidden">Close navigation</span>
         </button>
       </SidebarHeader>
@@ -488,7 +467,7 @@ function AppSidebar({
                   />
                 }
               >
-                <item.icon strokeWidth={1.5} aria-hidden="true" focusable="false" />
+                <Icon name={item.icon} aria-hidden="true" focusable="false" />
                 <span className="nav-item__label">{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -512,10 +491,10 @@ function AppSidebar({
   );
 }
 
-const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: LucideIcon }> = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: MoonStar },
-  { value: "system", label: "System", icon: Monitor },
+const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: IconName }> = [
+  { value: "light", label: "Light", icon: "appearance" },
+  { value: "dark", label: "Dark", icon: "appearance" },
+  { value: "system", label: "System", icon: "appearance" },
 ];
 
 /**
@@ -539,7 +518,7 @@ function AccountMenu({
 }) {
   const modKey = useModKeyLabel();
   const signOutForm = useRef<HTMLFormElement>(null);
-  const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+  const icon = { "aria-hidden": true, focusable: false } as const;
   const router = useRouter();
   const navigate = useNavigate();
   const toast = useToast();
@@ -576,7 +555,7 @@ function AccountMenu({
           {initials(actor.name).slice(0, 1)}
         </span>
         <span className="account__name">{actor.name}</span>
-        <ChevronDown className="account__chevron" {...icon} />
+        <Icon name="chevronDown" className="account__chevron" {...icon} />
         <span className="visually-hidden">, account menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start">
@@ -584,29 +563,29 @@ function AccountMenu({
           <span className="menu__email">{actor.email}</span>
         </DropdownMenuHeader>
         <DropdownMenuItem onClick={openSettings}>
-          <Settings {...icon} />
+          <Icon name="general" {...icon} />
           Settings
           <DropdownMenuShortcut>{modKey},</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onShortcuts}>
-          <Keyboard {...icon} />
+          <Icon name="developer" {...icon} />
           Keyboard shortcuts
           <DropdownMenuShortcut>?</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <current.icon {...icon} />
+            <Icon name={current.icon} {...icon} />
             Theme
             <DropdownMenuShortcut>
               {current.label}
-              <ChevronRight {...icon} />
+              <Icon name="chevronRight" {...icon} />
             </DropdownMenuShortcut>
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuRadioGroup value={theme} onValueChange={(value) => chooseTheme(value as Theme)}>
               {THEME_CHOICES.map((choice) => (
                 <DropdownMenuRadioItem key={choice.value} value={choice.value}>
-                  <choice.icon {...icon} />
+                  <Icon name={choice.icon} {...icon} />
                   {choice.label}
                 </DropdownMenuRadioItem>
               ))}
@@ -617,7 +596,7 @@ function AccountMenu({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOutForm.current?.requestSubmit()}>
-              <LogOut {...icon} />
+              <Icon name="checkIns" {...icon} />
               Sign out
             </DropdownMenuItem>
           </>

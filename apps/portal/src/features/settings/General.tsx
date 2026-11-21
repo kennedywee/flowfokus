@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useBlocker, useRouter } from "@tanstack/react-router";
-import { CircleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useToast } from "../../components/Toast";
 import { SubmitButton } from "../../components/ui";
@@ -155,8 +155,7 @@ export function General() {
                 className="settings-savebar__text settings-savebar__text--error"
                 role="alert"
               >
-                <CircleAlert
-                  strokeWidth={1.75}
+                <Icon name="notifications"
                   aria-hidden="true"
                   focusable="false"
                 />

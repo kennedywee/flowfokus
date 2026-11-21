@@ -1,5 +1,5 @@
 import { useSyncExternalStore, type ReactNode } from "react";
-import { CircleCheck, CircleX, Info, X, type LucideIcon } from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import {
   Toast as ToastPart,
   ToastAction,
@@ -44,7 +44,7 @@ type ToastApi = {
   dismiss: (id: string) => void;
 };
 
-const ICON: Record<ToastTone, LucideIcon> = { success: CircleCheck, error: CircleX, info: Info };
+const ICON: Record<ToastTone, IconName> = { success: "paid", error: "close", info: "notifications" };
 const DURATION: Record<ToastTone, number> = { success: 6000, info: 6000, error: 10000 };
 
 const api: ToastApi = {
@@ -98,10 +98,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastCard({ toast }: { toast: ToastInput }) {
-  const Icon = ICON[toast.tone];
+  const iconName = ICON[toast.tone];
   return (
     <ToastPart className="toast" data-tone={toast.tone} data-compact={toast.body ? undefined : true}>
-      <Icon className="toast__icon" strokeWidth={2} aria-hidden="true" focusable="false" />
+      <Icon name={iconName} className="toast__icon" aria-hidden="true" focusable="false" />
       <div className="toast__text">
         <ToastTitle className="toast__title" />
         {toast.body ? <ToastDescription className="toast__body" /> : null}
@@ -110,7 +110,7 @@ function ToastCard({ toast }: { toast: ToastInput }) {
         <ToastAction className="toast__action" />
       ) : (
         <ToastClose className="toast__dismiss">
-          <X strokeWidth={1.75} aria-hidden="true" focusable="false" />
+          <Icon name="close" aria-hidden="true" focusable="false" />
           <span className="visually-hidden">Dismiss: {toast.title}</span>
         </ToastClose>
       )}

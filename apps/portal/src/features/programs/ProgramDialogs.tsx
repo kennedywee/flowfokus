@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Archive, CircleMinus, MoreHorizontal, Tag } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
 import { useToast } from "../../components/Toast";
@@ -34,7 +34,7 @@ const sendTicket = (input: Parameters<typeof addTicket>[0]["data"]) => addTicket
 const sendPriceChange = (input: Parameters<typeof updatePrice>[0]["data"]) => updatePrice({ data: input });
 const sendArchive = (input: Parameters<typeof archivePrice>[0]["data"]) => archivePrice({ data: input });
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** A label above the control and a one-line error under it. */
 function DialogField({ id, label, error, children }: { id: string; label: string; error?: string; children: ReactNode }) {
@@ -276,7 +276,7 @@ export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; man
       <span className="program-ticket__name">{price.label}</span>
       {state === "on_sale" ? null : (
         <span className="program-ticket__state">
-          {state === "archived" ? <Archive {...icon} /> : <CircleMinus {...icon} />}
+          {state === "archived" ? <Icon name="visibility" {...icon} /> : <Icon name="close" {...icon} />}
           {PRICE_STATE_LABEL[state]}
         </span>
       )}
@@ -284,16 +284,16 @@ export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; man
       {manage && state !== "archived" ? (
         <DropdownMenu>
           <DropdownMenuTrigger className="program-ticket__more" aria-label={`Change ${price.label}`} disabled={change.pending || archive.pending}>
-            <MoreHorizontal {...icon} />
+            <Icon name="more" {...icon} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="sale-menu">
             <DropdownMenuItem onClick={() => void toggle()}>
-              <Tag {...icon} />
+              <Icon name="products" {...icon} />
               {price.available ? "Take off sale" : "Put on sale"}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="menu__item--critical" onClick={() => setConfirming(true)}>
-              <Archive {...icon} />
+              <Icon name="visibility" {...icon} />
               Archive price…
             </DropdownMenuItem>
           </DropdownMenuContent>

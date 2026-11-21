@@ -11,7 +11,7 @@ import {
   ComboboxList as ComboboxListPrimitive,
   ComboboxTrigger,
 } from "@ui-sdk/react/combobox"
-import { Check } from "lucide-react"
+import { Icon } from "@/components/ui/icon";
 
 /*
  * A combobox: a text box that filters a list and picks one item. ui-sdk
@@ -58,7 +58,7 @@ function ComboboxItem({ className, ...props }: WithClass<typeof ComboboxItemPrim
 function ComboboxItemIndicator({ className, ...props }: WithClass<typeof ComboboxItemIndicatorPrimitive>) {
   return (
     <ComboboxItemIndicatorPrimitive
-      render={<Check strokeWidth={2} aria-hidden="true" focusable="false" />}
+      render={<Icon name="check" aria-hidden="true" focusable="false" />}
       className={className ?? "combobox__check"}
       {...props}
     />

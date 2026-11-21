@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Archive, CalendarDays, Clock, Dumbbell, EyeOff, Gift, Globe, MoreHorizontal, Pencil, StickyNote, Tag } from "lucide-react";
+import { Icon } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
@@ -25,7 +25,7 @@ import { TicketPriceRow } from "../programs/ProgramDialogs";
 import { SALE_STATE_LABEL, headFacts, mainPrice, otherPrices, passUses, priceName, saleState, type Product } from "./facts";
 import { PRODUCT_ICON, ProductTile } from "./kinds";
 
-const icon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
 
 const sendProduct = (input: Parameters<typeof updateProduct>[0]["data"]) => updateProduct({ data: input });
 const sendPrice = (input: Parameters<typeof updatePrice>[0]["data"]) => updatePrice({ data: input });
@@ -127,21 +127,21 @@ export function ProductDetails({ product, programs }: { product: Product; progra
           {manage ? (
             <DropdownMenu>
               <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon-compact" })} aria-label="More actions" disabled={busy}>
-                <MoreHorizontal {...icon} />
+                <Icon name="more" {...icon} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="sale-menu">
                 <DropdownMenuItem onClick={() => void togglePublished()}>
-                  {product.published ? <EyeOff {...icon} /> : <Globe {...icon} />}
+                  {product.published ? <Icon name="visibility" {...icon} /> : <Icon name="gymSite" {...icon} />}
                   {product.published ? "Make staff only" : "Publish on the gym site"}
                 </DropdownMenuItem>
                 {price && state !== "archived" ? (
                   <DropdownMenuItem onClick={() => void toggleOnSale()}>
-                    <Tag {...icon} />
+                    <Icon name="products" {...icon} />
                     {price.available ? "Take off sale" : "Put on sale"}
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem onClick={edit}>
-                  <Pencil {...icon} />
+                  <Icon name="edit" {...icon} />
                   Edit product
                   <DropdownMenuShortcut>E</DropdownMenuShortcut>
                 </DropdownMenuItem>
@@ -149,7 +149,7 @@ export function ProductDetails({ product, programs }: { product: Product; progra
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="menu__item--critical" onClick={() => setArchiving(true)}>
-                      <Archive {...icon} />
+                      <Icon name="visibility" {...icon} />
                       Archive price…
                     </DropdownMenuItem>
                   </>
@@ -198,7 +198,7 @@ function OtherPrices({ product, manage }: { product: Product; manage: boolean })
   return (
     <section className="mx-section" aria-labelledby="product-prices-title">
       <div className="mx-section__head">
-        <Tag {...icon} />
+        <Icon name="products" {...icon} />
         <h2 id="product-prices-title">Other prices</h2>
         {onSale ? <span className="mx-section__count">{onSale} also on sale</span> : null}
       </div>
@@ -219,18 +219,18 @@ function Benefits({ product, programs }: { product: Product; programs: Schemas["
   return (
     <section className="mx-section" aria-labelledby="product-benefits-title">
       <div className="mx-section__head">
-        <Gift {...icon} />
+        <Icon name="pass" {...icon} />
         <h2 id="product-benefits-title">Benefits</h2>
         <span className="mx-section__count">Changes apply to new sales</span>
       </div>
       {product.benefits.length ? (
         <ul className="product-benefits">
           {product.benefits.map((benefit) => {
-            const Icon = benefit.kind === "gym_access" ? Dumbbell : CalendarDays;
+            const iconName = benefit.kind === "gym_access" ? "checkIns" : "schedule";
             return (
               <li key={benefit.id} className="product-benefit">
                 <span className="program-tile" aria-hidden="true">
-                  <Icon {...icon} />
+                  <Icon name={iconName} {...icon} />
                 </span>
                 <span className="product-benefit__name">{benefit.name}</span>
                 <span className="product-benefit__facts">
@@ -276,14 +276,14 @@ function Properties({ product }: { product: Product }) {
           </Property>
           <Property label="Price">
             <span className="mx-value" data-empty={price ? undefined : true}>
-              <Tag {...icon} />
+              <Icon name="products" {...icon} />
               <span className="mx-value__text money">{price ? formatMoney(price.amount_minor, price.currency) : "No price"}</span>
             </span>
           </Property>
           {price ? (
             <Property label={product.kind === "pass" ? "Valid for" : "Length"}>
               <span className="mx-value">
-                <Clock {...icon} />
+                <Icon name="length" {...icon} />
                 <span className="mx-value__text money">{formatDuration(price.duration_days)}</span>
               </span>
             </Property>
@@ -291,7 +291,7 @@ function Properties({ product }: { product: Product }) {
           {uses ? (
             <Property label="Uses">
               <span className="mx-value">
-                <CalendarDays {...icon} />
+                <Icon name="schedule" {...icon} />
                 <span className="mx-value__text money">{formatBenefitUsage(uses)}</span>
               </span>
             </Property>
@@ -299,7 +299,7 @@ function Properties({ product }: { product: Product }) {
           {state === "not_sold" ? null : (
             <Property label="Sold">
               <span className="mx-value">
-                {state === "on_sale" ? <Globe {...icon} /> : <EyeOff {...icon} />}
+                {state === "on_sale" ? <Icon name="gymSite" {...icon} /> : <Icon name="visibility" {...icon} />}
                 <span className="mx-value__text">{state === "on_sale" ? "Gym site and desk" : SALE_STATE_LABEL.staff_only}</span>
               </span>
             </Property>
@@ -309,7 +309,7 @@ function Properties({ product }: { product: Product }) {
       {product.description ? (
         <section className="mx-props__group program-props__note" aria-labelledby="product-note-title">
           <h2 id="product-note-title">
-            <StickyNote {...icon} />
+            <Icon name="customItem" {...icon} />
             Note
           </h2>
           <p>{product.description}</p>
@@ -320,8 +320,8 @@ function Properties({ product }: { product: Product }) {
 }
 
 function ProductIcon({ kind }: { kind: Schemas["ProductKind"] }) {
-  const Icon = PRODUCT_ICON[kind];
-  return <Icon {...icon} />;
+  const iconName = PRODUCT_ICON[kind];
+  return <Icon name={iconName} {...icon} />;
 }
 
 /* ---------- Loading and not found ---------- */

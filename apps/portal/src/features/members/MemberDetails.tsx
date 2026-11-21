@@ -1,20 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
-import {
-  Activity,
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  IdCard,
-  Mail,
-  MoreHorizontal,
-  Receipt,
-  RefreshCw,
-  Ticket,
-  UserCheck,
-  UserX,
-  type LucideIcon,
-} from "lucide-react";
+import { Icon, type IconName } from "@/components/ui/icon";
 import type { Schemas } from "@flowfokus/api";
 import { PageActions } from "../../components/PageActions";
 import { useCheckIn } from "../check-ins/CheckInFlow";
@@ -62,8 +48,8 @@ const sendLinkCode = (input: Parameters<typeof createLinkCode>[0]["data"]) => cr
 const sendUnlink = (input: Parameters<typeof unlinkMember>[0]["data"]) => unlinkMember({ data: input });
 const sendRenewal = (input: Parameters<typeof renewMembership>[0]["data"]) => renewMembership({ data: input });
 
-const icon = { strokeWidth: 1.5, "aria-hidden": true, focusable: false } as const;
-const statusIcon = { strokeWidth: 1.75, "aria-hidden": true, focusable: false } as const;
+const icon = { "aria-hidden": true, focusable: false } as const;
+const statusIcon = { "aria-hidden": true, focusable: false } as const;
 
 /** Lists show this many rows until staff ask for the rest. */
 const RECENT = 5;
@@ -165,11 +151,11 @@ function MemberHeader({ record }: { record: MemberRecord }) {
         {canRenew ? (
           <DropdownMenu>
             <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="More actions">
-              <MoreHorizontal {...icon} />
+              <Icon name="more" {...icon} />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setRenewing(true)}>
-                <RefreshCw {...statusIcon} />
+                <Icon name="sort" {...statusIcon} />
                 Renew membership…
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -247,20 +233,20 @@ export function RenewDialog({
 function Section({
   id,
   title,
-  icon: Icon,
+  icon: iconName,
   count,
   children,
 }: {
   id: string;
   title: string;
-  icon: LucideIcon;
+  icon: IconName;
   count?: string;
   children: ReactNode;
 }) {
   return (
     <section className="mx-section" aria-labelledby={`${id}-title`}>
       <div className="mx-section__head">
-        <Icon {...icon} />
+        <Icon name={iconName} {...icon} />
         <h2 id={`${id}-title`}>{title}</h2>
         {count ? <span className="mx-section__count">{count}</span> : null}
       </div>
@@ -275,7 +261,7 @@ function ShowMore({ shown, total, noun, expanded, onToggle }: { shown: number; t
   return (
     <button type="button" className="mx-more" aria-expanded={expanded} onClick={onToggle}>
       {expanded ? "Show fewer" : `Show all ${total} ${noun}`}
-      <ChevronDown className="mx-more__icon" {...icon} />
+      <Icon name="chevronDown" className="mx-more__icon" {...icon} />
     </button>
   );
 }
@@ -307,7 +293,7 @@ function MembershipSection({ member, sales, now }: { member: Schemas["MemberDeta
   const productName = (saleId: string) => sales.find((sale) => sale.id === saleId)?.line_item.product_name ?? "Membership period";
 
   return (
-    <Section id="membership" title="Membership" icon={IdCard} count={periods.length ? `${active.length} active of ${periods.length}` : undefined}>
+    <Section id="membership" title="Membership" icon="membership" count={periods.length ? `${active.length} active of ${periods.length}` : undefined}>
       {periods.length ? (
         <>
           <ul className="mx-rows">
@@ -348,7 +334,7 @@ function AccessSection({ member }: { member: Schemas["MemberDetail"] }) {
   const active = rights.filter((right) => right.active).length;
 
   return (
-    <Section id="access" title="Access" icon={Ticket} count={rights.length ? `${active} active of ${rights.length}` : undefined}>
+    <Section id="access" title="Access" icon="pass" count={rights.length ? `${active} active of ${rights.length}` : undefined}>
       {rights.length ? (
         <ul className="mx-rows">
           {rights.map((right) => {
@@ -407,7 +393,7 @@ function BookingsSection({ bookings, now }: { bookings: Schemas["Booking"][]; no
   const shown = all ? bookings : upcoming.length ? upcoming.slice(0, RECENT) : earlier.slice(0, 3);
 
   return (
-    <Section id="bookings" title="Bookings" icon={CalendarDays} count={bookings.length ? `${upcoming.length} upcoming` : undefined}>
+    <Section id="bookings" title="Bookings" icon="schedule" count={bookings.length ? `${upcoming.length} upcoming` : undefined}>
       {bookings.length ? (
         <>
           <ul className="mx-rows">
@@ -459,7 +445,7 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
     <Section
       id="sales"
       title="Sales"
-      icon={Receipt}
+      icon="sales"
       count={sales.length ? (sales.length > RECENT && !all ? `Recent ${RECENT} of ${sales.length}` : `${sales.length}`) : undefined}
     >
       {sales.length ? (
@@ -467,7 +453,7 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
           <ul className="mx-rows mx-sales">
             {shown.map((sale) => {
               const methods = paymentMethods(sale);
-              const MethodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
+              const methodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
               const payment = paymentFact(sale);
               return (
                 <li key={sale.id}>
@@ -481,7 +467,7 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
                     <PaymentMark sale={sale} className="mx-sale__payment" />
                     <FulfillmentMark sale={sale} className="mx-sale__fulfillment" />
                     <span className="mx-fact mx-sale__method">
-                      {MethodIcon ? <MethodIcon {...statusIcon} /> : null}
+                      {methodIcon ? <Icon name={methodIcon} {...statusIcon} /> : null}
                       {methods ?? "—"}
                     </span>
                     <span className="mx-sale__amount">
@@ -494,7 +480,7 @@ function SalesSection({ sales, memberId }: { sales: Schemas["Sale"][]; memberId:
                         <span className="mx-sale__refunded">{formatMoney(sale.refunded_minor, sale.currency)} refunded</span>
                       ) : null}
                     </span>
-                    <ChevronRight className="mx-sale__chevron" {...icon} />
+                    <Icon name="chevronRight" className="mx-sale__chevron" {...icon} />
                   </Link>
                 </li>
               );
@@ -526,7 +512,7 @@ function ActivitySection({ record }: { record: MemberRecord }) {
   return (
     <section className="mx-section mx-activity" aria-labelledby="activity-title">
       <div className="mx-activity__head">
-        <Activity {...icon} />
+        <Icon name="activity" {...icon} />
         <h2 id="activity-title">Activity</h2>
       </div>
       <ol className="mx-feed">
@@ -543,7 +529,7 @@ function ActivitySection({ record }: { record: MemberRecord }) {
       {earlier > 0 ? (
         <button type="button" className="mx-more mx-more--center" aria-expanded={all} onClick={() => setAll(!all)}>
           {all ? "Show fewer events" : `Show ${earlier} earlier ${earlier === 1 ? "event" : "events"}`}
-          <ChevronDown className="mx-more__icon" {...icon} />
+          <Icon name="chevronDown" className="mx-more__icon" {...icon} />
         </button>
       ) : null}
     </section>
@@ -572,7 +558,7 @@ function Properties({ record }: { record: MemberRecord }) {
         <dl>
           <Property label="Email">
             <span className="mx-value">
-              <Mail {...statusIcon} />
+              <Icon name="send" {...statusIcon} />
               <a href={`mailto:${member.email}`}>{member.email}</a>
             </span>
           </Property>
@@ -617,7 +603,7 @@ function SignInValue({ member }: { member: Schemas["MemberDetail"] }) {
   const linked = member.linked_email;
   const value = (
     <>
-      {linked ? <UserCheck {...statusIcon} /> : <UserX {...statusIcon} />}
+      {linked ? <Icon name="profile" {...statusIcon} /> : <Icon name="profile" {...statusIcon} />}
       <span className="mx-value__text">{linked ? `Linked · ${linked}` : "Not linked"}</span>
     </>
   );
@@ -639,12 +625,12 @@ function SignInValue({ member }: { member: Schemas["MemberDetail"] }) {
         <DropdownMenuContent align="start">
           {linked ? (
             <DropdownMenuItem onClick={() => setConfirming(true)}>
-              <UserX {...statusIcon} />
+              <Icon name="profile" {...statusIcon} />
               Unlink sign-in…
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem disabled={issue.pending} onClick={() => void createCode()}>
-              <UserCheck {...statusIcon} />
+              <Icon name="profile" {...statusIcon} />
               Create link code
             </DropdownMenuItem>
           )}
