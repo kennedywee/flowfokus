@@ -5,10 +5,14 @@ records cover only features whose APIs are not implemented yet.
 
 ## Design reference
 
-The reference is the [Flowfokus Paper file](https://app.paper.design/file/01M5CMH3NK5Q37J3EJN86P3W5C/p-7-0).
-The portal follows its redesign: Figtree type, dark and light surfaces,
-hairline borders, status colors, and a centered page column. The visual rules
-live in [the design system](design-system.md) and `apps/portal/DESIGN.md`.
+The reference is the Paper file
+[Flowfokus Design](https://app.paper.design/file/01M7X4HENFQVWCFYKJH6A9QSXD/p-1-0).
+The portal follows it: Geist type, zinc dark and light surfaces, hairline
+borders, status colors, and its own icon set. Screens move to its layouts one
+issue at a time; until then a screen keeps its layout on the new colors, type,
+and icons. The earlier file "Flowfokus Redesign" (and the Paper file linked
+before it) is history. The visual rules live in
+[the design system](design-system.md) and `apps/portal/DESIGN.md`.
 
 ## API-backed screens
 

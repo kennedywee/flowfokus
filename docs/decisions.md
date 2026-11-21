@@ -13,6 +13,7 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | Rails 8, WorkOS AuthKit, RSpec. | [Architecture](architecture.md#technology) |
 | The staff portal builds its components on ui-sdk, pinned to an exact beta version, with Tailwind CSS v4. Components keep the portal look through its own CSS and tokens. | [Portal README](../apps/portal/README.md#ui-components) |
 | The staff portal has System, Light, and Dark themes. Dark keeps the Paper colours. The choice is a display preference in a cookie. | [Portal README](../apps/portal/README.md#ui-components) |
+| The Paper file "Flowfokus Design" is the portal's design reference. It sets zinc colours, Geist and Geist Mono, a 6, 8, 10, 12 radius, and one icon set. The portal uses its own icons, not Hugeicons (closes #16). It replaces the 18 Nov rules in `docs/paper-redesign` (Figtree, neutral greys, grey table band). | [Portal design](../apps/portal/DESIGN.md#colors) |
 | WorkOS owns identity and staff access. Rails owns business data and rules. | [Architecture](architecture.md#responsibilities) |
 | No default service layer. Integrations in `lib/` or gems. | [Architecture](architecture.md#rails-code-layout) |
 | Monorepo: Rails API, React staff and member apps, Expo later. Bun workspace and mise. | [Monorepo](monorepo.md#layout) |

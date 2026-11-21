@@ -62,6 +62,7 @@ Start with `docs/README.md`. It lists every design document and its topic. Read 
 - For screen reviews, use `.agents/skills/flowfokus-review-screen/SKILL.md`. It checks the app's real states and conventions.
 - Run `bun run design:check` after styling changes. It catches color values added outside the token layers.
 - Before you build a portal component, check the gallery at `localhost:4001/components`. When you add or change a component, update its entry in `apps/portal/src/features/components/registry.ts`.
+- Every portal icon comes from the one set in `apps/portal/src/components/ui/icon.tsx`. Add a new icon to the Paper "Icons" page first. Do not add another icon library.
 - Portal components are built on ui-sdk. Before you use ui-sdk, follow the `ui-sdk` skill if it is installed, and read `node_modules/@ui-sdk/react/docs/llms.txt`. Pages import the wrappers in `apps/portal/src/components/ui/`.
 
 ## Simplicity

@@ -11,9 +11,20 @@ and task-specific skills. This repository implements those layers as follows.
 | --- | --- | --- |
 | Primitives: raw palette | `apps/portal/src/styles/primitives.css` | `apps/site/src/styles/primitives.css` |
 | Foundations: semantic color roles and type, space, radius, motion scales | `apps/portal/src/styles/tokens.css` | `apps/site/src/styles/tokens.css` |
-| Components: small reusable pieces | `apps/portal/src/components/ui/` and `components/ui.tsx` | CSS patterns in `apps/site/src/styles.css` |
+| Components: small reusable pieces, and the one icon set (`components/ui/icon.tsx`) | `apps/portal/src/components/ui/` and `components/ui.tsx` | CSS patterns in `apps/site/src/styles.css` |
 | Blocks: composed sections | `PageHead`, `Plate`, `PaymentMark`/`FulfillmentMark`, `ListToolbar`, `ListPager`, `useCheckIn`, `ConfirmDialog` | Opening, offer board, locations, member account |
 | Rules and review skill | Root `AGENTS.md`, app `DESIGN.md`, `.agents/skills/flowfokus-review-screen/SKILL.md` | Same entry points, with the site design file |
+
+## Reference
+
+The portal follows the Paper file
+[Flowfokus Design](https://app.paper.design/file/01M7X4HENFQVWCFYKJH6A9QSXD/p-1-0).
+It sets the portal's colours (zinc, in light and dark), type (Geist and Geist
+Mono), radius (6, 8, 10, 12), and icons (one set, page "Icons"). Its tokens hold
+the dark values; the light values come from its light frames. The portal's
+values and the few places where they differ from Paper are in
+[portal design](../apps/portal/DESIGN.md#colors). The gym site keeps its own
+look. The earlier file "Flowfokus Redesign" is history.
 
 Read [portal design](../apps/portal/DESIGN.md) or
 [gym site design](../apps/site/DESIGN.md) before UI work. Each file lists actual
