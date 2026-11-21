@@ -330,6 +330,8 @@
 .cal-slot {
   position: absolute;
   padding: 1px 3px 1px 3px;
+  /* Scrolled into view, a session sits above the foot of the window. */
+  scroll-margin-block: 24px 200px;
 }
 /* The part of today that has passed. It sits under the blocks. */
 .cal-wash {

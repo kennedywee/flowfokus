@@ -6,7 +6,6 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SpotRow } from "@/components/parts/marks";
 import { FilterChips, FilterMenu, nextListSearch, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
@@ -14,6 +13,7 @@ import { useDeskLocation, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
 import { useNow } from "../../lib/use-now";
 import { atLocation, clockRange, clockTime, programCounts, readPrograms, sessionCount, sessionState } from "../schedule/facts";
+import { CalendarBlock, type Density } from "./Block";
 import {
   KINDS,
   applyFilters,
@@ -251,8 +251,6 @@ function KindsRow({ search, counts, hidden }: { search: CalendarSearch; counts: 
 
 /* ---------- Blocks ---------- */
 
-type Density = "full" | "compact" | "tight";
-
 /** How much a block can say, from the minutes it is drawn tall. */
 function densityOf(minutes: number): Density {
   if (minutes >= 55) return "full";
@@ -260,12 +258,7 @@ function densityOf(minutes: number): Density {
   return "tight";
 }
 
-/**
- * One session. A class is a white card with its spots, an appointment a flat
- * grey block, an event a dark one. Full is amber, an ended session washes out,
- * and a cancelled one is a dashed red outline with its name struck through.
- * Under a program grouping the host is the title, because the column says the program.
- */
+/** One session of the Rails schedule as a block. Under a program grouping the host is the title, because the column says the program. */
 function SessionBlock({
   entry,
   variant,
@@ -287,36 +280,23 @@ function SessionBlock({
 }) {
   const organization = useOrganization();
   const tz = organization.timezone;
-  const state = sessionState(entry, now);
   const { kind } = entry.program;
-  const kindLabel = PROGRAM_KIND_LABEL[kind];
-  const title = group === "program" ? (entry.program.host_name?.trim() || "No host") : entry.program.name;
-  const showSpots = kind === "group_class" && variant === "day" && density === "full";
   return (
-    <Link
-      to="/$org/calendar/$occurrenceId"
-      params={{ org: organization.slug, occurrenceId: entry.id }}
-      className="cal-block"
-      data-kind={kind}
-      data-state={state}
-      data-density={density}
-      data-variant={variant}
-      data-nav-id={navId}
-      tabIndex={active ? 0 : -1}
-      aria-label={blockLabel(entry, tz, kindLabel, now)}
-      onFocus={() => onActive(navId)}
-    >
-      <span className="cal-block__time" suppressHydrationWarning>
-        {variant === "week" || density === "tight" ? clockTime(entry.starts_at, tz) : clockRange(entry.starts_at, entry.ends_at, tz)}
-      </span>
-      <span className="cal-block__name">{title}</span>
-      <span className="cal-block__meta" suppressHydrationWarning>
-        {showSpots ? (
-          <SpotRow capacity={entry.capacity} booked={entry.spots_taken} state={state === "ended" ? "past" : "upcoming"} cancelled={state === "cancelled"} />
-        ) : null}
-        <span className="cal-block__status">{blockStatus(entry, now)}</span>
-      </span>
-    </Link>
+    <CalendarBlock
+      kind={kind}
+      state={sessionState(entry, now)}
+      density={density}
+      variant={variant}
+      time={variant === "week" || density === "tight" ? clockTime(entry.starts_at, tz) : clockRange(entry.starts_at, entry.ends_at, tz)}
+      name={group === "program" ? entry.program.host_name?.trim() || "No host" : entry.program.name}
+      status={blockStatus(entry, now)}
+      spots={kind === "group_class" && variant === "day" && density === "full" ? { capacity: entry.capacity, booked: entry.spots_taken } : undefined}
+      label={blockLabel(entry, tz, PROGRAM_KIND_LABEL[kind], now)}
+      href={{ org: organization.slug, occurrenceId: entry.id }}
+      navId={navId}
+      active={active}
+      onActive={onActive}
+    />
   );
 }
 
@@ -368,9 +348,12 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
   const items: NavItem[] = placed.flatMap((column, x) => column.map((item) => ({ id: item.entry.id, x, y: 0, start: Date.parse(item.entry.starts_at) })));
   const keys = useGridKeys(items);
 
-  // Bring the now line into view when it is below the fold. A line already in view does not move the page.
+  // Bring the now line into view when it is below the fold, or the day's first session on another day.
+  // A target already in view does not move the page.
+  const earliest = items.reduce<NavItem | null>((first, item) => (!first || item.start < first.start ? item : first), null)?.id;
   useEffect(() => {
-    if (inAxis) document.querySelector(".cal-now")?.scrollIntoView({ block: "nearest" });
+    const target = inAxis ? document.querySelector(".cal-now") : earliest ? keys.ref.current?.querySelector(`[data-nav-id="${CSS.escape(earliest)}"]`)?.closest(".cal-slot") : null;
+    target?.scrollIntoView({ block: "nearest" });
     // Only when the day opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -396,7 +379,7 @@ function DayGrid({ entries, day, today, group, now }: { entries: Entry[]; day: s
       </div>
       <div className="cal-day__body">
         <div className="cal-axis" aria-hidden="true">
-          {hours.map((hour) => (
+          {[...hours, end].map((hour) => (
             <span key={hour} className="cal-axis__hour" style={{ top: (hour - start) * HOUR }}>
               {hourLabel(hour)}
             </span>
