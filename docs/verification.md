@@ -367,5 +367,5 @@ and from Ctrl K, and a denied member opens the denial dialog. The phone tab bar
 shows Schedule, Members, Sales, and More.
 
 Not verified: roles other than Owner, real touch devices, and the phone tab bar
-label height (the bar is 50px high and its labels clip at the bottom edge; this
-was the same before the removals).
+label height (the bar is 50px high and its labels clip at the bottom edge; the
+CSS for this did not change).
