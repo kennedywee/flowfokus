@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { formatTime } from "../../lib/format";
-import { useOrganization } from "../../lib/organization";
 import { placeLabels, position, type Horizon as HorizonData, type HorizonEvent } from "./timeline";
 
 const DAY = 24 * 3_600_000;
@@ -17,22 +16,30 @@ const MAX_LABEL = 168;
  * for assistive technology names every mark. The marks come from the member
  * record Rails returned (bookings, periods, and rights).
  */
-export function Horizon({ horizon }: { horizon: HorizonData }) {
-  const { timezone } = useOrganization();
+export function Horizon({ horizon, timezone }: { horizon: HorizonData; /** The organization's time zone. */ timezone: string }) {
   const { start, end, events } = horizon;
+  // The marks come from the clock, so the server and the browser would place them differently. They draw after hydration.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const track = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(760);
   useEffect(() => {
     const element = track.current;
-    if (!element) return;
+    if (!element || !mounted) return;
     const measure = () => setWidth(Math.round(element.getBoundingClientRect().width) || 760);
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [mounted]);
 
-  const day = useMemo(() => new Intl.DateTimeFormat("en-MY", { timeZone: timezone, weekday: "short", day: "numeric", month: "short" }), [timezone]);
+  const day = useMemo(
+    () => new Intl.DateTimeFormat("en-MY", { timeZone: timezone, weekday: "short", day: "numeric", month: "short" }),
+    [timezone],
+  );
   const range = useMemo(() => new Intl.DateTimeFormat("en-MY", { timeZone: timezone, day: "numeric", month: "short" }), [timezone]);
   const sub = (event: HorizonEvent) => {
     const date = day.format(event.at);
@@ -51,46 +58,63 @@ export function Horizon({ horizon }: { horizon: HorizonData }) {
     <section className="horizon" aria-labelledby="horizon-title">
       <div className="horizon__head">
         <h2 id="horizon-title">{horizon.shortened ? "Recent bookings and the next 30 days" : "Last week and the next 30 days"}</h2>
-        <span className="horizon__range">
+        <span className="horizon__range" suppressHydrationWarning>
           {range.format(start)} – {range.format(end)}
         </span>
       </div>
-      <ol className="visually-hidden">
-        {events.map((event) => (
-          <li key={event.id}>
-            {event.title}, {sub(event)}
-            {event.past && event.kind !== "today" ? ", earlier" : ""}
-          </li>
-        ))}
-      </ol>
+      {mounted ? (
+        <ol className="visually-hidden">
+          {events.map((event) => (
+            <li key={event.id}>
+              {event.title}, {sub(event)}
+              {event.past && event.kind !== "today" ? ", earlier" : ""}
+            </li>
+          ))}
+        </ol>
+      ) : null}
       <div className="horizon__plot" ref={track} aria-hidden="true">
-        <span className="horizon__line" />
-        {Array.from({ length: days + 1 }, (_, index) => (
-          <i key={index} className="horizon__tick" data-week={index % 7 === 0 || undefined} style={{ left: `${(index / days) * 100}%` }} />
-        ))}
-        {events.map((event) => {
-          const left = `${position(event.at, start, end) * 100}%`;
-          const place = places.get(event.id);
-          return (
-            <span key={event.id}>
-              <i className="horizon__mark" data-kind={event.kind} data-past={event.past || undefined} data-tone={event.tone} style={{ left }} />
-              {place ? (
-                <span
-                  className="horizon__label"
-                  data-lane={place.lane}
-                  data-align={place.align}
-                  data-past={event.past || undefined}
-                  data-tone={event.tone}
-                  data-kind={event.kind}
-                  style={place.align === "start" ? { left: `calc(${left} - 5px)` } : { right: `calc(100% - ${left} - 5px)` }}
-                >
-                  <span className="horizon__title">{event.title}</span>
-                  <span className="horizon__when">{sub(event)}</span>
+        {mounted ? (
+          <>
+            <span className="horizon__line" />
+            {Array.from({ length: days + 1 }, (_, index) => (
+              <i
+                key={index}
+                className="horizon__tick"
+                data-week={index % 7 === 0 || undefined}
+                style={{ left: `${(index / days) * 100}%` }}
+              />
+            ))}
+            {events.map((event) => {
+              const left = `${position(event.at, start, end) * 100}%`;
+              const place = places.get(event.id);
+              return (
+                <span key={event.id}>
+                  <i
+                    className="horizon__mark"
+                    data-kind={event.kind}
+                    data-past={event.past || undefined}
+                    data-tone={event.tone}
+                    style={{ left }}
+                  />
+                  {place ? (
+                    <span
+                      className="horizon__label"
+                      data-lane={place.lane}
+                      data-align={place.align}
+                      data-past={event.past || undefined}
+                      data-tone={event.tone}
+                      data-kind={event.kind}
+                      style={place.align === "start" ? { left: `calc(${left} - 5px)` } : { right: `calc(100% - ${left} - 5px)` }}
+                    >
+                      <span className="horizon__title">{event.title}</span>
+                      <span className="horizon__when">{sub(event)}</span>
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-            </span>
-          );
-        })}
+              );
+            })}
+          </>
+        ) : null}
       </div>
     </section>
   );

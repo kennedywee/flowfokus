@@ -356,11 +356,12 @@ const HOLD_COLUMNS: ListColumn[] = [
 
 /** The Horizon, when the member has a booking, a period, or a pass in its window. */
 function HorizonSection({ member, sales, now }: { member: Schemas["MemberDetail"]; sales: Schemas["Sale"][]; now: number }) {
+  const { timezone } = useOrganization();
   const productName = (saleId: string) => sales.find((sale) => sale.id === saleId)?.line_item.product_name ?? "Membership period";
   const horizon = horizonFor(member, productName, now);
   // Today alone says nothing.
   if (horizon.events.length < 2) return null;
-  return <Horizon horizon={horizon} />;
+  return <Horizon horizon={horizon} timezone={timezone} />;
 }
 
 function HoldStatusMark({ status }: { status: HoldRow["status"] }) {
@@ -412,7 +413,7 @@ function Holds({ member, sales, now }: { member: Schemas["MemberDetail"]; sales:
           </ListTableBody>
         </ListTable>
       ) : (
-        <Empty>No membership or pass yet. The first fulfilled sale of one starts it.</Empty>
+        <Empty>No membership or pass yet.</Empty>
       )}
     </Section>
   );

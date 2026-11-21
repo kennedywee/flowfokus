@@ -28,7 +28,7 @@ function MemberPage() {
   const record = Route.useLoaderData();
   if (!record.ok) {
     return (
-      <div className="page member-page">
+      <div className="page">
         <FailureNotice error={record.error} title="This member did not load" />
       </div>
     );
