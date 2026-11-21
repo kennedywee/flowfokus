@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Icon, type IconName } from "@/components/ui/icon";
-import { Kbd } from "../../components/ui";
+import { Icon } from "@/components/ui/icon";
+import { Kbd, Notice } from "../../components/ui";
 import { PageActions } from "../../components/PageActions";
 import {
   PAYMENT_METHOD_LABEL,
@@ -16,29 +16,47 @@ import {
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
 import { useShortDate } from "../members/dates";
+import { saleMarks } from "../members/facts";
+import { Empty, Section } from "../members/Section";
+import { ActivityFeed, type FeedItem } from "@/components/parts/Activity";
+import { DetailHero, DetailLayout, HeroTile, PanelGroup, PanelRow, PanelRows } from "@/components/parts/DetailLayout";
+import {
+  CellStack,
+  ListGroup,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { StatusMark, Tile } from "@/components/parts/marks";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { fulfillmentFact, saleActions, saleActivity, type SaleActions } from "./facts";
 import { FulfillDialog, KIND_ICON, ReasonDialog, RecordPaymentDialog, RefundDialog } from "./SaleDialogs";
-import { FulfillmentMark, METHOD_ICON, PaymentMark } from "./SaleFacts";
 
 const icon = { "aria-hidden": true, focusable: false } as const;
-const markIcon = { "aria-hidden": true, focusable: false } as const;
 
 type Open = "pay" | "fulfill" | "refund" | "void" | "revoke" | null;
 
+/** Activity shows this many events before "Show N earlier events". */
+const RECENT = 5;
+
 /**
- * One page per sale: the item and its fulfillment, the payments and the balance,
- * and what happened, with the sale's properties on the right. Payment and
- * fulfillment are separate facts. Every action opens a dialog that states its
- * consequence; Rails decides whether it is allowed.
+ * One page per sale (Paper "Sale details"): the hero with the payment and
+ * fulfillment facts, Items, Payments, and Activity on the left; Details on the
+ * right, on the ledger-rule pattern. Record payment (P) and Fulfill (F) sit in
+ * their section headers; Refund, Revoke access, and Void are in the top bar's
+ * more menu. Every action opens a dialog that states its consequence; Rails
+ * decides whether it is allowed. It shows only what Rails returns: no sale
+ * number, sold by, payment recorder, note, comments, invoice, several lines,
+ * or fulfillment per line (issue #18).
  */
 export function SaleDetails({ sale }: { sale: Schemas["Sale"] }) {
   const can = useCan();
@@ -49,202 +67,197 @@ export function SaleDetails({ sale }: { sale: Schemas["Sale"] }) {
   useShortcut("f", () => setOpen("fulfill"), { enabled: canFulfill });
 
   return (
-    <div className="page sale-details">
-      <SaleHeader sale={sale} actions={actions} onOpen={setOpen} />
-      <div className="sale-details__main">
-        {sale.voided_at ? <VoidBanner sale={sale} /> : null}
+    <>
+      <DetailLayout record="sale" className="sale-details" panel={<SaleDetailsPanel sale={sale} />}>
+        <SaleHero sale={sale} />
+        <SaleMenu actions={actions} onOpen={setOpen} />
+        {sale.voided_at ? <VoidNotice sale={sale} /> : null}
         <ItemsSection sale={sale} actions={actions} onFulfill={() => setOpen("fulfill")} />
-        <PaymentSection sale={sale} canPay={actions.pay} onPay={() => setOpen("pay")} />
-        <ActivitySection sale={sale} />
-      </div>
-      <SaleProperties sale={sale} />
+        <PaymentsSection sale={sale} canPay={actions.pay} onPay={() => setOpen("pay")} />
+        <SaleActivity sale={sale} />
+      </DetailLayout>
       {open === "pay" ? <RecordPaymentDialog sale={sale} onClose={() => setOpen(null)} /> : null}
       {open === "fulfill" && canFulfill ? (
         <FulfillDialog sale={sale} early={actions.fulfill === "early"} onClose={() => setOpen(null)} />
       ) : null}
       {open === "refund" ? <RefundDialog sale={sale} onClose={() => setOpen(null)} /> : null}
       {open === "void" || open === "revoke" ? <ReasonDialog sale={sale} kind={open} onClose={() => setOpen(null)} /> : null}
-    </div>
+    </>
   );
 }
 
-/* ---------- Header ---------- */
+/* ---------- Hero and menu ---------- */
 
-function SaleHeader({ sale, actions, onOpen }: { sale: Schemas["Sale"]; actions: SaleActions; onOpen: (open: Open) => void }) {
-  const line = sale.line_item;
-  const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
-  const corrections = actions.refund || actions.revoke || actions.void;
-  const any = actions.pay || canFulfill || corrections;
-
+/**
+ * A receipt tile, the item as the title (Rails has no sale number), and the
+ * two facts as pills: payment, then fulfillment. The words are Rails' (#14).
+ */
+function SaleHero({ sale }: { sale: Schemas["Sale"] }) {
+  const marks = saleMarks(sale);
   return (
-    <header className="sale-head">
-      <span className="sale-head__tile" aria-hidden="true">
-        <Icon name="sales" {...icon} />
-      </span>
-      <div className="sale-head__text">
-        <div className="sale-head__title">
-          <h1>{line.product_name}</h1>
-          <span className="sale-head__facts">
-            <PaymentMark sale={sale} className="sale-pill" />
-            <FulfillmentMark sale={sale} className="sale-pill" />
-          </span>
-        </div>
-        <p className="sale-head__meta">
-          {sale.member.name} · {line.price_label}
-          {sale.renewal ? " · Renewal" : ""}
-        </p>
-      </div>
-      {any ? (
-        <PageActions>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="Sale actions">
-              <Icon name="more" {...icon} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="sale-menu">
-              {actions.pay ? (
-                <DropdownMenuItem onClick={() => onOpen("pay")}>
-                  <Icon name="cash" {...markIcon} />
-                  Record payment
-                  <DropdownMenuShortcut>
-                    <Kbd>P</Kbd>
-                  </DropdownMenuShortcut>
-                </DropdownMenuItem>
-              ) : null}
-              {canFulfill ? (
-                <DropdownMenuItem onClick={() => onOpen("fulfill")}>
-                  <Icon name="fulfilled" {...markIcon} />
-                  {actions.fulfill === "early" ? "Fulfill early…" : "Fulfill"}
-                  <DropdownMenuShortcut>
-                    <Kbd>F</Kbd>
-                  </DropdownMenuShortcut>
-                </DropdownMenuItem>
-              ) : null}
-              {(actions.pay || canFulfill) && corrections ? <DropdownMenuSeparator /> : null}
-              {actions.refund ? (
-                <DropdownMenuItem onClick={() => onOpen("refund")}>
-                  <Icon name="arrowDown" {...markIcon} />
-                  Refund…
-                </DropdownMenuItem>
-              ) : null}
-              {actions.revoke ? (
-                <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("revoke")}>
-                  <Icon name="roles" {...markIcon} />
-                  Revoke access…
-                </DropdownMenuItem>
-              ) : null}
-              {actions.void ? (
-                <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("void")}>
-                  <Icon name="close" {...markIcon} />
-                  Void sale…
-                </DropdownMenuItem>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </PageActions>
-      ) : null}
-    </header>
+    <DetailHero
+      tile={<HeroTile icon="sales" />}
+      title={sale.line_item.product_name}
+      line={sale.renewal ? "Renewal" : undefined}
+    >
+      <StatusMark boxed kind={marks.payment.kind} tone={marks.payment.tone}>
+        {marks.payment.label}
+      </StatusMark>
+      <StatusMark boxed kind={marks.fulfillment.kind} tone={marks.fulfillment.tone}>
+        {marks.fulfillment.label}
+      </StatusMark>
+    </DetailHero>
   );
 }
 
-function VoidBanner({ sale }: { sale: Schemas["Sale"] }) {
+/** The top bar's more menu: Refund, Revoke access, and Void. It has no items, so no button, when none is allowed. */
+function SaleMenu({ actions, onOpen }: { actions: SaleActions; onOpen: (open: Open) => void }) {
+  if (!actions.refund && !actions.revoke && !actions.void) return null;
+  return (
+    <PageActions>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="button button--ghost button--icon button--compact" aria-label="Sale actions">
+          <Icon name="more" {...icon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="sale-menu">
+          {actions.refund ? (
+            <DropdownMenuItem onClick={() => onOpen("refund")}>
+              <Icon name="arrowDown" {...icon} />
+              Refund…
+            </DropdownMenuItem>
+          ) : null}
+          {actions.revoke ? (
+            <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("revoke")}>
+              <Icon name="roles" {...icon} />
+              Revoke access…
+            </DropdownMenuItem>
+          ) : null}
+          {actions.void ? (
+            <DropdownMenuItem className="menu__item--critical" onClick={() => onOpen("void")}>
+              <Icon name="close" {...icon} />
+              Void sale…
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </PageActions>
+  );
+}
+
+function VoidNotice({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
   return (
-    <div className="sale-void">
-      <Icon name="close" className="sale-void__icon" {...markIcon} />
-      <div>
-        <p className="sale-void__title">This sale was voided</p>
-        <p className="sale-void__sub">
-          {sale.void_reason ? `${sale.void_reason} · ` : ""}
-          <time dateTime={sale.voided_at!} suppressHydrationWarning>
-            {formatWhen(sale.voided_at!, organization.timezone)}
-          </time>
-        </p>
-      </div>
-    </div>
+    <Notice tone="error" title="This sale was voided">
+      <p>
+        {sale.void_reason ? `${sale.void_reason} · ` : ""}
+        <time dateTime={sale.voided_at!} suppressHydrationWarning>
+          {formatWhen(sale.voided_at!, organization.timezone)}
+        </time>
+      </p>
+    </Notice>
   );
 }
 
-/* ---------- Sections ---------- */
+/* ---------- Items ---------- */
 
-/** A section: a grey band with an icon, a title, and an optional action. */
-function Band({ id, title, icon: iconName, action }: { id: string; title: string; icon: IconName; action?: ReactNode }) {
-  return (
-    <div className="mx-section__head sale-band">
-      <Icon name={iconName} {...icon} />
-      <h2 id={`${id}-title`}>{title}</h2>
-      {action}
-    </div>
-  );
-}
+const ITEM_COLUMNS: ListColumn[] = [
+  { id: "item", label: "Item" },
+  { id: "price", label: "Price", width: "128px", align: "end" },
+  { id: "total", label: "Total", width: "112px", align: "end" },
+];
 
-/** What the sale is for, and its fulfillment: when it happened, early fulfillment, or revoked access. */
+/** The group's mark: the fulfillment fact's ring, coloured by its state. */
+const GROUP_MARK = {
+  fulfilled: { name: "fulfilled", tone: "good" },
+  revoked: { name: "close", tone: "critical" },
+  waiting: { name: "unfulfilled", tone: "neutral" },
+  none: { name: "unfulfilled", tone: "neutral" },
+} as const;
+
+/**
+ * What the sale is for. Rails sells one line, so there is one group: Fulfilled,
+ * Unfulfilled, or Access revoked, with a count of one. The row has the item,
+ * its terms, the unit price and quantity, and the line total, then the sale
+ * total. Fulfill (F) is in the header when the sale can be fulfilled.
+ */
 function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; actions: SaleActions; onFulfill: () => void }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   const shortDate = useShortDate();
   const line = sale.line_item;
-  const kindIcon = KIND_ICON[line.terms.kind];
   const fulfillment = sale.fulfillment;
   const period = fulfillment?.membership_period;
   const fact = fulfillmentFact(sale);
+  const mark = GROUP_MARK[fact.state];
 
-  const sub = sale.occurrence
+  const terms = sale.occurrence
     ? `${sale.occurrence.program_name} · ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}`
     : period
       ? `${shortDate(period.starts_at)} – ${shortDate(period.ends_at)}`
       : `${PRODUCT_KIND_LABEL[line.terms.kind]} · ${formatDuration(line.terms.duration_days)}`;
+  const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
 
   return (
-    <section className="mx-section sale-section" aria-labelledby="items-title">
-      <Band
-        id="items"
-        title="Items"
-        icon="products"
-        action={
-          actions.fulfill === "ready" || actions.fulfill === "early" ? (
-            <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onFulfill}>
-              {actions.fulfill === "early" ? "Fulfill early" : "Fulfill"}
-            </Button>
-          ) : null
-        }
-      />
-      <div className="sale-group">
-        <FulfillmentMark sale={sale} />
-        {fulfillment ? (
-          <span className="sale-group__when">
-            {fact.state === "revoked" ? "Fulfilled " : ""}
-            <time dateTime={fulfillment.fulfilled_at} suppressHydrationWarning>
-              {formatWhen(fulfillment.fulfilled_at, organization.timezone)}
-            </time>
-          </span>
-        ) : null}
-      </div>
-      <div className="sale-line">
-        <span className="sale-tile" aria-hidden="true">
-          <Icon name={kindIcon} {...markIcon} />
-        </span>
-        <div className="sale-line__main">
-          <span className="sale-line__name">{line.product_name}</span>
-          <span className="sale-line__sub" suppressHydrationWarning>
-            {sub}
-            {sale.renewal ? " · Agreed price" : ""}
-          </span>
-          {line.terms.benefits.map((benefit, index) => (
-            <span key={index} className="sale-line__sub">
-              {benefit.name} · {formatBenefitUsage(benefit)} · {locationName(benefit.location_id)}
+    <Section
+      id="items"
+      title="Items"
+      action={
+        canFulfill ? (
+          <Button type="button" variant="secondary" size="compact" aria-keyshortcuts="F" onClick={onFulfill}>
+            {actions.fulfill === "early" ? "Fulfill early" : "Fulfill items"}
+            <Kbd>F</Kbd>
+          </Button>
+        ) : null
+      }
+    >
+      <ListTable label="Items" density="two-line" className="list-table--bare sale-items" columns={ITEM_COLUMNS}>
+        <ListGroup
+          label={fact.label}
+          count={1}
+          mark={
+            <span className="status-mark" data-tone={mark.tone}>
+              <Icon name={mark.name} size={14} {...icon} />
             </span>
-          ))}
-          {sale.attendees.length ? (
-            <span className="sale-line__sub">
-              {sale.attendees.map((person) => (person.guest ? `${person.name} (guest)` : person.name)).join(", ")}
-            </span>
-          ) : null}
-        </div>
-        <span className="sale-line__unit">
-          {formatMoney(line.unit_amount_minor, line.currency)} × {line.quantity}
-        </span>
-        <span className="sale-line__total">{formatMoney(line.total_minor, line.currency)}</span>
-      </div>
+          }
+        >
+          <ListTableBody>
+            <ListTableRow>
+              <ListTableCell>
+                <span className="cell-stack">
+                  <Tile square>
+                    <Icon name={KIND_ICON[line.terms.kind]} size={16} {...icon} />
+                  </Tile>
+                  <span className="cell-stack__text">
+                    <span className="cell-stack__title">
+                      <span>{line.product_name}</span>
+                    </span>
+                    <span className="cell-stack__sub" suppressHydrationWarning>
+                      {terms}
+                      {sale.renewal ? " · Agreed price" : ""}
+                    </span>
+                    {line.terms.benefits.map((benefit, index) => (
+                      <span key={index} className="cell-stack__sub">
+                        {benefit.name} · {formatBenefitUsage(benefit)} · {locationName(benefit.location_id)}
+                      </span>
+                    ))}
+                    {sale.attendees.length ? (
+                      <span className="cell-stack__sub">
+                        {sale.attendees.map((person) => (person.guest ? `${person.name} (guest)` : person.name)).join(", ")}
+                      </span>
+                    ) : null}
+                  </span>
+                </span>
+              </ListTableCell>
+              <ListTableCell align="end" className="cell-muted sale-items__unit">
+                {formatMoney(line.unit_amount_minor, line.currency)} × {line.quantity}
+              </ListTableCell>
+              <ListTableCell align="end" className="cell-figure sale-items__total">
+                {formatMoney(line.total_minor, line.currency)}
+              </ListTableCell>
+            </ListTableRow>
+          </ListTableBody>
+        </ListGroup>
+      </ListTable>
       {fulfillment?.early ? (
         <p className="sale-note" data-tone="warning">
           Fulfilled before full payment. {formatMoney(fulfillment.unpaid_minor, sale.currency)} was due
@@ -276,20 +289,34 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
           )}
         </p>
       ) : null}
-      <div className="sale-total">
-        <span>Total</span>
-        <span className="sale-total__amount">{formatMoney(sale.total_minor, sale.currency)}</span>
-      </div>
-    </section>
+      <dl className="sale-sum">
+        <div className="sale-sum__row">
+          <dt>Total</dt>
+          <dd>{formatMoney(sale.total_minor, sale.currency)}</dd>
+        </div>
+      </dl>
+    </Section>
   );
 }
+
+/* ---------- Payments ---------- */
+
+const PAYMENT_COLUMNS: ListColumn[] = [
+  { id: "payment", label: "Payment" },
+  { id: "amount", label: "Amount", width: "112px", align: "end" },
+];
 
 type MoneyRow =
   | { kind: "payment"; at: string; payment: Schemas["Payment"] }
   | { kind: "refund"; at: string; refund: Schemas["Refund"]; payment: Schemas["Payment"] | undefined };
 
-/** Payments and refunds, oldest first, then the balance due. */
-function PaymentSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay: boolean; onPay: () => void }) {
+/**
+ * Payments and refunds, oldest first: the method and when, then the amount.
+ * Then the balance due, in the warning colour while money is owed. Record
+ * payment (P) is in the header when the sale can take one. Rails does not say
+ * who recorded a payment, and Send invoice does not exist yet (issue #18).
+ */
+function PaymentsSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay: boolean; onPay: () => void }) {
   const organization = useOrganization();
   const rows: MoneyRow[] = [
     ...sale.payments.map((payment) => ({ kind: "payment" as const, at: payment.received_at, payment })),
@@ -303,157 +330,125 @@ function PaymentSection({ sale, canPay, onPay }: { sale: Schemas["Sale"]; canPay
   const due = !sale.voided_at && sale.balance_minor > 0;
 
   return (
-    <section className="mx-section sale-section" aria-labelledby="payment-title">
-      <Band
-        id="payment"
-        title="Payment"
-        icon="cash"
-        action={
-          canPay ? (
-            <Button type="button" variant="secondary" size="compact" className="sale-band__button" onClick={onPay}>
-              Record payment
-            </Button>
-          ) : null
-        }
-      />
+    <Section
+      id="payments"
+      title="Payments"
+      action={
+        canPay ? (
+          <Button type="button" variant="secondary" size="compact" aria-keyshortcuts="P" onClick={onPay}>
+            <Icon name="plus" size={14} {...icon} />
+            Record payment
+            <Kbd>P</Kbd>
+          </Button>
+        ) : null
+      }
+    >
       {rows.length ? (
-        <ul className="sale-money-rows">
-          {rows.map((row) => {
-            if (row.kind === "payment") {
-              const { payment } = row;
-              const methodIcon = METHOD_ICON[payment.method];
-              return (
-                <li key={payment.id} className="sale-line">
-                  <span className="sale-tile" aria-hidden="true">
-                    <Icon name={methodIcon} {...markIcon} />
-                  </span>
-                  <div className="sale-line__main">
-                    <span className="sale-line__name">
-                      {PAYMENT_METHOD_LABEL[payment.method]}
-                      {payment.method === "online" && payment.provider ? ` · ${payment.provider}` : ""}
-                    </span>
-                    <span className="sale-line__sub">
-                      {payment.reference ? `Ref. ${payment.reference} · ` : ""}
-                      <time dateTime={payment.received_at} suppressHydrationWarning>
-                        {formatWhen(payment.received_at, organization.timezone)}
-                      </time>
-                      {payment.refunded_minor > 0 ? ` · ${formatMoney(payment.refunded_minor, payment.currency)} refunded` : ""}
-                    </span>
-                  </div>
-                  <span className="sale-line__total">{formatMoney(payment.amount_minor, payment.currency)}</span>
-                </li>
-              );
-            }
-            const { refund, payment } = row;
-            return (
-              <li key={refund.id} className="sale-line">
-                <span className="sale-tile sale-tile--critical" aria-hidden="true">
-                  <Icon name="arrowDown" {...markIcon} />
-                </span>
-                <div className="sale-line__main">
-                  <span className="sale-line__name">Refund{payment ? ` · ${PAYMENT_METHOD_LABEL[payment.method]}` : ""}</span>
-                  <span className="sale-line__sub">
-                    {refund.reason} ·{" "}
-                    <time dateTime={refund.refunded_at} suppressHydrationWarning>
-                      {formatWhen(refund.refunded_at, organization.timezone)}
-                    </time>
-                  </span>
-                </div>
-                <span className="sale-line__total sale-line__total--critical">
-                  <span className="visually-hidden">Minus </span>−{formatMoney(refund.amount_minor, refund.currency)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        <ListTable label="Payments" density="two-line" className="list-table--bare sale-payments" columns={PAYMENT_COLUMNS}>
+          <ListTableBody>
+            {rows.map((row) =>
+              row.kind === "payment" ? (
+                <ListTableRow key={row.payment.id}>
+                  <ListTableCell>
+                    <CellStack
+                      title={
+                        <>
+                          {PAYMENT_METHOD_LABEL[row.payment.method]}
+                          {row.payment.method === "online" && row.payment.provider ? ` · ${row.payment.provider}` : ""}
+                        </>
+                      }
+                      sub={
+                        <>
+                          {row.payment.reference ? `Ref. ${row.payment.reference} · ` : ""}
+                          <time dateTime={row.payment.received_at} suppressHydrationWarning>
+                            {formatWhen(row.payment.received_at, organization.timezone)}
+                          </time>
+                          {row.payment.refunded_minor > 0 ? ` · ${formatMoney(row.payment.refunded_minor, row.payment.currency)} refunded` : ""}
+                        </>
+                      }
+                    />
+                  </ListTableCell>
+                  <ListTableCell align="end" className="cell-figure">
+                    {formatMoney(row.payment.amount_minor, row.payment.currency)}
+                  </ListTableCell>
+                </ListTableRow>
+              ) : (
+                <ListTableRow key={row.refund.id}>
+                  <ListTableCell>
+                    <CellStack
+                      title={`Refund${row.payment ? ` · ${PAYMENT_METHOD_LABEL[row.payment.method]}` : ""}`}
+                      sub={
+                        <>
+                          {row.refund.reason} ·{" "}
+                          <time dateTime={row.refund.refunded_at} suppressHydrationWarning>
+                            {formatWhen(row.refund.refunded_at, organization.timezone)}
+                          </time>
+                        </>
+                      }
+                    />
+                  </ListTableCell>
+                  <ListTableCell align="end" className="cell-figure sale-payments__refund">
+                    <span className="visually-hidden">Minus </span>−{formatMoney(row.refund.amount_minor, row.refund.currency)}
+                  </ListTableCell>
+                </ListTableRow>
+              ),
+            )}
+          </ListTableBody>
+        </ListTable>
       ) : (
-        <p className="sale-empty">No payments yet</p>
+        <Empty>No payments yet</Empty>
       )}
-      <div className="sale-total" data-state={sale.voided_at ? "void" : due ? "due" : undefined}>
-        <span>Balance due</span>
-        <span className="sale-total__amount">{formatMoney(sale.voided_at ? 0 : sale.balance_minor, sale.currency)}</span>
-      </div>
-    </section>
+      <dl className="sale-sum" data-state={sale.voided_at ? "void" : due ? "due" : undefined}>
+        <div className="sale-sum__row">
+          <dt>Balance due</dt>
+          <dd>{formatMoney(sale.voided_at ? 0 : sale.balance_minor, sale.currency)}</dd>
+        </div>
+      </dl>
+    </Section>
   );
 }
 
-function ActivitySection({ sale }: { sale: Schemas["Sale"] }) {
+/* ---------- Activity ---------- */
+
+/** What Rails recorded: the sale, payments, fulfillment, refunds, and void. No comment box: Rails has no comments. */
+function SaleActivity({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
-  const events = saleActivity(sale);
-  return (
-    <section className="mx-section mx-activity" aria-labelledby="activity-title">
-      <div className="mx-activity__head">
-        <Icon name="activity" {...icon} />
-        <h2 id="activity-title">Activity</h2>
-      </div>
-      <ol className="mx-feed">
-        {events.map((event) => (
-          <li key={event.id} className="mx-feed__item">
-            <span className="mx-feed__dot" data-tone={event.tone} aria-hidden="true" />
-            <span className="mx-feed__text">{event.text}</span>
-            <time className="mx-feed__when" dateTime={event.at} suppressHydrationWarning>
-              {formatWhen(event.at, organization.timezone)}
-            </time>
-          </li>
-        ))}
-      </ol>
-    </section>
+  const items = saleActivity(sale).map(
+    (event): FeedItem => ({
+      kind: "event",
+      id: event.id,
+      tone: event.tone,
+      time: formatWhen(event.at, organization.timezone),
+      children: event.text,
+    }),
   );
+  return <ActivityFeed items={items} visible={RECENT} />;
 }
 
-/* ---------- Properties ---------- */
+/* ---------- Details panel ---------- */
 
-function Property({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="mx-prop">
-      <dt>{label}</dt>
-      <dd>
-        <span className="mx-value">{children}</span>
-      </dd>
-    </div>
-  );
-}
-
-function SaleProperties({ sale }: { sale: Schemas["Sale"] }) {
+/** The right panel: the member, the location (or the online channel), and the date. Rails has no sold-by or note. */
+function SaleDetailsPanel({ sale }: { sale: Schemas["Sale"] }) {
   const organization = useOrganization();
   const locationName = useLocationName();
   return (
-    <aside className="mx-props" aria-label="Sale properties">
-      <section className="mx-props__group" aria-labelledby="props-details">
-        <h2 id="props-details">Details</h2>
-        <dl>
-          <Property label="Member">
-            <Icon name="profile" {...markIcon} />
-            <Link to="/$org/members/$memberId" params={{ org: organization.slug, memberId: sale.member.id }}>
-              {sale.member.name}
-            </Link>
-          </Property>
-          <Property label={sale.channel === "online" ? "Channel" : "Location"}>
-            <Icon name="location" {...markIcon} />
-            <span className="mx-value__text">{sale.channel === "online" ? "Online" : locationName(sale.location_id)}</span>
-          </Property>
-          <Property label="Date">
-            <Icon name="schedule" {...markIcon} />
-            <time dateTime={sale.purchased_at} suppressHydrationWarning>
-              {formatDateTime(sale.purchased_at, organization.timezone)}
-            </time>
-          </Property>
-          <Property label="Price">
-            <Icon name="products" {...markIcon} />
-            <span className="mx-value__text">
-              {sale.line_item.price_label}
-              {sale.renewal ? " · Agreed price" : ""}
-            </span>
-          </Property>
-          {sale.attendees.length > 1 ? (
-            <Property label="Spots">
-              <Icon name="members" {...markIcon} />
-              <span className="mx-value__text">{sale.attendees.length}</span>
-            </Property>
-          ) : null}
-        </dl>
-      </section>
-    </aside>
+    <PanelGroup title="Details">
+      <PanelRows>
+        <PanelRow label="Member">
+          <Link className="panel-link" to="/$org/members/$memberId" params={{ org: organization.slug, memberId: sale.member.id }}>
+            {sale.member.name}
+          </Link>
+        </PanelRow>
+        <PanelRow label={sale.channel === "online" ? "Channel" : "Location"}>
+          {sale.channel === "online" ? "Online" : locationName(sale.location_id)}
+        </PanelRow>
+        <PanelRow label="Date">
+          <time dateTime={sale.purchased_at} suppressHydrationWarning>
+            {formatDateTime(sale.purchased_at, organization.timezone)}
+          </time>
+        </PanelRow>
+      </PanelRows>
+    </PanelGroup>
   );
 }
 
@@ -462,23 +457,24 @@ function SaleProperties({ sale }: { sale: Schemas["Sale"] }) {
 /** Keeps the page shape while the sale loads. */
 export function SaleDetailsLoading() {
   return (
-    <div className="page sale-details" role="status" aria-busy="true" aria-label="Loading sale">
-      <div className="sale-head">
-        <span className="sale-head__tile skeleton-block" />
-        <div className="sale-head__text">
-          <span className="skeleton-line" style={{ width: 200 }} />
-          <span className="skeleton-line skeleton-line--small" style={{ width: 160 }} />
-        </div>
-      </div>
-      <div className="sale-details__main">
-        {[0, 1].map((index) => (
-          <div key={index} className="mx-section">
-            <div className="mx-section__head" />
-            <span className="skeleton-line" style={{ width: "60%" }} />
-            <span className="skeleton-line skeleton-line--small" style={{ width: "40%" }} />
+    <DetailLayout record="sale" className="sale-details">
+      <div role="status" aria-busy="true" aria-label="Loading sale" className="sale-loading">
+        <header className="hero">
+          <span className="tile tile--hero skeleton" />
+          <div className="hero__text">
+            <span className="skeleton sale-loading__title" />
+            <span className="skeleton sale-loading__line" />
           </div>
-        ))}
+        </header>
+        <section className="member-section">
+          <div className="member-section__head">
+            <h2>Items</h2>
+          </div>
+          <ListTable label="Items (loading)" density="two-line" className="list-table--bare" columns={ITEM_COLUMNS}>
+            <ListTableLoading rows={2} label="Loading items" />
+          </ListTable>
+        </section>
       </div>
-    </div>
+    </DetailLayout>
   );
 }
