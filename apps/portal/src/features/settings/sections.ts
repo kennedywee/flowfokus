@@ -72,7 +72,9 @@ const OLD_NAMES: Record<string, SettingsSlug> = {
 };
 
 export function settingsFromOldLink(value: unknown): SettingsSlug | undefined {
-  return typeof value === "string" ? OLD_NAMES[value.trim().toLowerCase()] : undefined;
+  if (typeof value !== "string") return undefined;
+  const key = value.trim().toLowerCase();
+  return Object.hasOwn(OLD_NAMES, key) ? OLD_NAMES[key] : undefined;
 }
 
 type PageLocation = { pathname: string; search: object };

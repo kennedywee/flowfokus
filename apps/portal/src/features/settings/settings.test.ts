@@ -18,6 +18,7 @@ describe("settings pages", () => {
     expect(settingsFromOldLink("integrations")).toBeUndefined();
     expect(settingsFromOldLink("billing")).toBeUndefined();
     expect(settingsFromOldLink(3)).toBeUndefined();
+    expect(settingsFromOldLink("constructor")).toBeUndefined();
   });
 
   test("the address keeps only a real settings page", () => {

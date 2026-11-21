@@ -6,7 +6,7 @@ import { redirectToSettings, redirectToStart } from "../../../lib/start-redirect
  * Settings is a dialog over a page (`?settings=staff`). This address opens it
  * over the first page the person can read. Old `?section=Team` links still
  * open their page. A role that can read no page keeps this empty page behind
- * the dialog.
+ * the dialog, and closing the dialog leaves it.
  */
 export const Route = createFileRoute("/$org/settings/")({
   validateSearch: (search: Record<string, unknown>): { section?: string } =>
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/$org/settings/")({
     // Integrations left the product, like its page. It opens the first page the person can read.
     if (deps.section === "integrations") return redirectToStart(params.org, parentMatchPromise);
     const page = settingsFromOldLink(deps.section) ?? deps.settings ?? "general";
-    return redirectToSettings(params.org, page, parentMatchPromise, deps.section ? undefined : deps.settings);
+    return redirectToSettings(params.org, page, parentMatchPromise, !deps.section);
   },
   component: () => null,
 });

@@ -14,32 +14,38 @@ type OrganizationMatch = {
  * Sends the person to the first page in the sidebar they can read: Calendar,
  * then Members, Sales, Programs, Products, and Settings when they can read
  * none. It is one redirect, so old URLs and `/<org>` land on the page at once.
- * Returns when the organization did not open, because the layout then shows its
- * own screen. Call it from a loader, after the layout has loaded.
+ * An open settings page (`settings`) comes along. Returns when the
+ * organization did not open, because the layout then shows its own screen.
+ * Call it from a loader, after the layout has loaded.
  */
-export async function redirectToStart(slug: string, parentMatch: Promise<OrganizationMatch>): Promise<null> {
+export async function redirectToStart(
+  slug: string,
+  parentMatch: Promise<OrganizationMatch>,
+  settings?: SettingsSlug,
+): Promise<null> {
   const organization = (await parentMatch).loaderData?.organization;
   if (!organization?.ok) return null;
   const page = startPage(organization.data.actor.permissions);
-  if (!page) throw redirect({ to: "/$org/settings", params: { org: slug }, search: { settings: "general" }, replace: true });
-  throw redirect({ to: page.to, params: { org: slug }, replace: true });
+  if (!page) throw redirect({ to: "/$org/settings", params: { org: slug }, search: { settings: settings ?? "general" }, replace: true });
+  throw redirect({ to: page.to, params: { org: slug }, search: settings ? { settings } : {}, replace: true });
 }
 
 /**
  * Opens the Settings dialog on `settings` over the first page the person can
  * read. A role that can read no page keeps `/<org>/settings` behind the
- * dialog, so it returns null when that address already shows the dialog.
+ * dialog; with `stay`, that address is already right and nothing happens, so
+ * closing the dialog leaves the empty page.
  */
 export async function redirectToSettings(
   slug: string,
   settings: SettingsSlug,
   parentMatch: Promise<OrganizationMatch>,
-  current?: SettingsSlug,
+  stay = false,
 ): Promise<null> {
   const organization = (await parentMatch).loaderData?.organization;
   if (!organization?.ok) return null;
   const page = startPage(organization.data.actor.permissions);
   if (page) throw redirect({ to: page.to, params: { org: slug }, search: { settings }, replace: true });
-  if (current) return null;
+  if (stay) return null;
   throw redirect({ to: "/$org/settings", params: { org: slug }, search: { settings }, replace: true });
 }

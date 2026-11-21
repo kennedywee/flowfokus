@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
@@ -159,6 +159,12 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
     setPlan((current) => ({ ...current, [key]: value }));
     setPlanTouched(true);
   };
+
+  // A location added from Settings over this form becomes the choice when there was none.
+  const firstLocation = organization.locations[0]?.id;
+  useEffect(() => {
+    if (firstLocation && draft.locationId === "") set("locationId", firstLocation);
+  }, [firstLocation, draft.locationId]);
 
   const dirty = draftChanged(draft, start, planTouched);
   const blocker = useBlocker({
