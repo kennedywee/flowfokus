@@ -1,14 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useCan } from "../lib/organization";
+import { PAGES } from "../lib/pages";
 
-type Tab = { label: string; icon: IconName; to: "/$org/schedule" | "/$org/members" | "/$org/sales"; path: string };
-
-const TABS: Tab[] = [
-  { label: "Schedule", icon: "schedule", to: "/$org/schedule", path: "/schedule" },
-  { label: "Members", icon: "members", to: "/$org/members", path: "/members" },
-  { label: "Sales", icon: "sales", to: "/$org/sales", path: "/sales" },
-];
+/** The first three pages of the sidebar get a tab. Programs and Products are under More. */
+const TABS = PAGES.slice(0, 3);
 
 /** Full-page create and edit forms hide the tab bar on phones, as in Paper. */
 const CREATE_FORMS = ["/members/new", "/sales/new", "/programs/new", "/products/new"];
@@ -28,20 +25,22 @@ export function hidesTabBar(pathname: string, slug: string): boolean {
 }
 
 /**
- * The phone tab bar: Schedule, Members, Sales, and More. More opens
+ * The phone tab bar: Calendar, Members, Sales, and More. A role that cannot
+ * read a page has no tab for it. More opens
  * the navigation drawer, which holds every page and the account menu. CSS
  * shows the bar below 768px only.
  */
 export function TabBar({ slug }: { slug: string }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { openMobile, setOpenMobile } = useSidebar();
+  const can = useCan();
   if (hidesTabBar(pathname, slug)) return null;
   // The router marks the tab that owns the page (aria-current). More owns the rest.
   const onMore = openMobile || ownerTab(pathname, slug) === "More";
 
   return (
     <nav className="tab-bar" aria-label="Main">
-      {TABS.map((tab) => (
+      {TABS.filter((tab) => can(tab.permission)).map((tab) => (
         <Link
           key={tab.label}
           to={tab.to}
