@@ -1,7 +1,8 @@
 module MemberArea
   # /member/*: a verified user token and a Member in the organization linked to
   # that user. Staff permissions never apply here, even for a person who is
-  # also staff. The demo actor is staff only.
+  # also staff. The demo actor is staff only. An organization without the gym
+  # site feature has no member area.
   class BaseController < ApplicationController
     include OrganizationScoped
     include Authentication
@@ -24,7 +25,7 @@ module MemberArea
         fail_auth!(:forbidden, "forbidden", "Demo actors are staff only and have no member access.") if claims.demo?
 
         Current.audience = :member
-        Current.organization = find_organization
+        Current.organization = find_organization(Organization.with_feature("gym_site"))
         Current.user = member_user_for!(claims)
         Current.permissions = [].freeze
       end

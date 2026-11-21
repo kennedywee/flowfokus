@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { gymSiteAddress, locationCount, locationFieldError, zoneChoices, zoneLabel } from "./facts";
 import type { Failure } from "../../lib/result";
 import { ABILITIES, reach } from "./abilities";
-import { SETTINGS_PAGES, matchSettingsPages, onlySettingsChanged, readSettingsSearch, settingsFromOldLink } from "./sections";
+import { SETTINGS_PAGES, matchSettingsPages, onlySettingsChanged, readSettingsSearch, settingsFromOldLink, settingsPagesFor } from "./sections";
 import { firstName, invitationLine, listedMembers, inviteFailure, memberStatus, roleChoices, roleName, staffChangeFailure, staffCount } from "./team";
 
 const failure = (code: Failure["code"], message = ""): Failure => ({ status: 422, code, message });
@@ -29,11 +29,27 @@ describe("settings pages", () => {
   });
 
   test("search finds pages by name and by other words", () => {
-    expect(matchSettingsPages("").map((page) => page.slug)).toEqual(["appearance", "general", "gym-site", "locations", "staff", "roles"]);
+    expect(matchSettingsPages("").map((page) => page.slug)).toEqual(["appearance", "general", "gym-site", "locations", "labs", "staff", "roles", "features"]);
     expect(matchSettingsPages("theme").map((page) => page.slug)).toEqual(["appearance"]);
     expect(matchSettingsPages(" Staff ").map((page) => page.slug)).toEqual(["staff"]);
     expect(matchSettingsPages("permissions").map((page) => page.slug)).toEqual(["roles"]);
     expect(matchSettingsPages("billing")).toEqual([]);
+  });
+
+  test("shows Gym site, Labs, and Features only when Rails says so", () => {
+    const owner = ["settings:manage", "staff:manage"];
+    const slugs = (reach: Parameters<typeof settingsPagesFor>[0]) => settingsPagesFor(reach).map((page) => page.slug);
+    expect(slugs({ features: [], labs: [], permissions: owner })).toEqual(["appearance", "general", "locations", "staff", "roles"]);
+    expect(slugs({ features: ["gym_site"], labs: [], permissions: owner })).toContain("gym-site");
+    expect(slugs({ features: [], labs: [{ key: "gym_site" }], permissions: owner })).toEqual(
+      ["appearance", "general", "locations", "labs", "staff", "roles"],
+    );
+    expect(slugs({ features: ["gym_site"], labs: [], permissions: [...owner, "features:manage"] })).toEqual(
+      ["appearance", "general", "gym-site", "locations", "staff", "roles", "features"],
+    );
+    const pages = settingsPagesFor({ features: [], labs: [], permissions: owner });
+    expect(matchSettingsPages("flags", pages)).toEqual([]);
+    expect(matchSettingsPages("publish", pages)).toEqual([]);
   });
 
   test("leaves only pages that exist out of sample data", () => {

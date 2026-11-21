@@ -241,6 +241,16 @@
   gap: 2px;
   min-width: 0;
 }
+.settings-row__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.settings-row__tag.tag {
+  height: 20px;
+  padding: 0 6px;
+}
 .settings-row__title {
   color: var(--color-ink);
   font-size: var(--text-sm);
@@ -268,6 +278,10 @@
   color: var(--color-ink-2);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.settings-row__value--code {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
 }
 .settings-select.select {
   width: 240px;

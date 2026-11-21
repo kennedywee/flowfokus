@@ -366,6 +366,31 @@ export function updateOrganizationInput(value: unknown): UpdateOrganizationInput
   };
 }
 
+const FEATURE_KEY = /^[a-z][a-z0-9_]{0,62}$/;
+const FEATURE_STATES: readonly Schemas["FeatureState"][] = ["off", "labs", "on"];
+
+function featureKeyField(input: Record<string, unknown>): string {
+  if (typeof input.key !== "string" || !FEATURE_KEY.test(input.key)) throw new InputError("Invalid key");
+  return input.key;
+}
+
+export type FeatureStateInput = SlugInput & { key: string; state: Schemas["FeatureState"] };
+
+export function featureStateInput(value: unknown): FeatureStateInput {
+  const input = record(value);
+  const state = input.state;
+  if (!FEATURE_STATES.includes(state as Schemas["FeatureState"])) throw new InputError("Invalid state");
+  return { slug: slugField(input), key: featureKeyField(input), state: state as Schemas["FeatureState"] };
+}
+
+export type LabsFeatureInput = SlugInput & { key: string; enabled: boolean };
+
+export function labsFeatureInput(value: unknown): LabsFeatureInput {
+  const input = record(value);
+  if (typeof input.enabled !== "boolean") throw new InputError("Invalid enabled");
+  return { slug: slugField(input), key: featureKeyField(input), enabled: input.enabled };
+}
+
 export type LocationInput = SlugInput & { id?: string } & Schemas["LocationInput"];
 
 export function locationInput(value: unknown): LocationInput {

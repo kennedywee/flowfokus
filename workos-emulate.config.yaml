@@ -34,6 +34,13 @@ users:
     last_name: Hakim
     password: 123123qwe
     email_verified: true
+  # A Flowfokus developer. Developer is assigned by Flowfokus, never by a gym.
+  - id: user_dana
+    email: dana@flowfokus.com
+    first_name: Dana
+    last_name: Chong
+    password: 123123qwe
+    email_verified: true
   # A gym member, not staff. Links to a member record with a code from the desk.
   - id: user_patrick
     email: patrick@example.com
@@ -54,6 +61,9 @@ organizations:
         status: active
       - email: aiman@flowfokus.com
         role: receptionist
+        status: active
+      - email: dana@flowfokus.com
+        role: developer
         status: active
   - id: org_irongate
     name: Irongate
@@ -86,6 +96,30 @@ roles:
       - bookings:manage
       - settings:manage
       - staff:manage
+  - slug: developer
+    name: Developer
+    permissions:
+      - members:read
+      - members:create
+      - members:link
+      - products:read
+      - products:create
+      - products:update
+      - purchases:read
+      - purchases:create
+      - purchases:fulfill
+      - purchases:fulfill_unpaid
+      - payments:create
+      - purchases:refund
+      - purchases:void
+      - memberships:revoke
+      - programs:read
+      - programs:manage
+      - bookings:create
+      - bookings:manage
+      - settings:manage
+      - staff:manage
+      - features:manage
   - slug: manager
     name: Manager
     permissions:
@@ -152,3 +186,5 @@ permissions:
     name: Manage organization settings and locations
   - slug: staff:manage
     name: Invite staff, change roles, and remove access
+  - slug: features:manage
+    name: Set feature flags to Off, Labs, or On

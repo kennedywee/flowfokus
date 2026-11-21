@@ -13,6 +13,7 @@ import {
 export default function Example() {
   const [zone, setZone] = useState("Asia/Kuala_Lumpur");
   const [open, setOpen] = useState(true);
+  const [trying, setTrying] = useState(false);
   return (
     <div className="gallery-fill settings-dialog__column">
       <SettingsPage title="General" action={<SettingsPageAction onClick={() => {}}>New location</SettingsPageAction>}>
@@ -22,6 +23,9 @@ export default function Example() {
           </SettingsRow>
           <SettingsRow title="Public" description="Anyone can open the gym site and its shop." htmlFor="example-public">
             <Switch id="example-public" checked={open} onCheckedChange={setOpen} />
+          </SettingsRow>
+          <SettingsRow title="Gym site" description="Public pages, the shop, and the member area." htmlFor="example-labs" tag="Beta">
+            <Switch id="example-labs" checked={trying} onCheckedChange={setTrying} />
           </SettingsRow>
         </SettingsSection>
         <SettingsSection title="Region">

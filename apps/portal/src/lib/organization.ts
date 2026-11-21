@@ -22,6 +22,11 @@ export function useCan() {
   return (permission: Permission) => organization.actor.permissions.includes(permission);
 }
 
+/** True when members can open the gym site: Rails has the gym_site feature in effect, and the owner made it public. */
+export function gymSiteLive(organization: { published: boolean; features: readonly string[] }): boolean {
+  return organization.published && organization.features.includes("gym_site");
+}
+
 export function useLocationName() {
   const organization = useOrganization();
   return (id: string | null) =>

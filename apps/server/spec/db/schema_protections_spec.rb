@@ -154,4 +154,20 @@ RSpec.describe "Database protections from db/schema.rb" do
       end
     }.to raise_error(ActiveRecord::RecordNotUnique)
   end
+
+  it "keeps one feature state per organization, in a known state, turned on only in Labs" do
+    schema = Rails.root.join("db/schema.rb").read
+    %w[features_key_format features_state features_enabled_only_in_labs].each { expect(schema).to include(%(name: "#{_1}")) }
+    expect(schema).to include('name: "index_features_on_organization_id_and_key", unique: true')
+
+    row = ->(**attributes) { { organization_id: chainsaw.id, key: "gym_site", state: "labs", enabled: false }.merge(attributes) }
+    Feature.where(organization: chainsaw).delete_all
+
+    expect { in_savepoint { Feature.insert!(row.(state: "beta")) } }.to raise_error(ActiveRecord::StatementInvalid, /features_state/)
+    expect { in_savepoint { Feature.insert!(row.(state: "on", enabled: true)) } }.to raise_error(ActiveRecord::StatementInvalid, /features_enabled_only_in_labs/)
+    expect { in_savepoint { Feature.insert!(row.(key: "Gym Site")) } }.to raise_error(ActiveRecord::StatementInvalid, /features_key_format/)
+    expect { in_savepoint { Feature.insert!(row.(organization_id: SecureRandom.uuid)) } }.to raise_error(ActiveRecord::InvalidForeignKey)
+    Feature.insert!(row.(enabled: true))
+    expect { in_savepoint { Feature.insert!(row.()) } }.to raise_error(ActiveRecord::RecordNotUnique)
+  end
 end

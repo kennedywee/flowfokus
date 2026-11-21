@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
@@ -61,10 +62,13 @@ export function SettingsRow({
   description,
   htmlFor,
   id,
+  tag,
   children,
 }: {
   title: string;
   description?: string;
+  /** A short mark beside the title, such as Beta. */
+  tag?: string;
   htmlFor?: string;
   /** The title's id, for a control that names itself with aria-labelledby. */
   id?: string;
@@ -74,15 +78,22 @@ export function SettingsRow({
   return (
     <div className="settings-row">
       <div className="settings-row__text">
-        {htmlFor ? (
-          <label className="settings-row__title" htmlFor={htmlFor} id={id}>
-            {title}
-          </label>
-        ) : (
-          <span className="settings-row__title" id={id}>
-            {title}
-          </span>
-        )}
+        <span className="settings-row__heading">
+          {htmlFor ? (
+            <label className="settings-row__title" htmlFor={htmlFor} id={id}>
+              {title}
+            </label>
+          ) : (
+            <span className="settings-row__title" id={id}>
+              {title}
+            </span>
+          )}
+          {tag ? (
+            <Badge variant="tag" className="settings-row__tag">
+              {tag}
+            </Badge>
+          ) : null}
+        </span>
         {description ? (
           <span className="settings-row__description" id={descriptionId}>
             {description}

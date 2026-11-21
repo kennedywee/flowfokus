@@ -25,7 +25,7 @@ staff:manage    settings:manage
 
 ### Implemented permissions
 
-The API checks these permissions. `workos-emulate.config.yaml` gives the local Owner role all of them. The local Manager role can sell, deliver, book members, mark attendance, and manage staff, but not change offers, programs, settings, refunds, voids, or revocations. The local Receptionist role has the read permissions, `bookings:create`, and `bookings:manage`.
+The API checks these permissions. `workos-emulate.config.yaml` gives the local Developer role all of them, and the local Owner role all except `features:manage`. The local Manager role can sell, deliver, book members, mark attendance, and manage staff, but not change offers, programs, settings, refunds, voids, or revocations. The local Receptionist role has the read permissions, `bookings:create`, and `bookings:manage`.
 
 | Permission | Allows |
 | --- | --- |
@@ -45,10 +45,14 @@ The API checks these permissions. `workos-emulate.config.yaml` gives the local O
 | `programs:manage` | Add and change programs, add times, add ticket prices, and cancel a time |
 | `bookings:create` | Book a member with a pass or membership they hold |
 | `bookings:manage` | Cancel a booking and mark a member present |
-| `settings:manage` | Change the time zone and gym site publication. Add and edit locations. |
+| `settings:manage` | Change the time zone and gym site publication. Add and edit locations. Turn a Labs feature on or off. |
 | `staff:manage` | See the team, invite staff, revoke invitations, change roles, and remove access |
+| `features:manage` | List feature states and set a feature to Off, Labs, or On. See [Feature flags](feature-flags.md). |
 
-Three roles ship by default: Owner, Manager, and Receptionist.
+Four roles ship by default: Developer, Owner, Manager, and Receptionist.
+
+- Developer has every Owner permission plus `features:manage`. It is for Flowfokus staff. When a billing permission exists, Developer does not get it.
+- Owners do not hold `features:manage`. The grant rule in [Staff management](#staff-management) then stops an Owner from giving anyone the Developer role, so a gym cannot switch its own features On. Flowfokus assigns Developer in WorkOS.
 
 ## Enforcement
 

@@ -151,6 +151,67 @@ export interface paths {
         patch: operations["updateStaffLocation"];
         trace?: never;
     };
+    "/staff/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every feature with its state for this organization. Needs features:manage.
+         * @description Only the Developer role holds features:manage. A feature with no saved state is `off`.
+         */
+        get: operations["listStaffFeatures"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/features/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set a feature to off, labs, or on for this organization. Needs features:manage.
+         * @description Moving a feature out of `labs` clears the organization's Labs choice.
+         *     An unknown key is not found.
+         */
+        patch: operations["updateStaffFeature"];
+        trace?: never;
+    };
+    "/staff/labs/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Turn a feature in Labs on or off for this organization. Needs settings:manage.
+         * @description A feature that is not in Labs is not found.
+         */
+        patch: operations["updateStaffLabsFeature"];
+        trace?: never;
+    };
     "/staff/team": {
         parameters: {
             query?: never;
@@ -1173,8 +1234,8 @@ export interface components {
             name: string;
             address: string | null;
         };
-        /** @enum {string} */
-        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
+        /** @description A staff permission from WorkOS. The list grows, so clients must accept a permission they do not know. */
+        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage" | "features:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -1185,7 +1246,52 @@ export interface components {
             /** @description True when the gym site is public. */
             published: boolean;
             locations: components["schemas"]["Location"][];
+            /** @description The features in effect for this organization. Rails decides; clients only read it. */
+            features: components["schemas"]["FeatureKey"][];
+            /** @description The features in Labs, which staff with settings:manage can turn on or off. */
+            labs: components["schemas"]["LabsFeature"][];
             actor: components["schemas"]["Actor"];
+        };
+        /**
+         * @description A feature flag. The list lives in Rails and grows, so clients must accept a key they do not know.
+         *     - `gym_site`: the gym site (public pages, shop, member area) and Settings, Gym site.
+         */
+        FeatureKey: "gym_site";
+        /**
+         * @description - `off`: the organization does not have the feature.
+         *     - `labs`: Settings, Labs lists it, and staff with settings:manage turn it on or off.
+         *     - `on`: the organization has the feature.
+         * @enum {string}
+         */
+        FeatureState: "off" | "labs" | "on";
+        LabsFeature: {
+            key: components["schemas"]["FeatureKey"];
+            name: string;
+            description: string;
+            /** @description True when the organization turned the feature on. */
+            enabled: boolean;
+        };
+        DeveloperFeature: {
+            key: components["schemas"]["FeatureKey"];
+            name: string;
+            description: string;
+            state: components["schemas"]["FeatureState"];
+            /** @description True when the feature is in Labs and the organization turned it on. */
+            enabled: boolean;
+            /** @description True when the state is `on`, or `labs` and turned on. */
+            in_effect: boolean;
+        };
+        DeveloperFeaturesResponse: {
+            data: {
+                workos_organization_id: string | null;
+                features: components["schemas"]["DeveloperFeature"][];
+            };
+        };
+        FeatureStateInput: {
+            state: components["schemas"]["FeatureState"];
+        };
+        LabsFeatureInput: {
+            enabled: boolean;
         };
         StaffMembership: {
             slug: string;
@@ -2277,6 +2383,8 @@ export interface components {
     parameters: {
         /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
         IdempotencyKey: string;
+        /** @description A feature key, such as `gym_site`. */
+        FeatureKeyPath: string;
         InvitationIdPath: string;
         IdPath: string;
     };
@@ -2520,6 +2628,98 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listStaffFeatures: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperFeaturesResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffFeature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A feature key, such as `gym_site`. */
+                key: components["parameters"]["FeatureKeyPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeatureStateInput"];
+            };
+        };
+        responses: {
+            /** @description OK. Every feature, after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeveloperFeaturesResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    updateStaffLabsFeature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A feature key, such as `gym_site`. */
+                key: components["parameters"]["FeatureKeyPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LabsFeatureInput"];
+            };
+        };
+        responses: {
+            /** @description OK. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LabsFeature"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             503: components["responses"]["ServiceUnavailable"];
         };
     };

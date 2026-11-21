@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "btree_gist"
   enable_extension "pg_catalog.plpgsql"
@@ -164,6 +164,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_000001) do
     t.check_constraint "program_kind IS NULL OR (program_kind::text = ANY (ARRAY['group_class'::character varying::text, 'event'::character varying::text, 'appointment'::character varying::text]))", name: "entitlements_program_kind"
     t.check_constraint "usage_limit IS NULL OR usage_limit > 0", name: "entitlements_usage_limit_positive"
     t.check_constraint "used_count >= 0 AND (usage_limit IS NULL OR used_count <= usage_limit)", name: "entitlements_used_within_limit"
+  end
+
+  create_table "features", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "organization_id", null: false
+    t.string "key", null: false
+    t.string "state", default: "off", null: false
+    t.boolean "enabled", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["organization_id", "key"], name: "index_features_on_organization_id_and_key", unique: true
+    t.check_constraint "key::text ~ '^[a-z][a-z0-9_]{0,62}$'::text", name: "features_key_format"
+    t.check_constraint "state::text = 'labs'::text OR NOT enabled", name: "features_enabled_only_in_labs"
+    t.check_constraint "state::text = ANY (ARRAY['off'::character varying, 'labs'::character varying, 'on'::character varying]::text[])", name: "features_state"
   end
 
   create_table "fulfillments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -557,6 +570,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_04_000001) do
   add_foreign_key "entitlements", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlements", "occurrences", column: ["occurrence_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "entitlements", "organizations"
+  add_foreign_key "features", "organizations"
   add_foreign_key "fulfillments", "members", column: ["member_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "fulfillments", "memberships", column: ["membership_id", "organization_id"], primary_key: ["id", "organization_id"]
   add_foreign_key "fulfillments", "organizations"

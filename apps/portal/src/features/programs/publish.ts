@@ -1,13 +1,13 @@
 import { useRouter } from "@tanstack/react-router";
 import { useToast } from "../../components/Toast";
 import { failureMessage } from "../../lib/format";
-import { useOrganization } from "../../lib/organization";
+import { gymSiteLive, useOrganization } from "../../lib/organization";
 import { updateProgram } from "../../lib/staff.functions";
 import { siteScheduleUrl } from "./facts";
 
 /**
  * Publish or hide a program. The toast states the result Rails returned;
- * "Program published" offers View on site when the gym site is public.
+ * "Program published" offers View on site when the gym site is live.
  * It works from a toast after the page that started it has gone.
  */
 export function usePublishProgram() {
@@ -34,11 +34,12 @@ export function usePublishProgram() {
     void router.invalidate();
     if (result.data.published) {
       const url = siteScheduleUrl(organization.slug, window.location.hostname);
+      const live = gymSiteLive(organization);
       toast.show({
         tone: "success",
         title: "Program published",
-        body: organization.published ? "Members can book it online." : "It shows once the gym site is public.",
-        ...(organization.published ? { action: { label: "View on site", onClick: () => void window.open(url, "_blank", "noopener") } } : {}),
+        body: live ? "Members can book it online." : "It shows once the gym site is public.",
+        ...(live ? { action: { label: "View on site", onClick: () => void window.open(url, "_blank", "noopener") } } : {}),
       });
     } else {
       toast.show({ tone: "success", title: "Program is staff only", body: "Members can't see it online." });

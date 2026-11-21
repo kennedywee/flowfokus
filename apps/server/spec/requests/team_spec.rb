@@ -23,6 +23,7 @@ RSpec.describe "Staff management", workos: true, demo: false do
   before do
     workos.role_list = [
       { "slug" => "owner", "name" => "Owner", "permissions" => owner_permissions },
+      { "slug" => "developer", "name" => "Developer", "permissions" => owner_permissions + %w[features:manage] },
       { "slug" => "manager", "name" => "Manager", "permissions" => manager_permissions },
       { "slug" => "receptionist", "name" => "Receptionist", "permissions" => receptionist_permissions }
     ]
@@ -41,7 +42,21 @@ RSpec.describe "Staff management", workos: true, demo: false do
     expect(members["user_manager@example.test"]).to include("you" => true, "manageable" => false, "role_name" => "Manager")
     expect(members["user_owner@example.test"]).to include("manageable" => false)
     expect(members["user_receptionist@example.test"]).to include("manageable" => true)
-    expect(data["roles"].to_h { [ _1["slug"], _1["grantable"] ] }).to eq("owner" => false, "manager" => true, "receptionist" => true)
+    expect(data["roles"].to_h { [ _1["slug"], _1["grantable"] ] }).to eq("owner" => false, "developer" => false, "manager" => true, "receptionist" => true)
+  end
+
+  it "never lets an owner grant the Developer role" do
+    api :post, "/staff/team/invitations", **as_owner, body: { email: "dev@example.com", role: "developer" }
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig("error", "message")).to include("features:manage")
+
+    api :patch, "/staff/team/members/#{manager_membership.id}", **as_owner, body: { role: "developer" }
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig("error", "message")).to include("features:manage")
+    expect(manager_membership.reload.role).to eq("manager")
+
+    api :get, "/staff/team", **as_owner
+    expect(data["roles"].find { _1["slug"] == "developer" }).to include("grantable" => false)
   end
 
   it "invites with a grantable role and refuses escalation" do
