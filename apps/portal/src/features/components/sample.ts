@@ -28,7 +28,7 @@ export const SAMPLE_MEMBERS: readonly SampleMember[] = [
 
 export const MEMBER_COLUMNS = [
   { id: "name", label: "Member", sortable: true },
-  { id: "plan", label: "Plan", width: "220px" },
+  { id: "plan", label: "Plan", width: "190px" },
   { id: "since", label: "Member since", width: "110px", sortable: true },
   { id: "spent", label: "Spent", width: "100px", align: "end" as const, sortable: true },
   { id: "due", label: "Balance due", width: "110px", align: "end" as const },
