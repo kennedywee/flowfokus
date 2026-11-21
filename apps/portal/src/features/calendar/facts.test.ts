@@ -69,6 +69,9 @@ describe("calendar URL", () => {
     });
     expect(readCalendarSearch({ date: "21-11-2026", view: "month", group: "weird", program: "x", hide: "x" })).toEqual({});
     expect(readCalendarSearch({ date: "2026-13-45" })).toEqual({});
+    expect(readCalendarSearch({ date: "2026-02-30" })).toEqual({});
+    expect(readCalendarSearch({ date: "2026-04-31" })).toEqual({});
+    expect(readCalendarSearch({ date: "2028-02-29" })).toEqual({ date: "2028-02-29" });
   });
 
   test("leaves out the defaults", () => {

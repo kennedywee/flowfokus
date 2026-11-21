@@ -29,6 +29,13 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /* ---------- The URL ---------- */
 
+/** A day that exists: "2026-02-30" parses, but it rolls over to March, so it does not round-trip. */
+function isRealDay(value: string): boolean {
+  if (!DATE.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
 /**
  * What the Calendar keeps in the URL. A value that equals its default is left
  * out, so a plain `/calendar` is today, by host, with every kind.
@@ -45,7 +52,7 @@ export interface CalendarSearch {
 
 export function readCalendarSearch(search: Record<string, unknown>): CalendarSearch {
   const clean: CalendarSearch = {};
-  if (typeof search.date === "string" && DATE.test(search.date) && !Number.isNaN(Date.parse(`${search.date}T00:00:00Z`))) {
+  if (typeof search.date === "string" && isRealDay(search.date)) {
     clean.date = search.date;
   }
   if (search.view === "week") clean.view = "week";
