@@ -16,12 +16,7 @@ import { Route as ComponentsRouteRouteImport } from './routes/components/route'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignOutRouteImport } from './routes/sign-out'
 import { Route as OrgIndexRouteImport } from './routes/$org/index'
-import { Route as OrgAgentsRouteImport } from './routes/$org/agents'
-import { Route as OrgChangelogRouteImport } from './routes/$org/changelog'
-import { Route as OrgCheckInRouteImport } from './routes/$org/check-in'
-import { Route as OrgInboxRouteImport } from './routes/$org/inbox'
-import { Route as OrgReportsRouteImport } from './routes/$org/reports'
-import { Route as OrgSoonRouteImport } from './routes/$org/soon'
+import { Route as OrgSplatRouteImport } from './routes/$org/$'
 import { Route as ComponentsIndexRouteImport } from './routes/components/index'
 import { Route as ComponentsNameRouteImport } from './routes/components/$name'
 import { Route as OrgMembersIndexRouteImport } from './routes/$org/members/index'
@@ -40,7 +35,6 @@ import { Route as OrgScheduleIndexRouteImport } from './routes/$org/schedule/ind
 import { Route as OrgScheduleOccurrenceIdRouteImport } from './routes/$org/schedule/$occurrenceId'
 import { Route as OrgSettingsIndexRouteImport } from './routes/$org/settings/index'
 import { Route as OrgSettingsGeneralRouteImport } from './routes/$org/settings/general'
-import { Route as OrgSettingsIntegrationsRouteImport } from './routes/$org/settings/integrations'
 import { Route as OrgSettingsLocationsRouteImport } from './routes/$org/settings/locations'
 import { Route as OrgSettingsNotificationsRouteImport } from './routes/$org/settings/notifications'
 import { Route as OrgSettingsRolesRouteImport } from './routes/$org/settings/roles'
@@ -83,34 +77,9 @@ const OrgIndexRoute = OrgIndexRouteImport.update({
   path: '/',
   getParentRoute: () => OrgRouteRoute,
 } as any)
-const OrgAgentsRoute = OrgAgentsRouteImport.update({
-  id: '/agents',
-  path: '/agents',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgChangelogRoute = OrgChangelogRouteImport.update({
-  id: '/changelog',
-  path: '/changelog',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgCheckInRoute = OrgCheckInRouteImport.update({
-  id: '/check-in',
-  path: '/check-in',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgInboxRoute = OrgInboxRouteImport.update({
-  id: '/inbox',
-  path: '/inbox',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgReportsRoute = OrgReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
-const OrgSoonRoute = OrgSoonRouteImport.update({
-  id: '/soon',
-  path: '/soon',
+const OrgSplatRoute = OrgSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => OrgRouteRoute,
 } as any)
 const ComponentsIndexRoute = ComponentsIndexRouteImport.update({
@@ -203,11 +172,6 @@ const OrgSettingsGeneralRoute = OrgSettingsGeneralRouteImport.update({
   path: '/settings/general',
   getParentRoute: () => OrgRouteRoute,
 } as any)
-const OrgSettingsIntegrationsRoute = OrgSettingsIntegrationsRouteImport.update({
-  id: '/settings/integrations',
-  path: '/settings/integrations',
-  getParentRoute: () => OrgRouteRoute,
-} as any)
 const OrgSettingsLocationsRoute = OrgSettingsLocationsRouteImport.update({
   id: '/settings/locations',
   path: '/settings/locations',
@@ -249,12 +213,7 @@ export interface FileRoutesByFullPath {
   '/callback': typeof CallbackRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
-  '/$org/agents': typeof OrgAgentsRoute
-  '/$org/changelog': typeof OrgChangelogRoute
-  '/$org/check-in': typeof OrgCheckInRoute
-  '/$org/inbox': typeof OrgInboxRoute
-  '/$org/reports': typeof OrgReportsRoute
-  '/$org/soon': typeof OrgSoonRoute
+  '/$org/$': typeof OrgSplatRoute
   '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -268,7 +227,6 @@ export interface FileRoutesByFullPath {
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/settings/general': typeof OrgSettingsGeneralRoute
-  '/$org/settings/integrations': typeof OrgSettingsIntegrationsRoute
   '/$org/settings/locations': typeof OrgSettingsLocationsRoute
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
@@ -287,12 +245,7 @@ export interface FileRoutesByTo {
   '/callback': typeof CallbackRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
-  '/$org/agents': typeof OrgAgentsRoute
-  '/$org/changelog': typeof OrgChangelogRoute
-  '/$org/check-in': typeof OrgCheckInRoute
-  '/$org/inbox': typeof OrgInboxRoute
-  '/$org/reports': typeof OrgReportsRoute
-  '/$org/soon': typeof OrgSoonRoute
+  '/$org/$': typeof OrgSplatRoute
   '/components/$name': typeof ComponentsNameRoute
   '/$org': typeof OrgIndexRoute
   '/components': typeof ComponentsIndexRoute
@@ -306,7 +259,6 @@ export interface FileRoutesByTo {
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/settings/general': typeof OrgSettingsGeneralRoute
-  '/$org/settings/integrations': typeof OrgSettingsIntegrationsRoute
   '/$org/settings/locations': typeof OrgSettingsLocationsRoute
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
@@ -328,12 +280,7 @@ export interface FileRoutesById {
   '/callback': typeof CallbackRoute
   '/sign-in': typeof SignInRoute
   '/sign-out': typeof SignOutRoute
-  '/$org/agents': typeof OrgAgentsRoute
-  '/$org/changelog': typeof OrgChangelogRoute
-  '/$org/check-in': typeof OrgCheckInRoute
-  '/$org/inbox': typeof OrgInboxRoute
-  '/$org/reports': typeof OrgReportsRoute
-  '/$org/soon': typeof OrgSoonRoute
+  '/$org/$': typeof OrgSplatRoute
   '/components/$name': typeof ComponentsNameRoute
   '/$org/': typeof OrgIndexRoute
   '/components/': typeof ComponentsIndexRoute
@@ -347,7 +294,6 @@ export interface FileRoutesById {
   '/$org/sales/new': typeof OrgSalesNewRoute
   '/$org/schedule/$occurrenceId': typeof OrgScheduleOccurrenceIdRoute
   '/$org/settings/general': typeof OrgSettingsGeneralRoute
-  '/$org/settings/integrations': typeof OrgSettingsIntegrationsRoute
   '/$org/settings/locations': typeof OrgSettingsLocationsRoute
   '/$org/settings/notifications': typeof OrgSettingsNotificationsRoute
   '/$org/settings/roles': typeof OrgSettingsRolesRoute
@@ -370,12 +316,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/sign-in'
     | '/sign-out'
-    | '/$org/agents'
-    | '/$org/changelog'
-    | '/$org/check-in'
-    | '/$org/inbox'
-    | '/$org/reports'
-    | '/$org/soon'
+    | '/$org/$'
     | '/components/$name'
     | '/$org/'
     | '/components/'
@@ -389,7 +330,6 @@ export interface FileRouteTypes {
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/settings/general'
-    | '/$org/settings/integrations'
     | '/$org/settings/locations'
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
@@ -408,12 +348,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/sign-in'
     | '/sign-out'
-    | '/$org/agents'
-    | '/$org/changelog'
-    | '/$org/check-in'
-    | '/$org/inbox'
-    | '/$org/reports'
-    | '/$org/soon'
+    | '/$org/$'
     | '/components/$name'
     | '/$org'
     | '/components'
@@ -427,7 +362,6 @@ export interface FileRouteTypes {
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/settings/general'
-    | '/$org/settings/integrations'
     | '/$org/settings/locations'
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
@@ -448,12 +382,7 @@ export interface FileRouteTypes {
     | '/callback'
     | '/sign-in'
     | '/sign-out'
-    | '/$org/agents'
-    | '/$org/changelog'
-    | '/$org/check-in'
-    | '/$org/inbox'
-    | '/$org/reports'
-    | '/$org/soon'
+    | '/$org/$'
     | '/components/$name'
     | '/$org/'
     | '/components/'
@@ -467,7 +396,6 @@ export interface FileRouteTypes {
     | '/$org/sales/new'
     | '/$org/schedule/$occurrenceId'
     | '/$org/settings/general'
-    | '/$org/settings/integrations'
     | '/$org/settings/locations'
     | '/$org/settings/notifications'
     | '/$org/settings/roles'
@@ -542,46 +470,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgIndexRouteImport
       parentRoute: typeof OrgRouteRoute
     }
-    '/$org/agents': {
-      id: '/$org/agents'
-      path: '/agents'
-      fullPath: '/$org/agents'
-      preLoaderRoute: typeof OrgAgentsRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/changelog': {
-      id: '/$org/changelog'
-      path: '/changelog'
-      fullPath: '/$org/changelog'
-      preLoaderRoute: typeof OrgChangelogRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/check-in': {
-      id: '/$org/check-in'
-      path: '/check-in'
-      fullPath: '/$org/check-in'
-      preLoaderRoute: typeof OrgCheckInRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/inbox': {
-      id: '/$org/inbox'
-      path: '/inbox'
-      fullPath: '/$org/inbox'
-      preLoaderRoute: typeof OrgInboxRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/reports': {
-      id: '/$org/reports'
-      path: '/reports'
-      fullPath: '/$org/reports'
-      preLoaderRoute: typeof OrgReportsRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
-    '/$org/soon': {
-      id: '/$org/soon'
-      path: '/soon'
-      fullPath: '/$org/soon'
-      preLoaderRoute: typeof OrgSoonRouteImport
+    '/$org/$': {
+      id: '/$org/$'
+      path: '/$'
+      fullPath: '/$org/$'
+      preLoaderRoute: typeof OrgSplatRouteImport
       parentRoute: typeof OrgRouteRoute
     }
     '/components/': {
@@ -710,13 +603,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgSettingsGeneralRouteImport
       parentRoute: typeof OrgRouteRoute
     }
-    '/$org/settings/integrations': {
-      id: '/$org/settings/integrations'
-      path: '/settings/integrations'
-      fullPath: '/$org/settings/integrations'
-      preLoaderRoute: typeof OrgSettingsIntegrationsRouteImport
-      parentRoute: typeof OrgRouteRoute
-    }
     '/$org/settings/locations': {
       id: '/$org/settings/locations'
       path: '/settings/locations'
@@ -763,12 +649,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface OrgRouteRouteChildren {
-  OrgAgentsRoute: typeof OrgAgentsRoute
-  OrgChangelogRoute: typeof OrgChangelogRoute
-  OrgCheckInRoute: typeof OrgCheckInRoute
-  OrgInboxRoute: typeof OrgInboxRoute
-  OrgReportsRoute: typeof OrgReportsRoute
-  OrgSoonRoute: typeof OrgSoonRoute
+  OrgSplatRoute: typeof OrgSplatRoute
   OrgIndexRoute: typeof OrgIndexRoute
   OrgMembersMemberIdRoute: typeof OrgMembersMemberIdRoute
   OrgMembersNewRoute: typeof OrgMembersNewRoute
@@ -780,7 +661,6 @@ interface OrgRouteRouteChildren {
   OrgSalesNewRoute: typeof OrgSalesNewRoute
   OrgScheduleOccurrenceIdRoute: typeof OrgScheduleOccurrenceIdRoute
   OrgSettingsGeneralRoute: typeof OrgSettingsGeneralRoute
-  OrgSettingsIntegrationsRoute: typeof OrgSettingsIntegrationsRoute
   OrgSettingsLocationsRoute: typeof OrgSettingsLocationsRoute
   OrgSettingsNotificationsRoute: typeof OrgSettingsNotificationsRoute
   OrgSettingsRolesRoute: typeof OrgSettingsRolesRoute
@@ -796,12 +676,7 @@ interface OrgRouteRouteChildren {
 }
 
 const OrgRouteRouteChildren: OrgRouteRouteChildren = {
-  OrgAgentsRoute: OrgAgentsRoute,
-  OrgChangelogRoute: OrgChangelogRoute,
-  OrgCheckInRoute: OrgCheckInRoute,
-  OrgInboxRoute: OrgInboxRoute,
-  OrgReportsRoute: OrgReportsRoute,
-  OrgSoonRoute: OrgSoonRoute,
+  OrgSplatRoute: OrgSplatRoute,
   OrgIndexRoute: OrgIndexRoute,
   OrgMembersMemberIdRoute: OrgMembersMemberIdRoute,
   OrgMembersNewRoute: OrgMembersNewRoute,
@@ -813,7 +688,6 @@ const OrgRouteRouteChildren: OrgRouteRouteChildren = {
   OrgSalesNewRoute: OrgSalesNewRoute,
   OrgScheduleOccurrenceIdRoute: OrgScheduleOccurrenceIdRoute,
   OrgSettingsGeneralRoute: OrgSettingsGeneralRoute,
-  OrgSettingsIntegrationsRoute: OrgSettingsIntegrationsRoute,
   OrgSettingsLocationsRoute: OrgSettingsLocationsRoute,
   OrgSettingsNotificationsRoute: OrgSettingsNotificationsRoute,
   OrgSettingsRolesRoute: OrgSettingsRolesRoute,

@@ -13,15 +13,10 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import {
-  Bot,
   CalendarCheck,
   CalendarClock,
-  ChartColumn,
   ChevronDown,
   ChevronRight,
-  Inbox,
-  House,
-  LogIn,
   LogOut,
   MapPin,
   Menu,
@@ -31,7 +26,6 @@ import {
   PanelLeftOpen,
   Receipt,
   Search,
-  History,
   Keyboard,
   Settings,
   Sun,
@@ -124,24 +118,17 @@ export const Route = createFileRoute("/$org")({
   component: OrganizationLayout,
 });
 
-type RoutedPath = "/$org" | "/$org/members" | "/$org/sales" | "/$org/products" | "/$org/schedule" | "/$org/programs"
-  | "/$org/inbox" | "/$org/agents" | "/$org/check-in" | "/$org/reports" | "/$org/settings"
-  | "/$org/changelog";
+type RoutedPath = "/$org/members" | "/$org/sales" | "/$org/products" | "/$org/schedule" | "/$org/programs" | "/$org/settings";
 
 type NavItem = { label: string; icon: LucideIcon; to: RoutedPath; exact: boolean; path: string };
 
-/* One list, no group titles. What's new lives in the account menu. */
+/* One list, no group titles. */
 const NAV_ITEMS: NavItem[] = [
-  { to: "/$org", label: "Home", icon: House, exact: true, path: "" },
-  { to: "/$org/inbox", label: "Inbox", icon: Inbox, exact: false, path: "/inbox" },
-  { to: "/$org/agents", label: "Agents", icon: Bot, exact: false, path: "/agents" },
   { to: "/$org/members", label: "Members", icon: Users, exact: false, path: "/members" },
   { to: "/$org/sales", label: "Sales", icon: Receipt, exact: false, path: "/sales" },
-  { to: "/$org/check-in", label: "Check-ins", icon: LogIn, exact: false, path: "/check-in" },
   { to: "/$org/schedule", label: "Schedule", icon: CalendarClock, exact: false, path: "/schedule" },
   { to: "/$org/programs", label: "Programs", icon: CalendarCheck, exact: false, path: "/programs" },
   { to: "/$org/products", label: "Products", icon: Tag, exact: false, path: "/products" },
-  { to: "/$org/reports", label: "Reports", icon: ChartColumn, exact: false, path: "/reports" },
 ];
 
 function OrganizationLayout() {
@@ -217,7 +204,7 @@ function Shell({
   const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null);
   const modKey = useModKeyLabel();
   const [shortcuts, setShortcuts] = useState(false);
-  // ⌘K checks a member in with the same flow as Home: a toast, or the denial dialog.
+  // ⌘K checks a member in with the same flow as the Session page: a toast, or the denial dialog.
   const checkInFlow = useCheckIn();
   useShortcut("k", () => setSearching((open) => !open), { mod: true });
   useShortcut(",", () => void navigate({ to: "/$org/settings", params: { org: data.slug } }), { mod: true });
@@ -256,7 +243,6 @@ function Shell({
     ? { label: owner.label, to: owner.to }
     : routed
     ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
-    : trimmed === `${base}/changelog` ? { label: "What’s new" }
     : inSettings ? { label: "Settings" }
     : null;
 
@@ -267,7 +253,6 @@ function Shell({
       open: () => void navigate({ to: item.to, params: { org: data.slug } }),
     })),
     { label: "Settings", icon: Settings, open: () => void navigate({ to: "/$org/settings", params: { org: data.slug } }) },
-    { label: "What’s new", icon: History, open: () => void navigate({ to: "/$org/changelog", params: { org: data.slug } }) },
   ];
 
   return (
@@ -535,7 +520,7 @@ const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: LucideIc
 
 /**
  * The account menu, at the foot of the sidebar. It holds the theme choice,
- * settings, What's new, and sign-out. Sign-out submits a hidden form, so it is
+ * settings, and sign-out. Sign-out submits a hidden form, so it is
  * a same-origin POST, not a script call.
  */
 function AccountMenu({
@@ -579,9 +564,9 @@ function AccountMenu({
     }
   }
 
-  function open(to: "/$org/settings" | "/$org/changelog") {
+  function openSettings() {
     onNavigate();
-    void navigate({ to, params: { org: slug } });
+    void navigate({ to: "/$org/settings", params: { org: slug } });
   }
 
   return (
@@ -598,7 +583,7 @@ function AccountMenu({
         <DropdownMenuHeader>
           <span className="menu__email">{actor.email}</span>
         </DropdownMenuHeader>
-        <DropdownMenuItem onClick={() => open("/$org/settings")}>
+        <DropdownMenuItem onClick={openSettings}>
           <Settings {...icon} />
           Settings
           <DropdownMenuShortcut>{modKey},</DropdownMenuShortcut>
@@ -628,11 +613,6 @@ function AccountMenu({
             </DropdownMenuRadioGroup>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => open("/$org/changelog")}>
-          <History {...icon} />
-          What’s new
-        </DropdownMenuItem>
         {canSignOut ? (
           <>
             <DropdownMenuSeparator />

@@ -232,7 +232,7 @@ export function ListToolbarLoading({ filter = true }: { filter?: boolean }) {
   );
 }
 
-type ListRoute = "/$org/members" | "/$org/sales" | "/$org/programs" | "/$org/products" | "/$org/check-in" | "/$org/schedule";
+type ListRoute = "/$org/members" | "/$org/sales" | "/$org/programs" | "/$org/products" | "/$org/schedule";
 
 /**
  * Updates a list URL. The URL holds filters and search, so Back and reload

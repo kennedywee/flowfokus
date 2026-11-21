@@ -3,15 +3,13 @@ import { hidesTabBar, ownerTab } from "./TabBar";
 
 describe("phone tab bar", () => {
   test("selects the tab that owns the page", () => {
-    expect(ownerTab("/chainsaw", "chainsaw")).toBe("Home");
-    expect(ownerTab("/chainsaw/", "chainsaw")).toBe("Home");
+    expect(ownerTab("/chainsaw/schedule", "chainsaw")).toBe("Schedule");
     expect(ownerTab("/chainsaw/members/abc", "chainsaw")).toBe("Members");
-    expect(ownerTab("/chainsaw/check-in", "chainsaw")).toBe("Check in");
     expect(ownerTab("/chainsaw/sales/new", "chainsaw")).toBe("Sales");
   });
 
   test("gives every other page to More", () => {
-    expect(ownerTab("/chainsaw/schedule", "chainsaw")).toBe("More");
+    expect(ownerTab("/chainsaw/programs", "chainsaw")).toBe("More");
     expect(ownerTab("/chainsaw/salesy", "chainsaw")).toBe("More");
   });
 

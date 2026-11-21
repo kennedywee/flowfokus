@@ -308,7 +308,7 @@ function useMemberRecord(memberId: string, given?: MemberRecord): MemberRecord |
 }
 
 /** A filled red circle with a cross, as in Paper. */
-export function DeniedMark({ size = 20 }: { size?: number }) {
+function DeniedMark({ size = 20 }: { size?: number }) {
   return (
     <svg className="denied-mark" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <circle cx="12" cy="12" r="10" />

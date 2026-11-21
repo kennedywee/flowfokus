@@ -1,13 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { House, LogIn, MoreHorizontal, Receipt, Users, type LucideIcon } from "lucide-react";
+import { CalendarClock, MoreHorizontal, Receipt, Users, type LucideIcon } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 
-type Tab = { label: string; icon: LucideIcon; to: "/$org" | "/$org/members" | "/$org/check-in" | "/$org/sales"; path: string };
+type Tab = { label: string; icon: LucideIcon; to: "/$org/schedule" | "/$org/members" | "/$org/sales"; path: string };
 
 const TABS: Tab[] = [
-  { label: "Home", icon: House, to: "/$org", path: "" },
+  { label: "Schedule", icon: CalendarClock, to: "/$org/schedule", path: "/schedule" },
   { label: "Members", icon: Users, to: "/$org/members", path: "/members" },
-  { label: "Check in", icon: LogIn, to: "/$org/check-in", path: "/check-in" },
   { label: "Sales", icon: Receipt, to: "/$org/sales", path: "/sales" },
 ];
 
@@ -19,8 +18,7 @@ const EDIT_FORM = /^\/(programs|products)\/[^/]+\/edit$/;
 export function ownerTab(pathname: string, slug: string): string {
   const base = `/${slug}`;
   const rest = pathname.replace(/\/$/, "").slice(base.length);
-  if (rest === "") return "Home";
-  const tab = TABS.find((item) => item.path && (rest === item.path || rest.startsWith(`${item.path}/`)));
+  const tab = TABS.find((item) => rest === item.path || rest.startsWith(`${item.path}/`));
   return tab?.label ?? "More";
 }
 
@@ -30,7 +28,7 @@ export function hidesTabBar(pathname: string, slug: string): boolean {
 }
 
 /**
- * Paper's phone tab bar: Home, Members, Check in, Sales, and More. More opens
+ * The phone tab bar: Schedule, Members, Sales, and More. More opens
  * the navigation drawer, which holds every page and the account menu. CSS
  * shows the bar below 768px only.
  */
@@ -49,11 +47,9 @@ export function TabBar({ slug }: { slug: string }) {
           to={tab.to}
           params={{ org: slug }}
           className="tab-bar__tab"
-          data-check-in={tab.to === "/$org/check-in" || undefined}
-          activeOptions={{ exact: tab.to === "/$org" }}
         >
           <span className="tab-bar__icon">
-            <tab.icon strokeWidth={tab.to === "/$org/check-in" ? 2 : 1.75} aria-hidden="true" focusable="false" />
+            <tab.icon strokeWidth={1.75} aria-hidden="true" focusable="false" />
           </span>
           {tab.label}
         </Link>
