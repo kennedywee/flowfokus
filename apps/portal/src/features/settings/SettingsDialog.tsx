@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Link, getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Icon } from "@/components/ui/icon";
@@ -19,6 +19,7 @@ import {
 } from "./sections";
 
 const orgRoute = getRouteApi("/$org");
+const isSettingsIndex = (pathname: string) => /^\/[^/]+\/settings\/?$/.test(pathname);
 const icon = { "aria-hidden": true, focusable: false } as const;
 
 type Search = Record<string, unknown>;
@@ -29,6 +30,7 @@ type Search = Record<string, unknown>;
  */
 export function useSettings() {
   const navigate = useNavigate();
+  const router = useRouter();
   const open = useCallback(
     (settings: SettingsSlug, { replace = false }: { replace?: boolean } = {}) =>
       void navigate({
@@ -45,11 +47,12 @@ export function useSettings() {
         to: ".",
         search: ((prev: Search) => {
           const { settings: _settings, ...rest } = prev;
-          return rest;
+          // On /<org>/settings, the page of a role that can read no other page, the closed page stays.
+          return isSettingsIndex(router.state.location.pathname) ? { ...rest, closed: true } : rest;
         }) as never,
         resetScroll: false,
       }),
-    [navigate],
+    [navigate, router],
   );
   return { open, close };
 }

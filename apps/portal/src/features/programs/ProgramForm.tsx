@@ -138,7 +138,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
   const form = useRef<HTMLFormElement>(null);
   const saved = useRef(false);
 
-  const [start] = useState<ProgramDraft>(() => ({
+  const [start, setStart] = useState<ProgramDraft>(() => ({
     name: program?.name ?? "",
     kind: program?.kind ?? "group_class",
     locationId: program?.location_id ?? desk?.id ?? organization.locations[0]?.id ?? "",
@@ -160,11 +160,13 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
     setPlanTouched(true);
   };
 
-  // A location added from Settings over this form becomes the choice when there was none.
+  // A location added from Settings over this form becomes the default, as if it had been there.
   const firstLocation = organization.locations[0]?.id;
   useEffect(() => {
-    if (firstLocation && draft.locationId === "") set("locationId", firstLocation);
-  }, [firstLocation, draft.locationId]);
+    if (!firstLocation || start.locationId !== "") return;
+    setStart((current) => ({ ...current, locationId: firstLocation }));
+    setDraft((current) => (current.locationId === "" ? { ...current, locationId: firstLocation } : current));
+  }, [firstLocation, start.locationId]);
 
   const dirty = draftChanged(draft, start, planTouched);
   const blocker = useBlocker({
