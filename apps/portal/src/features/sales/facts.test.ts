@@ -149,12 +149,70 @@ describe("filterSales", () => {
     expect(searchFromFilters([], undefined)).toEqual({});
   });
 
-  test("a chip flipped to 'is not' becomes the values it leaves in", () => {
+  test("a chip flipped to 'is not' keeps its values and sets the _not param", () => {
     const flipped = [{ field: "payment", values: ["paid"], negated: true }];
-    expect(searchFromFilters(flipped, undefined)).toEqual({ payment: "unpaid,partial,void" });
-    // Every value ruled out leaves a filter that matches nothing, so it is dropped.
-    const none = [{ field: "fulfillment", values: ["waiting", "fulfilled", "revoked"], negated: true }];
-    expect(searchFromFilters(none, undefined)).toEqual({});
+    expect(searchFromFilters(flipped, undefined)).toEqual({ payment: "paid", payment_not: true });
+    const every = [{ field: "fulfillment", values: ["waiting", "fulfilled", "revoked"], negated: true }];
+    expect(searchFromFilters(every, undefined)).toEqual({ fulfillment: "waiting,fulfilled,revoked", fulfillment_not: true });
+    // A chip with no values is not a filter, so it leaves no param.
+    expect(searchFromFilters([{ field: "payment", values: [], negated: true }], undefined)).toEqual({});
+  });
+
+  test("'is not' round-trips through the URL and the chips", () => {
+    const search = readSalesSearch({ payment: "paid,void", payment_not: true, fulfillment: "fulfilled" });
+    expect(search).toEqual({ payment: "paid,void", payment_not: true, fulfillment: "fulfilled" });
+    const chips = activeFilters(filterFromSearch(search));
+    expect(chips.map((chip) => [chip.field, chip.negated])).toEqual([
+      ["payment", true],
+      ["fulfillment", false],
+    ]);
+    expect(searchFromFilters(chips, undefined)).toEqual(search);
+  });
+});
+
+describe("'is not' filters", () => {
+  const every = "unpaid,partial,paid,void";
+
+  test("payment 'is not' every value shows no sale", () => {
+    expect(filterSales(all, filterFromSearch({ payment: every, payment_not: true }))).toEqual([]);
+    // The same values without the flag still show every sale.
+    expect(filterSales(all, filterFromSearch({ payment: every }))).toHaveLength(all.length);
+  });
+
+  test("payment 'is not' one value leaves the others, void included", () => {
+    const notPaid = filterSales(all, filterFromSearch({ payment: "paid", payment_not: true }));
+    expect(notPaid.map((item) => item.id)).toEqual(["sale-1", "partial", "void"]);
+    const notVoid = filterSales(all, filterFromSearch({ payment: "void", payment_not: true }));
+    expect(notVoid.map((item) => item.id)).not.toContain("void");
+  });
+
+  test("fulfillment 'is not' keeps void sales, which are neither waiting nor fulfilled", () => {
+    const notFulfilled = filterSales(all, filterFromSearch({ fulfillment: "fulfilled", fulfillment_not: true }));
+    expect(notFulfilled.map((item) => item.id)).toEqual(["sale-1", "paid", "partial", "void"]);
+    const notWaiting = filterSales(all, filterFromSearch({ fulfillment: "waiting", fulfillment_not: true }));
+    expect(notWaiting.map((item) => item.id)).toEqual(["fulfilled", "void"]);
+    const none = filterSales(all, filterFromSearch({ fulfillment: "waiting,fulfilled,revoked", fulfillment_not: true }));
+    expect(none.map((item) => item.id)).toEqual(["void"]);
+  });
+
+  test("_not counts only with values, and never turns an old link negative", () => {
+    expect(readSalesSearch({ payment_not: true })).toEqual({});
+    expect(readSalesSearch({ payment: "bogus", payment_not: true })).toEqual({});
+    expect(readSalesSearch({ delivery: "waiting", fulfillment_not: true })).toEqual({ fulfillment: "waiting" });
+    expect(readSalesSearch({ view: "due", payment_not: true })).toEqual({ payment: "unpaid,partial" });
+    expect(readSalesSearch({ view: "deliver", payment_not: true, fulfillment_not: true })).toEqual({ payment: "paid", fulfillment: "waiting" });
+  });
+
+  test("a link typed by hand may say payment_not=1 or payment_not=true", () => {
+    expect(readSalesSearch({ payment: "paid", payment_not: "1" })).toEqual({ payment: "paid", payment_not: true });
+    expect(readSalesSearch({ payment: "paid", payment_not: "true" })).toEqual({ payment: "paid", payment_not: true });
+    expect(readSalesSearch({ payment: "paid", payment_not: "no" })).toEqual({ payment: "paid" });
+  });
+
+  test("old links without _not are 'is any of'", () => {
+    expect(filterFromSearch(readSalesSearch({ payment: "unpaid,partial" }))).toMatchObject({ paymentNot: false, fulfillmentNot: false });
+    expect(filterSales(all, filterFromSearch(readSalesSearch({ view: "due" }))).map((item) => item.id)).toEqual(["sale-1", "partial"]);
+    expect(filterSales(all, filterFromSearch(readSalesSearch({ delivery: "delivered" }))).map((item) => item.id)).toEqual(["fulfilled"]);
   });
 });
 

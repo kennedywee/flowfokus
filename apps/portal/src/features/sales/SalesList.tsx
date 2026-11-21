@@ -138,15 +138,15 @@ function NewSaleLink({ variant = "default", shortcut = false }: { variant?: "def
  * Filter button is left out.
  */
 function Bar({ search, counts, display }: { search: SalesSearch; counts: ReturnType<typeof factCounts> | null; display?: ReactNode }) {
-  const setSearch = useSetListSearch("/$org/sales", search, ["payment", "fulfillment", "q"]);
+  const setSearch = useSetListSearch("/$org/sales", search, ["payment", "payment_not", "fulfillment", "fulfillment_not", "q"]);
   const filter = filterFromSearch(search);
   return (
     <FilterBar
       fields={counts ? salesFilterFields(counts) : []}
       filters={activeFilters(filter)}
       onChange={(next: ActiveFilter[]) => {
-        const { payment, fulfillment } = searchFromFilters(next, undefined);
-        setSearch({ payment, fulfillment });
+        const { payment, payment_not, fulfillment, fulfillment_not } = searchFromFilters(next, undefined);
+        setSearch({ payment, payment_not, fulfillment, fulfillment_not });
       }}
       search={
         <SearchField
@@ -171,14 +171,14 @@ function Loaded({ sales, search }: { sales: Schemas["Sale"][]; search: SalesSear
   const [columns, setColumns] = useState(DEFAULT_SALE_COLUMNS);
   const [chosenPage, setPage] = useState(1);
   // A new filter or search starts again at page 1.
-  const key = `${filter.payment.join()}|${filter.fulfillment.join()}|${q}`;
+  const key = `${filter.paymentNot ? "!" : ""}${filter.payment.join()}|${filter.fulfillmentNot ? "!" : ""}${filter.fulfillment.join()}|${q}`;
   const [lastKey, setLastKey] = useState(key);
   if (lastKey !== key) {
     setLastKey(key);
     setPage(1);
   }
   const requested = lastKey === key ? chosenPage : 1;
-  const shown = useMemo(() => sortSales(filterSales(sales, filter, q), sort), [sales, filter.payment.join(), filter.fulfillment.join(), q, sort]);
+  const shown = useMemo(() => sortSales(filterSales(sales, filter, q), sort), [sales, key, sort]);
   const { from, to, pages } = pageRange(requested, PAGE_SIZE, shown.length);
   const page = Math.min(requested, pages);
   const rows = shown.slice(Math.max(from - 1, 0), to);
@@ -210,75 +210,77 @@ function Loaded({ sales, search }: { sales: Schemas["Sale"][]; search: SalesSear
   return (
     <>
       <Bar search={search} counts={factCounts(sales)} display={sales.length ? display : undefined} />
-      <ListTable label="Sales" columns={saleColumns(columns)} sort={sort} onSort={set} className="sales-table">
-        {rows.length ? (
-          <ListTableBody>
-            {rows.map((sale) => {
-              const marks = saleMarks(sale);
-              const methods = paymentMethods(sale);
-              const methodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
-              return (
-                <ListTableRow key={sale.id}>
-                  <ListTableCell className="sales-table__member">
-                    <Link
-                      to="/$org/sales/$saleId"
-                      params={{ org: organization.slug, saleId: sale.id }}
-                      className="list-table__link"
-                    >
-                      <CellStack lead={<Tile>{initials(sale.member.name)}</Tile>} title={sale.member.name} sub={sale.member.email} />
-                    </Link>
-                  </ListTableCell>
-                  <ListTableCell className="sales-table__product">
-                    <CellStack
-                      title={
-                        <>
-                          {sale.line_item.product_name}
-                          {sale.line_item.quantity > 1 ? ` × ${sale.line_item.quantity}` : ""}
-                        </>
-                      }
-                      sub={`${sale.line_item.price_label}${sale.renewal ? " · Renewal" : ""}`}
-                    />
-                  </ListTableCell>
-                  {columns.date ? (
-                    <ListTableCell className="cell-muted sales-table__date">
-                      <time dateTime={sale.purchased_at} suppressHydrationWarning>
-                        {shortSaleDate(sale.purchased_at, organization.timezone, now)}
-                      </time>
+      <div className="sales-table-frame">
+        <ListTable label="Sales" columns={saleColumns(columns)} sort={sort} onSort={set} className="sales-table">
+          {rows.length ? (
+            <ListTableBody>
+              {rows.map((sale) => {
+                const marks = saleMarks(sale);
+                const methods = paymentMethods(sale);
+                const methodIcon = sale.payments[0] ? METHOD_ICON[sale.payments[0].method] : null;
+                return (
+                  <ListTableRow key={sale.id}>
+                    <ListTableCell className="sales-table__member">
+                      <Link
+                        to="/$org/sales/$saleId"
+                        params={{ org: organization.slug, saleId: sale.id }}
+                        className="list-table__link"
+                      >
+                        <CellStack lead={<Tile>{initials(sale.member.name)}</Tile>} title={sale.member.name} sub={sale.member.email} />
+                      </Link>
                     </ListTableCell>
-                  ) : null}
-                  <ListTableCell className="sales-table__payment">
-                    <StatusMark kind={marks.payment.kind} tone={marks.payment.tone}>
-                      {marks.payment.label}
-                    </StatusMark>
-                  </ListTableCell>
-                  {columns.fulfillment ? (
-                    <ListTableCell className="sales-table__fulfillment">
-                      <StatusMark kind={marks.fulfillment.kind} tone={marks.fulfillment.tone}>
-                        {marks.fulfillment.label}
+                    <ListTableCell className="sales-table__product">
+                      <CellStack
+                        title={
+                          <>
+                            {sale.line_item.product_name}
+                            {sale.line_item.quantity > 1 ? ` × ${sale.line_item.quantity}` : ""}
+                          </>
+                        }
+                        sub={`${sale.line_item.price_label}${sale.renewal ? " · Renewal" : ""}`}
+                      />
+                    </ListTableCell>
+                    {columns.date ? (
+                      <ListTableCell className="cell-muted sales-table__date">
+                        <time dateTime={sale.purchased_at} suppressHydrationWarning>
+                          {shortSaleDate(sale.purchased_at, organization.timezone, now)}
+                        </time>
+                      </ListTableCell>
+                    ) : null}
+                    <ListTableCell className="sales-table__payment">
+                      <StatusMark kind={marks.payment.kind} tone={marks.payment.tone}>
+                        {marks.payment.label}
                       </StatusMark>
                     </ListTableCell>
-                  ) : null}
-                  {columns.method ? (
-                    <ListTableCell className="cell-muted sales-table__method">
-                      <span className="sale-method-cell">
-                        {methodIcon ? <Icon name={methodIcon} size={14} {...icon} /> : null}
-                        <span title={methods ?? undefined}>{methods ?? "—"}</span>
-                      </span>
+                    {columns.fulfillment ? (
+                      <ListTableCell className="sales-table__fulfillment">
+                        <StatusMark kind={marks.fulfillment.kind} tone={marks.fulfillment.tone}>
+                          {marks.fulfillment.label}
+                        </StatusMark>
+                      </ListTableCell>
+                    ) : null}
+                    {columns.method ? (
+                      <ListTableCell className="cell-muted sales-table__method">
+                        <span className="sale-method-cell">
+                          {methodIcon ? <Icon name={methodIcon} size={14} {...icon} /> : null}
+                          <span title={methods ?? undefined}>{methods ?? "—"}</span>
+                        </span>
+                      </ListTableCell>
+                    ) : null}
+                    <ListTableCell align="end" className="sales-table__amount">
+                      <SaleAmount sale={sale} />
                     </ListTableCell>
-                  ) : null}
-                  <ListTableCell align="end" className="sales-table__amount">
-                    <SaleAmount sale={sale} />
-                  </ListTableCell>
-                </ListTableRow>
-              );
-            })}
-          </ListTableBody>
-        ) : sales.length ? (
-          <NoMatch q={q} filtered={Boolean(filter.payment.length || filter.fulfillment.length)} />
-        ) : (
-          <ListTableEmpty title="No sales yet" text="Desk sales and online purchases show up here." action={<NewSaleLink variant="secondary" />} />
-        )}
-      </ListTable>
+                  </ListTableRow>
+                );
+              })}
+            </ListTableBody>
+          ) : sales.length ? (
+            <NoMatch q={q} filtered={Boolean(filter.payment.length || filter.fulfillment.length)} />
+          ) : (
+            <ListTableEmpty title="No sales yet" text="Desk sales and online purchases show up here." action={<NewSaleLink variant="secondary" />} />
+          )}
+        </ListTable>
+      </div>
       {rows.length ? (
         <ListPager
           label="Sales pages"
@@ -328,9 +330,11 @@ export function SalesListLoading() {
         <span className="filter-bar__space" />
         <span className="list-search skeleton-block" />
       </div>
-      <ListTable label="Sales" columns={saleColumns(DEFAULT_SALE_COLUMNS)} className="sales-table">
-        <ListTableLoading rows={8} label="Loading sales" />
-      </ListTable>
+      <div className="sales-table-frame">
+        <ListTable label="Sales" columns={saleColumns(DEFAULT_SALE_COLUMNS)} className="sales-table">
+          <ListTableLoading rows={8} label="Loading sales" />
+        </ListTable>
+      </div>
     </div>
   );
 }
