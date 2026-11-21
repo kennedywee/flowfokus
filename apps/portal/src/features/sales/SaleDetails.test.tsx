@@ -63,6 +63,19 @@ describe("SaleDetails", () => {
     expect(html).toContain("Bangsar");
   });
 
+  test("the item's terms line names the price that was sold", () => {
+    const html = render(sale());
+    expect(html).toContain("Membership · 30 days · Monthly");
+    // A price label the line already says is not repeated.
+    const same = sale({ line_item: { ...sale().line_item, price_label: "30 days" } });
+    expect(render(same)).toContain("Membership · 30 days</span>");
+  });
+
+  test("guest names wrap in the item row", () => {
+    const html = render(sale({ attendees: [{ member_id: "m1", name: "Mei Lim", guest: false }, { member_id: null, name: "Arif Hakim", guest: true }] }));
+    expect(html).toContain('data-wrap="true">Mei Lim, Arif Hakim (guest)');
+  });
+
   test("Fulfill early and Record payment show with their keys while both are allowed", () => {
     const html = render(sale());
     expect(html).toContain('aria-keyshortcuts="F"');

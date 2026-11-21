@@ -190,11 +190,13 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
   const fact = fulfillmentFact(sale);
   const mark = GROUP_MARK[fact.state];
 
-  const terms = sale.occurrence
+  const sold = sale.occurrence
     ? `${sale.occurrence.program_name} · ${formatDateTime(sale.occurrence.starts_at, organization.timezone)}`
     : period
       ? `${shortDate(period.starts_at)} – ${shortDate(period.ends_at)}`
       : `${PRODUCT_KIND_LABEL[line.terms.kind]} · ${formatDuration(line.terms.duration_days)}`;
+  // The price that was sold. Left out when the line already says it.
+  const terms = line.price_label && !sold.toLowerCase().includes(line.price_label.toLowerCase()) ? `${sold} · ${line.price_label}` : sold;
   const canFulfill = actions.fulfill === "ready" || actions.fulfill === "early";
 
   return (
@@ -241,7 +243,7 @@ function ItemsSection({ sale, actions, onFulfill }: { sale: Schemas["Sale"]; act
                       </span>
                     ))}
                     {sale.attendees.length ? (
-                      <span className="cell-stack__sub">
+                      <span className="cell-stack__sub" data-wrap>
                         {sale.attendees.map((person) => (person.guest ? `${person.name} (guest)` : person.name)).join(", ")}
                       </span>
                     ) : null}

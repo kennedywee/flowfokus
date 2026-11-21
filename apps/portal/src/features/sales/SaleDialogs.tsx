@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode, type RefObject } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
+import { Tile } from "@/components/parts/marks";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useToast } from "../../components/Toast";
 import { Kbd, SubmitButton, describedBy } from "../../components/ui";
@@ -432,9 +433,9 @@ export function FulfillDialog({ sale, early, onClose }: { sale: Schemas["Sale"];
       )}
     >
       <div className="sale-item-card">
-        <span className="sale-tile" aria-hidden="true">
+        <Tile square>
           <Icon name={kindIcon} {...icon} />
-        </span>
+        </Tile>
         <span className="sale-item-card__text">
           <span className="sale-item-card__name">{line.product_name}</span>
           <span className="sale-item-card__sub">
