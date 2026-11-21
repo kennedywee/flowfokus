@@ -186,7 +186,7 @@
   background: var(--color-ink);
   box-shadow: inset 0 0 0 2px var(--color-warning);
 }
-.cal-block[data-state="full"] .cal-block__status {
+.cal-block[data-state="full"]:not([data-kind="appointment"]) .cal-block__status {
   color: var(--color-warning);
   font-weight: var(--font-weight-medium);
 }
@@ -196,7 +196,7 @@
 
 /* Ended: washed out. */
 .cal-block[data-state="ended"] {
-  opacity: 0.55;
+  opacity: 0.65;
 }
 .cal-block[data-state="ended"]:hover,
 .cal-block[data-state="ended"]:focus-visible {
@@ -443,7 +443,7 @@
   background: color-mix(in srgb, var(--color-ink) 2%, transparent);
 }
 .cal-cell[data-past] .cal-block {
-  opacity: 0.6;
+  opacity: 0.65;
 }
 .cal-cell[data-past] .cal-block:hover,
 .cal-cell[data-past] .cal-block:focus-visible {
@@ -530,7 +530,7 @@
   grid-area: status;
   color: var(--color-ink-2);
 }
-.cal-list__row[data-state="full"] .cal-list__status {
+.cal-list__row[data-state="full"]:not([data-kind="appointment"]) .cal-list__status {
   color: var(--color-warning);
 }
 .cal-list__row[data-state="cancelled"] .cal-list__status {
