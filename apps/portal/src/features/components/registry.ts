@@ -654,13 +654,14 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Record section",
     group: "Blocks",
     summary:
-      "A section of a record page: a small grey title, View all on the right when the list has more rows, then flush list rows with no label row on screen (the list table keeps it for assistive technology with the list-table--bare class). Member details uses it for Holds, Recent sales, and Bookings; New member for Profile.",
+      "A section of a record page: a small grey title, an optional button (Record payment, Fulfill items) or View all on the right when the list has more rows, then flush list rows with no label row on screen (the list table keeps it for assistive technology with the list-table--bare class). Member details uses it for Holds, Recent sales, and Bookings; New member for Profile; Sale details for Items and Payments; New sale for Products and Payment.",
     source: ["features/members/Section.tsx", "components/parts/ListTable.tsx", "styles/members.css"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
     examples: [{ file: "record-section", title: "Holds with View all, and an empty section", note: "Sample data." }],
     props: [
       { name: "title", type: "string", note: "Names the section. 12px, muted." },
       { name: "more", type: "{ open, onToggle } | null", note: "Shows View all (or Show fewer) and opens the rest in place. Leave it null when the list is short." },
+      { name: "action", type: "ReactNode", note: "A compact secondary button for the whole section, on the right of the title. Show it only when the person can do it, and give it its letter with Kbd." },
     ],
   },
   {
@@ -703,12 +704,15 @@ export const GALLERY: readonly GalleryEntry[] = [
     ],
   },
   {
-    slug: "sale-marks",
-    name: "Payment and fulfillment marks",
+    slug: "sale-amount",
+    name: "Sale amount",
     group: "Blocks",
-    summary: "A sale's two separate facts: how it is paid and whether it is fulfilled. Never merge them.",
-    source: ["features/sales/SaleFacts.tsx", "features/sales/facts.ts"],
-    examples: [{ file: "sale-marks-states", title: "States" }],
+    summary:
+      "A sale's total, with the balance still due under it (amber for part paid, red for unpaid) or the amount refunded. A void sale shows its total struck through. The Sales list uses it.",
+    source: ["features/sales/SaleFacts.tsx", "styles/sales.css"],
+    paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
+    examples: [{ file: "sale-amount-states", title: "Paid, part paid, refunded, and void", note: "Sample data." }],
+    props: [{ name: "sale", type: "Sale", note: "Reads total_minor, balance_minor, refunded_minor, payment_status, voided_at, and currency." }],
   },
   {
     slug: "form-notice",
