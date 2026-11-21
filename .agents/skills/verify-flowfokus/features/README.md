@@ -54,6 +54,7 @@ commands, and observable proof.
   sign-out.
 - [Members](members.md): create a member, validation, the list, and the stored row. Has a ready proof
   script.
+- [Calendar](calendar.md): Day and Week grids, grouping, filters, kinds, keyboard, and the list.
 - [Desk sale](desk-sale.md): sell a product, record a payment, and fulfill the sale.
 - [Session check-in](session-check-in.md): mark booked members as here on Session details, one by one
   or in bulk, and confirm the member page and Ctrl K have no walk-in check-in.
