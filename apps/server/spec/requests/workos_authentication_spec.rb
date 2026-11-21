@@ -4,7 +4,7 @@ RSpec.describe "WorkOS access tokens", workos: true, demo: false do
   let(:owner) { staff_user("user_chainsaw_owner") }
   let(:receptionist) { staff_user("user_chainsaw_receptionist") }
   let(:owner_permissions) { Flowfokus::DemoIdentity::PERMISSIONS }
-  let(:receptionist_permissions) { %w[members:read products:read purchases:read check_ins:read check_ins:create] }
+  let(:receptionist_permissions) { %w[members:read products:read purchases:read] }
 
   def token_for(user, organization: chainsaw, **overrides)
     workos_token(workos_claims(user:, organization:, **overrides))
@@ -156,7 +156,7 @@ RSpec.describe "WorkOS access tokens", workos: true, demo: false do
       expect(response).to have_http_status(:forbidden)
     end
 
-    it "lets a receptionist read and check in, but not sell or create members" do
+    it "lets a receptionist read, but not sell or create members" do
       location = create_location(chainsaw)
       member = create_member(chainsaw)
       price = create_offer(chainsaw)
@@ -174,9 +174,6 @@ RSpec.describe "WorkOS access tokens", workos: true, demo: false do
         api :post, "/staff/sales", token:, key: SecureRandom.uuid, body: { member_id: member.id, price_id: price.id, location_id: location.id }
       }.not_to change(Sale, :count)
       expect(response).to have_http_status(:forbidden)
-
-      api :post, "/staff/check_ins", token:, key: SecureRandom.uuid, body: { member_id: member.id, location_id: location.id }
-      expect(response).to have_http_status(:created)
     end
 
     it "cannot reach another organization's records with its own token" do

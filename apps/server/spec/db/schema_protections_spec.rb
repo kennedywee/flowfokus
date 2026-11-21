@@ -9,6 +9,9 @@ RSpec.describe "Database protections from db/schema.rb" do
   let!(:member) { create_member(chainsaw) }
   let!(:price) { create_offer(chainsaw) }
 
+  # Walk-in check-ins left the product. Their table stays as history, so a model-free class checks its protections.
+  let(:check_ins_table) { Class.new(ApplicationRecord) { self.table_name = "check_ins" } }
+
   before { chainsaw && demo_user }
 
   it "dumps functions and triggers into schema.rb" do
@@ -111,7 +114,7 @@ RSpec.describe "Database protections from db/schema.rb" do
     expect { in_savepoint { Sale.where(id: sale.id).update_all(member_id: foreign_member.id) } }.to raise_error(ActiveRecord::InvalidForeignKey)
     expect {
       in_savepoint do
-        CheckIn.insert!({ organization_id: chainsaw.id, member_id: foreign_member.id, location_id: location.id,
+        check_ins_table.insert!({ organization_id: chainsaw.id, member_id: foreign_member.id, location_id: location.id,
           recorded_by_user_id: demo_user.id, result: "denied", denial_reason: "no_entitlement",
           checked_in_at: Time.current, idempotency_key: SecureRandom.uuid, request_fingerprint: "x" })
       end

@@ -1,7 +1,8 @@
 # A usable right with validity, location scope, and a usage limit.
 #
-# `gym_access` opens the gym floor at check-in. `program_access` books spots in
-# programs: any program, all of one kind, selected programs, or one occurrence.
+# `gym_access` is a record of gym access that a product grants. No screen uses it
+# to record visits. `program_access` books spots in programs: any program, all of
+# one kind, selected programs, or one occurrence.
 class Entitlement < ApplicationRecord
   include TenantOwned
 
@@ -22,7 +23,6 @@ class Entitlement < ApplicationRecord
 
   scope :live, -> { where(revoked_at: nil) }
   scope :valid_at, ->(at) { live.where("starts_at <= :at AND ends_at > :at", at:) }
-  scope :gym_access, -> { where(kind: "gym_access") }
   scope :program_access, -> { where(kind: "program_access") }
 
   def unlimited? = usage_limit.nil?

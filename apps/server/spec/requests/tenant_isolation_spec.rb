@@ -59,16 +59,6 @@ RSpec.describe "Tenant isolation" do
     end
   end
 
-  it "rejects foreign member and location in a check-in body" do
-    grant_access(ironworks, member: other_member, location: other_location)
-
-    [ { member_id: other_member.id, location_id: location.id }, { member_id: member.id, location_id: other_location.id } ].each do |body|
-      expect { api :post, "/staff/check_ins", key: SecureRandom.uuid, body: }.not_to change(CheckIn, :count)
-      expect(response).to have_http_status(:unprocessable_content)
-    end
-    expect(Entitlement.where(member: other_member).sum(:used_count)).to eq(0)
-  end
-
   it "keeps idempotency keys per organization" do
     key = SecureRandom.uuid
     record_sale(ironworks, member: other_member, price: other_price, location: other_location, key:)

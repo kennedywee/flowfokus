@@ -126,12 +126,10 @@ RSpec.describe "Refunds, voids, and revocation" do
       expect(first.reload.line_item.fulfillment).not_to be_revoked
 
       travel_to(start + 40.days) do
-        result, = CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid, member_id: member.id, location_id: location.id)
-        expect(result.denial_reason).to eq("no_entitlement")
+        expect(member.entitlements.valid_at(Time.current)).to be_empty
       end
       travel_to(start + 3.days) do
-        result, = CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid, member_id: member.id, location_id: location.id)
-        expect(result).to be_granted
+        expect(member.entitlements.valid_at(Time.current).size).to eq(1)
         api :get, "/staff/members/#{member.id}"
         expect(data["entitlements"].size).to eq(1)
         expect(data["renewal"]["starts_at"]).to eq((start + 30.days).utc.iso8601(3))

@@ -622,32 +622,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/staff/check_ins": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Recent check-ins, newest first, at most 100. Needs check_ins:read. */
-        get: operations["listStaffCheckIns"];
-        put?: never;
-        /**
-         * Check a member in at a location. Needs check_ins:create.
-         * @description Returns 201 for both granted and denied attempts. Read `result`.
-         *     A denied attempt records `denial_reason` and consumes nothing.
-         *     A retry with the same Idempotency-Key and body returns the first check-in with
-         *     status 200 and never consumes twice. The same key with a different body returns 409.
-         *     With `override_reason` and check_ins:override, an attempt that would be denied is
-         *     granted instead. It keeps `denial_reason`, records the reason, and consumes nothing.
-         */
-        post: operations["createStaffCheckIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/staff/programs": {
         parameters: {
             query?: never;
@@ -1200,7 +1174,7 @@ export interface components {
             address: string | null;
         };
         /** @enum {string} */
-        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "check_ins:read" | "check_ins:create" | "check_ins:override" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
+        Permission: "members:read" | "members:create" | "members:link" | "products:read" | "products:create" | "products:update" | "purchases:read" | "purchases:create" | "purchases:fulfill" | "purchases:fulfill_unpaid" | "payments:create" | "purchases:refund" | "purchases:void" | "memberships:revoke" | "programs:read" | "programs:manage" | "bookings:create" | "bookings:manage" | "settings:manage" | "staff:manage";
         StaffOrganization: {
             /** Format: uuid */
             id: string;
@@ -1236,11 +1210,6 @@ export interface components {
             unpaid_sale_count: number;
             /** @description Fully paid sales that are not fulfilled. */
             awaiting_fulfillment_count: number;
-            /** @description Counts since midnight in the organization's time zone. */
-            check_ins_today: {
-                granted: number;
-                denied: number;
-            };
             /** @description The organization's currency, for the amounts in `money`. */
             currency?: string;
             /** @description Members added since midnight in the organization's time zone. */
@@ -1389,7 +1358,7 @@ export interface components {
             occurrence_id: string | null;
         };
         /**
-         * @description `gym_access` opens the gym floor at check-in. `program_access` books spots in programs.
+         * @description `gym_access` is gym access that a product grants. `program_access` books spots in programs.
          * @enum {string}
          */
         BenefitKind: "gym_access" | "program_access";
@@ -1521,14 +1490,6 @@ export interface components {
             /** @description Optional receipt or bank reference. */
             reference?: string | null;
         };
-        CheckInInput: {
-            /** Format: uuid */
-            member_id: string;
-            /** Format: uuid */
-            location_id: string;
-            /** @description Let the member in even if their rights deny it. Needs check_ins:override. */
-            override_reason?: string;
-        };
         /** @description Terms snapshotted at purchase. Later catalog edits never change them. */
         SaleLineItemTerms: {
             kind: components["schemas"]["ProductKind"];
@@ -1642,36 +1603,6 @@ export interface components {
         };
         SaleResponse: {
             data: components["schemas"]["Sale"];
-        };
-        /** @enum {string} */
-        CheckInResult: "granted" | "denied";
-        /**
-         * @description - `no_entitlement`: no right is valid at this time.
-         *     - `location_not_allowed`: a right is valid now but not at this location.
-         *     - `usage_limit_reached`: every matching right has no uses left.
-         * @enum {string}
-         */
-        DenialReason: "no_entitlement" | "location_not_allowed" | "usage_limit_reached";
-        CheckIn: {
-            /** Format: uuid */
-            id: string;
-            member: components["schemas"]["MemberSummary"];
-            /** Format: uuid */
-            location_id: string;
-            result: components["schemas"]["CheckInResult"];
-            denial_reason: components["schemas"]["DenialReason"] | null;
-            /**
-             * Format: uuid
-             * @description The right used by a granted check-in.
-             */
-            entitlement_id: string | null;
-            /** @description Set when staff let the member in despite `denial_reason`. Nothing was consumed. */
-            override_reason: string | null;
-            /** Format: date-time */
-            checked_in_at: string;
-        };
-        CheckInResponse: {
-            data: components["schemas"]["CheckIn"];
         };
         BenefitInput: {
             kind?: components["schemas"]["BenefitKind"];
@@ -1846,17 +1777,6 @@ export interface components {
         MemberDetailResponse: {
             data: components["schemas"]["MemberDetail"];
         };
-        MemberCheckIn: {
-            /** Format: uuid */
-            id: string;
-            location_name: string;
-            result: components["schemas"]["CheckInResult"];
-            denial_reason: components["schemas"]["DenialReason"] | null;
-            /** @description True when staff let the member in despite a denial. */
-            overridden: boolean;
-            /** Format: date-time */
-            checked_in_at: string;
-        };
         MemberSale: {
             channel: components["schemas"]["SaleChannel"];
             /** Format: uuid */
@@ -1882,8 +1802,6 @@ export interface components {
             membership: components["schemas"]["Membership"] | null;
             current_period: components["schemas"]["MembershipPeriod"] | null;
             entitlements: components["schemas"]["Entitlement"][];
-            /** @description The 20 latest visits, newest first. */
-            check_ins: components["schemas"]["MemberCheckIn"][];
             /** @description The 20 latest purchases that are not void, newest first. */
             sales: components["schemas"]["MemberSale"][];
             /** @description Coming bookings, then the 10 latest earlier ones. */
@@ -3463,78 +3381,6 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
-            422: components["responses"]["Unprocessable"];
-            503: components["responses"]["ServiceUnavailable"];
-        };
-    };
-    listStaffCheckIns: {
-        parameters: {
-            query?: {
-                member_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Check-ins. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CheckIn"][];
-                    };
-                };
-            };
-            400: components["responses"]["BadRequest"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            503: components["responses"]["ServiceUnavailable"];
-        };
-    };
-    createStaffCheckIn: {
-        parameters: {
-            query?: never;
-            header: {
-                /** @description Unique per logical request. 8 to 255 printable ASCII characters. A UUID works well. */
-                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CheckInInput"];
-            };
-        };
-        responses: {
-            /** @description Replay of an earlier request with the same key. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CheckInResponse"];
-                };
-            };
-            /** @description Check-in recorded (granted or denied). */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CheckInResponse"];
-                };
-            };
-            400: components["responses"]["BadRequest"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
-            404: components["responses"]["NotFound"];
-            409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
             503: components["responses"]["ServiceUnavailable"];
         };

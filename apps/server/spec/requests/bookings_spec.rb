@@ -127,12 +127,6 @@ RSpec.describe "Bookings at the desk" do
     expect(error_code).to eq("occurrence_unavailable")
   end
 
-  it "keeps gym check-in to gym access" do
-    right
-    api :post, "/staff/check_ins", key: SecureRandom.uuid, body: { member_id: member.id, location_id: bangsar.id }
-    expect(data).to include("result" => "denied", "denial_reason" => "no_entitlement")
-  end
-
   describe "tickets at the desk" do
     let(:ticket) { program.add_ticket!(label: "Drop-in", amount_minor: 2_500).first }
     let(:sale_body) { { member_id: member.id, price_id: ticket.id, location_id: bangsar.id, occurrence_id: occurrence.id } }

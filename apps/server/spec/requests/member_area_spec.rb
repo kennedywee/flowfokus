@@ -75,7 +75,6 @@ RSpec.describe "Member area", workos: true, demo: false do
   it "shows only the member's own records" do
     link(staff_code)
     sale = grant_access(chainsaw, member:, location:, amount_minor: 9_000)
-    CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid, member_id: member.id, location_id: location.id)
     stranger = create_member(chainsaw)
     grant_access(chainsaw, member: stranger, location:)
 
@@ -84,7 +83,7 @@ RSpec.describe "Member area", workos: true, demo: false do
     expect(response).to have_http_status(:ok)
     expect(data["sales"].map { _1["id"] }).to eq([ sale.id ])
     expect(data["sales"].sole).to include("product_name" => sale.line_item.product_name, "balance_minor" => 0)
-    expect(data["check_ins"].sole).to include("location_name" => "Bangsar", "result" => "granted")
+    expect(data).not_to have_key("check_ins")
     expect(data["entitlements"].size).to eq(1)
     expect(data["current_period"]).to be_present
 

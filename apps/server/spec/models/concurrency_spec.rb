@@ -30,32 +30,6 @@ RSpec.describe "Concurrent writes" do
 
   before { demo_user && location && member }
 
-  it "consumes a single remaining use once" do
-    grant_access(chainsaw, member:, location:, usage_limit: 1)
-
-    results = in_parallel(4) do
-      CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid,
-        member_id: member.id, location_id: location.id).first.result
-    end
-
-    expect(results.tally).to eq("granted" => 1, "denied" => 3)
-    expect(member.entitlements.sole.reload.used_count).to eq(1)
-  end
-
-  it "records one check-in for parallel retries of the same key" do
-    grant_access(chainsaw, member:, location:, usage_limit: 5)
-    key = SecureRandom.uuid
-
-    results = in_parallel(4) do
-      CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: key,
-        member_id: member.id, location_id: location.id).first.id
-    end
-
-    expect(results.uniq.size).to eq(1)
-    expect(CheckIn.count).to eq(1)
-    expect(member.entitlements.sole.reload.used_count).to eq(1)
-  end
-
   it "fulfills parallel renewals without overlap" do
     price = create_offer(chainsaw, duration_days: 30)
     sales = 3.times.map { pay_in_full(record_sale(chainsaw, member:, price:, location:)) }

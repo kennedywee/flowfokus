@@ -36,7 +36,6 @@ Rails.application.routes.draw do
       post :void, on: :member
       post :revoke, on: :member
     end
-    resources :check_ins, only: %i[index create]
     resources :programs, only: %i[index show create update] do
       resources :occurrences, only: :create
       resources :tickets, only: :create

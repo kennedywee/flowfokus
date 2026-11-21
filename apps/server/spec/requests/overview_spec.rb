@@ -6,13 +6,12 @@ RSpec.describe "Staff overview" do
 
   before { chainsaw && demo_user }
 
-  it "counts members, memberships, sales, and today's check-ins" do
+  it "counts members, memberships, and sales" do
     location = create_location(chainsaw)
     active = create_member(chainsaw)
     grant_access(chainsaw, member: active, location:)
     record_sale(chainsaw, member: create_member(chainsaw), price: create_offer(chainsaw), location:)
     pay_in_full(record_sale(chainsaw, member: active, price: create_offer(chainsaw), location:))
-    CheckIn.record!(organization: chainsaw, actor: demo_user, idempotency_key: SecureRandom.uuid, member_id: active.id, location_id: location.id)
     create_member(ironworks)
 
     api :get, "/staff/overview"
@@ -21,9 +20,9 @@ RSpec.describe "Staff overview" do
       "member_count" => 2,
       "active_membership_count" => 1,
       "unpaid_sale_count" => 1,
-      "awaiting_fulfillment_count" => 1,
-      "check_ins_today" => { "granted" => 1, "denied" => 0 }
+      "awaiting_fulfillment_count" => 1
     )
+    expect(data).not_to have_key("check_ins_today")
   end
 
   it "reports today's sales, money received, and new members in the organization's time zone" do
@@ -119,7 +118,7 @@ RSpec.describe "Staff overview" do
 
   describe "permissions", workos: true, demo: false do
     it "leaves money out without purchases:read" do
-      token = workos_token(workos_claims(user: staff_user("user_desk"), organization: chainsaw, permissions: %w[check_ins:read]))
+      token = workos_token(workos_claims(user: staff_user("user_desk"), organization: chainsaw, permissions: %w[members:read]))
       api :get, "/staff/overview", token: token
 
       expect(response).to have_http_status(:ok)

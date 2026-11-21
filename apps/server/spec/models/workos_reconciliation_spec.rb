@@ -48,10 +48,8 @@ RSpec.describe "Organization#reconcile_with_workos!" do
     gone = staff_user("user_gone")
     other_gym = ironworks.organization_memberships.create!(user: gone, role: "owner")
     membership = chainsaw.organization_memberships.create!(user: gone, role: "owner", workos_id: "om_gone", workos_updated_at: 2.hours.ago)
-    location = create_location(chainsaw)
-    member = create_member(chainsaw)
-    CheckIn.create!(organization: chainsaw, member:, location:, recorded_by_user: gone, result: "denied",
-      denial_reason: "no_entitlement", checked_in_at: Time.current, idempotency_key: SecureRandom.uuid, request_fingerprint: "x")
+    sale = record_sale(chainsaw, member: create_member(chainsaw), price: create_offer(chainsaw), location: create_location(chainsaw))
+    sale.record_payment!(actor: gone, idempotency_key: SecureRandom.uuid, amount_minor: 100, method: "cash")
 
     summary = chainsaw.reconcile_with_workos!(api:)
 
@@ -59,7 +57,7 @@ RSpec.describe "Organization#reconcile_with_workos!" do
     expect(gone.reload.workos_deleted_at).to be_present
     expect(gone.email).to eq("user_gone@example.test")
     expect([ membership.reload, other_gym.reload ].map(&:workos_deleted_at)).to all(be_present)
-    expect(CheckIn.where(recorded_by_user: gone)).to exist
+    expect(Payment.where(recorded_by_user: gone)).to exist
 
     expect(chainsaw.reconcile_with_workos!(api:)).not_to include(:user_deleted)
   end
