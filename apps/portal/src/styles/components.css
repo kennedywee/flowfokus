@@ -190,6 +190,10 @@
   width: 16px;
   height: 16px;
 }
+/* The set has an arrow in and no arrow out; Sign out mirrors the one it has. */
+.icon--flip {
+  transform: scaleX(-1);
+}
 .button:disabled,
 .button[aria-disabled="true"] {
   cursor: not-allowed;

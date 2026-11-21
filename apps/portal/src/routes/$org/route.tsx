@@ -596,7 +596,7 @@ function AccountMenu({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOutForm.current?.requestSubmit()}>
-              <Icon name="checkIns" {...icon} />
+              <Icon name="checkIns" className="icon--flip" {...icon} />
               Sign out
             </DropdownMenuItem>
           </>
