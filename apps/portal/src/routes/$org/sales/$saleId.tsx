@@ -28,7 +28,7 @@ function SalePage() {
   const sale = Route.useLoaderData();
   if (!sale.ok) {
     return (
-      <div className="page sale-details">
+      <div className="page">
         <FailureNotice error={sale.error} title="This sale did not load" />
       </div>
     );

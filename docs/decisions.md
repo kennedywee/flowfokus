@@ -63,6 +63,7 @@ Questions that are not decided are GitHub issues with the [`decision` label](htt
 | The staff portal sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Home, Inbox, Agents, the Check-ins page, Reports, Integrations, and What's new left the scope on 21 November 2026. `/<org>` opens the first page the role can read, which is Calendar (the schedule route) until it is built. | [Frontend preview](frontend-preview.md) |
 | The staff portal shell is a rounded window on a tinted frame, with a darker sidebar, a breadcrumb top bar, and the account control at the foot. The sidebar and ⌘K list only the pages a role can read. The location crumb shows on every page, including Calendar. | [Portal design](../apps/portal/DESIGN.md#redesign-foundation) |
 | The redesigned screens share one set of parts (list table, filter bar, Display popover, row selection, groups, detail layout, hero, activity, background patterns, data marks) in `components/parts/`. Each screen issue moves a screen onto them; the older list toolbar, pager, and table state stay until then. A status mark always has a text label from Rails. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
+| A sale has no number in Rails yet, so the sale page title is the product name. "Sale #1058" waits for sale numbers. Record payment (P) and Fulfill items (F) are in the page's section headers; Refund, Revoke access, and Void stay in its more menu. | [Portal design](../apps/portal/DESIGN.md#shared-parts-issue-87) |
 
 ## Deferred
 

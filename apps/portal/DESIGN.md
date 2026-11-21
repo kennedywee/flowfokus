@@ -182,8 +182,8 @@ live, with code, at `localhost:4001/components` (local development only; see
 | Feedback | `Notice` defaults to info; `FailureNotice` displays API failures | Use `live` for changed feedback, not every static notice. Error text gives a next step. |
 | Collection state | `LoadingState`, `Empty`, `ErrorState` | Loading reserves space; empty describes no records; error describes a failed load. |
 
-Good: sales rows use `PaymentMark` and `FulfillmentMark` from
-`features/sales/SaleFacts.tsx`. Payment (Paid, Part paid, Unpaid, Void) and
+Good: sales rows use two `StatusMark`s from `saleMarks`
+(`features/members/facts.ts`). Payment (Paid, Part paid, Unpaid, Void) and
 fulfillment (Fulfilled, Unfulfilled, Access revoked) stay two separate marks.
 Bad: setting `state="fulfilled"` because the user clicked Fulfill before Rails
 returns success. Payment and fulfillment are separate facts.
@@ -197,7 +197,7 @@ Existing blocks to compose before adding another abstraction:
 - `PageHead`: title, optional record metadata, title facts, and actions.
 - `PageActions`: a page's actions, placed in the top bar from 768px.
 - `Plate`: named section with body and optional action/footer.
-- `PaymentMark` / `FulfillmentMark`: a sale's two facts, on the sales list, sale page, and member page.
+- `StatusMark` with `saleMarks`: a sale's two facts, on the sales list, sale page, and member page.
 - `ListToolbar` (`components/ListToolbar.tsx`): Paper "Table toolbar" on every
   list. Filter (`FilterMenu`) and the active chips (`FilterChips`, "Payment · is
   any of · Unpaid, Part paid" with a clear button) on the left, `SearchField`
@@ -417,7 +417,7 @@ Session details, Member details, Sale details, Program details, Product
 details, and Pass credits. The screen issues (#88 to #94) move each screen onto
 them. Until then the older `ListToolbar`, `FilterChips`, `ListPager`, and
 `TableState` stay as they are, and the existing screens use them. The Members
-list is the first screen on the new parts (#88). The new parts add no sample
+list is the first screen on the new parts (#88); the Sales list follows (#90). The new parts add no sample
 data to a screen; the gallery examples carry labelled sample data.
 
 Code: `components/parts/` (`ListTable`, `FilterBar`, `DetailLayout`,
@@ -558,67 +558,105 @@ The members list and New member are redesigned screens
   After a create, the member page opens with a "Member created" toast. The
   toast has no New sale action; Sell (S) is on the member page.
 
-The sales list and sale details are the next redesigned screens
-(`features/sales/SalesList.tsx`, `SaleDetails.tsx`, and `SaleDialogs.tsx`;
-facts, filters, and action rules in `features/sales/facts.ts`). They share the
-list pieces in `components.css` (`.list-toolbar`, `.list-search`, `.list-pager`,
-`.list-state`), `ListToolbar`, and `ListPager` with the members list. They show only Rails data:
+The sales list, Sale details, and New sale (issue #90, Paper "Sale details", light
+and dark) are on the shared parts (`features/sales/SalesList.tsx`,
+`SaleDetails.tsx`, `NewSale.tsx`, and `SaleDialogs.tsx`; facts, filters, sorting,
+and action rules in `facts.ts`; the draft rules in `saleDraft.ts`; styles in
+`styles/sales.css`). They show only Rails data. Paper could not be read while
+they were built (the Paper server timed out), so the layout, order, and content
+follow the saved light screenshot of "Sale details — #1058 partly paid", and
+every size and colour comes from the tokens and shared parts built from Paper in
+#85 and #87. The Sales list and New sale have no Paper frame: the list follows
+the Members list (#88) with the Recent sales columns, and New sale follows New
+member (#89) with the sale page's rows.
 
-- Sales list: the title, New sale (purchases:create only) in the top bar. Filter
-  opens Payment and Fulfillment submenus with a count per value; each active fact
-  shows as a chip with a clear button. Search (with a "/" hint) matches member
-  name, email, and item. A header band, then 44px rows: member, item and price,
-  payment, fulfillment, total (with the balance due or the amount refunded), and a
-  short date. The URL keeps filters and search (`payment`, `fulfillment`,
-  `q`); old `view=due`, `view=deliver`, and `delivery=` links still work.
-  Rails returns every sale, so the list filters and pages 50 at a time in the
-  browser. Phones show member and total,
-  then the item, then the facts and the date.
-- No sales: one line and New sale. No match: one line and Clear filters.
-- Sale details: a tile, the item as the title, and the two facts as pills. The
-  ⋯ menu in the top bar holds Record payment (P), Fulfill (F), Refund…,
-  Revoke access…, and Void sale…; each appears only when the permission and
-  the sale allow it. Items shows the fulfillment fact and time, the line with its
-  period or term and rights, early-fulfillment and revoke notes, and the total.
-  Payment lists payments and refunds in order, then the balance due. Activity
-  lists what Rails recorded. Properties: member, location, date, and price.
-  A void sale shows one bordered notice with the reason.
-- Dialogs follow the Paper "Dialogs and menu" frame: a 48px header with a fact
-  and a close button, the fields, then Cancel and the action. ⌘↵ submits the
-  record and fulfill dialogs. Record payment offers Cash and Bank transfer and
-  says it does not move money. Fulfill states what it creates; with money due
-  it becomes Fulfill early and needs a reason. Refund chooses the payment in
-  the dialog and says access stays. Void and revoke need a reason.
-- Not shown, because Rails has no data for them: sale numbers, who sold or
-  recorded a payment, notes, comments, invoices, card or e-wallet payments,
-  attachments, receipts, and several lines in one sale.
-
-New sale is the next redesigned screen (`features/sales/NewSale.tsx`, rules in
-`features/sales/saleDraft.ts`). It reuses the sale page's lines, totals, and
-dialog frame, and the record-payment fields (`PaymentFields`). It shows only
-Rails data:
-
-- A page, not a dialog. A tile and the title, Create sale (⌘↵) in the top
-  bar. Products and Payment on the left; Member and Location on the right
-  from 1100px. Phones put Member and Location first.
-- Products holds one line, because Rails sells one line, quantity one, at the
-  price's current amount. "+ Product" opens Add product: search, then All,
-  Memberships, and Passes when both are on sale, then one choice. Tickets are
-  left out: they are sold for a session time from the schedule.
-- Record payment adds Cash or Bank transfer before the sale exists. Nothing is
-  sent until Create sale; then Rails records the sale, then the payment.
-  Balance due turns warning-coloured while money is due.
-- Member: a search of name and email; a chosen member shows the name and
-  email, with a button to change. Sell (S) on a member page and `?member=`
-  start with the member chosen. Location starts at the desk location.
-- Errors show on the member, product, and location, as in Paper "4a". Leaving
-  with a product, a payment, or a changed member asks "Discard this sale?".
-- After a create, the sale page opens with a "Sale created" toast that says
-  what is due. If the payment fails after the sale exists, an error toast says
-  so and the sale page still opens, so staff never create the sale twice.
-- Not shown, because Rails has no data for them: custom items, quantity,
-  several lines, notes, card or e-wallet, attachments, member numbers and
-  phones, and "Add new member" from the search.
+- Sales list: the title with the sale count on the right (`HeroStats`; a filter
+  or search hides it, because the count then covers only the matches), New sale
+  (N, purchases:create) in the top bar, a filter bar, the list table, and the
+  page range. The bar has Filter (Payment: Unpaid, Part paid, Paid, Void;
+  Fulfillment: Unfulfilled, Fulfilled, Access revoked, each with a count), a
+  chip per active filter, search ("/" hint; member name, email, product, and price
+  label), and Display. The columns are Member (initials, name, email), Product
+  (name and price label, "Renewal"), Date, Payment, Fulfillment, Method (each
+  method once, "—" with no payment), and Amount (the total, with the balance due
+  in amber or red, or the refund, under it; a void total is struck through).
+  Member, Date, and Amount sort from the header. Display has Sort by (Date, Member,
+  Amount; newest first is the start) and the chips Date, Fulfillment, and Method.
+  Each row opens the sale. The faint ledger rules sit behind the header. Rows
+  switch to the phone layout (member and amount first) when the table is 1024px wide or less; the
+  table's own width decides, through a container query, not the viewport. The
+  header, with its sort buttons, is `display: none` there, so Tab and screen
+  readers skip it; Display sorts.
+- The URL keeps `payment`, `fulfillment`, and `q`, as before, plus `payment_not=true`
+  and `fulfillment_not=true`. A filter with its `_not` flag is "is not" (or "is none
+  of"): each sale's state is tested against the values and kept when it is none of
+  them. Without the flag the values mean "is any of". The chip's operator click
+  flips the flag and keeps the values, so "is none of" every value shows no sale and
+  "is not Fulfilled" keeps void sales. `_not` counts only with values. Old
+  `view=due`, `view=deliver`, and `delivery=` links, and plain `payment=` and
+  `fulfillment=` links, still work and are "is any of". Rails
+  returns the 100 newest sales; the list filters, sorts, and pages 50 at a time in
+  the page, and at 100 it says "sales shown" and "100+". No sales: one line and
+  New sale. No match: one line and Clear filters or Clear search. Phones put the
+  member and amount on the first line, then the product, then the facts.
+- Sale details: `DetailLayout` with the ledger pattern. The title and the pills are
+  cut out of the rules with a page-colored box as wide as the text, so no rule
+  crosses a letter (also on New sale). The hero has the receipt
+  tile, the item as the title, and two pills: payment, then fulfillment, in the words
+  Rails returns (#14 is open). Rails has no sale number, so the title is the
+  product name; "Renewal" is the line under it for a renewal. Items: one group
+  (Fulfilled, Unfulfilled, or Access revoked, with a count of one), and its row
+  with the icon tile, the name, the terms line (dates once fulfilled, then the
+  price that was sold, unless the line already says it), the rights, the guests of
+  a ticket (they wrap onto more lines), the unit price and quantity, and the line total, then
+  Total. "Fulfill items" (F) is in the section header while the sale can be
+  fulfilled, "Fulfill early" when staff may fulfill it before payment
+  (purchases:fulfill_unpaid). Notes under the row say when it was fulfilled early,
+  why access ended, or that fulfillment waits for payment, with the link to the
+  member's access or the roster. Payments: each payment (method, reference, when,
+  refunded part) and each refund (a negative amount), oldest first, then Balance
+  due in the warning colour while money is owed. "Record payment" (P,
+  payments:create) is in the header while a balance is due. Activity is the
+  shared feed with real events (the sale, payments, fulfillment, refunds, void),
+  without a comment box or the All, Comments, Activity control. The panel has
+  Member (a link), Location (or Channel, Online), and Date.
+- Actions: the top bar's ⋯ menu holds Refund…, Revoke access…, and Void sale…,
+  each only with its permission and when the sale allows it; with none allowed
+  there is no ⋯. Fulfill and Record payment are not in it any more: they are in the
+  section headers. F and P work only while their button shows. A void sale shows one
+  bordered notice with the reason. Dialogs follow the Paper "Dialogs and menu"
+  frame and keep their rules: Record payment offers Cash and Bank transfer and says
+  it does not move money. Fulfill states what it creates; with money due it
+  becomes Fulfill early and needs a reason. Refund chooses the payment and says
+  access stays. Void and revoke need a reason. Phones put the ⋯ on the title's line,
+  the unit price and total under the item, and the panel under the page.
+- New sale: a page on the same record frame (ledger rules, `DetailHero` with the
+  receipt tile and "New sale"), with Create sale (⌘↵) in the top bar. Products and
+  Payment are `Section`s on the left; Member and Location are in the right panel
+  from 1100px. Narrower screens put them between the title and the sections, and
+  Create sale at the end. The page moves the panel and the action in the document
+  itself, not with CSS `order`, so Tab follows the screen. Products holds one line, because Rails sells one line,
+  quantity one, at the price's current amount; "+ Product" (and Change) opens Add
+  product: search, then All, Memberships, and Passes when both are on sale, then
+  one choice. Tickets are left out: they are sold for a session time from the
+  schedule. Record payment adds Cash or Bank transfer before the sale exists;
+  nothing is sent until Create sale, then Rails records the sale, then the payment.
+  Balance due turns warning-coloured while money is due. Member is a search of name
+  and email; a chosen member shows the name and email with a button to change.
+  Sell (S) on a member page and `?member=` start with the member chosen; `?price=`
+  starts with the product. Location starts at the desk location. Errors show on
+  the member, product, and location. Leaving with a product, a payment, or a
+  changed member asks "Discard this sale?". After a create, the sale page opens
+  with a "Sale created" toast that says what is due. If the payment fails after the
+  sale exists, an error toast says so and the sale page still opens, so staff never
+  create the sale twice.
+- Not shown, because Rails has no data for them (issue #18): sale numbers, sold
+  by, who recorded each payment, who fulfilled, refunded, or voided, sale notes,
+  comments, Send invoice, receipts, Renew from the sale page (Renew is on the
+  member page), several lines in one sale, fulfillment per line (so one group, not
+  a Fulfilled and an Unfulfilled group), custom items, quantity and more than
+  one line on New sale, card or e-wallet payments, member numbers and phones, "Add
+  new member" from the search, and server-side filters and paging for the list.
 
 The check-in flow (`features/check-ins/CheckInFlow.tsx`, facts in `facts.ts`,
 idempotency in `attempt.ts`, member search in `useMemberSearch.ts`) has no page

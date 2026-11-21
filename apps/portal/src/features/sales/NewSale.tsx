@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { Link, useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { Combobox } from "../../components/Combobox";
 import { PageActions } from "../../components/PageActions";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -13,6 +13,10 @@ import { useCan, useDeskLocation, useOrganization } from "../../lib/organization
 import type { Result } from "../../lib/result";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { createSale, recordPayment } from "../../lib/staff.functions";
+import { Section } from "../members/Section";
+import { DetailHero, DetailLayout, HeroTile, PanelGroup } from "@/components/parts/DetailLayout";
+import { CellStack, ListTable, ListTableBody, ListTableCell, ListTableLoading, ListTableRow, type ListColumn } from "@/components/parts/ListTable";
+import { Tile } from "@/components/parts/marks";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -31,7 +35,6 @@ import {
   type SaleOption,
 } from "./saleDraft";
 import { KIND_ICON, PaymentFields, SaleDialog, checkPaymentAmount } from "./SaleDialogs";
-import { METHOD_ICON } from "./SaleFacts";
 
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
 const sendPayment = (input: Parameters<typeof recordPayment>[0]["data"]) => recordPayment({ data: input });
@@ -60,45 +63,60 @@ export function NewSale({ data, memberId, priceId }: { data: NewSaleData; member
   const can = useCan();
   if (!can("purchases:create")) {
     return (
-      <div className="page new-sale">
-        <NewSaleHead />
+      <NewSaleLayout>
         <Notice tone="warning" title="You cannot sell">
           <p>Selling needs the purchases:create permission. Ask an owner to change your role.</p>
         </Notice>
-      </div>
+      </NewSaleLayout>
     );
   }
   if (!data.members.ok || !data.products.ok) {
     return (
-      <div className="page new-sale">
-        <NewSaleHead />
+      <NewSaleLayout>
         {!data.members.ok ? <FailureNotice error={data.members.error} title="Members did not load" /> : null}
         {!data.products.ok ? <FailureNotice error={data.products.error} title="Products did not load" /> : null}
-      </div>
+      </NewSaleLayout>
     );
   }
   return <NewSaleForm members={data.members.data} options={saleOptions(data.products.data)} initialMemberId={memberId} initialPriceId={priceId} />;
 }
 
-function NewSaleHead({ children }: { children?: ReactNode }) {
-  return (
-    <header className="new-sale__head">
-      <span className="new-sale__icon" aria-hidden="true">
-        <Icon name="sales" {...icon} />
-      </span>
-      <h1>New sale</h1>
-      {children ? <PageActions>{children}</PageActions> : null}
-    </header>
+const WIDE = "(min-width: 1100px)";
+
+function subscribeWide(onChange: () => void) {
+  const query = window.matchMedia(WIDE);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** True from 1100px, where the panel sits beside the form. The server renders the wide layout. */
+function useWide(): boolean {
+  return useSyncExternalStore(
+    subscribeWide,
+    () => window.matchMedia(WIDE).matches,
+    () => true,
   );
 }
 
-function Band({ id, title, icon: iconName, action }: { id: string; title: string; icon: IconName; action?: ReactNode }) {
+/**
+ * The page frame of a sale: ledger rules behind a hero, then the content, with
+ * an optional right panel. Below 1100px the panel moves into the page after the
+ * hero, so the document order is the order on screen: Member and Location, the
+ * form, then the action. `actions` goes last for that reason.
+ */
+function NewSaleLayout({ panel, actions, children }: { panel?: ReactNode; actions?: ReactNode; children: ReactNode }) {
+  const wide = useWide();
   return (
-    <div className="mx-section__head sale-band">
-      <Icon name={iconName} {...icon} />
-      <h2 id={`${id}-title`}>{title}</h2>
-      {action}
-    </div>
+    <DetailLayout record="sale" className="new-sale" panel={wide ? panel : undefined}>
+      <DetailHero tile={<HeroTile icon="sales" />} title="New sale" />
+      {!wide && panel ? (
+        <aside className="detail__panel" aria-label="Details">
+          {panel}
+        </aside>
+      ) : null}
+      {children}
+      {actions ? <PageActions>{actions}</PageActions> : null}
+    </DetailLayout>
   );
 }
 
@@ -251,9 +269,62 @@ function NewSaleForm({
   const currency = option?.price.currency ?? "";
   const balance = draftBalance(total, payment);
 
+  const panel = (
+    <>
+      <MemberPanel
+        members={members}
+        member={member}
+        error={memberError}
+        pending={pending}
+        onChoose={(value) => {
+          moveFocus.current = true;
+          setMemberId(value);
+          setLocal((current) => ({ ...current, member: undefined }));
+          edited();
+        }}
+        onClear={() => {
+          moveFocus.current = true;
+          setMemberId("");
+          edited();
+        }}
+      />
+      <div className="new-sale__group">
+        <div className="panel-group__head">
+          <label htmlFor="sale-location" className="panel-group__title">
+            Location
+          </label>
+        </div>
+        <div className="new-sale__select">
+          <Icon name="location" {...markIcon} />
+          <NativeSelect
+            id="sale-location"
+            className="new-sale__native"
+            value={locationId}
+            disabled={pending}
+            onChange={(event) => {
+              setLocationId(event.target.value);
+              setLocal((current) => ({ ...current, location: undefined }));
+              edited();
+            }}
+            aria-invalid={locationError ? true : undefined}
+            aria-describedby={describedBy("sale-location", undefined, locationError)}
+          >
+            {organization.locations.map((location) => (
+              <NativeSelectOption key={location.id} value={location.id}>
+                {location.name}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <FieldError id="sale-location-error">{locationError}</FieldError>
+      </div>
+    </>
+  );
+
   return (
-    <div className="page new-sale">
-      <NewSaleHead>
+    <NewSaleLayout
+      panel={panel}
+      actions={
         <Button
           type="submit"
           form={FORM_ID}
@@ -274,48 +345,60 @@ function NewSaleForm({
             </>
           )}
         </Button>
-      </NewSaleHead>
-
-      <form id={FORM_ID} ref={form} className="new-sale__main" onSubmit={onSubmit} noValidate>
+      }
+    >
+      <form id={FORM_ID} ref={form} className="new-sale__form" onSubmit={onSubmit} noValidate>
         {error && !fieldError ? <FailureNotice error={error} title="The sale was not created" /> : null}
 
-        <section className="mx-section" aria-labelledby="products-title">
-          <Band
-            id="products"
-            title="Products"
-            icon="products"
-            action={
-              option ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="compact"
-                  className="sale-band__button"
-                  onClick={() => setDialog("product")}
-                >
-                  Change
-                </Button>
-              ) : null
-            }
-          />
+        <Section
+          id="products"
+          title="Products"
+          action={
+            option ? (
+              <Button type="button" variant="secondary" size="compact" onClick={() => setDialog("product")}>
+                Change
+              </Button>
+            ) : options.length ? (
+              <Button
+                id="sale-add-product"
+                type="button"
+                variant="secondary"
+                size="compact"
+                aria-describedby={productError ? "sale-add-product-error" : undefined}
+                onClick={() => setDialog("product")}
+              >
+                <Icon name="plus" size={14} {...markIcon} />
+                Product
+              </Button>
+            ) : null
+          }
+        >
           {option ? (
-            <ul className="sale-money-rows">
-              <li className="sale-line">
-                <span className="sale-tile" aria-hidden="true">
-                  <ProductIcon kind={option.kind} />
-                </span>
-                <div className="sale-line__main">
-                  <span className="sale-line__name">{optionTitle(option, options)}</span>
-                  <span className="sale-line__sub">
-                    {PRODUCT_KIND_LABEL[option.kind]} · {optionFacts(option)}
-                  </span>
-                </div>
-                <span className="sale-line__total">{formatMoney(option.price.amount_minor, option.price.currency)}</span>
-                <RemoveButton label={`Remove ${option.product.name}`} disabled={pending} onClick={() => choosePrice("")} />
-              </li>
-            </ul>
+            <ListTable label="Products" density="two-line" className="list-table--bare new-sale__lines" columns={LINE_COLUMNS}>
+              <ListTableBody>
+                <ListTableRow>
+                  <ListTableCell>
+                    <CellStack
+                      lead={
+                        <Tile square>
+                          <ProductIcon kind={option.kind} />
+                        </Tile>
+                      }
+                      title={optionTitle(option, options)}
+                      sub={`${PRODUCT_KIND_LABEL[option.kind]} · ${optionFacts(option)}`}
+                    />
+                  </ListTableCell>
+                  <ListTableCell align="end" className="cell-figure">
+                    {formatMoney(option.price.amount_minor, option.price.currency)}
+                  </ListTableCell>
+                  <ListTableCell align="end">
+                    <RemoveButton label={`Remove ${option.product.name}`} disabled={pending} onClick={() => choosePrice("")} />
+                  </ListTableCell>
+                </ListTableRow>
+              </ListTableBody>
+            </ListTable>
           ) : options.length === 0 ? (
-            <div className="new-sale__empty">
+            <div className="member-empty">
               <p>No membership or pass has a price to sell.</p>
               {can("products:update") ? (
                 <Link to="/$org/products" params={{ org: organization.slug }} className="new-sale__link">
@@ -324,163 +407,56 @@ function NewSaleForm({
               ) : null}
             </div>
           ) : (
-            <div className="new-sale__empty" data-invalid={productError ? true : undefined}>
-              <Button
-                id="sale-add-product"
-                type="button"
-                variant="ghost"
-                size="compact"
-                className="new-sale__add"
-                aria-describedby={productError ? "sale-add-product-error" : undefined}
-                onClick={() => setDialog("product")}
-              >
-                <Icon name="plus" {...markIcon} />
-                Product
-              </Button>
-            </div>
+            <p className="member-empty" data-invalid={productError ? true : undefined}>
+              No product yet
+            </p>
           )}
           <FieldError id="sale-add-product-error" className="new-sale__error">
             {productError}
           </FieldError>
           {option ? (
-            <div className="sale-total">
-              <span>Total</span>
-              <span className="sale-total__amount">{formatMoney(total, currency)}</span>
-            </div>
+            <dl className="sale-sum">
+              <div className="sale-sum__row">
+                <dt>Total</dt>
+                <dd>{formatMoney(total, currency)}</dd>
+              </div>
+            </dl>
           ) : null}
-        </section>
+        </Section>
 
-        <section className="mx-section" aria-labelledby="payment-title">
-          <Band
-            id="payment"
-            title="Payment"
-            icon="cash"
-            action={
-              canPay && !payment ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="compact"
-                  className="sale-band__button"
-                  disabled={!option || pending}
-                  onClick={() => setDialog("payment")}
-                >
-                  <Icon name="plus" {...markIcon} />
-                  Record payment
-                </Button>
-              ) : null
-            }
-          />
+        <Section
+          id="payment"
+          title="Payment"
+          action={
+            canPay && !payment ? (
+              <Button type="button" variant="secondary" size="compact" disabled={!option || pending} onClick={() => setDialog("payment")}>
+                <Icon name="plus" size={14} {...markIcon} />
+                Record payment
+              </Button>
+            ) : null
+          }
+        >
           {!option ? (
-            <p className="new-sale__hint">Add a product to record a payment.</p>
+            <p className="member-empty">Add a product to record a payment.</p>
           ) : payment ? (
-            <ul className="sale-money-rows">
-              <PaymentRow payment={payment} currency={currency} disabled={pending} onRemove={() => setPayment(null)} />
-            </ul>
+            <ListTable label="Payment" density="two-line" className="list-table--bare new-sale__lines" columns={LINE_COLUMNS}>
+              <ListTableBody>
+                <PaymentRow payment={payment} currency={currency} disabled={pending} onRemove={() => setPayment(null)} />
+              </ListTableBody>
+            </ListTable>
           ) : (
-            <p className="sale-empty">No payment yet</p>
+            <p className="member-empty">No payment yet</p>
           )}
           {option ? (
-            <div className="sale-total" data-state={balance > 0 ? "due" : undefined}>
-              <span>Balance due</span>
-              <span className="sale-total__amount">{formatMoney(balance, currency)}</span>
-            </div>
+            <dl className="sale-sum" data-state={balance > 0 ? "due" : undefined}>
+              <div className="sale-sum__row">
+                <dt>Balance due</dt>
+                <dd>{formatMoney(balance, currency)}</dd>
+              </div>
+            </dl>
           ) : null}
-        </section>
+        </Section>
       </form>
-
-      <aside className="new-sale__side" aria-label="Sale details">
-        <div className="new-sale__group">
-          {member ? (
-            <>
-              <div className="new-sale__group-head">
-                <h2 id="sale-member-label">Member</h2>
-                <button
-                  type="button"
-                  id="sale-member"
-                  className="new-sale__icon-button"
-                  disabled={pending}
-                  onClick={() => {
-                    moveFocus.current = true;
-                    setMemberId("");
-                    edited();
-                  }}
-                >
-                  <Icon name="close" {...markIcon} />
-                  <span className="visually-hidden">Change member: {member.name}</span>
-                </button>
-              </div>
-              <div className="new-sale__member">
-                <span className="new-sale__avatar" aria-hidden="true">
-                  {initials(member.name)}
-                </span>
-                <div className="new-sale__member-text">
-                  <span className="new-sale__member-name">{member.name}</span>
-                  <span className="new-sale__member-sub">{member.email}</span>
-                </div>
-              </div>
-            </>
-          ) : members.length === 0 ? (
-            <>
-              <div className="new-sale__group-head">
-                <h2>Member</h2>
-              </div>
-              <p className="new-sale__hint new-sale__hint--plain">No members yet.</p>
-              <Link to="/$org/members/new" params={{ org: organization.slug }} className="new-sale__link">
-                New member
-              </Link>
-            </>
-          ) : (
-            <Combobox
-              id="sale-member"
-              label="Member"
-              placeholder="Search name or email"
-              emptyText="No member matches. Check the spelling."
-              options={members.map((item) => ({ value: item.id, label: item.name, detail: item.email }))}
-              value={null}
-              onChange={(value) => {
-                if (!value) return;
-                moveFocus.current = true;
-                setMemberId(value);
-                setLocal((current) => ({ ...current, member: undefined }));
-                edited();
-              }}
-              error={memberError}
-              invalid={Boolean(memberError)}
-              required
-            />
-          )}
-        </div>
-
-        <div className="new-sale__group">
-          <div className="new-sale__group-head">
-            <label htmlFor="sale-location">Location</label>
-          </div>
-          <div className="new-sale__select">
-            <Icon name="location" {...markIcon} />
-            <NativeSelect
-              id="sale-location"
-              className="new-sale__native"
-              value={locationId}
-              disabled={pending}
-              onChange={(event) => {
-                setLocationId(event.target.value);
-                setLocal((current) => ({ ...current, location: undefined }));
-                edited();
-              }}
-              aria-invalid={locationError ? true : undefined}
-              aria-describedby={describedBy("sale-location", undefined, locationError)}
-            >
-              {organization.locations.map((location) => (
-                <NativeSelectOption key={location.id} value={location.id}>
-                  {location.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
-          <FieldError id="sale-location-error">{locationError}</FieldError>
-        </div>
-      </aside>
 
       {dialog === "product" ? (
         <AddProductDialog
@@ -516,6 +492,84 @@ function NewSaleForm({
       >
         <p>{discardText(option, payment, currency)}</p>
       </ConfirmDialog>
+    </NewSaleLayout>
+  );
+}
+
+const LINE_COLUMNS: ListColumn[] = [
+  { id: "line", label: "Line" },
+  { id: "amount", label: "Amount", width: "112px", align: "end" },
+  { id: "remove", label: "Remove", width: "32px", align: "end", hideLabel: true },
+];
+
+/**
+ * Member in the right panel: a search of name and email, or the chosen member
+ * with a button to change. With no members it points to New member.
+ */
+function MemberPanel({
+  members,
+  member,
+  error,
+  pending,
+  onChoose,
+  onClear,
+}: {
+  members: Schemas["Member"][];
+  member: Schemas["Member"] | undefined;
+  error: string | undefined;
+  pending: boolean;
+  onChoose: (memberId: string) => void;
+  onClear: () => void;
+}) {
+  const organization = useOrganization();
+  if (member) {
+    return (
+      <div className="new-sale__group">
+        <div className="panel-group__head">
+          <h2 className="panel-group__title" id="sale-member-label">
+            Member
+          </h2>
+          <button type="button" id="sale-member" className="new-sale__icon-button" disabled={pending} onClick={onClear}>
+            <Icon name="close" {...markIcon} />
+            <span className="visually-hidden">Change member: {member.name}</span>
+          </button>
+        </div>
+        <div className="new-sale__member">
+          <Tile size="small">{initials(member.name)}</Tile>
+          <div className="new-sale__member-text">
+            <span className="new-sale__member-name">{member.name}</span>
+            <span className="new-sale__member-sub">{member.email}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (members.length === 0) {
+    return (
+      <PanelGroup title="Member">
+        <p className="new-sale__hint">No members yet.</p>
+        <Link to="/$org/members/new" params={{ org: organization.slug }} className="new-sale__link">
+          New member
+        </Link>
+      </PanelGroup>
+    );
+  }
+  return (
+    <div className="new-sale__group">
+      <Combobox
+        id="sale-member"
+        label="Member"
+        placeholder="Search name or email"
+        emptyText="No member matches. Check the spelling."
+        options={members.map((item) => ({ value: item.id, label: item.name, detail: item.email }))}
+        value={null}
+        onChange={(value) => {
+          if (value) onChoose(value);
+        }}
+        error={error}
+        invalid={Boolean(error)}
+        required
+      />
     </div>
   );
 }
@@ -545,20 +599,19 @@ function PaymentRow({
   disabled: boolean;
   onRemove: () => void;
 }) {
-  const methodIcon = METHOD_ICON[payment.method];
   const label = PAYMENT_METHOD_LABEL[payment.method];
   return (
-    <li className="sale-line">
-      <span className="sale-tile" aria-hidden="true">
-        <Icon name={methodIcon} {...markIcon} />
-      </span>
-      <div className="sale-line__main">
-        <span className="sale-line__name">{label}</span>
-        {payment.reference.trim() ? <span className="sale-line__sub">Ref. {payment.reference.trim()}</span> : null}
-      </div>
-      <span className="sale-line__total">{formatMoney(payment.amount_minor, currency)}</span>
-      <RemoveButton label={`Remove the ${label.toLowerCase()} payment`} disabled={disabled} onClick={onRemove} />
-    </li>
+    <ListTableRow>
+      <ListTableCell>
+        <CellStack title={label} sub={payment.reference.trim() ? `Ref. ${payment.reference.trim()}` : undefined} />
+      </ListTableCell>
+      <ListTableCell align="end" className="cell-figure">
+        {formatMoney(payment.amount_minor, currency)}
+      </ListTableCell>
+      <ListTableCell align="end">
+        <RemoveButton label={`Remove the ${label.toLowerCase()} payment`} disabled={disabled} onClick={onRemove} />
+      </ListTableCell>
+    </ListTableRow>
   );
 }
 
@@ -750,21 +803,18 @@ function DraftPaymentDialog({
 /** The page while members and products load. */
 export function NewSaleLoading() {
   return (
-    <div className="page new-sale" role="status" aria-busy="true" aria-label="Loading new sale">
-      <NewSaleHead />
-      <div className="new-sale__main">
-        {[0, 1].map((index) => (
-          <div key={index} className="mx-section">
-            <div className="mx-section__head" />
-            <span className="skeleton-line" style={{ width: "60%" }} />
-            <span className="skeleton-line skeleton-line--small" style={{ width: "40%" }} />
-          </div>
-        ))}
+    <NewSaleLayout
+      panel={
+        <div role="status" aria-busy="true" aria-label="Loading member and location">
+          <span className="skeleton-block new-sale__skeleton-field" />
+        </div>
+      }
+    >
+      <div role="status" aria-busy="true" aria-label="Loading new sale" className="sale-loading">
+        <ListTable label="Products (loading)" density="two-line" className="list-table--bare" columns={LINE_COLUMNS}>
+          <ListTableLoading rows={2} label="Loading products" />
+        </ListTable>
       </div>
-      <div className="new-sale__side">
-        <span className="skeleton-line skeleton-line--small" style={{ width: 80 }} />
-        <span className="skeleton-block new-sale__skeleton-field" />
-      </div>
-    </div>
+    </NewSaleLayout>
   );
 }

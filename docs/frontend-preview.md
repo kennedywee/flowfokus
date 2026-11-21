@@ -37,8 +37,15 @@ before it) is history. The visual rules live in
   Staff check a member in from the member page (C) or with Ctrl K. Sell (S) needs
   purchases:create. Renew, gym site link codes, and unlink are in the page's more
   menu.
-- Sales: list and create sales, record payments, deliver access, renew,
-  refund, void, and end access.
+- Sales: the list (the sale count, Filter by Payment and Fulfillment, search,
+  Display, sortable Member, Date, and Amount, and a page range), New sale,
+  and the sale page, where staff record payments, fulfill, refund, void, and end
+  access. The list and sale page show only what Rails returns (the 100 newest
+  sales). They leave out sale numbers, sold by, who recorded a payment, notes,
+  comments, Send invoice, several lines in one sale, and fulfillment per line
+  ([#18](https://github.com/kennedywee/flowfokus/issues/18)). The sale page's
+  title is the product name. Record payment (P) and Fulfill items (F) are in the
+  page's section headers; Refund, Revoke access, and Void are in its more menu.
 - Calendar (the schedule route): sessions by day, the roster of each session, booking a member,
   cancelling a booking or a session, and marking attendance.
 - Programs: create and edit programs, add sessions, and add or change ticket
@@ -68,8 +75,8 @@ These actions persist in PostgreSQL, including during local demo development.
   parts for the redesign (list table, filter bar, Display popover, row
   selection, groups, detail layout, hero, activity, background patterns, and
   data marks) on labelled sample members, bookings, and events. The
-  Members list and Member details use them with real Rails data; the other
-  screens follow in the issues #90 to #94. It also shows the Horizon and the
+  Members list, Member details, and the Sales screens use them with real Rails
+  data; the other screens follow in the issues #91 to #94. It also shows the Horizon and the
   record section that Member details adds. See
   [portal design](../apps/portal/DESIGN.md#shared-parts-issue-87).
 

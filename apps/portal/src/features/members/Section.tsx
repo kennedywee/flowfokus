@@ -5,16 +5,20 @@ import { Icon } from "@/components/ui/icon";
  * A section of a record page (Paper "Holds", "Recent sales", "Profile"): a
  * small grey title, "View all" on the right when the list has more rows than
  * it shows, then the content. `more` toggles the rest of the list in place.
+ * `action` is a button for the section as a whole, such as Record payment.
  */
 export function Section({
   id,
   title,
   more,
+  action,
   children,
 }: {
   id: string;
   title: string;
   more?: { open: boolean; onToggle: () => void } | null;
+  /** A button on the right of the title. */
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -27,6 +31,7 @@ export function Section({
             <Icon name={more.open ? "chevronDown" : "chevronRight"} size={12} aria-hidden focusable={false} />
           </button>
         ) : null}
+        {action}
       </div>
       {children}
     </section>

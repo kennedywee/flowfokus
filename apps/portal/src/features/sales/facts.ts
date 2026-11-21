@@ -1,4 +1,6 @@
 import type { Permission, Schemas } from "@flowfokus/api";
+import type { FilterField } from "@/components/parts/FilterBar";
+import { type ActiveFilter, type SortState } from "@/lib/list-parts";
 import { PAYMENT_METHOD_LABEL, PAYMENT_STATUS_LABEL, formatMoney, formatTime } from "../../lib/format";
 
 /*
@@ -53,13 +55,22 @@ export const FULFILLMENT_FILTERS: { value: Exclude<FulfillmentState, "none">; la
 
 export interface SalesFilter {
   payment: PaymentState[];
+  /** True for "is not": the sales whose payment state is none of the values. */
+  paymentNot: boolean;
   fulfillment: FulfillmentState[];
+  fulfillmentNot: boolean;
 }
 
-/** The search params the sales list keeps in the URL. */
+/**
+ * The search params the sales list keeps in the URL. `payment_not=true` and
+ * `fulfillment_not=true` turn that filter into "is not"; without them the values
+ * mean "is any of". Old links have no `_not` param and stay "is any of".
+ */
 export interface SalesSearch {
   payment?: string;
+  payment_not?: true;
   fulfillment?: string;
+  fulfillment_not?: true;
   q?: string;
 }
 
@@ -81,40 +92,64 @@ function legacyFulfillment(text: unknown): unknown {
     .join(",");
 }
 
+const PAYMENT_VALUES = PAYMENT_FILTERS.map((item) => item.value);
+const FULFILLMENT_VALUES = FULFILLMENT_FILTERS.map((item) => item.value);
+
+/**
+ * `_not` counts only when its filter has values. The router reads `true` as a
+ * boolean; the text forms are for links typed by hand.
+ */
+function negation(flag: unknown, values: readonly string[]): boolean {
+  return values.length > 0 && (flag === true || flag === "true" || flag === "1" || flag === 1);
+}
+
 /**
  * Reads the list URL. Older links use `view=due` (money still due),
  * `view=deliver` (paid, unfulfilled), and `delivery=` for the fulfillment
  * filter; they become the same filters.
  */
 export function readSalesSearch(search: Record<string, unknown>): SalesSearch {
-  let payment = pick(search.payment, PAYMENT_FILTERS.map((item) => item.value));
-  let fulfillment = pick(search.fulfillment ?? legacyFulfillment(search.delivery), FULFILLMENT_FILTERS.map((item) => item.value));
-  if (search.view === "due" && !payment.length) payment = ["unpaid", "partial"];
+  let payment = pick(search.payment, PAYMENT_VALUES);
+  let paymentNot = negation(search.payment_not, payment);
+  let fulfillment = pick(search.fulfillment ?? legacyFulfillment(search.delivery), FULFILLMENT_VALUES);
+  let fulfillmentNot = search.fulfillment === undefined ? false : negation(search.fulfillment_not, fulfillment);
+  if (search.view === "due" && !payment.length) {
+    payment = ["unpaid", "partial"];
+    paymentNot = false;
+  }
   if (search.view === "deliver" && !payment.length && !fulfillment.length) {
     payment = ["paid"];
     fulfillment = ["waiting"];
+    paymentNot = false;
+    fulfillmentNot = false;
   }
   const q = typeof search.q === "string" ? search.q.trim().slice(0, 200) : "";
   return {
     ...(payment.length ? { payment: payment.join(",") } : {}),
+    ...(paymentNot ? { payment_not: true as const } : {}),
     ...(fulfillment.length ? { fulfillment: fulfillment.join(",") } : {}),
+    ...(fulfillmentNot ? { fulfillment_not: true as const } : {}),
     ...(q ? { q } : {}),
   };
 }
 
 export function filterFromSearch(search: SalesSearch): SalesFilter {
+  const payment = pick(search.payment, PAYMENT_VALUES);
+  const fulfillment = pick(search.fulfillment, FULFILLMENT_VALUES);
   return {
-    payment: pick(search.payment, PAYMENT_FILTERS.map((item) => item.value)),
-    fulfillment: pick(search.fulfillment, FULFILLMENT_FILTERS.map((item) => item.value)),
+    payment,
+    paymentNot: negation(search.payment_not, payment),
+    fulfillment,
+    fulfillmentNot: negation(search.fulfillment_not, fulfillment),
   };
 }
 
-/** Sales that match every chosen fact. Within one fact, any chosen value matches. */
+/** Sales that match every chosen fact. Within one fact, "is any of" matches any value and "is not" matches none. */
 export function filterSales(sales: Schemas["Sale"][], filter: SalesFilter, q = ""): Schemas["Sale"][] {
   const needle = q.trim().toLowerCase();
   return sales.filter((sale) => {
-    if (filter.payment.length && !filter.payment.includes(paymentFact(sale).state)) return false;
-    if (filter.fulfillment.length && !filter.fulfillment.includes(fulfillmentFact(sale).state)) return false;
+    if (filter.payment.length && filter.payment.includes(paymentFact(sale).state) === filter.paymentNot) return false;
+    if (filter.fulfillment.length && filter.fulfillment.includes(fulfillmentFact(sale).state) === filter.fulfillmentNot) return false;
     if (!needle) return true;
     return [sale.member.name, sale.member.email, sale.line_item.product_name, sale.line_item.price_label].some((text) =>
       text.toLowerCase().includes(needle),
@@ -132,11 +167,72 @@ export function factCounts(sales: Schemas["Sale"][]): Record<PaymentState | Fulf
   return counts;
 }
 
-/** The list footer: "16 sales", or "1–50 of 212 sales" when there are pages. */
-export function salesRange(first: number, shown: number, total: number): string {
-  const noun = total === 1 ? "sale" : "sales";
-  if (shown >= total) return `${total} ${noun}`;
-  return `${first + 1}–${first + shown} of ${total} ${noun}`;
+/** The filter fields the bar offers, with a count per value. */
+export function salesFilterFields(counts: Record<PaymentState | FulfillmentState, number>): FilterField[] {
+  return [
+    { key: "payment", label: "Payment", options: PAYMENT_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+    { key: "fulfillment", label: "Fulfillment", options: FULFILLMENT_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+  ];
+}
+
+/** The chips for the filters in the URL, payment first. */
+export function activeFilters(filter: SalesFilter): ActiveFilter[] {
+  return [
+    ...(filter.payment.length ? [{ field: "payment", values: filter.payment, negated: filter.paymentNot }] : []),
+    ...(filter.fulfillment.length ? [{ field: "fulfillment", values: filter.fulfillment, negated: filter.fulfillmentNot }] : []),
+  ];
+}
+
+/** The URL search for the chips. A flipped chip keeps its values and sets `_not`. */
+export function searchFromFilters(filters: readonly ActiveFilter[], q: string | undefined): SalesSearch {
+  const payment = filters.find((filter) => filter.field === "payment");
+  const fulfillment = filters.find((filter) => filter.field === "fulfillment");
+  return {
+    ...(payment?.values.length ? { payment: payment.values.join(",") } : {}),
+    ...(payment?.values.length && payment.negated ? { payment_not: true as const } : {}),
+    ...(fulfillment?.values.length ? { fulfillment: fulfillment.values.join(",") } : {}),
+    ...(fulfillment?.values.length && fulfillment.negated ? { fulfillment_not: true as const } : {}),
+    ...(q ? { q } : {}),
+  };
+}
+
+/* ---------- Display: sort and columns ---------- */
+
+/** The columns staff can sort by. The ids are the list table's column ids. */
+export const SALE_SORT_FIELDS = [
+  { value: "date", label: "Date" },
+  { value: "member", label: "Member" },
+  { value: "amount", label: "Amount" },
+] as const;
+
+/** Rails returns sales newest first, so that is the order staff see until they sort. */
+export const DEFAULT_SALE_SORT: SortState = { column: "date", direction: "desc" };
+
+/** The Display popover's column chips. Member, Product, Payment, and Amount always show. */
+export type SaleColumnId = "date" | "fulfillment" | "method";
+export const DEFAULT_SALE_COLUMNS: Record<SaleColumnId, boolean> = { date: true, fulfillment: true, method: true };
+
+/** The sales in the chosen order. A tie keeps the order Rails sent. */
+export function sortSales(sales: readonly Schemas["Sale"][], sort: SortState): Schemas["Sale"][] {
+  const sign = sort.direction === "asc" ? 1 : -1;
+  const compare = (a: Schemas["Sale"], b: Schemas["Sale"]) => {
+    if (sort.column === "member") return a.member.name.localeCompare(b.member.name, undefined, { sensitivity: "base" });
+    if (sort.column === "amount") return a.total_minor - b.total_minor;
+    return Date.parse(a.purchased_at) - Date.parse(b.purchased_at);
+  };
+  return sales
+    .map((sale, index) => ({ sale, index }))
+    .sort((a, b) => sign * compare(a.sale, b.sale) || a.index - b.index)
+    .map(({ sale }) => sale);
+}
+
+/** True when sort and columns are what the page starts with. Reset to default then does nothing. */
+export function isDefaultDisplay(sort: SortState, columns: Record<SaleColumnId, boolean>): boolean {
+  return (
+    sort.column === DEFAULT_SALE_SORT.column &&
+    sort.direction === DEFAULT_SALE_SORT.direction &&
+    (Object.keys(DEFAULT_SALE_COLUMNS) as SaleColumnId[]).every((id) => columns[id] === DEFAULT_SALE_COLUMNS[id])
+  );
 }
 
 /* ---------- Dates ---------- */
