@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
-import { creditTone, mixShares, pieSlice, spotKinds, type SpotKind } from "@/lib/list-parts";
+import { creditTone, mixShares, pieSlice, scaleSpots, spotKinds, type SpotKind } from "@/lib/list-parts";
 import { cn } from "@/lib/utils";
 
 const icon = { "aria-hidden": true, focusable: false } as const;
@@ -118,10 +118,38 @@ export function CreditRing({ left, total, children }: { left: number; total: num
  */
 const SPOT_CLASS: Record<SpotKind, string> = { booked: "spot--booked", open: "spot--open", full: "spot--full", past: "spot--past" };
 
-/** One run of spots, left to right, at row size (60 x 12 for twelve spots). */
-export function SpotRow({ capacity, booked, state = "upcoming", label }: { capacity: number; booked: number; state?: "upcoming" | "past"; label?: string }) {
-  const spots = spotKinds(capacity, booked, state);
-  const width = Math.max(1, spots.length) * 5;
+/** Most segments a row draws (100px). A bigger session is drawn smaller. */
+const ROW_MAX = 20;
+/** Most segments a column draws (128px). */
+const COLUMN_MAX = 16;
+
+/**
+ * One run of spots, left to right, at row size (60 x 12 for twelve spots). A
+ * cancelled session is a flat faint line, as in Paper.
+ */
+export function SpotRow({
+  capacity,
+  booked,
+  state = "upcoming",
+  cancelled = false,
+  label,
+}: {
+  capacity: number;
+  booked: number;
+  state?: "upcoming" | "past";
+  cancelled?: boolean;
+  label?: string;
+}) {
+  const scaled = scaleSpots(capacity, booked, ROW_MAX);
+  const spots = spotKinds(scaled.capacity, scaled.booked, state);
+  const width = Math.max(1, cancelled ? Math.min(capacity, ROW_MAX) : spots.length) * 5;
+  if (cancelled) {
+    return (
+      <svg className="spot-row" width={width} height="12" viewBox={`0 0 ${width} 12`} role="img" aria-label={label ?? "Cancelled"}>
+        <path className="spot--line" d={`M0 6H${width}`} />
+      </svg>
+    );
+  }
   return (
     <svg
       className="spot-row"
@@ -140,7 +168,8 @@ export function SpotRow({ capacity, booked, state = "upcoming", label }: { capac
 
 /** One session as a column of spots at chart size. Stack several side by side for a chart. */
 export function SpotColumn({ capacity, booked, state = "upcoming", cancelled = false }: { capacity: number; booked: number; state?: "upcoming" | "past"; cancelled?: boolean }) {
-  const spots = spotKinds(capacity, booked, state);
+  const scaled = scaleSpots(capacity, booked, COLUMN_MAX);
+  const spots = spotKinds(scaled.capacity, scaled.booked, state);
   const height = Math.max(1, spots.length) * 8;
   return (
     <svg

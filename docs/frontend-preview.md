@@ -46,10 +46,25 @@ before it) is history. The visual rules live in
   ([#18](https://github.com/kennedywee/flowfokus/issues/18)). The sale page's
   title is the product name. Record payment (P) and Fulfill items (F) are in the
   page's section headers; Refund, Revoke access, and Void are in its more menu.
-- Calendar (the schedule route): sessions by day, the roster of each session, booking a member,
-  cancelling a booking or a session, and marking attendance.
-- Programs: create and edit programs, add sessions, and add or change ticket
-  prices.
+- Calendar (the schedule route): sessions by day.
+- Session details: the date and time with "Starts in", the arrival ribbon (the
+  members who are here, how many are still to arrive, and the spots open), and
+  the bookings as Here, To arrive, and Cancelled. This is the only check-in
+  screen for booked members: a row's status mark, A, the row menu, or Check in
+  on the floating bar for chosen rows (one Rails attend call per row; Rails
+  ignores a member who is already here). Staff also book a member, cancel a
+  booking, and cancel the session. It leaves out No-show, a bulk check-in call,
+  arrival times before check-in, the sale's payment state on a booking, staff
+  hosts, notes, and activity ([#20](https://github.com/kennedywee/flowfokus/issues/20)).
+- Programs: the list (the program count, Filter by Kind and Visibility, search,
+  Display, sortable Program, Host, and Upcoming, and a page range), Program
+  details, and New and Edit program. Program details has the fill rate for the
+  last four weeks (derived from the sessions Rails returns), the chart of the
+  last week and the next 30 days, the sessions with "Show all sessions", and Ways
+  to book. Staff create programs, add sessions, publish, and add or change ticket
+  prices. The screens leave out the weekly pattern line, bookings per way to
+  book, staff hosts, and activity and comments
+  ([#20](https://github.com/kennedywee/flowfokus/issues/20)).
 - Products: the list (the product count, Filter by Type and Status, search,
   Display, sortable Status, Name, and Price, and a page range), Product details,
   and New and Edit product. Staff with `products:create` add products. Staff with

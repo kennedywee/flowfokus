@@ -206,10 +206,6 @@ Existing blocks to compose before adding another abstraction:
   in the URL. Each screen keeps its own filter groups and query params.
 - `ListPager`: the range and page buttons under a redesigned list. It is also the
   footer of the new `ListTable`.
-- `TableState`: a list with no rows. Paper "Table · Empty" keeps the header band
-  and fills a grey panel with generic skeleton lines that fade in an oval toward
-  the message; "No results" shows the panel alone, with Clear search or Clear
-  filters. List header bands and rows start on the content edge.
 - `FormNotice`: a form's failed request in one bordered line (red icon, title,
   staff sentence). The fields keep their values.
 - `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and
@@ -415,8 +411,9 @@ The redesigned screens share a small set of parts. Each is in the gallery
 empty, and loading. Sizes and colours come from the Paper pages Members,
 Session details, Member details, Sale details, Program details, Product
 details, and Pass credits. The screen issues (#88 to #94) move each screen onto
-them. Until then the older `ListToolbar`, `FilterChips`, `ListPager`, and
-`TableState` stay as they are, and the existing screens use them. The Members
+them. The older `ListToolbar` (still the Calendar's Filter and search, and the
+search field of every list), `FilterChips`, and `ListPager` (the footer of every
+list) stay as they are; `TableState` is gone. The Members
 list is the first screen on the new parts (#88); the Sales list (#90) and the Products list (#93) follow. The new parts add no sample
 data to a screen; the gallery examples carry labelled sample data.
 
@@ -427,19 +424,19 @@ and `lib/paging.ts`, styles in `styles/parts.css`.
 
 | Part | Rule |
 | --- | --- |
-| List table (`ListTable`, `ListTableBody`, `ListTableRow`, `ListTableCell`) | Table roles on a grid. Column labels are 12px muted text on a 30px header with one hairline. Rows sit flush with the content edge: no grey band, no row dividers, no inset. Two-line rows are 56px (a list page); one-line rows are 44px (a detail page). A sortable header is a button; its `columnheader` has `aria-sort`, and only the sorted column has one. The count and pager under a list page are the existing `ListPager`. A list inside a detail page loads more on scroll (`LoadMore`, with a button for keyboard users; `loaded` re-arms the trigger after each append, and Show more is free again when the promise `onLoadMore` returns settles, also on failure). Loading is skeleton rows in the same columns (`ListTableLoading`); empty is `ListTableEmpty` under the labels. |
+| List table (`ListTable`, `ListTableBody`, `ListTableRow`, `ListTableCell`) | Table roles on a grid. Column labels are 12px muted text on a 30px header with one hairline. Rows sit flush with the content edge: no grey band, no row dividers, no inset. Two-line rows are 56px (a list page); one-line rows are 44px (a detail page). A sortable header is a button; its `columnheader` has `aria-sort`, and only the sorted column has one. The count and pager under a list page are the existing `ListPager`. A list inside a detail page loads more on scroll (`LoadMore`, with a button for keyboard users; `loaded` re-arms the trigger after each append, and Show more is free again when the promise `onLoadMore` returns settles, also on failure). Loading is skeleton rows in the same columns (`ListTableLoading`); empty is `ListTableEmpty` under the labels. A row that no bulk action covers is `unselectable`: it keeps the checkbox column and shows no box, so the columns line up (Session details uses it for members already checked in). A row takes `onKeyDown` and `onContextMenu` for a row shortcut and a row menu. |
 | Row selection | `ListTable selection` adds a checkbox column and a header box (none, mixed, all). Chosen rows get `--color-selected`. Adjacent chosen rows merge into one band: `bandPositions` gives each row first, middle, last, or alone, so only the outer corners round (8px). Shift-click chooses a range. `SelectionBar` floats at the bottom with "2 selected" and the bulk actions; a live region announces the count, and Escape in the bar clears it. |
 | Collapsible groups (`ListGroup`) | A 36px heading button with a chevron, a mark, a label, and a count: "Here 2", "To arrive 9", "Fulfilled 1". The group is a ui-sdk Collapsible, so the button has `aria-expanded`. |
 | Filter bar (`FilterBar`) | A Filter button, then a chip per filter, then search (`SearchField`, with its "/" hint) and Display on the right. A chip reads field, operator, value, remove. A click on the operator flips "is" and "is not", or "is any of" and "is none of" (`filterOperator`, `toggleOperator`); there is no operator menu. The value opens the same checkbox list as the Filter menu. The filter state is `ActiveFilter[]` ({ field, values, negated }). With no `fields`, the Filter button is left out and search and Display remain (the Members list, until Rails has member filters). |
 | Display popover (`DisplayPopover`) | Sort by with a direction button, one toggle, column chips (`aria-pressed`), and "Reset to default" (dimmed and inert at the default, but still focusable). A ui-sdk Popover with `modal="trap-focus"`: focus moves in, Escape closes, and focus returns to the Display button. |
 | Segmented control (`ui/segmented-control`) | Two to four views where one is chosen: All, Comments, Activity. One tab stop, arrow keys between items. |
 | Detail layout (`DetailLayout`) | A main column (28px top, 36px sides, 40px between sections) and a 296px right panel. Below 1100px the panel sits under the main column. The panel holds `PanelGroup` (a grey 12px title) with `PanelRow` label and value rows (96px label), and `PanelAddGroup` for Tags and Notes with a "+" button. Leave the button out when the person cannot add. |
-| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. `HeroStats` is the stats alone: the Members list shows its count with it. |
+| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. A stat with `above` puts its label over the figure ("Starts in" over "20 min"); with a display title, a lone stat is 28px. `HeroStats` is the stats alone: the Members list shows its count with it. |
 | Activity (`ActivityFeed`) | A comment box (`CommentComposer`, ⌘↵), the All, Comments, Activity control, event rows with a coloured dot, comment rows with a 24px avatar, and "Show N earlier events". Rails has no comments yet, so a screen leaves the composer out and shows events only; the control then hides too. |
 | Background pattern (`RecordBackdrop`, via `DetailLayout record`) | One faint pattern per record: glyph dots (member), ledger rules (sale), orbit dots (program), clock ticks (session), barcode (product). Drawn from the Paper "Atmosphere" frames in `--color-pattern`. Decoration: `aria-hidden`, no pointer events, hidden under `prefers-contrast: more`. |
 | Status marks (`StatusMark`, `TimeMark`) | A ring or pie with its label: Paid, Partly paid, Unpaid, Fulfilled, Partly fulfilled, Unfulfilled (the icon set), and Renews or Ends (a pie of the time left). The label is the word Rails returns (#14 is open). Payment, fulfillment, and access stay separate marks. `boxed` is the pill of a hero. |
 | Credit ring (`CreditRing`) | "7 of 10 left" with a ring. Amber at two or fewer left, and at none. |
-| Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross. Chart size is a 10px column per session; row size is 60 x 12 for twelve spots. Put the count beside it as text. |
+| Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross in the chart and a flat faint line in a row. Chart size is a 10px column per session (16 spots at most); row size is 60 x 12 for twelve spots (20 at most). A larger session is drawn smaller: it never shows full unless it is, and never shows empty with a booking. Put the count beside it as text. |
 | Mix bar (`MixBar`) | Slanted stripes sized by share, darkest first. Put the numbers beside it as text. |
 | Allowance bar (`AllowanceBar`) | What a benefit allows: one slanted segment for each visit or booking, or one solid slanted bar for unlimited (and for more than 20). The amount sits beside it as text. |
 | Tag chip (`TagChip`) | A 20px pill with a 6px dot (`DotTone`: neutral, good, warning, critical, info, violet) and the tag name. The dot never carries the meaning alone. |
@@ -694,23 +691,58 @@ styles in `styles/schedule.css`). They show only Rails data:
   status under the name.
 - Nothing scheduled: one line and "Add sessions from a program". No match:
   one line and Clear filters. Did not load: one line, the reason, Try again.
-- Session details: a tile, the date and time as the title, program and kind
-  under it. Book member (B) and ⋯ (Open program, Cancel session… with
-  programs:manage) sit in the top bar while the session is open. The
-  breadcrumb is Programs › program › session, and Programs is the active
-  page. Properties: program, host, location (with several locations), time,
-  capacity, status, and the cancel reason.
-- The roster has three bands: Not marked (booked and held), Attended, and
-  Cancelled (cancelled and expired, folded unless the session is cancelled
-  or has no other bookings). The band says "Attended", the Rails word, not
-  Paper's "Checked in": a gym check-in is a separate fact. Rows show
-  initials, the name, "Guest of …" or "Booked by …" from the holder, what
+- Session details (issue #92, Paper "Session · A3 · Chosen (clock ticks)",
+  light and dark): `DetailLayout` with the clock-tick pattern. The hero is
+  the date and time at display size ("Tue 24 Nov, 19:00") with one stat on the
+  right, "Starts in" over "3 d" (`clockStat` in `arrival.ts`: "Starts in", "Ends
+  in" while it runs, "Ended … ago"; none for a cancelled session). Every time
+  on the page reads one clock: the route's `loadedAt` for the server render and
+  the first browser render, then the browser's own, ticking every 30 seconds
+  (`useNow`). A cancelled session shows "Cancelled · reason" under the title
+  and no ribbon. Book member (B, primary) and ⋯ (Open program, Cancel
+  session… with programs:manage) sit in the top bar while the session is open.
+  The breadcrumb is Programs › program › session.
+- The arrival ribbon (`ArrivalRibbon.tsx`, rules in `arrival.ts`) is a time
+  axis from 30 minutes before the start to the end, with the session hatched on
+  it, a Now pin with the time, and the members who are here as 28px initials
+  at the time Rails recorded their check-in (`attended_at`), stacked in up to
+  three rows so none covers another. The text says "9 to arrive, 1 spot open"
+  (once the session is over, "9 not checked in") with one ring per waiting
+  member and per open spot, up to 24 rings. Rails records when a member was
+  checked in, not when they walked in, so the ribbon shows no one before
+  that. A member checked in more than three hours before the start, or more than an
+  hour after the end, stays in the list and off the ribbon, so a check-in made
+  days ahead does not squeeze the session into a sliver. With no avatars the ribbon is short.
+- Bookings are three groups in the shared list table with a selection column:
+  Here (checked in, in arrival order, with the time in green), To arrive (booked
+  or held, not checked in, with the day it was booked), and Cancelled (cancelled
+  or expired; folded unless the session is cancelled or it is all there is).
+  The words are Rails' "attended" shown as "Here": a gym check-in is a separate
+  fact. A row has a checkbox, a status mark, a 28px initials tile and the name
+  (a link to the member), "Guest of …" or "Booked by …" from the holder, what
   happened to a cancelled spot (reason, "Credit returned", "Refund from the
-  sale", "Hold expired, payment not received"), the right as a chip,
-  "Awaiting payment" on a held spot, and the day it was booked. The status
-  icon opens the attendance menu; A marks the focused row; right-click or ⋯
-  opens Mark attended, Open member, Open sale, and Cancel booking….
-  Phones put Details first and write each row as two lines of text.
+  sale", "Hold expired, payment not received"), the right used (the pass,
+  membership, or Ticket) with "Awaiting payment" in amber on a held spot, and
+  the time. Phones put the right under the name and show the ⋯ always.
+- Check in is on this page only. For a booked member it works three ways: the
+  status mark on the row (a click, labelled "Check in Ben Tan"), A on the
+  focused row, and ⋯ › Check in. Choosing rows (the box, Shift for a range, or
+  the header box for all) opens the floating bar with Check in. Only booked
+  spots have a box: a held spot waits for payment, and a member already here or
+  cancelled has nothing to do (`unselectable`). Rails has no bulk call, so the
+  bar sends Rails' single attend call once per chosen row, one after another.
+  Rails ignores a booking that is already checked in and keeps its time, so a
+  second tab, a retry, or a stale page is safe. The toast says "3 members
+  checked in", or "2 of 3 checked in" with the names that failed and Try again,
+  and the failed rows stay chosen. Checking in needs bookings:manage.
+- Rows: right-click or ⋯ opens Check in, Open member, Open sale, and Cancel
+  booking…. The panel has Program (a link), Host (text), Location (with several
+  locations), Time, and Status (the schedule's mark and words).
+- Not shown, because Rails has no data for them (issue #20): No-show and its
+  undo, arrival times before check-in, a bulk check-in call, the sale's payment
+  state on a booking (a held spot says "Awaiting payment"; a sale that is not
+  fully paid does not), guest-of names beyond the holder, staff hosts, session
+  notes, and activity and comments.
 - Book member is one dialog: find the member, then one choice: a pass or
   membership they hold, or a ticket. Tickets can buy up to ten spots; each
   other spot is a member or a named guest. The footer action names the
@@ -722,40 +754,69 @@ styles in `styles/schedule.css`). They show only Rails data:
 - Cancel session and Cancel booking use the Paper confirm frame: a title,
   the consequence, a required Reason, then Keep and the red action. Cancel
   booking on a pass offers to give the credit back.
-- Not shown, because Rails has no data for them: no-show and undo, bulk
-  marking, member numbers, the sale's payment state on a booking, Change
-  payment, Collect payment, Move, session activity and comments, and
-  cancellation emails.
 
-Programs, Program details, and New program are the next redesigned screens
-(`features/programs/ProgramsList.tsx`, `ProgramDetails.tsx`,
-`ProgramForm.tsx`, and `ProgramDialogs.tsx`; facts in `facts.ts`, kind
-tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
-`styles/programs.css`). They show only Rails data:
+Programs, Program details, and New program (issue #92, Paper "Program",
+light and dark) are on the shared parts (`features/programs/ProgramsList.tsx`,
+`ProgramDetails.tsx`, `SessionsChart.tsx`, `ProgramForm.tsx`, and
+`ProgramDialogs.tsx`; facts in `facts.ts`, the sessions, the chart, and the fill
+rate in `sessions.ts`, kind tiles in `kinds.tsx`, publishing in `publish.ts`,
+styles in `styles/programs.css`). They show only Rails data. Paper could not be
+read while they were built (the Paper server timed out), so the layout, order,
+and content follow the saved light screenshots of "Program" and "Session · A3",
+and every size and colour comes from the tokens and shared parts built from
+Paper in #85 and #87. Where a size had to be judged, it is the nearest token:
+the chart column is the 8px `SpotColumn` step, the chart plot is 14px per day,
+and the ribbon's rows are 34px apart.
 
-- Programs: the title, New program (programs:manage) in the top bar, Filter
-  (Kind, Visibility, with counts and chips) and a "/" search over names and
-  hosts. A header band, then 52px rows: the kind tile (the set's groupClass, event,
-  and appointment icons), the name with Staff only, kind and length (and the location when
-  there are several), the host with an initial, and the upcoming count. Rails
-  returns every program; the list sorts by name, filters, and pages 50 at a
-  time in the browser. The URL keeps `kind`, `visibility`, and `q`. Phones
-  drop the header band and put the host on line 2.
+- Programs (the Members list pattern): the title with the program count on
+  the right, New program (programs:manage) in the top bar, a filter bar (Filter
+  with Kind and Visibility, with counts and "is" and "is not" chips; search over
+  names and hosts, "/" hint; Display), the list table, and a page range. Rows
+  are 56px: the kind tile (the set's groupClass, event, and appointment icons),
+  the name with Staff only, then kind, length, and the location when there are
+  several; the host with an initial; and the upcoming count. Program, Host, and
+  Upcoming sort from the header. Display has Sort by (Program, Host, Upcoming)
+  and the chips Host and Upcoming, with Reset to default. Rails returns every
+  program; the list sorts by name, filters, and pages 50 at a time in the
+  browser. The URL keeps `kind`, `visibility`, their `_not` flags, and `q`.
+  Orbit dots sit behind the title. Phones drop the header band and put the host
+  on line 2.
 - No programs: one line ("A manager adds programs." without manage). No
-  match: the search tile, one line, Clear search or Clear filters. Did not
-  load: one line, the reason, Try again. Loading keeps the toolbar and band.
-- Program details: the kind tile and the name. Add sessions (T), Sell ticket
-  (S), Book member (B), and ⋯ with Publish or Make staff only (⇧P) and Edit
-  program in the top bar, each only for roles and states that allow it. The
-  Sessions band lists sessions from today, ten first, then "Show N more".
-  Rows show the day, the time, Today, and the schedule's status marks; Ended
-  compares `ends_at` with now. Properties: Kind, Host, Length, Capacity,
-  Visibility, Location (several locations), then Tickets (+ opens New ticket),
-  "Also bookable with", and the Note. Phones put Book member first, hide
-  Add sessions from the action row, and add it to the Sessions band.
-- Ticket rows: the name, Off sale or Archived with a grey mark, the amount,
-  and ⋯ with Put on sale or Take off sale, and Archive price… (the shared
-  confirm). Prices sort by name, so a change of state does not move a row.
+  match: one line, Clear search or Clear filters. Did not load: one line, the
+  reason, Try again. Loading keeps the toolbar and the label row.
+- Program details: `DetailLayout` with the orbit dots. The hero is the name at
+  display size with one stat, the fill rate for the last four weeks. Rails has
+  no fill rate, so the page derives it exactly: spots taken over spots offered,
+  for the sessions that ended in the last 28 days and were not cancelled. Rails
+  counts a spot as taken while its booking is confirmed, attended, or held. It
+  needs the schedule from the last two months, which the route loads next to
+  the program (`listSchedule`); if that did not load, or no session qualifies,
+  the stat is left out. Book member (B, primary), Sell ticket (S, when a ticket
+  is on sale and the role can sell), and ⋯ (Publish or Make staff only ⇧P, Edit
+  program, with programs:manage) are in the top bar. Add sessions (T) is in the
+  Sessions header and Add ticket in the Ways to book header.
+- The chart ("Last week and the next 30 days"): one spot stack per session on
+  a line of days, with the key (Booked, Open, Full), a Today pin, a red cross
+  and "Cancelled" under the first cancelled session, a label every Monday, and
+  "Last session" with its date at the right. Past sessions are grey. A stack
+  draws at most 16 spots; a larger session is drawn smaller and never shows
+  full unless it is. A click on a column opens that session. The chart repeats
+  what Sessions says, so assistive technology skips it. On a phone the plot
+  scrolls sideways at 14px a day.
+- Sessions: the next four sessions from today as one-line rows: the day, the
+  time ("Today" beside it), the row-size spot stack, and "9 of 12", "Full" in
+  amber, or "Cancelled" with the reason (a cancelled session draws a flat
+  line). Past and cancelled rows are grey. "Show all sessions" opens the rest
+  in place as Upcoming and Past groups, each by week; when the schedule did not
+  load, only Upcoming shows and a line says so. Each row opens the session.
+- Ways to book: a table of Name, Type (Membership, Pass, Ticket), and Price
+  ("Included", "1 credit", or the ticket's amount), from `accepted_by` and the
+  tickets. A ticket that is off sale or archived says so, and its ⋯ has Put on
+  sale or Take off sale, and Archive price… (the shared confirm). Prices sort
+  by name, so a change of state does not move a row.
+- The panel: Kind, Host (text), Length, Capacity, Visibility, Location (several
+  locations), and the Note, which is Rails' description as plain text (it has no
+  author or date). Phones put the panel under the page.
 - Sell ticket and Book member reuse `BookMemberDialog` from the schedule with
   a Session picker (`sessions`); Sell ticket (`mode="sell"`) offers tickets
   only. A ticket buys spots in one session.
@@ -763,21 +824,27 @@ tiles in `kinds.tsx`, publishing in `publish.ts`, styles in
   fields, ⌘↵, and `FormNotice` when Rails does not answer. Add sessions sends
   Rails' first date, start time, and 1 to 26 weeks; the summary says
   "4 sessions · Tuesdays, 07:00 · 17 Nov to 8 Dec · 12 spots each".
-- New program: a page with Details (Name, Kind cards, Host, Length, Spots
-  per session) and Schedule (Starts at, From, Repeat weekly for, or "No
-  sessions yet") on the left; Location, Visibility, and Note on the right.
+- New program: a page on the same record frame as the program page (orbit
+  dots, `DetailHero` with the kind tile and "New program", and `Section`s):
+  Details (Name, Kind cards, Host, Length, Spots per session) and Schedule
+  (Starts at, From, Repeat weekly for, or "No sessions yet") on the left;
+  Location, Visibility, and Note in the right panel from 1100px. Narrower
+  screens put the panel after the title, in the page itself (`useWide`), so Tab
+  follows the screen.
   Create program (⌘↵) creates the program with an Idempotency-Key, then adds
   the sessions. The created toast offers Publish; the published toast offers
   View on site when the gym site is public. Leaving with changes asks
-  "Discard this program?". Phones put the properties first and the create
-  bar at the bottom, with no tab bar.
+  "Discard this program?". Phones put the create bar at the bottom, with no
+  tab bar.
 - Edit program (`/programs/:id/edit`): the same page with Save changes, no
   Kind and no Schedule.
-- Not shown, because Rails has no data for them: the next session per
-  program, several hosts and a staff host picker, the weekly pattern
-  subtitle, program activity and comments, Duplicate and Archive program,
-  pass credits per program, ticket Covers, Who can buy, and Sell online,
-  several days per schedule, Until, and specific dates.
+- Not shown, because Rails has no data for them (issue #20, and #21 for
+  tickets): the weekly pattern line ("Mondays and Wednesdays at 07:00", Rails
+  keeps no recurrence rule), bookings per way to book and the mix bar over
+  them, staff hosts and a host picker, the program note's author and date,
+  program activity and comments, Duplicate and Archive program, pass credits per
+  program, ticket Covers, Who can buy, and Sell online, several days per
+  schedule, Until, and specific dates.
 
 The Products list, Product details, and New and Edit product (issue #93, Paper
 "Product" and "Product · Pass (10-class pass)", light and dark) are on the

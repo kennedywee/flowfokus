@@ -237,17 +237,16 @@ export function NewTicketDialog({ program, onClose }: { program: Schemas["Progra
 }
 
 /**
- * One ticket price on the program page: the name, Off sale or Archived with a
- * grey mark, the amount, and ⋯ with Put on sale or Take off sale, and Archive.
+ * The ⋯ menu of a ticket price on the program page: Put on sale or Take off
+ * sale, and Archive price… (the shared confirm). An archived price has no menu.
  */
-export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; manage: boolean }) {
+export function TicketMenu({ price }: { price: Schemas["Price"] }) {
   const organization = useOrganization();
   const router = useRouter();
   const toast = useToast();
   const change = useAction(sendPriceChange);
   const archive = useAction(sendArchive);
   const [confirming, setConfirming] = useState(false);
-  const state = priceState(price);
 
   async function toggle() {
     const result = await change.run({ slug: organization.slug, id: price.id, available: !price.available });
@@ -271,36 +270,25 @@ export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; man
     }
   }
 
+  if (priceState(price) === "archived") return null;
   return (
-    <li className="program-ticket" data-state={state}>
-      <span className="program-ticket__name">{price.label}</span>
-      {state === "on_sale" ? null : (
-        <span className="program-ticket__state">
-          {state === "archived" ? <Icon name="visibility" {...icon} /> : <Icon name="close" {...icon} />}
-          {PRICE_STATE_LABEL[state]}
-        </span>
-      )}
-      <span className="program-ticket__amount">{formatMoney(price.amount_minor, price.currency)}</span>
-      {manage && state !== "archived" ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="program-ticket__more" aria-label={`Change ${price.label}`} disabled={change.pending || archive.pending}>
-            <Icon name="more" {...icon} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="sale-menu">
-            <DropdownMenuItem onClick={() => void toggle()}>
-              <Icon name="products" {...icon} />
-              {price.available ? "Take off sale" : "Put on sale"}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="menu__item--critical" onClick={() => setConfirming(true)}>
-              <Icon name="visibility" {...icon} />
-              Archive price…
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <span className="program-ticket__more-slot" aria-hidden="true" />
-      )}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="program-ticket__more" aria-label={`Change ${price.label}`} disabled={change.pending || archive.pending}>
+          <Icon name="more" {...icon} />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="sale-menu">
+          <DropdownMenuItem onClick={() => void toggle()}>
+            <Icon name="products" {...icon} />
+            {price.available ? "Take off sale" : "Put on sale"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="menu__item--critical" onClick={() => setConfirming(true)}>
+            <Icon name="visibility" {...icon} />
+            Archive price…
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <ConfirmDialog
         open={confirming}
         tone="critical"
@@ -313,6 +301,28 @@ export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; man
       >
         <p>It can never go back on sale. Past sales keep this price.</p>
       </ConfirmDialog>
+    </>
+  );
+}
+
+/**
+ * One ticket price as a list row, for the product page: the name, Off sale or
+ * Archived with a grey mark, the amount, and the ⋯ menu. The program page lists
+ * its prices in the Ways to book table instead.
+ */
+export function TicketPriceRow({ price, manage }: { price: Schemas["Price"]; manage: boolean }) {
+  const state = priceState(price);
+  return (
+    <li className="program-ticket" data-state={state}>
+      <span className="program-ticket__name">{price.label}</span>
+      {state === "on_sale" ? null : (
+        <span className="program-ticket__state">
+          {state === "archived" ? <Icon name="visibility" {...icon} /> : <Icon name="close" {...icon} />}
+          {PRICE_STATE_LABEL[state]}
+        </span>
+      )}
+      <span className="program-ticket__amount">{formatMoney(price.amount_minor, price.currency)}</span>
+      {manage && state !== "archived" ? <TicketMenu price={price} /> : <span className="program-ticket__more-slot" aria-hidden="true" />}
     </li>
   );
 }

@@ -11,8 +11,10 @@ import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useAction, useIdempotencyKey } from "../../lib/hooks";
 import { useCan, useDeskLocation, useOrganization } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
+import { useWide } from "../../lib/use-wide";
 import { createProgram, scheduleProgram, updateProgram } from "../../lib/staff.functions";
 import { PROGRAM_KINDS } from "../../lib/validate";
+import { DetailHero, DetailLayout, HeroTile, PanelAddGroup, PanelGroup } from "@/components/parts/DetailLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -35,6 +37,7 @@ import {
   type PlanErrors,
   type ProgramDraft,
 } from "./facts";
+import { Section } from "../members/Section";
 import { KIND_ICON } from "./kinds";
 import { usePublishProgram } from "./publish";
 
@@ -72,27 +75,46 @@ export function ProgramForm({ program }: { program?: Schemas["ProgramDetail"] })
   const can = useCan();
   if (!can("programs:manage")) {
     return (
-      <div className="page program-form">
-        <FormHead title={program ? `Edit ${program.name}` : "New program"} />
+      <FormFrame program={program}>
         <div className="list-state" role="status">
           <p className="list-state__title">Your role cannot change programs.</p>
           <p className="list-state__text">A manager adds and edits programs.</p>
         </div>
-      </div>
+      </FormFrame>
     );
   }
   return <Form program={program} />;
 }
 
-function FormHead({ title, children }: { title: string; children?: ReactNode }) {
+/**
+ * The record frame of a program: orbit dots behind a hero, then the content,
+ * with an optional right panel. Below 1100px the panel moves into the page
+ * after the hero, so the document order is the order on screen. `actions`
+ * goes last for that reason.
+ */
+function FormFrame({
+  program,
+  panel,
+  actions,
+  children,
+}: {
+  program?: Schemas["ProgramDetail"];
+  panel?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  const wide = useWide();
   return (
-    <header className="program-form__head">
-      <span className="program-tile" data-size={40} aria-hidden="true">
-        <Icon name="programs" {...icon} />
-      </span>
-      <h1>{title}</h1>
-      {children ? <PageActions>{children}</PageActions> : null}
-    </header>
+    <DetailLayout record="program" className="program-form" panel={wide ? panel : undefined}>
+      <DetailHero tile={<HeroTile icon={program ? KIND_ICON[program.kind] : "programs"} />} title={program ? `Edit ${program.name}` : "New program"} />
+      {!wide && panel ? (
+        <aside className="detail__panel" aria-label="Location, visibility, and note">
+          {panel}
+        </aside>
+      ) : null}
+      {children}
+      {actions ? <PageActions>{actions}</PageActions> : null}
+    </DetailLayout>
   );
 }
 
@@ -223,9 +245,86 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
   const failed = action.error && action.error.code !== "validation_failed" ? action.error : null;
   const anyFieldError = Object.values(errors).some(Boolean);
 
+  const panel = (
+    <>
+      <div className="panel-group">
+        <FieldBox id="program-location" label="Location" error={errors.location}>
+          <span className="program-select">
+            <Icon name="location" className="program-select__icon" {...icon} />
+            <NativeSelect
+              id="program-location"
+              className="program-input program-select__control"
+              value={draft.locationId}
+              onChange={(event) => set("locationId", event.target.value)}
+              aria-invalid={errors.location ? true : undefined}
+              aria-describedby={errors.location ? "program-location-error" : undefined}
+            >
+              {organization.locations.length ? null : <NativeSelectOption value="">No locations</NativeSelectOption>}
+              {organization.locations.map((location) => (
+                <NativeSelectOption key={location.id} value={location.id}>
+                  {location.name}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </span>
+          {organization.locations.length ? null : (
+            <Link to="/$org/settings/locations" params={{ org: organization.slug }} className="program-form__link">
+              Add a location
+            </Link>
+          )}
+        </FieldBox>
+      </div>
+      <div className="panel-group">
+        <FieldBox id="program-visibility" label="Visibility">
+          <span className="program-select">
+            {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
+            <NativeSelect
+              id="program-visibility"
+              className="program-input program-select__control"
+              value={draft.published ? "published" : "staff_only"}
+              onChange={(event) => set("published", event.target.value === "published")}
+            >
+              <NativeSelectOption value="staff_only">Staff only</NativeSelectOption>
+              <NativeSelectOption value="published">Published</NativeSelectOption>
+            </NativeSelect>
+          </span>
+        </FieldBox>
+      </div>
+      {noteOpen ? (
+        <div className="panel-group">
+          <FieldBox id="program-note" label="Note" error={errors.description}>
+            <Textarea
+              id="program-note"
+              className="program-input program-input--note"
+              rows={3}
+              maxLength={2000}
+              value={draft.description}
+              onChange={(event) => set("description", event.target.value)}
+              aria-invalid={errors.description ? true : undefined}
+              aria-describedby={errors.description ? "program-note-error" : undefined}
+            />
+          </FieldBox>
+        </div>
+      ) : (
+        <PanelAddGroup
+          title="Note"
+          addLabel="Add a note"
+          onAdd={() => {
+            setNoteOpen(true);
+            requestAnimationFrame(() => document.getElementById("program-note")?.focus());
+          }}
+        >
+          <p className="program-form__no-note">No note</p>
+        </PanelAddGroup>
+      )}
+    </>
+  );
+
   return (
-    <div className="page program-form">
-      <FormHead title={program ? `Edit ${program.name}` : "New program"}>
+    <FormFrame
+      program={program}
+      panel={panel}
+      actions={
         <Button
           type="submit"
           form={FORM_ID}
@@ -247,259 +346,171 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
             </>
           )}
         </Button>
-      </FormHead>
+      }
+    >
+      <form id={FORM_ID} ref={form} className="program-form__form" onSubmit={onSubmit} noValidate>
+        {failed ? (
+          <FormNotice title={program ? "The changes were not saved" : "The program was not saved"} error={failed} after="Your details are kept." />
+        ) : anyFieldError ? (
+          <p className="visually-hidden" role="alert">
+            {program ? "The changes were not saved." : "The program was not created."} Fix the marked fields.
+          </p>
+        ) : null}
 
-      <form id={FORM_ID} ref={form} className="program-form__layout" onSubmit={onSubmit} noValidate>
-        <div className="program-form__main">
-          {failed ? (
-            <FormNotice title={program ? "The changes were not saved" : "The program was not saved"} error={failed} after="Your details are kept." />
-          ) : anyFieldError ? (
-            <p className="visually-hidden" role="alert">
-              {program ? "The changes were not saved." : "The program was not created."} Fix the marked fields.
-            </p>
-          ) : null}
+        <Section id="program-details" title="Details">
+          <div className="program-form__fields">
+            <FieldBox id="program-name" label="Name" error={errors.name} wide>
+              <Input
+                id="program-name"
+                className="program-input"
+                autoFocus
+                autoComplete="off"
+                maxLength={200}
+                value={draft.name}
+                onChange={(event) => set("name", event.target.value)}
+                aria-invalid={errors.name ? true : undefined}
+                aria-describedby={errors.name ? "program-name-error" : undefined}
+              />
+            </FieldBox>
 
-          <section className="program-form__section" aria-labelledby="program-details-title">
-            <div className="mx-section__head">
-              <Icon name="edit" {...icon} />
-              <h2 id="program-details-title">Details</h2>
-            </div>
-            <div className="program-form__fields">
-              <FieldBox id="program-name" label="Name" error={errors.name} wide>
+            {program ? null : (
+              <fieldset className="program-kinds">
+                <legend className="program-field__label">Kind</legend>
+                <div className="program-kinds__cards">
+                  {PROGRAM_KINDS.map((kind) => {
+                    const iconName = KIND_ICON[kind];
+                    return (
+                      <label key={kind} className="program-kind">
+                        <input
+                          type="radio"
+                          name="program-kind"
+                          className="program-kind__input"
+                          value={kind}
+                          checked={draft.kind === kind}
+                          onChange={() => chooseKind(kind)}
+                        />
+                        <Icon name={iconName} className="program-kind__icon" {...icon} />
+                        <span className="program-kind__title">{PROGRAM_KIND_LABEL[kind]}</span>
+                        <span className="program-kind__meta">{KIND_META[kind]}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+
+            <div className="program-form__row">
+              <FieldBox id="program-host" label="Host" optional error={errors.host}>
                 <Input
-                  id="program-name"
+                  id="program-host"
                   className="program-input"
-                  autoFocus
                   autoComplete="off"
                   maxLength={200}
-                  value={draft.name}
-                  onChange={(event) => set("name", event.target.value)}
-                  aria-invalid={errors.name ? true : undefined}
-                  aria-describedby={errors.name ? "program-name-error" : undefined}
+                  placeholder="Coach or host"
+                  value={draft.host}
+                  onChange={(event) => set("host", event.target.value)}
+                  aria-invalid={errors.host ? true : undefined}
+                  aria-describedby={errors.host ? "program-host-error" : undefined}
                 />
               </FieldBox>
-
-              {program ? null : (
-                <fieldset className="program-kinds">
-                  <legend className="program-field__label">Kind</legend>
-                  <div className="program-kinds__cards">
-                    {PROGRAM_KINDS.map((kind) => {
-                      const iconName = KIND_ICON[kind];
-                      return (
-                        <label key={kind} className="program-kind">
-                          <input
-                            type="radio"
-                            name="program-kind"
-                            className="program-kind__input"
-                            value={kind}
-                            checked={draft.kind === kind}
-                            onChange={() => chooseKind(kind)}
-                          />
-                          <Icon name={iconName} className="program-kind__icon" {...icon} />
-                          <span className="program-kind__title">{PROGRAM_KIND_LABEL[kind]}</span>
-                          <span className="program-kind__meta">{KIND_META[kind]}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              )}
-
-              <div className="program-form__row">
-                <FieldBox id="program-host" label="Host" optional error={errors.host}>
-                  <Input
-                    id="program-host"
-                    className="program-input"
+              <FieldBox id="program-duration" label="Length" error={errors.duration}>
+                <NativeSelect
+                  id="program-duration"
+                  className="program-input"
+                  value={draft.duration}
+                  onChange={(event) => set("duration", event.target.value)}
+                  aria-invalid={errors.duration ? true : undefined}
+                  aria-describedby={errors.duration ? "program-duration-error" : undefined}
+                >
+                  {lengths.map((minutes) => (
+                    <NativeSelectOption key={minutes} value={String(minutes)}>
+                      {lengthText(minutes)}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+              </FieldBox>
+              <FieldBox id="program-capacity" label="Spots" error={errors.capacity}>
+                <span className="program-input program-input--suffix" data-invalid={errors.capacity ? true : undefined}>
+                  <input
+                    id="program-capacity"
+                    className="program-input__bare"
+                    inputMode="numeric"
                     autoComplete="off"
-                    maxLength={200}
-                    placeholder="Coach or host"
-                    value={draft.host}
-                    onChange={(event) => set("host", event.target.value)}
-                    aria-invalid={errors.host ? true : undefined}
-                    aria-describedby={errors.host ? "program-host-error" : undefined}
+                    value={draft.capacity}
+                    onChange={(event) => set("capacity", event.target.value)}
+                    aria-invalid={errors.capacity ? true : undefined}
+                    aria-describedby={errors.capacity ? "program-capacity-error program-capacity-unit" : "program-capacity-unit"}
+                  />
+                  <span id="program-capacity-unit" className="program-input__unit">
+                    per session
+                  </span>
+                </span>
+              </FieldBox>
+            </div>
+          </div>
+        </Section>
+
+        {program ? null : (
+          <Section id="program-schedule" title="Schedule">
+            <div className="program-form__fields">
+              <div className="program-form__row program-form__row--schedule">
+                <FieldBox id="program-time" label="Starts at" error={errors.time}>
+                  <span className="program-input program-input--suffix" data-invalid={errors.time ? true : undefined}>
+                    <input
+                      id="program-time"
+                      type="time"
+                      step={300}
+                      className="program-input__bare"
+                      value={plan.time}
+                      disabled={weeks === 0}
+                      onChange={(event) => setPlanField("time", event.target.value)}
+                      aria-invalid={errors.time ? true : undefined}
+                      aria-describedby={errors.time ? "program-time-error" : undefined}
+                    />
+                    <span className="program-input__unit">to {endClock(plan.time, Number(draft.duration) || 0)}</span>
+                  </span>
+                </FieldBox>
+                <FieldBox id="program-date" label="From" error={errors.date}>
+                  <Input
+                    id="program-date"
+                    type="date"
+                    className="program-input"
+                    value={plan.date}
+                    disabled={weeks === 0}
+                    onChange={(event) => setPlanField("date", event.target.value)}
+                    aria-invalid={errors.date ? true : undefined}
+                    aria-describedby={errors.date ? "program-date-error" : undefined}
                   />
                 </FieldBox>
-                <FieldBox id="program-duration" label="Length" error={errors.duration}>
+                <FieldBox id="program-weeks" label="Repeat weekly for" error={errors.weeks}>
                   <NativeSelect
-                    id="program-duration"
+                    id="program-weeks"
                     className="program-input"
-                    value={draft.duration}
-                    onChange={(event) => set("duration", event.target.value)}
-                    aria-invalid={errors.duration ? true : undefined}
-                    aria-describedby={errors.duration ? "program-duration-error" : undefined}
+                    value={plan.weeks}
+                    onChange={(event) => setPlanField("weeks", event.target.value)}
                   >
-                    {lengths.map((minutes) => (
-                      <NativeSelectOption key={minutes} value={String(minutes)}>
-                        {lengthText(minutes)}
+                    <NativeSelectOption value="0">No sessions yet</NativeSelectOption>
+                    {Array.from({ length: MAX_WEEKS }, (_, index) => (
+                      <NativeSelectOption key={index} value={String(index + 1)}>
+                        {index === 0 ? "1 week" : `${index + 1} weeks`}
                       </NativeSelectOption>
                     ))}
                   </NativeSelect>
                 </FieldBox>
-                <FieldBox id="program-capacity" label="Spots" error={errors.capacity}>
-                  <span className="program-input program-input--suffix" data-invalid={errors.capacity ? true : undefined}>
-                    <input
-                      id="program-capacity"
-                      className="program-input__bare"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      value={draft.capacity}
-                      onChange={(event) => set("capacity", event.target.value)}
-                      aria-invalid={errors.capacity ? true : undefined}
-                      aria-describedby={errors.capacity ? "program-capacity-error program-capacity-unit" : "program-capacity-unit"}
-                    />
-                    <span id="program-capacity-unit" className="program-input__unit">
-                      per session
-                    </span>
-                  </span>
-                </FieldBox>
               </div>
+              <p className="program-form__summary" aria-live="polite">
+                {summary ? (
+                  <>
+                    <span className="program-form__summary-count">{summary.count}</span>
+                    <span className="program-form__summary-detail">{summary.detail}</span>
+                  </>
+                ) : (
+                  <span className="program-form__summary-detail">No sessions yet</span>
+                )}
+              </p>
             </div>
-          </section>
-
-          {program ? null : (
-            <section className="program-form__section" aria-labelledby="program-schedule-title">
-              <div className="mx-section__head">
-                <Icon name="schedule" {...icon} />
-                <h2 id="program-schedule-title">Schedule</h2>
-              </div>
-              <div className="program-form__fields">
-                <div className="program-form__row program-form__row--schedule">
-                  <FieldBox id="program-time" label="Starts at" error={errors.time}>
-                    <span className="program-input program-input--suffix" data-invalid={errors.time ? true : undefined}>
-                      <input
-                        id="program-time"
-                        type="time"
-                        step={300}
-                        className="program-input__bare"
-                        value={plan.time}
-                        disabled={weeks === 0}
-                        onChange={(event) => setPlanField("time", event.target.value)}
-                        aria-invalid={errors.time ? true : undefined}
-                        aria-describedby={errors.time ? "program-time-error" : undefined}
-                      />
-                      <span className="program-input__unit">to {endClock(plan.time, Number(draft.duration) || 0)}</span>
-                    </span>
-                  </FieldBox>
-                  <FieldBox id="program-date" label="From" error={errors.date}>
-                    <Input
-                      id="program-date"
-                      type="date"
-                      className="program-input"
-                      value={plan.date}
-                      disabled={weeks === 0}
-                      onChange={(event) => setPlanField("date", event.target.value)}
-                      aria-invalid={errors.date ? true : undefined}
-                      aria-describedby={errors.date ? "program-date-error" : undefined}
-                    />
-                  </FieldBox>
-                  <FieldBox id="program-weeks" label="Repeat weekly for" error={errors.weeks}>
-                    <NativeSelect
-                      id="program-weeks"
-                      className="program-input"
-                      value={plan.weeks}
-                      onChange={(event) => setPlanField("weeks", event.target.value)}
-                    >
-                      <NativeSelectOption value="0">No sessions yet</NativeSelectOption>
-                      {Array.from({ length: MAX_WEEKS }, (_, index) => (
-                        <NativeSelectOption key={index} value={String(index + 1)}>
-                          {index === 0 ? "1 week" : `${index + 1} weeks`}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </FieldBox>
-                </div>
-                <p className="program-form__summary" aria-live="polite">
-                  {summary ? (
-                    <>
-                      <span className="program-form__summary-count">{summary.count}</span>
-                      <span className="program-form__summary-detail">{summary.detail}</span>
-                    </>
-                  ) : (
-                    <span className="program-form__summary-detail">No sessions yet</span>
-                  )}
-                </p>
-              </div>
-            </section>
-          )}
-        </div>
-
-        <aside className="program-form__side" aria-label="Location, visibility, and note">
-          <div className="program-form__side-group">
-            <FieldBox id="program-location" label="Location" error={errors.location}>
-              <span className="program-select">
-                <Icon name="location" className="program-select__icon" {...icon} />
-                <NativeSelect
-                  id="program-location"
-                  className="program-input program-select__control"
-                  value={draft.locationId}
-                  onChange={(event) => set("locationId", event.target.value)}
-                  aria-invalid={errors.location ? true : undefined}
-                  aria-describedby={errors.location ? "program-location-error" : undefined}
-                >
-                  {organization.locations.length ? null : <NativeSelectOption value="">No locations</NativeSelectOption>}
-                  {organization.locations.map((location) => (
-                    <NativeSelectOption key={location.id} value={location.id}>
-                      {location.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-              </span>
-              {organization.locations.length ? null : (
-                <Link to="/$org/settings/locations" params={{ org: organization.slug }} className="program-form__link">
-                  Add a location
-                </Link>
-              )}
-            </FieldBox>
-          </div>
-          <div className="program-form__side-group">
-            <FieldBox id="program-visibility" label="Visibility">
-              <span className="program-select">
-                {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
-                <NativeSelect
-                  id="program-visibility"
-                  className="program-input program-select__control"
-                  value={draft.published ? "published" : "staff_only"}
-                  onChange={(event) => set("published", event.target.value === "published")}
-                >
-                  <NativeSelectOption value="staff_only">Staff only</NativeSelectOption>
-                  <NativeSelectOption value="published">Published</NativeSelectOption>
-                </NativeSelect>
-              </span>
-            </FieldBox>
-          </div>
-          <div className="program-form__side-group">
-            {noteOpen ? (
-              <FieldBox id="program-note" label="Note" error={errors.description}>
-                <Textarea
-                  id="program-note"
-                  className="program-input program-input--note"
-                  rows={3}
-                  maxLength={2000}
-                  value={draft.description}
-                  onChange={(event) => set("description", event.target.value)}
-                  aria-invalid={errors.description ? true : undefined}
-                  aria-describedby={errors.description ? "program-note-error" : undefined}
-                />
-              </FieldBox>
-            ) : (
-              <div className="program-form__note">
-                <span className="program-field__label">Note</span>
-                <button
-                  type="button"
-                  className="program-form__add"
-                  aria-label="Add a note"
-                  onClick={() => {
-                    setNoteOpen(true);
-                    requestAnimationFrame(() => document.getElementById("program-note")?.focus());
-                  }}
-                >
-                  <Icon name="plus" {...icon} />
-                </button>
-                <span className="program-form__no-note">No note</span>
-              </div>
-            )}
-          </div>
-        </aside>
+          </Section>
+        )}
       </form>
 
       <ConfirmDialog
@@ -513,7 +524,7 @@ function Form({ program }: { program?: Schemas["ProgramDetail"] }) {
       >
         <p>{program ? `Your changes to ${program.name} will be lost.` : `The details you entered${draft.name.trim() ? ` for ${draft.name.trim()}` : ""} will be lost.`}</p>
       </ConfirmDialog>
-    </div>
+    </FormFrame>
   );
 }
 

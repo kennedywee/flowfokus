@@ -7,6 +7,8 @@ import {
   useEffect,
   useRef,
   type KeyboardEvent,
+  type KeyboardEventHandler,
+  type MouseEventHandler,
   type ReactElement,
   type ReactNode,
 } from "react";
@@ -161,35 +163,59 @@ export interface ListTableRowProps {
   onSelectedChange?: (on: boolean, details: { range: boolean }) => void;
   /** Names the row's checkbox, for example "Choose Ben Tan". */
   selectLabel?: string;
+  /**
+   * In a table with a selection column: this row cannot be chosen. It keeps
+   * the column's width and shows no checkbox. A group can hold rows that no
+   * bulk action covers, such as the members already checked in.
+   */
+  unselectable?: boolean;
   /** Shows the hover look without a pointer. For the gallery. */
   demo?: "hover" | "focus";
   className?: string;
+  /** Keys pressed in the row, and a right-click on it. */
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+  onContextMenu?: MouseEventHandler<HTMLDivElement>;
   children: ReactNode;
 }
 
-export function ListTableRow({ selected = false, band = null, onSelectedChange, selectLabel, demo, className, children }: ListTableRowProps) {
+export function ListTableRow({
+  selected = false,
+  band = null,
+  onSelectedChange,
+  selectLabel,
+  unselectable = false,
+  demo,
+  className,
+  onKeyDown,
+  onContextMenu,
+  children,
+}: ListTableRowProps) {
   const { template, selectable } = useContext(Context);
   const shift = useRef(false);
   return (
     <div
       role="row"
-      aria-selected={selectable ? selected : undefined}
+      aria-selected={selectable && !unselectable ? selected : undefined}
       className={cn("list-table__row", className)}
       style={{ gridTemplateColumns: template }}
+      onKeyDown={onKeyDown}
+      onContextMenu={onContextMenu}
       data-selected={selected || undefined}
       data-band={selected ? (band ?? "alone") : undefined}
       data-demo={demo}
     >
       {selectable ? (
         <div role="cell" className="list-table__check">
-          <Checkbox
-            aria-label={selectLabel ?? "Choose row"}
-            checked={selected}
-            onClick={(event) => {
-              shift.current = event.shiftKey;
-            }}
-            onCheckedChange={(on) => onSelectedChange?.(Boolean(on), { range: shift.current })}
-          />
+          {unselectable ? null : (
+            <Checkbox
+              aria-label={selectLabel ?? "Choose row"}
+              checked={selected}
+              onClick={(event) => {
+                shift.current = event.shiftKey;
+              }}
+              onCheckedChange={(on) => onSelectedChange?.(Boolean(on), { range: shift.current })}
+            />
+          )}
         </div>
       ) : null}
       {children}
@@ -201,13 +227,16 @@ export function ListTableCell({
   align,
   className,
   children,
+  ...rest
 }: {
   align?: "start" | "end";
   className?: string;
   children?: ReactNode;
+  /** `data-*` attributes, such as a state for CSS. */
+  [attribute: `data-${string}`]: string | boolean | undefined;
 }) {
   return (
-    <div role="cell" className={cn("list-table__cell", className)} data-align={align}>
+    <div role="cell" className={cn("list-table__cell", className)} data-align={align} {...rest}>
       {children}
     </div>
   );

@@ -59,6 +59,26 @@ describe("ListTable", () => {
     expect(html.match(/aria-selected="true"/g)).toHaveLength(1);
   });
 
+  test("an unselectable row keeps the checkbox column and shows no box", () => {
+    const html = renderToStaticMarkup(
+      <ListTable label="Bookings" columns={COLUMNS} selection={{ chosen: 0, total: 1, onToggleAll: () => {} }}>
+        <ListTableBody>
+          <ListTableRow unselectable selectLabel="Choose Ada">
+            <ListTableCell>Ada</ListTableCell>
+            <ListTableCell align="end">RM 1</ListTableCell>
+          </ListTableRow>
+          <ListTableRow selectLabel="Choose Ben">
+            <ListTableCell>Ben</ListTableCell>
+            <ListTableCell align="end">RM 1</ListTableCell>
+          </ListTableRow>
+        </ListTableBody>
+      </ListTable>,
+    );
+    expect(html).not.toContain("Choose Ada");
+    expect(html).toContain("Choose Ben");
+    expect(html.match(/class="list-table__check"/g)?.length).toBe(3);
+  });
+
   test("adjacent chosen rows share one band", () => {
     const html = table([true, true, true, false, true]);
     expect([...html.matchAll(/data-band="(\w+)"/g)].map((match) => match[1])).toEqual(["first", "middle", "last", "alone"]);
@@ -136,6 +156,12 @@ describe("FilterBar", () => {
 describe("marks and patterns", () => {
   test("a credit ring always has its text", () => {
     expect(renderToStaticMarkup(<CreditRing left={2} total={10} />)).toContain("2 of 10 left");
+  });
+
+  test("a cancelled spot row is a flat line named Cancelled", () => {
+    const html = renderToStaticMarkup(<SpotRow capacity={12} booked={0} cancelled />);
+    expect(html).toContain('aria-label="Cancelled"');
+    expect(html).toContain("spot--line");
   });
 
   test("a spot row names its count", () => {

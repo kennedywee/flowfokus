@@ -5,14 +5,17 @@ import { failureMessage } from "../../../lib/format";
 import { getRoster } from "../../../lib/staff.functions";
 import { isUuid } from "../../../lib/validate";
 
-type Loaded = Awaited<ReturnType<typeof getRoster>>;
+type Roster = Awaited<ReturnType<typeof getRoster>>;
+type Loaded = Roster & { loadedAt: number };
 
 export const Route = createFileRoute("/$org/schedule/$occurrenceId")({
-  loader: ({ params }): Promise<Loaded> => {
+  // `loadedAt` is the one clock for the server render and the first browser render.
+  loader: async ({ params }): Promise<Loaded> => {
+    const loadedAt = Date.now();
     if (!isUuid(params.occurrenceId)) {
-      return Promise.resolve({ ok: false as const, error: { status: 404, code: "not_found" as const, message: "Session not found" } });
+      return { ok: false as const, error: { status: 404, code: "not_found" as const, message: "Session not found" }, loadedAt };
     }
-    return getRoster({ data: { slug: params.org, id: params.occurrenceId } });
+    return { ...(await getRoster({ data: { slug: params.org, id: params.occurrenceId } })), loadedAt };
   },
   // Paper puts a session under its program: Programs › Morning strength › Thu 5 Nov, 07:00.
   staticData: {
@@ -31,9 +34,9 @@ export const Route = createFileRoute("/$org/schedule/$occurrenceId")({
 });
 
 function SessionPage() {
-  const roster = Route.useLoaderData();
-  if (!roster.ok) {
-    return <SessionDidNotLoad notFound={roster.error.code === "not_found"} message={failureMessage(roster.error)} />;
+  const loaded = Route.useLoaderData();
+  if (!loaded.ok) {
+    return <SessionDidNotLoad notFound={loaded.error.code === "not_found"} message={failureMessage(loaded.error)} />;
   }
-  return <SessionDetails roster={roster.data} />;
+  return <SessionDetails roster={loaded.data} loadedAt={loaded.loadedAt} />;
 }

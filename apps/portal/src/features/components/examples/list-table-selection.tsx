@@ -39,6 +39,7 @@ export default function Example() {
             <ListTableRow
               key={booking.id}
               selected={chosen.has(booking.id)}
+              unselectable={booking.group === "here"}
               selectLabel={`Choose ${booking.name}`}
               onSelectedChange={(on, { range }) => choose(booking.id, on, range)}
             >

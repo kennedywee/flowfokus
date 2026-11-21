@@ -34,6 +34,14 @@ export default function Example() {
         <SpotRow capacity={12} booked={9} state="past" />
         <span>9 of 12 · past</span>
       </div>
+      <div className="gallery-row">
+        <SpotRow capacity={12} booked={0} cancelled />
+        <span>Cancelled</span>
+      </div>
+      <div className="gallery-row">
+        <SpotRow capacity={40} booked={30} />
+        <span>30 of 40, drawn with 20 segments</span>
+      </div>
       <SpotKey kinds={["booked", "open", "full", "past"]} />
     </div>
   );

@@ -837,6 +837,11 @@
   stroke-width: 1.5;
   stroke-linecap: round;
 }
+.spot--line {
+  fill: none;
+  stroke: var(--color-line-strong);
+  stroke-width: 1;
+}
 .spot-row,
 .spot-column {
   flex: none;
@@ -980,6 +985,16 @@
   flex-direction: column-reverse;
   align-items: flex-end;
   gap: 2px;
+}
+/* "Starts in" over "20 min": the label first, as in Paper "Session details". */
+.hero__stat[data-above] {
+  flex-direction: column;
+}
+.hero[data-size="display"] .hero__stat[data-above] .hero__value,
+.hero[data-size="display"] .hero__stat:only-child .hero__value {
+  font-size: var(--text-figure);
+  line-height: 36px;
+  letter-spacing: var(--tracking-display);
 }
 .hero__value {
   margin: 0;
