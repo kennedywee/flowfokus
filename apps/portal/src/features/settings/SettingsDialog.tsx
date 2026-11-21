@@ -73,7 +73,8 @@ export function SettingsDialog() {
 
   return (
     <Dialog open={settings !== undefined} onOpenChange={(next) => !next && close()}>
-      <DialogContent className="settings-dialog" aria-describedby={undefined}>
+      {/* Focus starts on the dialog, so Tab reaches the search first and no field shows a ring on open. */}
+      <DialogContent className="settings-dialog" aria-describedby={undefined} initialFocus="content">
         <aside className="settings-dialog__side">
           <DialogTitle className="settings-dialog__title">Settings</DialogTitle>
           {settings ? <SettingsNav current={settings} onOpen={(slug) => open(slug, { replace: true })} /> : null}
@@ -113,6 +114,11 @@ function SettingsContent({ slug, team }: { slug: SettingsSlug; team: TeamState }
 function SettingsNav({ current, onOpen }: { current: SettingsSlug; onOpen: (slug: SettingsSlug) => void }) {
   const [query, setQuery] = useState("");
   const pages = matchSettingsPages(query);
+  const nav = useRef<HTMLElement>(null);
+  // Phones show the pages in one scrolling row; keep the open page in view.
+  useEffect(() => {
+    nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [current]);
   return (
     <>
       <div className="settings-dialog__search">
@@ -134,7 +140,7 @@ function SettingsNav({ current, onOpen }: { current: SettingsSlug; onOpen: (slug
           }}
         />
       </div>
-      <nav className="settings-dialog__nav" aria-label="Settings pages">
+      <nav className="settings-dialog__nav" aria-label="Settings pages" ref={nav}>
         {pages.length === 0 ? <p className="settings-dialog__none">No settings match.</p> : null}
         {SETTINGS_GROUPS.map((group) => {
           const items = pages.filter((page) => page.group === group);

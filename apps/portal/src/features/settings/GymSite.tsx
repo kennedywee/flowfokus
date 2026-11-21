@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "../../components/Toast";
@@ -19,20 +19,23 @@ export function GymSite() {
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendOrganization);
-  const [pending, setPending] = useState<boolean | null>(null);
-  const published = pending ?? organization.published;
+  // The switch moves at once, while Rails saves it, and stays until the organization reloads.
+  const [published, setPublished] = useState(organization.published);
+  useEffect(() => setPublished(organization.published), [organization.published]);
 
   async function publish(next: boolean) {
     if (action.pending) return;
-    setPending(next);
+    const before = published;
+    setPublished(next);
     const result = await action.run({ slug: organization.slug, published: next });
     if (result.ok) {
-      await router.invalidate();
+      setPublished(result.data.published);
       toast.show({ tone: "success", title: result.data.published ? "The gym site is public" : "The gym site is hidden" });
+      void router.invalidate();
     } else {
+      setPublished(before);
       toast.show({ tone: "error", title: "Gym site not changed", body: failureMessage(result.error) });
     }
-    setPending(null);
   }
 
   return (

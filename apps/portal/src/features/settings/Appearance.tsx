@@ -8,7 +8,7 @@ export function Appearance() {
   const { theme, choose } = useThemeChoice();
   return (
     <SettingsPage title="Appearance">
-      <SettingsSection title="Theme">
+      <SettingsSection title="Display">
         <SettingsRow title="Theme" description="System follows your device." htmlFor="settings-theme">
           <NativeSelect
             id="settings-theme"

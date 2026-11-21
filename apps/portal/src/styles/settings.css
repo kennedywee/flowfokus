@@ -714,6 +714,13 @@ button.settings-row-item:focus-visible {
   .settings-row__control {
     max-width: 100%;
   }
+  /* A select takes the full width under its title. */
+  .settings-row__control:has(select) {
+    flex-basis: 100%;
+  }
+  .settings-row__control .settings-select.select {
+    width: 100%;
+  }
   /* 16px text stops iOS from zooming into a focused field. */
   .settings-form-dialog .settings-input,
   .settings-select.select {

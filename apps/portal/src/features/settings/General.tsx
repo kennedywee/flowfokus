@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useToast } from "../../components/Toast";
 import { failureMessage } from "../../lib/format";
@@ -22,21 +22,23 @@ export function General() {
   const router = useRouter();
   const toast = useToast();
   const action = useAction(sendOrganization);
-  // The choice shows at once, while Rails saves it.
-  const [pending, setPending] = useState<string | null>(null);
-  const timezone = pending ?? organization.timezone;
+  // The choice shows at once, while Rails saves it, and stays until the organization reloads.
+  const [timezone, setTimezone] = useState(organization.timezone);
+  useEffect(() => setTimezone(organization.timezone), [organization.timezone]);
 
   async function chooseZone(next: string) {
-    if (next === organization.timezone || action.pending) return;
-    setPending(next);
+    if (next === timezone || action.pending) return;
+    const before = timezone;
+    setTimezone(next);
     const result = await action.run({ slug: organization.slug, timezone: next });
     if (result.ok) {
-      await router.invalidate();
+      setTimezone(result.data.timezone);
       toast.show({ tone: "success", title: `Time zone saved · ${zoneLabel(result.data.timezone)}` });
+      void router.invalidate();
     } else {
+      setTimezone(before);
       toast.show({ tone: "error", title: "Time zone not saved", body: failureMessage(result.error) });
     }
-    setPending(null);
   }
 
   return (
