@@ -6,19 +6,29 @@
  *   .sale-details ... sale detail
  */
 
-/* ---------- Sales list (redesign) ---------- */
+/* ---------- Sales list ---------- */
 /*
- * Paper "Sales — list": the title and New sale in one row, Filter and its
- * chips on the left, search on the right, a grey header band, then 44px rows.
- * Payment and fulfillment are separate columns. The band and the row hover
- * reach 12px past the content, so the text lines up with the title.
+ * The Members list pattern with the Recent sales columns: the title with the
+ * sale count, the filter bar (Filter, chips, search, Display), the list table
+ * (styles/parts.css), and the page range. Faint ledger rules sit behind the
+ * header.
  */
 
 .sales-list {
+  position: relative;
   max-width: 1280px;
-  gap: var(--space-6);
+  gap: var(--space-4);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+}
+/* The pattern is decoration behind the page; the content paints over it. */
+.sales-list > :not(.backdrop) {
+  position: relative;
+}
+.sales-list > .backdrop {
+  width: 864px;
+  height: 220px;
+  mask-image: linear-gradient(var(--color-ink) 35%, transparent);
 }
 .sales-head {
   display: flex;
@@ -28,287 +38,166 @@
 .sales-head h1 {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--text-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
 }
-
-/* The table: one grid for the band and the rows, so the columns keep their lanes. */
-.sales-table {
-  container: sales-table / inline-size;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-1);
+/* On a phone the count stays beside the title. */
+.sales-head .hero__stats {
+  flex-basis: auto;
+}
+.sales-list .list-table__link {
   min-width: 0;
 }
-.sales-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 112px 124px 104px 128px 16px;
-  align-items: center;
-  column-gap: var(--space-3);
-}
-.sales-col--num {
-  text-align: right;
-}
-.sales-table__head {
-  height: 36px;
-  padding-inline: var(--space-3);
+.sales-list__skeleton-button {
+  display: block;
+  width: 68px;
+  height: var(--control-height-compact);
   border-radius: var(--radius-compact);
+}
+.sales-list .list-search.skeleton-block {
+  border-color: transparent;
   background: var(--color-well);
+}
+.sales-table .status-mark {
   color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-medium);
-  line-height: 16px;
-}
-.sales-rows {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.sales-row {
-  min-height: 44px;
-  padding: 6px var(--space-3);
-  border-radius: var(--radius-compact);
-  color: var(--color-ink);
-  text-decoration: none;
-  transition: background-color var(--duration-hover) var(--ease-out);
-}
-a.sales-row:hover {
-  background: var(--color-hover);
-  color: var(--color-ink);
-}
-a.sales-row:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-.sales-row__member {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.sales-row__avatar {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-full);
-  background: var(--color-avatar);
-  color: var(--color-ink-2);
-  font-size: 10px;
-  font-weight: var(--font-weight-semibold);
-  line-height: 1;
-}
-.sales-row__name {
-  overflow: hidden;
-  font-weight: var(--font-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sales-row__item {
-  overflow: hidden;
-  color: var(--color-ink-2);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.sales-row__label {
-  color: var(--color-ink-3);
-}
-.sales-row__amount {
-  display: grid;
-  justify-items: end;
-  text-align: right;
-}
-.sales-row__total {
-  font-family: var(--font-sans);
   font-size: var(--text-sm);
+}
+.sales-table .status-mark svg {
+  width: 16px;
+  height: 16px;
+}
+.sales-table .status-mark[data-tone="good"] {
+  color: var(--color-good);
+}
+.sales-table .status-mark[data-tone="warning"] {
+  color: var(--color-warning);
+}
+.sales-table .status-mark[data-tone="critical"] {
+  color: var(--color-critical);
+}
+.sales-table .status-mark__label {
+  color: var(--color-ink);
+}
+.sales-table__date {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.sales-row__total[data-void] {
+.sale-method-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.sale-method-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sale-method-cell svg {
+  flex: none;
+  color: var(--color-ink-2);
+}
+.sales-table__amount {
+  justify-content: flex-end;
+  font-size: var(--text-base);
+}
+
+/* A sale's total, with the balance due or the refund under it. Also on the sale page. */
+.sale-amount {
+  display: grid;
+  justify-items: end;
+}
+.sale-amount__total {
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+.sale-amount__total[data-void] {
   color: var(--color-ink-3);
   text-decoration: line-through;
 }
-.sales-row__due {
+.sale-amount__note {
   color: var(--color-ink-2);
   font-size: var(--text-xs);
   line-height: 16px;
   white-space: nowrap;
 }
-.sales-row__date {
-  color: var(--color-ink-2);
-  font-family: inherit;
-  font-size: var(--text-xs);
-  line-height: 16px;
-  text-align: right;
-  white-space: nowrap;
+.sale-amount__note[data-state="partial"] {
+  color: var(--color-warning);
 }
-.sales-row__chevron {
-  width: 16px;
-  height: 16px;
-  color: var(--color-ink-4);
+.sale-amount__note[data-state="unpaid"] {
+  color: var(--color-critical);
 }
 
-/* Narrow: member and total, then the item, then payment, fulfillment, and date. */
-@container sales-table (max-width: 720px) {
-  .sales-table__head {
-    display: flex;
+/* Phones: the member and the amount share the first line; the product and the facts wrap under. */
+@media (max-width: 767.98px) {
+  .sales-list .filter-bar .list-search {
+    flex: 1 1 0;
+    width: auto;
   }
-  .sales-table__head > :not(:first-child) {
+  .sales-list .filter-bar__space {
     display: none;
   }
-  .sales-row {
+  .sales-table .list-table__head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    border: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .sales-table .list-table__row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 2px var(--space-3);
     padding-block: var(--space-2);
   }
-  .sales-row__member {
+  .sales-table .list-table__row > .sales-table__member {
     flex: 1 1 0;
-    order: 1;
+    min-width: 0;
   }
-  .sales-row__amount {
+  .sales-table .list-table__row > .sales-table__amount {
     order: 2;
   }
-  .sales-row__chevron {
+  .sales-table .list-table__row::before {
+    content: "";
     order: 3;
+    flex-basis: 100%;
+    height: 0;
   }
-  .sales-row__item {
-    flex: 1 1 100%;
+  .sales-table .list-table__row > .sales-table__product {
     order: 4;
-    padding-left: 32px;
-    font-size: var(--text-xs);
-    line-height: 16px;
+    flex-basis: 100%;
   }
-  .sales-row__payment {
+  .sales-table .list-table__row > .sales-table__payment,
+  .sales-table .list-table__row > .sales-table__fulfillment,
+  .sales-table .list-table__row > .sales-table__method,
+  .sales-table .list-table__row > .sales-table__date {
     order: 5;
-    margin-left: 32px;
-  }
-  .sales-row__fulfillment {
-    order: 6;
-  }
-  .sales-row__date {
-    order: 7;
-    margin-left: auto;
-    padding-right: 28px;
   }
 }
 
-/* Loading: grey bars in the list's shape. */
-.sales-list .skeleton-block {
-  background: var(--color-well);
-}
-.sales-skeleton__row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.sales-list .skeleton-line {
-  display: block;
-  height: 12px;
-  border-radius: var(--radius-sm);
-  background: var(--color-well);
-}
-.sales-list .skeleton-line--small {
-  height: 10px;
-}
-
-
-/* ---------- New sale (redesign) ---------- */
+/* ---------- New sale ---------- */
 /*
- * Paper "New sale": a tile and the title with Create sale (⌘↵), then Products
- * and Payment on one white surface, with Member and Location on the right
- * (300px) from 1100px. Narrow screens put Member and Location first, because
- * the member is the first choice. Lines reuse the sale page's `.sale-line`
- * and `.sale-total`; bands reuse `.mx-section__head`.
+ * Paper's record frame, as New member: ledger rules behind a hero with the
+ * title, then Products and Payment as sections, with Member and Location in
+ * the right panel from 1100px. Narrower screens put Member and Location
+ * between the title and the sections, because the member is the first choice,
+ * and Create sale at the end. Lines reuse the list table; totals reuse
+ * `.sale-sum`.
  */
 
-.new-sale {
-  max-width: 1280px;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "head" "side" "main";
+.new-sale .detail__main {
   gap: var(--space-6);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
 }
-.new-sale__head {
-  grid-area: head;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.new-sale__head h1 {
-  flex: 1;
-  min-width: 0;
-}
-.new-sale__icon {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
-  background: var(--color-well);
-  color: var(--color-ink-2);
-}
-.new-sale__icon svg {
-  width: 18px;
-  height: 18px;
-}
-.new-sale__main {
-  grid-area: main;
+.new-sale__form {
   display: grid;
-  align-content: start;
-  gap: var(--space-6);
-  min-width: 0;
-}
-.new-sale__side {
-  grid-area: side;
-  display: grid;
-  align-content: start;
-  min-width: 0;
-}
-@media (min-width: 1100px) {
-  .new-sale {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "head side" "main side";
-    column-gap: var(--space-6);
-  }
-  .new-sale__side {
-    position: sticky;
-    top: calc(var(--topbar-height) + var(--space-5));
-  }
-}
-
-/* The empty product slot: a dashed box with the add button, as in Paper. */
-.new-sale__empty {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 88px;
-  margin-top: var(--space-2);
-  padding: var(--space-4);
-  border: 1px dashed var(--color-line);
-  border-radius: 10px;
-  color: var(--color-ink-2);
-  text-align: center;
-}
-.new-sale__empty[data-invalid] {
-  border-color: var(--color-critical);
-}
-.new-sale__add.button--compact {
-  background: var(--color-hover);
-}
-.new-sale__add svg {
-  width: 14px;
-  height: 14px;
-  color: var(--color-ink-2);
+  gap: 40px;
+  max-width: 756px;
 }
 .new-sale__error {
   margin-top: var(--space-1);
@@ -320,23 +209,42 @@ a.sales-row:focus-visible {
   text-underline-offset: 2px;
 }
 .new-sale__hint {
-  max-width: none;
-  margin-top: var(--space-2);
-  padding: 14px var(--space-3);
-  border-radius: var(--radius-compact);
-  background: var(--color-well);
-  color: var(--color-ink-2);
-}
-.new-sale__hint--plain {
   margin: 0;
-  padding: 0 var(--space-2);
-  background: none;
+  color: var(--color-ink-2);
   font-size: var(--text-xs);
 }
-.sale-band__button svg {
-  width: 12px;
-  height: 12px;
-  color: var(--color-ink-2);
+.member-empty[data-invalid] {
+  color: var(--color-critical);
+}
+.new-sale__lines .list-table__row {
+  min-height: 56px;
+}
+@media (max-width: 1099.98px) {
+  .new-sale.detail {
+    gap: 28px;
+    padding-bottom: 32px;
+  }
+  /* The hero, the panel, the form, and the actions become siblings, so they can be ordered. */
+  .new-sale .detail__main {
+    display: contents;
+  }
+  .new-sale .detail__main > *,
+  .new-sale .detail__panel {
+    margin-inline: 20px;
+  }
+  .new-sale .hero {
+    margin-top: 28px;
+  }
+  .new-sale .detail__panel {
+    order: 1;
+    padding: 0;
+  }
+  .new-sale__form {
+    order: 2;
+  }
+  .new-sale .page-actions {
+    order: 3;
+  }
 }
 
 /* A 24px icon button: remove a line, or change the member. */
@@ -347,7 +255,7 @@ a.sales-row:focus-visible {
   justify-content: center;
   width: 24px;
   height: 24px;
-  margin-right: -30px;
+  margin-right: 0;
   padding: 0;
   border: 0;
   border-radius: 6px;
@@ -378,44 +286,29 @@ a.sales-row:focus-visible {
   .new-sale__icon-button {
     width: 40px;
     height: 40px;
-    margin-right: -38px;
+    margin-right: 0;
   }
 }
 
-/* The side: Member and Location groups split by hairlines. */
+/* The panel's Member and Location groups. The title is the panel group's grey 12px. */
 .new-sale__group {
   display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-2);
-  border-bottom: 1px solid var(--color-line);
+  gap: 10px;
 }
-.new-sale__group:first-child {
-  padding-top: 0;
-}
-.new-sale__group:last-child {
-  border-bottom: 0;
-}
-.new-sale__group-head {
-  display: flex;
-  align-items: center;
+.new-sale__group .panel-group__head {
   min-height: 24px;
-}
-.new-sale__group-head h2,
-.new-sale__group-head label,
-.new-sale__group .field > label {
-  flex: 1;
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: 16px;
 }
 .new-sale__group .field {
-  gap: var(--space-2);
+  gap: 10px;
 }
 .new-sale__group .field > label {
   display: flex;
   align-items: center;
   min-height: 24px;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
 }
 .new-sale__group .combobox__input {
   min-height: 32px;
@@ -589,31 +482,8 @@ a.sales-row:focus-visible {
   white-space: nowrap;
 }
 
-/* Loading. */
-.new-sale .skeleton-line {
-  display: block;
-  height: 14px;
-  margin-block: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--color-well);
-}
-.new-sale .skeleton-line--small {
-  height: 10px;
-}
-.new-sale__skeleton-field {
-  display: block;
-  height: 32px;
-  border-radius: var(--radius-compact);
-  background: var(--color-well);
-}
 
 @media (max-width: 767.98px) {
-  .new-sale__icon-button {
-    margin-right: 0;
-  }
-  .new-sale__group {
-    padding-inline: 0;
-  }
   .new-sale__option {
     flex-wrap: wrap;
     row-gap: 0;
@@ -625,105 +495,24 @@ a.sales-row:focus-visible {
   }
 }
 
-/* ---------- Sale details (redesign) ---------- */
+/* Loading. */
+.new-sale__skeleton-field {
+  display: block;
+  height: 32px;
+  border-radius: var(--radius-compact);
+  background: var(--color-well);
+}
+
+/* ---------- Sale details ---------- */
 /*
- * Paper "Sale details": a 40px tile, the item as the title with payment and
- * fulfillment pills, then Items, Payment, and Activity on one white surface.
- * Properties sit on the right from 1100px; on narrow screens they follow the
- * header. Section bands reuse the member page's `.mx-section__head`.
+ * Paper "Sale details" on the shared DetailLayout (ledger rules): the hero
+ * with the payment and fulfillment pills, then Items, Payments, and Activity
+ * as sections with flush rows. Colour only on status marks and the balance due.
+ * The panel sits under the main column below 1100px.
  */
 
-.sale-details {
-  max-width: 1280px;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "head" "props" "main";
-  gap: var(--space-6);
-  font-size: var(--text-sm);
-  line-height: var(--leading-normal);
-}
-.sale-details > .sale-head {
-  grid-area: head;
-}
-.sale-details > .mx-props {
-  grid-area: props;
-}
-.sale-details__main {
-  grid-area: main;
-  display: grid;
-  gap: 28px;
-  min-width: 0;
-}
-@media (min-width: 1100px) {
-  .sale-details {
-    grid-template-columns: minmax(0, 1fr) 280px;
-    grid-template-rows: auto 1fr;
-    grid-template-areas: "head props" "main props";
-    column-gap: 40px;
-  }
-  .sale-details > .mx-props {
-    align-self: start;
-    position: sticky;
-    top: calc(var(--topbar-height) + var(--space-5));
-  }
-}
-
-/* Header: tile, title with the two facts, member and price, and the actions menu. */
-.sale-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.sale-head__tile {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
-  background: var(--color-well);
-  color: var(--color-ink-2);
-}
-.sale-head__tile svg {
-  width: 18px;
-  height: 18px;
-}
-.sale-head__text {
-  flex: 1;
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-.sale-head__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px var(--space-2);
-}
-.sale-head__title h1 {
-  overflow-wrap: anywhere;
-}
-.sale-head__facts {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.mx-fact.sale-pill {
-  height: 20px;
-  padding-inline: 6px;
-  border-radius: 6px;
-  background: var(--color-hover);
-  color: var(--color-ink);
-  font-weight: var(--font-weight-medium);
-}
-.sale-head__meta {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
 .menu.sale-menu {
-  width: 240px;
+  width: 200px;
 }
 .menu.sale-menu .menu__item {
   min-height: 32px;
@@ -736,147 +525,36 @@ a.sales-row:focus-visible {
 .menu.sale-menu .menu__item--critical svg {
   color: var(--color-critical);
 }
-.menu.sale-menu .kbd {
-  min-width: 18px;
-  height: 18px;
-}
 
-/* Voided: one bordered block, the only boxed fact on the page. */
-.sale-void {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--color-line);
-  border-radius: 10px;
+.sale-details .list-table__link,
+.sale-details .panel-link {
+  color: inherit;
 }
-.sale-void__icon {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin-top: 2px;
-  color: var(--color-critical);
+.sale-details .panel-link {
+  text-decoration: none;
 }
-.sale-void__title {
-  font-weight: var(--font-weight-medium);
+.sale-details .panel-link:hover {
+  text-decoration: underline;
 }
-.sale-void__sub {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.sale-void__sub time {
-  font-family: inherit;
-}
-
-/* Sections. A 24px secondary button can sit at the right of the band. */
-.sale-band {
-  padding-right: 6px;
-}
-.sale-band__button.button--compact {
-  min-height: 24px;
-  padding-inline: var(--space-2);
-  border-radius: 6px;
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-medium);
-}
-@media (pointer: coarse) {
-  .sale-band__button.button--compact {
-    min-height: 32px;
-  }
-}
-.sale-group {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 32px;
-}
-.sale-group .mx-fact {
-  color: var(--color-ink-2);
-  font-weight: var(--font-weight-semibold);
-}
-.sale-group__when {
-  color: var(--color-ink-3);
-  font-size: var(--text-xs);
-}
-.sale-group__when time {
-  font-family: inherit;
-}
-
-/* A line: a 28px tile, the name and its facts, then unit price and amount. */
-.sale-money-rows {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.sale-line {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 52px;
-  padding-block: 6px;
-  padding-right: 36px;
-}
-.sale-tile {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-compact);
-  background: var(--color-well);
-  color: var(--color-ink-2);
-}
-.sale-tile svg {
-  width: 14px;
-  height: 14px;
-}
-.sale-tile--critical {
-  color: var(--color-critical);
-}
-.sale-line__main {
-  flex: 1 1 0;
-  display: grid;
-  min-width: 0;
-}
-.sale-line__name {
-  font-weight: var(--font-weight-medium);
-}
-.sale-line__sub {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-}
-.sale-line__sub time {
-  font-family: inherit;
-}
-.sale-line__unit {
-  flex: none;
-  width: 120px;
-  color: var(--color-ink-2);
-  font-family: var(--font-sans);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--text-xs);
-  text-align: right;
-  white-space: nowrap;
-}
-.sale-line__total {
-  flex: none;
-  min-width: 96px;
-  font-family: var(--font-sans);
-  font-variant-numeric: tabular-nums;
+.sale-items__unit {
   font-size: var(--text-sm);
-  text-align: right;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.sale-line__total--critical {
+.sale-items__total {
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+}
+.sale-payments .list-table__cell.cell-figure {
+  font-size: var(--text-base);
+}
+.sale-payments__refund {
   color: var(--color-critical);
 }
+/* A line under the rows: when it was fulfilled early, why access ended, or what blocks fulfillment. */
 .sale-note {
-  padding-left: 40px;
+  margin: 0;
+  padding-block: var(--space-1);
   color: var(--color-ink-2);
   font-size: var(--text-xs);
   line-height: 16px;
@@ -887,75 +565,80 @@ a.sales-row:focus-visible {
 .sale-note[data-tone="critical"] {
   color: var(--color-critical);
 }
-.sale-note time {
-  font-family: inherit;
+.sale-note a {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
-.sale-empty {
-  padding-block: var(--space-3);
-  color: var(--color-ink-2);
+/* Total and Balance due: a hairline, a grey label, and the figure at the right edge. */
+.sale-sum {
+  margin: 0;
+  border-top: 1px solid var(--color-line);
 }
-
-/* Total and balance: a hairline, then a bold label and amount. */
-.sale-total {
+.sale-sum__row {
   display: flex;
   align-items: center;
-  min-height: 40px;
-  margin-top: var(--space-1);
-  padding-right: 36px;
-  border-top: 1px solid var(--color-line);
-  font-weight: var(--font-weight-semibold);
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 44px;
+  font-size: var(--text-sm);
 }
-.sale-total > :first-child {
-  flex: 1;
+.sale-sum__row dt {
+  color: var(--color-ink-2);
 }
-.sale-total__amount {
-  font-family: var(--font-sans);
+.sale-sum__row dd {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-base);
   font-variant-numeric: tabular-nums;
+  font-weight: var(--font-weight-medium);
 }
-.sale-total[data-state="due"] .sale-total__amount {
+.sale-sum[data-state="due"] .sale-sum__row dd {
   color: var(--color-warning);
 }
-.sale-total[data-state="void"] .sale-total__amount {
+.sale-sum[data-state="void"] .sale-sum__row dd {
   color: var(--color-ink-3);
 }
+.sale-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.sale-loading__title {
+  display: block;
+  width: 180px;
+  height: 24px;
+}
+.sale-loading__line {
+  display: block;
+  width: 120px;
+  height: 14px;
+}
 
-/* Narrow: the unit price goes, and lines keep their amount on the right. */
+/* Phones: the more menu sits on the title's line; the item takes the first line of its row, the unit price and the total follow. */
 @media (max-width: 767.98px) {
-  .sale-line,
-  .sale-total {
-    padding-right: 0;
+  .sale-details .page-actions {
+    position: absolute;
+    top: 28px;
+    right: 20px;
   }
-  .sale-line__unit {
-    display: none;
+  .sale-details .hero:has(~ .page-actions) {
+    padding-right: 44px;
   }
-  .sale-line__total {
+  .sale-items .list-table__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px var(--space-3);
+    padding-block: var(--space-2);
+  }
+  .sale-items .list-table__row > :first-child {
+    flex: 1 1 100%;
     min-width: 0;
   }
-  .sale-head {
-    align-items: flex-start;
+  .sale-items .list-table__row > .sale-items__unit {
+    margin-right: auto;
   }
-}
-
-/* Loading. */
-.sale-details .skeleton-block {
-  background: var(--color-well);
-}
-.sale-details .skeleton-line {
-  display: block;
-  height: 14px;
-  margin-block: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--color-well);
-}
-.sale-details .skeleton-line--small {
-  height: 10px;
-}
-
-/* Readout grid. The schedule roster still uses it. */
-.sale-page__readouts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
-  gap: var(--space-3);
 }
 
 /* ---------- Sale dialogs (redesign) ---------- */
