@@ -369,3 +369,36 @@ shows Schedule, Members, Sales, and More.
 Not verified: roles other than Owner, real touch devices, and the phone tab bar
 label height (the bar is 50px high and its labels clip at the bottom edge; the
 CSS for this did not change).
+
+## App shell — 21 November 2026
+
+The portal frame follows the Paper "Window" frames: a rounded window on a
+tinted frame, a darker sidebar with Calendar, Members, Sales, Programs, and
+Products, a 52px breadcrumb top bar, and the account control at the foot. The
+sidebar, the phone tab bar, and Ctrl K list only the pages a role can read.
+`/<org>` and removed URLs open the first page the role can read.
+
+Passed: `bash scripts/check-docker` (364 Rails specs, 312 portal and 56 site
+tests, type checks, builds, worker artifact checks), `bun run design:check`,
+`bun run contract:check`, `bun run test:tooling`, `bun run smoke:session`, and
+`bun run smoke:workflows`.
+
+Browser checks, signed in through the emulator, at 1440 pixels in light and
+dark, at 1024 pixels, and at 390 pixels: the sidebar order, the current item on
+list and detail pages, the breadcrumb, both switchers by keyboard, the account
+menu with the theme choice, the collapse button, Tab through the sidebar, the
+switchers, Search, and the page actions, N on the members list, one redirect
+from `/<org>` and from a removed URL, and the main column scrolling inside the
+window. Choosing another location keeps the new name on the label after the
+save. Issue #64 did not reproduce: every server-function GET answers
+`private, no-store`.
+
+A temporary custom role with `members:read`, `purchases:read`, and
+`products:read` (the emulator file was changed for the check and restored) saw
+Members, Sales, and Products in the sidebar and in Ctrl K, two tabs on a phone,
+and landed on Members from `/<org>`, `/<org>/reports`, and
+`/<org>/settings?section=Integrations`.
+
+Not verified: roles that can read nothing (the redirect to Settings is not run
+in a browser; `startPage` has a unit test), real touch devices, the tablet and
+phone shells beyond one page, and the phone tab bar label height (unchanged).

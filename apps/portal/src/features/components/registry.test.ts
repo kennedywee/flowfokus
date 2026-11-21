@@ -6,9 +6,6 @@ import { GALLERY, GALLERY_GROUPS, findEntry, groupedEntries } from "./registry";
 const SRC = join(import.meta.dir, "../..");
 const EXAMPLES = join(import.meta.dir, "examples");
 
-/** Parts of the app shell. The gallery's own frame shows them in use. */
-const SHELL_ONLY = new Set(["components/ui/sidebar.tsx"]);
-
 describe("component gallery registry", () => {
   test("slugs are unique and URL-safe", () => {
     const slugs = GALLERY.map((entry) => entry.slug);
@@ -35,7 +32,7 @@ describe("component gallery registry", () => {
     const missing = readdirSync(join(SRC, "components/ui"))
       .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
       .map((file) => `components/ui/${file}`)
-      .filter((file) => !covered.has(file) && !SHELL_ONLY.has(file));
+      .filter((file) => !covered.has(file));
     expect(missing).toEqual([]);
   });
 

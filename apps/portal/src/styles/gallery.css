@@ -380,3 +380,23 @@
     padding: var(--space-5) var(--space-3);
   }
 }
+
+/* The app shell example: the window fits the preview, not the screen. */
+.gallery-shell {
+  width: 100%;
+}
+.gallery-shell .shell {
+  height: 360px;
+  min-height: 0;
+}
+.gallery-shell .main {
+  padding: 0;
+}
+.gallery-shell .topbar {
+  padding-inline: var(--space-4);
+}
+.gallery-switchers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}

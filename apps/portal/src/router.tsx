@@ -12,6 +12,8 @@ export function getRouter() {
   return createRouter({
     routeTree,
     scrollRestoration: true,
+    // The window's main column scrolls, not the document.
+    scrollToTopSelectors: ['[data-scroll-restoration-id="main"]'],
     defaultPreload: "intent",
     // Loaders call the API on every visit. Staff data must be fresh.
     defaultPreloadStaleTime: 0,

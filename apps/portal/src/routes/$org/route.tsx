@@ -33,6 +33,7 @@ import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
 import { setTheme } from "../../lib/theme.functions";
 import { applyTheme } from "../../lib/theme";
+import { PAGES, readablePages, type PagePath } from "../../lib/pages";
 import { isSlug, type Theme } from "../../lib/validate";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -97,18 +98,7 @@ export const Route = createFileRoute("/$org")({
   component: OrganizationLayout,
 });
 
-type RoutedPath = "/$org/members" | "/$org/sales" | "/$org/products" | "/$org/schedule" | "/$org/programs" | "/$org/settings";
-
-type NavItem = { label: string; icon: IconName; to: RoutedPath; exact: boolean; path: string };
-
-/* One list, no group titles. */
-const NAV_ITEMS: NavItem[] = [
-  { to: "/$org/members", label: "Members", icon: "members", exact: false, path: "/members" },
-  { to: "/$org/sales", label: "Sales", icon: "sales", exact: false, path: "/sales" },
-  { to: "/$org/schedule", label: "Schedule", icon: "schedule", exact: false, path: "/schedule" },
-  { to: "/$org/programs", label: "Programs", icon: "bookingRules", exact: false, path: "/programs" },
-  { to: "/$org/products", label: "Products", icon: "products", exact: false, path: "/products" },
-];
+type RoutedPath = PagePath;
 
 function OrganizationLayout() {
   const { access, email, organization, organizations } = Route.useLoaderData();
@@ -166,7 +156,7 @@ function Shell({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const base = `/${data.slug}`;
   const trimmed = pathname.replace(/\/$/, "");
-  const routed = NAV_ITEMS.find((item) => (item.exact ? trimmed === base : pathname.startsWith(`${base}${item.path}`)));
+  const routed = PAGES.find((item) => pathname.startsWith(`${base}${item.path}`));
   const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
   // Settings has its own sidebar. Its breadcrumb is the organization, then Settings, as in Paper.
   const inSettings = isSettingsPath(pathname, data.slug);
@@ -215,18 +205,18 @@ function Shell({
     (found, match) => match.staticData.trail?.(match.loaderData, data.timezone) ?? found,
     undefined,
   );
-  const owner = NAV_ITEMS.find((item) => item.to === sectionOverride);
+  const owner = PAGES.find((item) => item.to === sectionOverride);
 
   // The section, then the page. On a detail page the section links back to its list.
   const section: { label: string; to?: RoutedPath } | null = owner
     ? { label: owner.label, to: owner.to }
     : routed
-    ? routed.exact || atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
+    ? atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
     : inSettings ? { label: "Settings" }
     : null;
 
   const pages: CommandPage[] = [
-    ...NAV_ITEMS.map((item) => ({
+    ...readablePages(data.actor.permissions).map((item) => ({
       label: item.label,
       icon: item.icon,
       open: () => void navigate({ to: item.to, params: { org: data.slug } }),
@@ -239,141 +229,145 @@ function Shell({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <AppSidebar data={data} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
-      <SidebarInset>
-        <header className="topbar">
-          <div className="topbar__start">
-            <SidebarTrigger className="nav-toggle" aria-controls="app-sidebar">
-              <Icon name="sidebar" aria-hidden="true" focusable="false" />
-              <span className="visually-hidden">Navigation menu</span>
-            </SidebarTrigger>
-            <div className="topbar__context">
-              {/* Demo mode has no list of organizations, so the list holds the open one. */}
-              <ContextSwitcher
-                label="Organization"
-                strong
-                icon={<span className="org-tile">{initials(data.name).slice(0, 1)}</span>}
-                current={data.name}
-                options={
-                  organizations && organizations.length > 0
-                    ? organizations.map((choice) => ({
-                        value: choice.slug,
-                        label: choice.name,
-                        aside: roleLabel(choice.role),
-                        icon: <OrgTile name={choice.name} current={choice.slug === data.slug} />,
-                      }))
-                    : [
-                        {
-                          value: data.slug,
-                          label: data.name,
-                          aside: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
-                          icon: <OrgTile name={data.name} current />,
-                        },
-                      ]
-                }
-                value={data.slug}
-                onSelect={(slug) => {
-                  if (slug !== data.slug) openOrganization(slug);
-                }}
-                searchLabel="Switch organization…"
-                emptyText="No organization matches."
-              />
-              {inSettings ? null : (
-                <span className="topbar__slash" aria-hidden="true">
-                  /
-                </span>
-              )}
-              {inSettings ? null : shownLocation ? (
+      {/* The rounded window on the tinted frame. Phones drop the frame (styles/shell.css). */}
+      <div className="window">
+        <AppSidebar data={data} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
+        {/* The main column scrolls inside the window, so the router restores its scroll. */}
+        <SidebarInset data-scroll-restoration-id="main">
+          <header className="topbar">
+            <div className="topbar__start">
+              <SidebarTrigger className="nav-toggle" aria-controls="app-sidebar">
+                <Icon name="sidebar" aria-hidden="true" focusable="false" />
+                <span className="visually-hidden">Navigation menu</span>
+              </SidebarTrigger>
+              <div className="topbar__context">
+                {/* Demo mode has no list of organizations, so the list holds the open one. */}
                 <ContextSwitcher
-                  label="Location"
-                  icon={<Icon name="location" aria-hidden="true" focusable="false" />}
-                  current={shownLocation.name}
-                  options={data.locations.map((location) => ({
-                    value: location.id,
-                    label: location.name,
-                    icon: <Icon name="location" aria-hidden="true" focusable="false" />,
-                  }))}
-                  value={shownLocation.id}
-                  onSelect={(id) => void chooseLocation(id)}
-                  searchLabel="Switch location…"
-                  emptyText="No location matches."
-                  footer={(close) => (
-                    <Link
-                      to="/$org/settings/locations"
-                      params={{ org: data.slug }}
-                      className="switcher__action"
-                      onClick={close}
-                    >
-                      <Icon name="general" aria-hidden="true" focusable="false" />
-                      Manage locations
-                    </Link>
-                  )}
+                  label="Organization"
+                  strong
+                  icon={<span className="org-tile">{initials(data.name).slice(0, 1)}</span>}
+                  current={data.name}
+                  options={
+                    organizations && organizations.length > 0
+                      ? organizations.map((choice) => ({
+                          value: choice.slug,
+                          label: choice.name,
+                          aside: roleLabel(choice.role),
+                          icon: <OrgTile name={choice.name} current={choice.slug === data.slug} />,
+                        }))
+                      : [
+                          {
+                            value: data.slug,
+                            label: data.name,
+                            aside: `${data.locations.length} ${data.locations.length === 1 ? "location" : "locations"}`,
+                            icon: <OrgTile name={data.name} current />,
+                          },
+                        ]
+                  }
+                  value={data.slug}
+                  onSelect={(slug) => {
+                    if (slug !== data.slug) openOrganization(slug);
+                  }}
+                  searchLabel="Switch organization…"
+                  emptyText="No organization matches."
                 />
-              ) : (
-                <span className="topbar__none">No locations</span>
-              )}
-              {section ? (
-                <>
-                  <span className="topbar__slash topbar__slash--page" aria-hidden="true">
+                {inSettings ? null : (
+                  <span className="topbar__slash" aria-hidden="true">
                     /
                   </span>
-                  <nav className="breadcrumb" aria-label="Breadcrumb">
-                    <ol>
-                      <li>
-                        {section.to ? (
-                          <Link to={section.to} params={{ org: data.slug }} activeOptions={{ exact: true }}>
-                            {section.label}
-                          </Link>
-                        ) : (
-                          <span aria-current="page">{section.label}</span>
-                        )}
-                      </li>
-                      {section.to && trail
-                        ? trail.map((crumb, index) => (
-                            <li key={index}>
-                              {crumb.program ? (
-                                <Link to="/$org/programs/$programId" params={{ org: data.slug, programId: crumb.program }}>
-                                  {crumb.label}
-                                </Link>
-                              ) : (
-                                <span aria-current={index === trail.length - 1 ? "page" : undefined}>{crumb.label}</span>
-                              )}
-                            </li>
-                          ))
-                        : section.to && pageCrumb ? (
-                            <li>
-                              <span aria-current="page">{pageCrumb}</span>
-                            </li>
-                          ) : null}
-                    </ol>
-                  </nav>
-                </>
-              ) : null}
+                )}
+                {inSettings ? null : shownLocation ? (
+                  <ContextSwitcher
+                    label="Location"
+                    icon={<Icon name="location" aria-hidden="true" focusable="false" />}
+                    current={shownLocation.name}
+                    options={data.locations.map((location) => ({
+                      value: location.id,
+                      label: location.name,
+                      icon: <Icon name="location" aria-hidden="true" focusable="false" />,
+                    }))}
+                    value={shownLocation.id}
+                    onSelect={(id) => void chooseLocation(id)}
+                    searchLabel="Switch location…"
+                    emptyText="No location matches."
+                    footer={(close) => (
+                      <Link
+                        to="/$org/settings/locations"
+                        params={{ org: data.slug }}
+                        className="switcher__action"
+                        onClick={close}
+                      >
+                        <Icon name="general" aria-hidden="true" focusable="false" />
+                        Manage locations
+                      </Link>
+                    )}
+                  />
+                ) : (
+                  <span className="topbar__none">No locations</span>
+                )}
+                {section ? (
+                  <>
+                    <span className="topbar__slash topbar__slash--page" aria-hidden="true">
+                      /
+                    </span>
+                    <nav className="breadcrumb" aria-label="Breadcrumb">
+                      <ol>
+                        <li>
+                          {section.to ? (
+                            <Link to={section.to} params={{ org: data.slug }} activeOptions={{ exact: true }}>
+                              {section.label}
+                            </Link>
+                          ) : (
+                            <span aria-current="page">{section.label}</span>
+                          )}
+                        </li>
+                        {section.to && trail
+                          ? trail.map((crumb, index) => (
+                              <li key={index}>
+                                {crumb.program ? (
+                                  <Link to="/$org/programs/$programId" params={{ org: data.slug, programId: crumb.program }}>
+                                    {crumb.label}
+                                  </Link>
+                                ) : (
+                                  <span aria-current={index === trail.length - 1 ? "page" : undefined}>{crumb.label}</span>
+                                )}
+                              </li>
+                            ))
+                          : section.to && pageCrumb ? (
+                              <li>
+                                <span aria-current="page">{pageCrumb}</span>
+                              </li>
+                            ) : null}
+                      </ol>
+                    </nav>
+                  </>
+                ) : null}
+              </div>
             </div>
-          </div>
-          <div className="topbar__end">
-            {/* Search opens from here or with ⌘K. It finds members and pages. */}
-            <button
-              type="button"
-              className="button button--secondary button--compact topbar__search"
-              aria-keyshortcuts="Meta+K Control+K"
-              aria-haspopup="dialog"
-              onClick={() => setSearching(true)}
-            >
-              <Icon name="search" aria-hidden="true" focusable="false" />
-              <span className="visually-hidden">Search</span>
-              <Kbd>{modKey}K</Kbd>
-            </button>
-            <div className="topbar__actions" ref={setActionsSlot} />
-          </div>
-        </header>
-        <main className="main" id="main" tabIndex={-1}>
-          <PageActionsSlot.Provider value={actionsSlot}>
-            <Outlet />
-          </PageActionsSlot.Provider>
-        </main>
-        <TabBar slug={data.slug} />
-      </SidebarInset>
+            <div className="topbar__end">
+              {/* Search opens from here or with ⌘K. It finds members and pages. */}
+              <button
+                type="button"
+                className="button button--secondary button--compact topbar__search"
+                aria-keyshortcuts="Meta+K Control+K"
+                aria-haspopup="dialog"
+                onClick={() => setSearching(true)}
+              >
+                <Icon name="search" aria-hidden="true" focusable="false" />
+                <span className="visually-hidden">Search</span>
+                <Kbd>{modKey}K</Kbd>
+              </button>
+              <div className="topbar__actions" ref={setActionsSlot} />
+            </div>
+          </header>
+          <main className="main" id="main" tabIndex={-1}>
+            <PageActionsSlot.Provider value={actionsSlot}>
+              <Outlet />
+            </PageActionsSlot.Provider>
+          </main>
+          <TabBar slug={data.slug} />
+        </SidebarInset>
+      </div>
       <KeyboardShortcuts open={shortcuts} onOpenChange={setShortcuts} />
       <CommandMenu
         slug={data.slug}
@@ -452,7 +446,7 @@ function AppSidebar({
           <SettingsNav slug={data.slug} organization={data.name} onNavigate={closeDrawer} />
         ) : (
           <SidebarMenu>
-          {NAV_ITEMS.map((item) => (
+          {readablePages(data.actor.permissions).map((item) => (
             <SidebarMenuItem key={item.label}>
               {/* The router marks the active link (aria-current="page"). A section stays active on its detail pages. */}
               <SidebarMenuButton
@@ -461,7 +455,7 @@ function AppSidebar({
                   <Link
                     to={item.to}
                     params={{ org: data.slug }}
-                    activeOptions={{ exact: item.exact || activeTo !== undefined }}
+                    activeOptions={{ exact: activeTo !== undefined }}
                     inactiveProps={activeTo === item.to ? { "aria-current": "page" } : undefined}
                     onClick={closeDrawer}
                   />
@@ -552,10 +546,10 @@ function AccountMenu({
     <DropdownMenu>
       <DropdownMenuTrigger className="account__button">
         <span className="account__avatar" aria-hidden="true">
-          {initials(actor.name).slice(0, 1)}
+          {initials(actor.name)}
         </span>
         <span className="account__name">{actor.name}</span>
-        <Icon name="chevronDown" className="account__chevron" {...icon} />
+        <Icon name="chevrons" className="account__chevron" {...icon} />
         <span className="visually-hidden">, account menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start">

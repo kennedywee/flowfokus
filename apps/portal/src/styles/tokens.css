@@ -31,6 +31,8 @@
   --color-page: light-dark(var(--swatch-ffffff), var(--swatch-09090b));
   --color-surface: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
   --color-sidebar: light-dark(var(--swatch-fafafa), var(--swatch-0c0c0e));
+  /* The tinted frame around the window panel (Paper: the artboard behind "Window"). */
+  --color-frame: light-dark(var(--swatch-f4f4f5), var(--swatch-050506));
   --color-raised: light-dark(var(--swatch-ffffff), var(--swatch-1f1f23));
   --color-overlay: var(--color-raised);
   --color-control: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
@@ -174,9 +176,11 @@
   --focus-offset: 2px;
 
   /* Layout. */
-  --sidebar-width: 236px;
+  --sidebar-width: 232px;
   --rail-width: 56px;
-  --topbar-height: 48px;
+  --topbar-height: 52px;
+  /* The rounded window panel on the frame (Paper "Window"). */
+  --radius-window: 14px;
   /* The phone tab bar, without the safe area under it. */
   --tab-bar-height: 50px;
 
@@ -184,6 +188,7 @@
   --shadow-control: 0 1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4));
   /* The primary button: a 1px light edge inside and a soft drop. */
   --shadow-primary: inset 0 0 0 1px var(--color-primary-ring), 0 1px 2px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.4));
+  --shadow-window: 0 0 0 1px var(--color-line), 0 24px 48px -12px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.6));
   --shadow-popover: 0 16px 40px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --shadow-dialog: 0 24px 64px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.6));
   --shadow-toast: 0 12px 32px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
@@ -211,4 +216,11 @@
   --color-avatar-light: light-dark(var(--swatch-52525b), var(--swatch-d4d4d8));
   /* Rail tooltip. */
   --color-tooltip: var(--color-raised);
+}
+
+/* The phone top bar stays 48px; the window shell is for 768px and up. */
+@media (max-width: 767.98px) {
+  :root {
+    --topbar-height: 48px;
+  }
 }

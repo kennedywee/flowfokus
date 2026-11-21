@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageActionsSlot } from "@/components/PageActions";
-import { PageHead, Status } from "@/components/ui";
+import { Kbd, PageHead, Status } from "@/components/ui";
 
 export default function Example() {
   // In the app, the top bar provides this slot. Here a mock top bar does.
@@ -19,7 +19,10 @@ export default function Example() {
           actions={
             <>
               <Button size="compact" variant="secondary">Send invoice</Button>
-              <Button size="compact">Record payment</Button>
+              <Button size="compact" aria-keyshortcuts="P">
+                Record payment
+                <Kbd>P</Kbd>
+              </Button>
             </>
           }
         >

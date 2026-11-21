@@ -3,7 +3,7 @@ import { hidesTabBar, ownerTab } from "./TabBar";
 
 describe("phone tab bar", () => {
   test("selects the tab that owns the page", () => {
-    expect(ownerTab("/chainsaw/schedule", "chainsaw")).toBe("Schedule");
+    expect(ownerTab("/chainsaw/schedule", "chainsaw")).toBe("Calendar");
     expect(ownerTab("/chainsaw/members/abc", "chainsaw")).toBe("Members");
     expect(ownerTab("/chainsaw/sales/new", "chainsaw")).toBe("Sales");
   });

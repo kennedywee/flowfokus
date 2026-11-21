@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { ListToolbar, ListToolbarLoading, SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
 import { TableState } from "../../components/TableState";
-import { FailureNotice, initials } from "../../components/ui";
+import { FailureNotice, Kbd, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
+import { useShortcut } from "../../lib/shortcuts";
 import { buttonVariants } from "@/components/ui/button";
 import { useShortDate } from "./dates";
 import { PAGE_SIZE } from "../../lib/paging";
@@ -45,20 +46,33 @@ function ListHead() {
     <header className="members-head">
       <h1>Members</h1>
       <PageActions>
-        <NewMemberLink />
+        <NewMemberLink shortcut />
       </PageActions>
     </header>
   );
 }
 
-function NewMemberLink({ variant = "default" }: { variant?: "default" | "secondary" }) {
+/** `shortcut` adds the N key and its hint. Only the top bar action has it, so the key is bound once. */
+function NewMemberLink({ variant = "default", shortcut = false }: { variant?: "default" | "secondary"; shortcut?: boolean }) {
   const organization = useOrganization();
   const can = useCan();
-  if (!can("members:create")) return null;
+  const navigate = useNavigate();
+  // A new member opens on its record, which needs members:read.
+  const canCreate = can("members:create") && can("members:read");
+  useShortcut("n", () => void navigate({ to: "/$org/members/new", params: { org: organization.slug } }), {
+    enabled: shortcut && canCreate,
+  });
+  if (!canCreate) return null;
   return (
-    <Link to="/$org/members/new" params={{ org: organization.slug }} className={buttonVariants({ variant, size: "compact" })}>
+    <Link
+      to="/$org/members/new"
+      params={{ org: organization.slug }}
+      className={buttonVariants({ variant, size: "compact" })}
+      aria-keyshortcuts={shortcut ? "N" : undefined}
+    >
       <Icon name="plus" {...icon} />
       New member
+      {shortcut ? <Kbd>N</Kbd> : null}
     </Link>
   );
 }

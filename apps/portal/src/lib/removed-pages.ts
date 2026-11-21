@@ -1,6 +1,3 @@
-/** The page `/<org>` opens. Pages that left the product open it too. */
-export const START_PAGE = "/$org/schedule";
-
 /** The paths of pages that left the product, after `/<org>`. Old bookmarks still point at them. */
 const REMOVED_PAGES = ["inbox", "agents", "check-in", "reports", "changelog", "soon", "settings/integrations"];
 

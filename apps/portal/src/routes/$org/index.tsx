@@ -1,9 +1,11 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { START_PAGE } from "../../lib/removed-pages";
+import { createFileRoute } from "@tanstack/react-router";
+import { redirectToStart } from "../../lib/start-redirect";
 
-/** `/<org>` has no page of its own. It opens the schedule. */
+/**
+ * `/<org>` has no page of its own. It opens the first page in the sidebar that
+ * the person can read: Calendar, then Members, Sales, Programs, Products. A role
+ * that can read none opens Settings. Rails still checks every request.
+ */
 export const Route = createFileRoute("/$org/")({
-  beforeLoad: ({ params }) => {
-    throw redirect({ to: START_PAGE, params: { org: params.org }, replace: true });
-  },
+  loader: ({ params, parentMatchPromise }) => redirectToStart(params.org, parentMatchPromise),
 });
