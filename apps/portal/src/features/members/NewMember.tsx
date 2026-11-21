@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkNewMember, fieldMessage, type NewMemberErrors } from "./list";
 import { Section } from "./Section";
+import { onlySettingsChanged } from "../settings/sections";
 
 const sendMember = (input: Parameters<typeof createMember>[0]["data"]) => createMember({ data: input });
 const FORM_ID = "new-member";
@@ -74,7 +75,7 @@ function NewMemberForm() {
 
   const dirty = name.trim() !== "" || email.trim() !== "";
   const blocker = useBlocker({
-    shouldBlockFn: () => dirty && !saved.current,
+    shouldBlockFn: ({ current, next }) => dirty && !saved.current && !onlySettingsChanged(current, next),
     enableBeforeUnload: () => dirty && !saved.current,
     withResolver: true,
   });

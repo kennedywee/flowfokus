@@ -41,14 +41,6 @@ export function gymSiteAddress(slug: string): string {
   return `${slug}.flowfokus.com`;
 }
 
-/** What the save bar says changed: "Time zone changed", or "2 changes". */
-export function changeSummary(changes: { timezone: boolean; published: boolean }): string {
-  const names = [changes.timezone ? "Time zone" : null, changes.published ? "Gym site" : null].filter((name) => name !== null);
-  if (names.length === 0) return "No changes";
-  if (names.length === 1) return `${names[0]} changed`;
-  return `${names.length} changes`;
-}
-
 /**
  * A location field error from Rails, in Paper's words. Rails says "has already
  * been taken"; Paper says "Another location is already called Bangsar".

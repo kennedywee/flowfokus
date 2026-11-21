@@ -3,16 +3,14 @@ import { useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { FormNotice } from "../../components/FormNotice";
-import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
 import { SubmitButton } from "../../components/ui";
 import { useAction } from "../../lib/hooks";
 import { useCan, useOrganization } from "../../lib/organization";
 import { saveLocation } from "../../lib/staff.functions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SaleDialog } from "../sales/SaleDialogs";
-import { LockLine, SettingsPage } from "./SettingsPage";
+import { LockLine, SettingsPage, SettingsPageAction } from "./SettingsPage";
 import { locationCount, locationFieldError } from "./facts";
 
 const sendLocation = (input: Parameters<typeof saveLocation>[0]["data"]) =>
@@ -25,8 +23,8 @@ const icon = {
 type Location = Schemas["Location"];
 
 /**
- * Paper "Settings — Locations": one row per location with its address. A row
- * opens the edit dialog. Rails stores a name and an address only, and keeps
+ * Locations: one row per location with its address. A row opens the edit
+ * dialog. Rails stores a name and an address only, and keeps
  * every location, so there is no remove.
  */
 export function Locations() {
@@ -39,56 +37,24 @@ export function Locations() {
   return (
     <SettingsPage
       title="Locations"
-      className="settings-page--wide"
-      actions={
-        editable ? (
-          <PageActions>
-            <Button
-              type="button"
-              size="compact"
-              onClick={() => setEditing("new")}
-            >
-              <Icon name="plus" {...icon} />
-              New location
-            </Button>
-          </PageActions>
-        ) : null
-      }
+      action={editable ? <SettingsPageAction onClick={() => setEditing("new")}>New location</SettingsPageAction> : null}
     >
       {locations.length === 0 ? (
-        <p className="settings-empty">
-          No locations yet. Add one before the first sale.
-        </p>
+        <p className="settings-empty">No locations yet. Add one before the first sale.</p>
       ) : (
-        <section className="settings-table" aria-label="Locations">
-          <div
-            className="settings-table__head settings-locations__grid"
-            aria-hidden="true"
-          >
-            <span>Location</span>
-            <span />
-          </div>
+        <section className="settings-list" aria-label="Locations">
           <ul className="settings-rows">
             {locations.map((location) => {
               const body = (
                 <>
                   <Icon name="location" className="settings-locations__pin" {...icon} />
                   <span className="settings-row-text">
-                    <span className="settings-row-text__name">
-                      {location.name}
-                    </span>
-                    {location.address ? (
-                      <span className="settings-row-text__sub">
-                        {location.address}
-                      </span>
-                    ) : null}
+                    <span className="settings-row-text__name">{location.name}</span>
+                    {location.address ? <span className="settings-row-text__sub">{location.address}</span> : null}
                   </span>
                   {/* An empty lane keeps the columns in line when the role cannot edit. */}
                   {editable ? (
-                    <Icon name="chevronRight"
-                      className="settings-rows__chevron"
-                      {...icon}
-                    />
+                    <Icon name="chevronRight" className="settings-rows__chevron" {...icon} />
                   ) : (
                     <span aria-hidden="true" />
                   )}
@@ -106,9 +72,7 @@ export function Locations() {
                       {body}
                     </button>
                   ) : (
-                    <div className="settings-row-item settings-locations__grid">
-                      {body}
-                    </div>
+                    <div className="settings-row-item settings-locations__grid">{body}</div>
                   )}
                 </li>
               );
@@ -118,16 +82,10 @@ export function Locations() {
         </section>
       )}
       {editable ? null : (
-        <LockLine>
-          View only. Adding and editing locations needs a role that can change
-          settings.
-        </LockLine>
+        <LockLine>View only. Adding and editing locations needs a role that can change settings.</LockLine>
       )}
       {editing ? (
-        <LocationDialog
-          location={editing === "new" ? undefined : editing}
-          onClose={() => setEditing(null)}
-        />
+        <LocationDialog location={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} />
       ) : null}
     </SettingsPage>
   );
@@ -182,7 +140,7 @@ function LocationDialog({
   return (
     <SaleDialog
       title={location ? `Edit ${location.name}` : "New location"}
-      className="settings-dialog"
+      className="settings-form-dialog"
       pending={action.pending}
       onClose={onClose}
       onSubmit={() => void submit()}

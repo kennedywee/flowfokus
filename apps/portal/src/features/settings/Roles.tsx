@@ -3,32 +3,40 @@ import { Icon } from "@/components/ui/icon";
 import type { Result } from "../../lib/result";
 import { LockLine, SettingsPage } from "./SettingsPage";
 import { ABILITIES, reach } from "./abilities";
+import { DidNotLoad } from "./Staff";
 
 const icon = { focusable: false } as const;
 
 /**
- * Paper "Settings — Roles": what each role can do. The columns and the ticks
- * come from the WorkOS roles that Rails returns with the staff list, so the
- * table always matches what the app allows. Only staff who can manage staff
- * receive that list.
+ * Roles: what each role can do. The columns and the ticks come from the
+ * WorkOS roles that Rails returns with the staff list, so the table always
+ * matches what the app allows. Only staff who can manage staff receive that
+ * list. `team` is null while it loads.
  */
-export function Roles({ team }: { team: Result<Schemas["Team"]> }) {
+export function Roles({ team, reload }: { team: Result<Schemas["Team"]> | null; reload: () => Promise<void> }) {
+  if (!team) {
+    return (
+      <SettingsPage title="Roles">
+        <p className="settings-state" role="status">
+          Loading roles…
+        </p>
+      </SettingsPage>
+    );
+  }
   if (!team.ok) {
     return (
-      <SettingsPage title="Roles" className="settings-page--wide">
+      <SettingsPage title="Roles">
         {team.error.code === "forbidden" ? (
           <LockLine>Seeing roles needs a role that can manage staff.</LockLine>
         ) : (
-          <p className="settings-state">
-            Roles did not load. Reload the page to try again.
-          </p>
+          <DidNotLoad what="Roles" reload={reload} />
         )}
       </SettingsPage>
     );
   }
   const roles = team.data.roles;
   return (
-    <SettingsPage title="Roles" className="settings-page--wide">
+    <SettingsPage title="Roles">
       <div
         className="settings-roles"
         role="region"

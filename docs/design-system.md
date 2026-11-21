@@ -12,7 +12,7 @@ and task-specific skills. This repository implements those layers as follows.
 | Primitives: raw palette | `apps/portal/src/styles/primitives.css` | `apps/site/src/styles/primitives.css` |
 | Foundations: semantic color roles and type, space, radius, motion scales | `apps/portal/src/styles/tokens.css` | `apps/site/src/styles/tokens.css` |
 | Components: small reusable pieces, and the one icon set (`components/ui/icon.tsx`) | `apps/portal/src/components/ui/` and `components/ui.tsx` | CSS patterns in `apps/site/src/styles.css` |
-| Blocks: composed sections | `PageHead`, `Plate`, `StatusMark` with `saleMarks`, `ListToolbar`, `ListPager`, `ConfirmDialog`, and the shared parts in `components/parts/` (list table, filter bar, detail layout, activity, data marks) | Opening, offer board, locations, member account |
+| Blocks: composed sections | `PageHead`, `Plate`, `StatusMark` with `saleMarks`, `ListToolbar`, `ListPager`, `ConfirmDialog`, the settings page parts (`features/settings/SettingsPage.tsx`), and the shared parts in `components/parts/` (list table, filter bar, detail layout, activity, data marks) | Opening, offer board, locations, member account |
 | Rules and review skill | Root `AGENTS.md`, app `DESIGN.md`, `.agents/skills/flowfokus-review-screen/SKILL.md` | Same entry points, with the site design file |
 
 ## Reference

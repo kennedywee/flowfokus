@@ -36,6 +36,7 @@ import {
   type SaleOption,
 } from "./saleDraft";
 import { KIND_ICON, PaymentFields, SaleDialog, checkPaymentAmount } from "./SaleDialogs";
+import { onlySettingsChanged } from "../settings/sections";
 
 const sendSale = (input: Parameters<typeof createSale>[0]["data"]) => createSale({ data: input });
 const sendPayment = (input: Parameters<typeof recordPayment>[0]["data"]) => recordPayment({ data: input });
@@ -154,7 +155,7 @@ function NewSaleForm({
 
   const dirty = Boolean(priceId !== preselectedPrice || payment || memberId !== preselected);
   const blocker = useBlocker({
-    shouldBlockFn: () => dirty && !saved.current,
+    shouldBlockFn: ({ current, next }) => dirty && !saved.current && !onlySettingsChanged(current, next),
     enableBeforeUnload: () => dirty && !saved.current,
     withResolver: true,
   });

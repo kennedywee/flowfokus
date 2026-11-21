@@ -5,22 +5,20 @@ import {
   createFileRoute,
   notFound,
   redirect,
-  rootRouteId,
-  useLoaderData,
   useMatches,
   useNavigate,
   useRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import markUrl from "../../assets/flowfokus-mark.svg?url";
 import { AccessUnavailable } from "../../components/AccessUnavailable";
 import { Blocked } from "../../components/Blocked";
 import { CommandMenu, type CommandPage } from "../../components/CommandMenu";
 import { ContextSwitcher } from "../../components/ContextSwitcher";
 import { KeyboardShortcuts } from "../../components/KeyboardShortcuts";
-import { SettingsNav } from "../../features/settings/SettingsNav";
-import { isSettingsPath } from "../../features/settings/sections";
+import { SettingsDialog, useSettings } from "../../features/settings/SettingsDialog";
+import { readSettingsSearch } from "../../features/settings/sections";
 import { PageActionsSlot } from "../../components/PageActions";
 import { SignOutForm, roleLabel, signInHref } from "../../components/Session";
 import { TabBar } from "../../components/TabBar";
@@ -30,8 +28,7 @@ import { getDeskLocation, setDeskLocation } from "../../lib/desk.functions";
 import { useDeskLocation } from "../../lib/organization";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
 import { getAccess, getStaffOrganization, listMyOrganizations, type StaffOrganizationChoice } from "../../lib/staff.functions";
-import { setTheme } from "../../lib/theme.functions";
-import { applyTheme } from "../../lib/theme";
+import { THEME_CHOICES, useThemeChoice } from "../../lib/use-theme-choice";
 import { PAGES, readablePages, type PagePath } from "../../lib/pages";
 import { isSlug, type Theme } from "../../lib/validate";
 import { buttonVariants } from "@/components/ui/button";
@@ -64,6 +61,8 @@ import {
 } from "@/components/ui/sidebar";
 
 export const Route = createFileRoute("/$org")({
+  // `?settings=staff` opens Settings on that page, over any page (features/settings).
+  validateSearch: readSettingsSearch,
   beforeLoad: ({ params }) => {
     if (!isSlug(params.org)) throw notFound();
   },
@@ -157,8 +156,6 @@ function Shell({
   const trimmed = pathname.replace(/\/$/, "");
   const routed = PAGES.find((item) => pathname.startsWith(`${base}${item.path}`));
   const atSectionRoot = routed !== undefined && trimmed === `${base}${routed.path}`;
-  // Settings has its own sidebar. Its breadcrumb is the organization, then Settings, as in Paper.
-  const inSettings = isSettingsPath(pathname, data.slug);
 
   // The desk location shows the new choice at once, while the cookie is saved.
   const router = useRouter();
@@ -173,7 +170,8 @@ function Shell({
   const modKey = useModKeyLabel();
   const [shortcuts, setShortcuts] = useState(false);
   useShortcut("k", () => setSearching((open) => !open), { mod: true });
-  useShortcut(",", () => void navigate({ to: "/$org/settings", params: { org: data.slug } }), { mod: true });
+  const settings = useSettings();
+  useShortcut(",", () => settings.open("general"), { mod: true });
   useShortcut("?", () => setShortcuts(true));
 
   async function chooseLocation(id: string) {
@@ -209,7 +207,6 @@ function Shell({
     ? { label: owner.label, to: owner.to }
     : routed
     ? atSectionRoot ? { label: routed.label } : { label: routed.label, to: routed.to }
-    : inSettings ? { label: "Settings" }
     : null;
 
   const pages: CommandPage[] = [
@@ -218,7 +215,7 @@ function Shell({
       icon: item.icon,
       open: () => void navigate({ to: item.to, params: { org: data.slug } }),
     })),
-    { label: "Settings", icon: "general", open: () => void navigate({ to: "/$org/settings", params: { org: data.slug } }) },
+    { label: "Settings", icon: "general", open: () => settings.open("general") },
   ];
 
   return (
@@ -268,12 +265,10 @@ function Shell({
                   searchLabel="Switch organization…"
                   emptyText="No organization matches."
                 />
-                {inSettings ? null : (
-                  <span className="topbar__slash" aria-hidden="true">
-                    /
-                  </span>
-                )}
-                {inSettings ? null : shownLocation ? (
+                <span className="topbar__slash" aria-hidden="true">
+                  /
+                </span>
+                {shownLocation ? (
                   <ContextSwitcher
                     label="Location"
                     icon={<Icon name="location" aria-hidden="true" focusable="false" />}
@@ -288,15 +283,17 @@ function Shell({
                     searchLabel="Switch location…"
                     emptyText="No location matches."
                     footer={(close) => (
-                      <Link
-                        to="/$org/settings/locations"
-                        params={{ org: data.slug }}
+                      <button
+                        type="button"
                         className="switcher__action"
-                        onClick={close}
+                        onClick={() => {
+                          close();
+                          settings.open("locations");
+                        }}
                       >
                         <Icon name="general" aria-hidden="true" focusable="false" />
                         Manage locations
-                      </Link>
+                      </button>
                     )}
                   />
                 ) : (
@@ -365,6 +362,7 @@ function Shell({
           <TabBar slug={data.slug} />
         </SidebarInset>
       </div>
+      <SettingsDialog />
       <KeyboardShortcuts open={shortcuts} onOpenChange={setShortcuts} />
       <CommandMenu
         slug={data.slug}
@@ -402,8 +400,6 @@ function AppSidebar({
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { open, setOpenMobile } = useSidebar();
   const closeDrawer = () => setOpenMobile(false);
-  const inSettings = isSettingsPath(pathname, data.slug);
-
   // A link inside the drawer was used. Close it, so the new page shows.
   useEffect(() => {
     setOpenMobile(false);
@@ -436,10 +432,7 @@ function AppSidebar({
           <span className="visually-hidden">Close navigation</span>
         </button>
       </SidebarHeader>
-      <SidebarContent aria-label={inSettings ? "Settings" : "Staff pages"}>
-        {inSettings ? (
-          <SettingsNav slug={data.slug} organization={data.name} onNavigate={closeDrawer} />
-        ) : (
+      <SidebarContent aria-label="Staff pages">
           <SidebarMenu>
           {readablePages(data.actor.permissions).map((item) => (
             <SidebarMenuItem key={item.label}>
@@ -462,7 +455,6 @@ function AppSidebar({
             </SidebarMenuItem>
           ))}
           </SidebarMenu>
-        )}
       </SidebarContent>
       <SidebarFooter>
         <AccountMenu
@@ -479,12 +471,6 @@ function AppSidebar({
     </Sidebar>
   );
 }
-
-const THEME_CHOICES: ReadonlyArray<{ value: Theme; label: string; icon: IconName }> = [
-  { value: "light", label: "Light", icon: "appearance" },
-  { value: "dark", label: "Dark", icon: "appearance" },
-  { value: "system", label: "System", icon: "appearance" },
-];
 
 /**
  * The account menu, at the foot of the sidebar. It holds the theme choice,
@@ -508,33 +494,13 @@ function AccountMenu({
   const modKey = useModKeyLabel();
   const signOutForm = useRef<HTMLFormElement>(null);
   const icon = { "aria-hidden": true, focusable: false } as const;
-  const router = useRouter();
-  const navigate = useNavigate();
-  const toast = useToast();
-  const saved = useLoaderData({ from: rootRouteId });
-  // Shown at once, before the cookie is saved and the root route reloads.
-  const [pending, setPending] = useState<Theme | null>(null);
-  const theme = pending ?? saved;
+  const settings = useSettings();
+  const { theme, choose: chooseTheme } = useThemeChoice();
   const current = THEME_CHOICES.find((choice) => choice.value === theme)!;
-
-  async function chooseTheme(next: Theme) {
-    if (next === theme) return;
-    setPending(next);
-    applyTheme(next);
-    try {
-      await setTheme({ data: { theme: next } });
-      await router.invalidate({ filter: (match) => match.routeId === rootRouteId });
-    } catch {
-      applyTheme(saved);
-      toast.show({ tone: "error", title: "Theme not changed", body: "The choice was not saved. Try again." });
-    } finally {
-      setPending(null);
-    }
-  }
 
   function openSettings() {
     onNavigate();
-    void navigate({ to: "/$org/settings", params: { org: slug } });
+    settings.open("general");
   }
 
   return (
@@ -563,7 +529,7 @@ function AccountMenu({
         </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
-            <Icon name={current.icon} {...icon} />
+            <Icon name="appearance" {...icon} />
             Theme
             <DropdownMenuShortcut>
               {current.label}
@@ -574,7 +540,7 @@ function AccountMenu({
             <DropdownMenuRadioGroup value={theme} onValueChange={(value) => chooseTheme(value as Theme)}>
               {THEME_CHOICES.map((choice) => (
                 <DropdownMenuRadioItem key={choice.value} value={choice.value}>
-                  <Icon name={choice.icon} {...icon} />
+                  <Icon name="appearance" {...icon} />
                   {choice.label}
                 </DropdownMenuRadioItem>
               ))}

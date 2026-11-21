@@ -7,5 +7,7 @@ import { redirectToStart } from "../../lib/start-redirect";
  * that can read none opens Settings. Rails still checks every request.
  */
 export const Route = createFileRoute("/$org/")({
-  loader: ({ params, parentMatchPromise }) => redirectToStart(params.org, parentMatchPromise),
+  // `/<org>?settings=roles` keeps its settings page.
+  loaderDeps: ({ search }) => ({ settings: search.settings }),
+  loader: ({ params, deps, parentMatchPromise }) => redirectToStart(params.org, parentMatchPromise, deps.settings),
 });
