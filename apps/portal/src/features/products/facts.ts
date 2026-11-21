@@ -242,11 +242,13 @@ export interface ProductDraft {
   benefits: BenefitDraft[];
 }
 
-let nextKey = 1;
-
-export function benefitDraft(benefit?: Schemas["Benefit"]): BenefitDraft {
+/**
+ * Keys only need to be unique within one draft. They come from the draft
+ * itself, so the server and the browser render the same field ids.
+ */
+export function benefitDraft(benefit?: Schemas["Benefit"], key = 1): BenefitDraft {
   return {
-    key: nextKey++,
+    key,
     kind: benefit?.kind ?? "gym_access",
     name: benefit?.name ?? "Gym access",
     usage: benefit?.usage_limit ? String(benefit.usage_limit) : "",
@@ -254,6 +256,11 @@ export function benefitDraft(benefit?: Schemas["Benefit"]): BenefitDraft {
     scope: benefit?.program_ids.length ? "selected" : (benefit?.program_kind ?? "all"),
     programIds: benefit?.program_ids ?? [],
   };
+}
+
+/** The key for a benefit added to this list. */
+export function nextBenefitKey(benefits: BenefitDraft[]): number {
+  return Math.max(0, ...benefits.map((item) => item.key)) + 1;
 }
 
 /** A new pass starts with ten group-class bookings; a new membership with gym access. */
@@ -272,7 +279,7 @@ export function startDraft(product: Product | undefined, currency: string): Prod
     days: "30",
     published: product?.published ?? false,
     description: product?.description ?? "",
-    benefits: product?.benefits.length ? product.benefits.map(benefitDraft) : startBenefits("membership"),
+    benefits: product?.benefits.length ? product.benefits.map((benefit, index) => benefitDraft(benefit, index + 1)) : startBenefits("membership"),
   };
 }
 

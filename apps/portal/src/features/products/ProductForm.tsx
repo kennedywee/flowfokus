@@ -27,6 +27,7 @@ import {
   checkDraft,
   draftChanged,
   hasErrors,
+  nextBenefitKey,
   priceSpec,
   productFields,
   startBenefits,
@@ -440,7 +441,7 @@ function BenefitsFields({
       title="Benefits"
       action={
         draft.benefits.length < MAX_BENEFITS ? (
-          <Button id="product-add-benefit" type="button" variant="secondary" size="compact" onClick={() => onSet([...draft.benefits, benefitDraft()])}>
+          <Button id="product-add-benefit" type="button" variant="secondary" size="compact" onClick={() => onSet([...draft.benefits, benefitDraft(undefined, nextBenefitKey(draft.benefits))])}>
             <Icon name="plus" {...icon} />
             Add benefit
           </Button>
