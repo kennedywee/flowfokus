@@ -1,27 +1,46 @@
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
-import { FilterChips, FilterMenu, ListToolbar, ListToolbarLoading, SearchField, useSetListSearch, withCounts } from "../../components/ListToolbar";
+import { SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
-import { TableState } from "../../components/TableState";
+import { RecordBackdrop } from "@/components/parts/Backdrop";
+import { HeroStats } from "@/components/parts/DetailLayout";
+import { DisplayPopover, FilterBar } from "@/components/parts/FilterBar";
+import {
+  CellStack,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableEmpty,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { TagChip, Tile } from "@/components/parts/marks";
 import { initials } from "../../components/ui";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
-import { PAGE_SIZE } from "../../lib/paging";
+import { PAGE_SIZE, pageRange, rangeLabel } from "../../lib/paging";
 import type { Failure, Result } from "../../lib/result";
 import { Button, buttonVariants } from "@/components/ui/button";
+import type { ActiveFilter, SortState } from "@/lib/list-parts";
 import {
-  KIND_FILTERS,
-  VISIBILITY_FILTERS,
+  DEFAULT_PROGRAM_COLUMNS,
+  DEFAULT_PROGRAM_SORT,
+  PROGRAM_SORT_FIELDS,
+  activeFilters,
   filterFromSearch,
   filterPrograms,
+  isDefaultDisplay,
   lengthText,
   programCounts,
-  programsRange,
+  programFilterFields,
+  searchFromFilters,
+  sortPrograms,
   upcomingText,
-  type ProgramsFilter,
+  type ProgramColumnId,
   type ProgramsSearch,
 } from "./facts";
 import { KindTile } from "./kinds";
@@ -30,202 +49,229 @@ type Program = Schemas["ProgramListItem"];
 
 const icon = { "aria-hidden": true, focusable: false } as const;
 
+/** The first column, and Host and Upcoming when the Display popover has them on. */
+function programColumns(columns: Record<ProgramColumnId, boolean>): ListColumn[] {
+  return [
+    { id: "name", label: "Program", sortable: true },
+    ...(columns.host ? [{ id: "host", label: "Host", width: "176px", sortable: true }] : []),
+    ...(columns.upcoming ? [{ id: "upcoming", label: "Upcoming", width: "104px", align: "end" as const, sortable: true }] : []),
+  ];
+}
+
 /**
- * Paper "Programs": Filter and search, a header band, then one 52px row per
- * program with its kind, length, host, and upcoming sessions. Rails returns
- * every program of the organization; the list filters and pages here.
+ * The programs list (Paper "Members" pattern, issue #92): the title with the
+ * program count, New program in the top bar, a filter bar (Kind, Visibility,
+ * and search over names and hosts, with Display), the list table, and the
+ * page range. Rails returns every program of the organization; the list
+ * filters, sorts, and pages here. The URL keeps the filters and the search.
  */
 export function ProgramsList({ programs, search }: { programs: Result<Program[]>; search: ProgramsSearch }) {
-  const filter = filterFromSearch(search);
-  const q = search.q ?? "";
   return (
     <div className="page programs-list">
-      <ListHead />
-      {!programs.ok ? (
-        <DidNotLoad error={programs.error} />
-      ) : !programs.data.length ? (
-        <NoPrograms />
+      <RecordBackdrop record="program" />
+      <ListHead count={programs.ok ? String(programs.data.length) : null} />
+      {programs.ok ? (
+        <Loaded programs={programs.data} search={search} />
       ) : (
         <>
-          <Toolbar programs={programs.data} filter={filter} search={search} />
-          <Results programs={programs.data} filter={filter} q={q} />
+          <Bar search={search} programs={null} />
+          <ListTable label="Programs" columns={programColumns(DEFAULT_PROGRAM_COLUMNS)} className="programs-table">
+            <DidNotLoad error={programs.error} />
+          </ListTable>
         </>
       )}
     </div>
   );
 }
 
-function ListHead() {
-  const organization = useOrganization();
-  const can = useCan();
+function ListHead({ count }: { count: string | null }) {
   return (
     <header className="programs-head">
       <h1>Programs</h1>
-      {can("programs:manage") ? (
-        <PageActions>
-          <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ size: "compact" })}>
-            <Icon name="plus" {...icon} />
-            New program
-          </Link>
-        </PageActions>
-      ) : null}
+      {count !== null ? <HeroStats stats={[{ value: count, label: Number(count) === 1 ? "program" : "programs" }]} /> : null}
+      <PageActions>
+        <NewProgramLink />
+      </PageActions>
     </header>
   );
 }
 
-function Toolbar({ programs, filter, search }: { programs: Program[]; filter: ProgramsFilter; search: ProgramsSearch }) {
-  const setSearch = useSetListSearch("/$org/programs", search, ["kind", "visibility", "q"]);
-  const counts = programCounts(programs);
-  const groups = [
-    { key: "kind" as const, title: "Kind", options: withCounts(KIND_FILTERS, counts), chosen: filter.kind },
-    { key: "visibility" as const, title: "Visibility", options: withCounts(VISIBILITY_FILTERS, counts), chosen: filter.visibility },
-  ];
+function NewProgramLink({ variant = "default" }: { variant?: "default" | "secondary" }) {
+  const organization = useOrganization();
+  const can = useCan();
+  if (!can("programs:manage")) return null;
   return (
-    <ListToolbar
-      filter={<FilterMenu groups={groups} onChange={(key, values) => setSearch({ [key]: values.join(",") || undefined })} />}
-      chips={<FilterChips groups={groups} onClear={(key) => setSearch({ [key]: undefined })} />}
+    <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ variant, size: "compact" })}>
+      <Icon name="plus" {...icon} />
+      New program
+    </Link>
+  );
+}
+
+/**
+ * Filter, one chip per active filter, search, and Display. The chips change the
+ * URL, so Back and reload keep them. Without the programs (the list did not
+ * load) the Filter button is left out.
+ */
+function Bar({ search, programs, display }: { search: ProgramsSearch; programs: Program[] | null; display?: ReactNode }) {
+  const setSearch = useSetListSearch("/$org/programs", search, ["kind", "kind_not", "visibility", "visibility_not", "q"]);
+  const filter = filterFromSearch(search);
+  return (
+    <FilterBar
+      fields={programs ? programFilterFields(programCounts(programs)) : []}
+      filters={activeFilters(filter)}
+      onChange={(next: ActiveFilter[]) => {
+        const { kind, kind_not, visibility, visibility_not } = searchFromFilters(next);
+        setSearch({ kind, kind_not, visibility, visibility_not });
+      }}
       search={
         <SearchField
           id="program-search"
           label="Search programs by name or host"
-          placeholder="Search programs or hosts"
+          placeholder="Search name or host"
           q={search.q ?? ""}
           onSearch={(q) => setSearch({ q: q || undefined })}
+          delay={300}
         />
       }
+      display={display}
     />
   );
 }
 
-function Results({ programs, filter, q }: { programs: Program[]; filter: ProgramsFilter; q: string }) {
-  const organization = useOrganization();
-  const navigate = useNavigate();
-  const shown = filterPrograms(programs, filter, q);
-  if (!shown.length) {
-    const onlySearch = q && !filter.kind.length && !filter.visibility.length;
-    return (
-      <TableState
-        title={q ? `No programs match “${q}”` : "No programs match these filters"}
-        action={
-          <Button
-            type="button"
-            variant="secondary"
-            size="compact"
-            onClick={() => void navigate({ to: "/$org/programs", params: { org: organization.slug }, search: {}, replace: true })}
-          >
-            {onlySearch ? "Clear search" : "Clear filters"}
-          </Button>
-        }
-      />
-    );
-  }
-  // A new filter starts again at page 1.
-  return <ProgramRows key={`${filter.kind.join()}|${filter.visibility.join()}|${q}`} programs={shown} />;
-}
-
-function ProgramRows({ programs }: { programs: Program[] }) {
+function Loaded({ programs, search }: { programs: Program[]; search: ProgramsSearch }) {
   const organization = useOrganization();
   const locationName = useLocationName();
-  const [requested, setPage] = useState(1);
-  const pages = Math.max(1, Math.ceil(programs.length / PAGE_SIZE));
+  const filter = filterFromSearch(search);
+  const q = search.q ?? "";
+  const [sort, setSort] = useState<SortState>(DEFAULT_PROGRAM_SORT);
+  const [columns, setColumns] = useState(DEFAULT_PROGRAM_COLUMNS);
+  const [chosenPage, setPage] = useState(1);
+  // A new filter or search starts again at page 1.
+  const key = `${filter.kindNot ? "!" : ""}${filter.kind.join()}|${filter.visibilityNot ? "!" : ""}${filter.visibility.join()}|${q}`;
+  const [lastKey, setLastKey] = useState(key);
+  if (lastKey !== key) {
+    setLastKey(key);
+    setPage(1);
+  }
+  const requested = lastKey === key ? chosenPage : 1;
+  const shown = useMemo(() => sortPrograms(filterPrograms(programs, filter, q), sort), [programs, key, sort]);
+  const { from, to, pages } = pageRange(requested, PAGE_SIZE, shown.length);
   const page = Math.min(requested, pages);
-  const first = (page - 1) * PAGE_SIZE;
-  const rows = programs.slice(first, first + PAGE_SIZE);
+  const rows = shown.slice(Math.max(from - 1, 0), to);
   const manyLocations = organization.locations.length > 1;
+  const set = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
 
-  return (
-    <section className="programs-table" aria-label="Programs">
-      <ProgramsHead />
-      <ul className="programs-rows">
-        {rows.map((program) => (
-          <li key={program.id}>
-            <Link
-              to="/$org/programs/$programId"
-              params={{ org: organization.slug, programId: program.id }}
-              className="programs-row programs-grid"
-            >
-              <span className="programs-row__program">
-                <KindTile kind={program.kind} />
-                <span className="programs-row__text">
-                  <span className="programs-row__title">
-                    <span className="programs-row__name">{program.name}</span>
-                    {program.published ? null : <span className="programs-row__staff">Staff only</span>}
-                  </span>
-                  <span className="programs-row__line">
-                    {PROGRAM_KIND_LABEL[program.kind]}
-                    <span className="programs-row__dot" aria-hidden="true">
-                      ·
-                    </span>
-                    <Icon name="length" className="programs-row__clock" {...icon} />
-                    {lengthText(program.duration_minutes)}
-                    {manyLocations ? (
-                      <>
-                        <span className="programs-row__dot" aria-hidden="true">
-                          ·
-                        </span>
-                        {locationName(program.location_id)}
-                      </>
-                    ) : null}
-                    {/* Phones put the host on this line. */}
-                    <span className="programs-row__phone-host"> · {program.host_name ?? "No host"}</span>
-                  </span>
-                </span>
-              </span>
-              <span className="programs-row__host programs-col--host">
-                {program.host_name ? (
-                  <>
-                    <span className="programs-row__avatar" aria-hidden="true">
-                      {initials(program.host_name).slice(0, 1)}
-                    </span>
-                    <span className="programs-row__host-name">{program.host_name}</span>
-                  </>
-                ) : (
-                  <span className="programs-row__no-host">No host</span>
-                )}
-              </span>
-              <span className="programs-row__upcoming programs-col--num">{upcomingText(program.upcoming_count)}</span>
-              <Icon name="chevronRight" className="programs-row__chevron" {...icon} />
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <ListPager label="Program pages" range={programsRange(first, rows.length, programs.length)} page={page} pages={pages} onPage={setPage} />
-    </section>
+  const display = (
+    <DisplayPopover
+      sortFields={PROGRAM_SORT_FIELDS}
+      sort={sort}
+      onSort={set}
+      columns={[
+        { id: "host", label: "Host", on: columns.host },
+        { id: "upcoming", label: "Upcoming", on: columns.upcoming },
+      ]}
+      onColumn={(id, on) => setColumns((current) => ({ ...current, [id as ProgramColumnId]: on }))}
+      isDefault={isDefaultDisplay(sort, columns)}
+      onReset={() => {
+        set(DEFAULT_PROGRAM_SORT);
+        setColumns(DEFAULT_PROGRAM_COLUMNS);
+      }}
+    />
   );
-}
 
-/** Column titles for sighted staff. Each row link reads its own facts. */
-function ProgramsHead() {
   return (
-    <div className="programs-table__head programs-grid" aria-hidden="true">
-      <span className="programs-table__sort">
-        Program
-        <Icon name="arrowDown" {...icon} />
-      </span>
-      <span className="programs-col--host">Host</span>
-      <span className="programs-col--num">Upcoming</span>
-      <span />
-    </div>
+    <>
+      <Bar search={search} programs={programs} display={programs.length ? display : undefined} />
+      <ListTable label="Programs" columns={programColumns(columns)} sort={sort} onSort={set} className="programs-table">
+        {rows.length ? (
+          <ListTableBody>
+            {rows.map((program) => (
+              <ListTableRow key={program.id}>
+                <ListTableCell>
+                  <Link
+                    to="/$org/programs/$programId"
+                    params={{ org: organization.slug, programId: program.id }}
+                    className="list-table__link"
+                  >
+                    <CellStack
+                      lead={<KindTile kind={program.kind} />}
+                      title={program.name}
+                      tags={program.published ? null : <TagChip>Staff only</TagChip>}
+                      sub={[PROGRAM_KIND_LABEL[program.kind], lengthText(program.duration_minutes), manyLocations ? locationName(program.location_id) : null]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    />
+                  </Link>
+                </ListTableCell>
+                {columns.host ? (
+                  <ListTableCell className="programs-table__host">
+                    {program.host_name ? (
+                      <>
+                        <Tile size="small">{initials(program.host_name).slice(0, 1)}</Tile>
+                        <span>{program.host_name}</span>
+                      </>
+                    ) : (
+                      <span className="cell-faint">No host</span>
+                    )}
+                  </ListTableCell>
+                ) : null}
+                {columns.upcoming ? (
+                  <ListTableCell align="end" className="cell-muted programs-table__upcoming">
+                    {upcomingText(program.upcoming_count)}
+                  </ListTableCell>
+                ) : null}
+              </ListTableRow>
+            ))}
+          </ListTableBody>
+        ) : programs.length ? (
+          <NoMatch q={q} filtered={Boolean(filter.kind.length || filter.visibility.length)} />
+        ) : (
+          <NoPrograms />
+        )}
+      </ListTable>
+      {rows.length ? (
+        <ListPager
+          label="Program pages"
+          range={rangeLabel(page, PAGE_SIZE, shown.length, "programs")}
+          page={page}
+          pages={pages}
+          onPage={setPage}
+        />
+      ) : null}
+    </>
   );
 }
 
 function NoPrograms() {
-  const organization = useOrganization();
   const can = useCan();
-  const manage = can("programs:manage");
   return (
-    <TableState
-      className="programs-table"
-      head={<ProgramsHead />}
+    <ListTableEmpty
       title="No programs yet"
-      text={manage ? "Classes and open-gym sessions you add show up here." : "A manager adds programs."}
+      text={can("programs:manage") ? "Classes and open-gym sessions you add show up here." : "A manager adds programs."}
+      action={<NewProgramLink variant="secondary" />}
+    />
+  );
+}
+
+function NoMatch({ q, filtered }: { q: string; filtered: boolean }) {
+  const navigate = useNavigate();
+  const organization = useOrganization();
+  return (
+    <ListTableEmpty
+      title={q ? `No programs match “${q}”` : "No programs match these filters"}
       action={
-        manage ? (
-          <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ variant: "secondary", size: "compact" })}>
-            <Icon name="plus" {...icon} />
-            New program
-          </Link>
-        ) : null
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          onClick={() => void navigate({ to: "/$org/programs", params: { org: organization.slug }, search: {}, replace: true })}
+        >
+          {q && !filtered ? "Clear search" : "Clear filters"}
+        </Button>
       }
     />
   );
@@ -235,52 +281,43 @@ function DidNotLoad({ error }: { error: Failure }) {
   const router = useRouter();
   const [retrying, setRetrying] = useState(false);
   return (
-    <div className="list-state" role="alert">
-      <p className="list-state__title">Programs did not load.</p>
-      <p className="list-state__text">{failureMessage(error)}</p>
-      <Button
-        type="button"
-        variant="secondary"
-        size="compact"
-        disabled={retrying}
-        aria-busy={retrying || undefined}
-        onClick={async () => {
-          setRetrying(true);
-          await router.invalidate();
-          setRetrying(false);
-        }}
-      >
-        Try again
-      </Button>
-    </div>
+    <ListTableEmpty
+      title="Programs did not load"
+      text={failureMessage(error)}
+      action={
+        <Button
+          type="button"
+          variant="secondary"
+          size="compact"
+          disabled={retrying}
+          aria-busy={retrying || undefined}
+          onClick={async () => {
+            setRetrying(true);
+            await router.invalidate();
+            setRetrying(false);
+          }}
+        >
+          Try again
+        </Button>
+      }
+    />
   );
 }
 
-/** Paper "Programs — Loading": the toolbar and the header band stay; four skeleton rows. */
+/** Keeps the list shape while programs load. */
 export function ProgramsLoading() {
   return (
-    <div className="page programs-list" role="status" aria-busy="true" aria-label="Loading programs">
-      <ListHead />
-      <ListToolbarLoading />
-      <div className="programs-table" aria-hidden="true">
-        <div className="programs-table__head programs-grid">
-          <span>Program</span>
-          <span className="programs-col--host">Host</span>
-          <span className="programs-col--num">Upcoming</span>
-          <span />
-        </div>
-        <div className="programs-rows">
-          {[38, 30, 34, 26].map((width, index) => (
-            <div key={index} className="programs-row programs-skeleton__row">
-              <span className="program-tile skeleton-block" data-size={28} />
-              <span className="programs-skeleton__text">
-                <span className="skeleton-line" style={{ width: `${width}%` }} />
-                <span className="skeleton-line skeleton-line--small" style={{ width: `${width - 12}%` }} />
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="page programs-list">
+      <RecordBackdrop record="program" />
+      <ListHead count={null} />
+      <div className="filter-bar" aria-hidden="true">
+        <span className="skeleton-block programs-list__skeleton-button" />
+        <span className="filter-bar__space" />
+        <span className="list-search skeleton-block" />
       </div>
+      <ListTable label="Programs" columns={programColumns(DEFAULT_PROGRAM_COLUMNS)} className="programs-table">
+        <ListTableLoading rows={8} label="Loading programs" />
+      </ListTable>
     </div>
   );
 }

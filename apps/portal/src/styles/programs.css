@@ -1004,3 +1004,319 @@ a.program-row:focus-visible {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---------- Program details (issue #92) ---------- */
+/*
+ * Paper "Program details" on the shared DetailLayout: the name at display size
+ * with the fill rate, the chart of the last week and the next 30 days,
+ * Sessions, and Ways to book, with orbit dots behind them. Sizes come from the
+ * tokens and the shared parts (Paper could not be read; see DESIGN.md).
+ */
+
+.program-details .detail__main {
+  gap: var(--space-8, 40px);
+}
+
+/* The chart: one spot stack per session on a line of days. */
+.program-chart {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.program-chart__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 24px;
+}
+.program-chart__head h2 {
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+  line-height: 16px;
+}
+/* The plot keeps 14px a day. A phone scrolls it sideways instead of squeezing the stacks. */
+.program-chart__scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.program-chart__plot {
+  --height: calc(var(--rows) * 1px + 36px);
+  position: relative;
+  min-width: calc(var(--days) * 14px);
+}
+.program-chart__columns,
+.program-chart__axis,
+.program-chart__labels {
+  display: grid;
+  grid-template-columns: repeat(var(--days), minmax(0, 1fr));
+}
+.program-chart__columns {
+  align-items: end;
+  height: var(--height);
+}
+.program-chart__day {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+.program-chart__column {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+.program-chart__column:hover {
+  opacity: 0.7;
+}
+.program-chart__today {
+  position: absolute;
+  top: 0;
+  height: var(--height);
+  width: 1px;
+  background: var(--color-ink);
+  pointer-events: none;
+}
+.program-chart__today::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-ink);
+}
+.program-chart__today-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.program-chart__axis {
+  border-top: 1px solid var(--color-line);
+}
+.program-chart__tick {
+  justify-self: center;
+  width: 1px;
+  height: 4px;
+  background: var(--color-line-strong);
+}
+.program-chart__labels {
+  grid-auto-rows: 16px;
+  row-gap: 2px;
+  margin-top: 4px;
+}
+.program-chart__label,
+.program-chart__cancelled {
+  justify-self: center;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.program-chart__cancelled {
+  color: var(--color-critical);
+}
+.program-chart__last {
+  display: grid;
+  justify-items: end;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+.program-chart__last span:last-child {
+  color: var(--color-ink-3);
+}
+
+/* Sessions: day, time, a spot stack with its count, and a chevron. */
+.program-sessions {
+  container: program-sessions / inline-size;
+}
+.program-session__day {
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+.program-session__day[data-past] {
+  color: var(--color-ink-3);
+}
+.program-session__time {
+  color: var(--color-ink-2);
+  font-variant-numeric: tabular-nums;
+  gap: 8px;
+  white-space: nowrap;
+}
+.program-session__time[data-past] {
+  color: var(--color-ink-3);
+}
+.program-session__today {
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--color-line-strong);
+  color: var(--color-ink-2);
+  font-size: var(--text-xs);
+  line-height: 18px;
+}
+.program-session__spots {
+  gap: 12px;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.program-session__spots[data-state="past"] .program-session__count {
+  color: var(--color-ink-3);
+}
+.program-session__spots[data-state="full"] .program-session__count {
+  color: var(--color-warning);
+}
+.program-session__spots[data-state="cancelled"] .program-session__count {
+  color: var(--color-critical);
+}
+.program-session__reason {
+  overflow: hidden;
+  color: var(--color-ink-3);
+  text-overflow: ellipsis;
+}
+.program-session__chevron {
+  color: var(--color-ink-3);
+}
+@container program-sessions (max-width: 560px) {
+  .program-sessions .list-table__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px var(--space-3);
+    padding-block: var(--space-2);
+  }
+  .program-sessions .list-table__row > :first-child {
+    flex: none;
+  }
+  .program-sessions .list-table__row > :nth-child(2) {
+    flex: 1 1 0;
+  }
+  .program-sessions .list-table__row > :nth-child(4) {
+    order: 2;
+  }
+  .program-sessions .list-table__row > :nth-child(3) {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+.program-week {
+  padding: 14px 0 4px;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  line-height: 16px;
+}
+.program-week > [role="cell"] {
+  display: block;
+}
+.program-more {
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  gap: 4px;
+  height: 24px;
+  margin-top: var(--space-1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink-3);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+.program-more:hover {
+  color: var(--color-ink);
+}
+.program-more:focus-visible {
+  outline: var(--focus-ring);
+}
+.program-more[aria-expanded="true"] .program-more__chevron {
+  transform: rotate(180deg);
+}
+.program-note {
+  margin: 0;
+  padding: var(--space-2) 0;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+}
+
+/* Ways to book: name, type, price, and the ⋯ of a ticket. */
+.program-way__name {
+  gap: 8px;
+  font-weight: var(--font-weight-medium);
+}
+.program-way__name > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.program-way__name[data-state="off_sale"],
+.program-way__name[data-state="archived"],
+.program-way__price[data-state="off_sale"],
+.program-way__price[data-state="archived"] {
+  color: var(--color-ink-3);
+}
+.program-way__state {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-ink-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
+}
+.program-way__price {
+  font-variant-numeric: tabular-nums;
+}
+.program-ways .list-table__row {
+  padding-right: 0;
+}
+
+/* The panel: an icon and a value, and the note. */
+.program-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.program-value svg {
+  flex: none;
+  color: var(--color-ink-3);
+}
+.program-value[data-empty] {
+  color: var(--color-ink-3);
+}
+.program-note-text {
+  margin: 0;
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+/* Loading keeps the hero and the Sessions rows. */
+.program-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+.program-loading__title {
+  display: block;
+  width: 280px;
+  max-width: 100%;
+  height: 36px;
+}

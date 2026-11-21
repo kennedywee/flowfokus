@@ -168,6 +168,20 @@ export function spotKinds(capacity: number, booked: number, state: "upcoming" | 
   });
 }
 
+/**
+ * A spot stack draws at most `max` segments. A larger session is drawn smaller:
+ * each segment then stands for several spots. A session that is not full never
+ * draws full, and one with a booking never draws empty, so the shape stays true.
+ */
+export function scaleSpots(capacity: number, booked: number, max: number): { capacity: number; booked: number } {
+  const total = Math.max(0, Math.floor(capacity));
+  const taken = Math.min(total, Math.max(0, Math.floor(booked)));
+  if (total <= max) return { capacity: total, booked: taken };
+  if (taken === 0) return { capacity: max, booked: 0 };
+  if (taken >= total) return { capacity: max, booked: max };
+  return { capacity: max, booked: Math.min(max - 1, Math.max(1, Math.round((taken / total) * max))) };
+}
+
 /** Shares as whole percentages of a total, for the mix bar. Empty shares count as zero. */
 export function mixShares(counts: readonly number[]): number[] {
   const total = counts.reduce((sum, count) => sum + Math.max(0, count), 0);

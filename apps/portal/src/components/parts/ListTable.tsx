@@ -201,13 +201,16 @@ export function ListTableCell({
   align,
   className,
   children,
+  ...rest
 }: {
   align?: "start" | "end";
   className?: string;
   children?: ReactNode;
+  /** `data-*` attributes, such as a state for CSS. */
+  [attribute: `data-${string}`]: string | boolean | undefined;
 }) {
   return (
-    <div role="cell" className={cn("list-table__cell", className)} data-align={align}>
+    <div role="cell" className={cn("list-table__cell", className)} data-align={align} {...rest}>
       {children}
     </div>
   );

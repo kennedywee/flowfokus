@@ -61,7 +61,7 @@ export function HeroStats({ stats }: { stats: readonly HeroStat[] }) {
   return (
     <dl className="hero__stats">
       {stats.map((stat) => (
-        <div key={stat.label} className="hero__stat">
+        <div key={stat.label} className="hero__stat" data-above={stat.above || undefined}>
           {/* The label is the term; CSS shows the value above it, as in Paper. */}
           <dt className="hero__label">{stat.label}</dt>
           <dd className="hero__value">{stat.value}</dd>
@@ -74,6 +74,8 @@ export function HeroStats({ stats }: { stats: readonly HeroStat[] }) {
 export interface HeroStat {
   value: ReactNode;
   label: string;
+  /** Puts the label above the figure, for "Starts in" over "20 min". */
+  above?: boolean;
 }
 
 /** The 44px round tile of a hero: initials, or an icon for a record that is not a person. */
