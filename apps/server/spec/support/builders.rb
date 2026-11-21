@@ -6,8 +6,12 @@ module Builders
     end
   end
 
+  # A published organization gets the gym site feature On, as the migration
+  # gave every published organization.
   def create_organization(slug:, workos_id: "org_#{slug}", published: true, currency: "MYR")
-    Organization.create!(slug:, workos_id:, name: slug.titleize, published:, currency:, timezone: "Asia/Kuala_Lumpur")
+    Organization.create!(slug:, workos_id:, name: slug.titleize, published:, currency:, timezone: "Asia/Kuala_Lumpur").tap do |organization|
+      organization.change_feature!("gym_site", state: "on") if published
+    end
   end
 
   def chainsaw

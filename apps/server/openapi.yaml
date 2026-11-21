@@ -283,6 +283,114 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
 
+  /staff/features:
+    get:
+      tags: [staff]
+      operationId: listStaffFeatures
+      summary: Every feature with its state for this organization. Needs features:manage.
+      description: |
+        Only the Developer role holds features:manage. A feature with no saved state is `off`.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeveloperFeaturesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/features/{key}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffFeature
+      summary: Set a feature to off, labs, or on for this organization. Needs features:manage.
+      description: |
+        Moving a feature out of `labs` clears the organization's Labs choice.
+        An unknown key is not found.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/FeatureKeyPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureStateInput"
+      responses:
+        "200":
+          description: OK. Every feature, after the change.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeveloperFeaturesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/Unprocessable"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  /staff/labs/{key}:
+    patch:
+      tags: [staff]
+      operationId: updateStaffLabsFeature
+      summary: Turn a feature in Labs on or off for this organization. Needs settings:manage.
+      description: |
+        A feature that is not in Labs is not found.
+      security:
+        - bearerAuth: []
+          organizationHeader: []
+      parameters:
+        - $ref: "#/components/parameters/FeatureKeyPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabsFeatureInput"
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LabsFeature"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
   /staff/team:
     get:
       tags: [staff]
@@ -2244,6 +2352,13 @@ components:
         type: string
         minLength: 8
         maxLength: 255
+    FeatureKeyPath:
+      name: key
+      in: path
+      required: true
+      description: A feature key, such as `gym_site`.
+      schema:
+        type: string
     InvitationIdPath:
       name: invitation_id
       in: path
@@ -2522,7 +2637,9 @@ components:
 
     Permission:
       type: string
-      enum:
+      description: |
+        A staff permission from WorkOS. The list grows, so clients must accept a permission they do not know.
+      x-extensible-enum:
         - members:read
         - members:create
         - members:link
@@ -2543,6 +2660,7 @@ components:
         - bookings:manage
         - settings:manage
         - staff:manage
+        - features:manage
 
     StaffOrganization:
       type: object
@@ -2567,8 +2685,103 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Location"
+        features:
+          type: array
+          description: The features in effect for this organization. Rails decides; clients only read it.
+          items:
+            $ref: "#/components/schemas/FeatureKey"
+        labs:
+          type: array
+          description: The features in Labs, which staff with settings:manage can turn on or off.
+          items:
+            $ref: "#/components/schemas/LabsFeature"
         actor:
           $ref: "#/components/schemas/Actor"
+
+    FeatureKey:
+      type: string
+      description: |
+        A feature flag. The list lives in Rails and grows, so clients must accept a key they do not know.
+        - `gym_site`: the gym site (public pages, shop, member area) and Settings, Gym site.
+      x-extensible-enum:
+        - gym_site
+
+    FeatureState:
+      type: string
+      description: |
+        - `off`: the organization does not have the feature.
+        - `labs`: Settings, Labs lists it, and staff with settings:manage turn it on or off.
+        - `on`: the organization has the feature.
+      enum: ["off", "labs", "on"]
+
+    LabsFeature:
+      type: object
+      additionalProperties: false
+      required: [key, name, description, enabled]
+      properties:
+        key:
+          $ref: "#/components/schemas/FeatureKey"
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+          description: True when the organization turned the feature on.
+
+    DeveloperFeature:
+      type: object
+      additionalProperties: false
+      required: [key, name, description, state, enabled, in_effect]
+      properties:
+        key:
+          $ref: "#/components/schemas/FeatureKey"
+        name:
+          type: string
+        description:
+          type: string
+        state:
+          $ref: "#/components/schemas/FeatureState"
+        enabled:
+          type: boolean
+          description: True when the feature is in Labs and the organization turned it on.
+        in_effect:
+          type: boolean
+          description: True when the state is `on`, or `labs` and turned on.
+
+    DeveloperFeaturesResponse:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [workos_organization_id, features]
+          properties:
+            workos_organization_id:
+              type: string
+              nullable: true
+            features:
+              type: array
+              items:
+                $ref: "#/components/schemas/DeveloperFeature"
+
+    FeatureStateInput:
+      type: object
+      additionalProperties: false
+      required: [state]
+      properties:
+        state:
+          $ref: "#/components/schemas/FeatureState"
+
+    LabsFeatureInput:
+      type: object
+      additionalProperties: false
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
 
     StaffMembership:
       type: object

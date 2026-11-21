@@ -11,6 +11,8 @@ Rails.application.routes.draw do
   namespace :staff do
     resource :organization, only: %i[show update]
     resources :locations, only: %i[create update]
+    resources :features, only: %i[index update], param: :key
+    resources :labs, only: :update, param: :key
     resource :team, only: :show, controller: "team" do
       resources :invitations, only: :create, controller: "team_invitations" do
         post :revoke, on: :member

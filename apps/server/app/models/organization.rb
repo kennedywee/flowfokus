@@ -23,9 +23,11 @@ class Organization < ApplicationRecord
   has_many :occurrences, dependent: :restrict_with_exception
   has_many :bookings, dependent: :restrict_with_exception
   has_many :checkouts, dependent: :restrict_with_exception
+  has_many :features, dependent: :restrict_with_exception
 
   scope :published, -> { where(published: true) }
   scope :linked_to_workos, -> { live.where.not(workos_id: nil) }
+  scope :with_feature, ->(key) { where(id: Feature.in_effect.where(key: key.to_s).select(:organization_id)) }
 
   normalizes :slug, with: ->(slug) { slug.strip.downcase }
   validates :name, presence: true
@@ -42,6 +44,39 @@ class Organization < ApplicationRecord
   end
 
   def time_zone = ActiveSupport::TimeZone[timezone]
+
+  # True when the feature is On, or in Labs and turned on. See Feature.
+  def feature?(key) = features.in_effect.exists?(key: key.to_s)
+
+  # Every feature in Feature::LIST with this organization's state, in list order.
+  # A feature with no saved state is Off.
+  def feature_list
+    saved = features.index_by(&:key)
+    Feature::LIST.keys.map { |key| saved[key] || Feature.new(organization: self, key:) }
+  end
+
+  # Sets a feature's state. Only staff with features:manage may call this.
+  def change_feature!(key, state:)
+    raise ActiveRecord::RecordNotFound unless Feature.known?(key)
+
+    transaction do
+      feature = features.lock.find_or_initialize_by(key: key.to_s)
+      feature.update!(state:)
+      feature
+    end
+  rescue ActiveRecord::RecordNotUnique
+    retry
+  end
+
+  # Turns a Labs feature on or off for this organization. A feature that is
+  # not in Labs is not found.
+  def turn_labs_feature!(key, enabled:)
+    transaction do
+      feature = features.where(state: "labs").lock.find_by!(key: key.to_s)
+      feature.update!(enabled:)
+      feature
+    end
+  end
 
   # Applies WorkOS organization data to an existing linked gym. Call inside a
   # transaction. Returns the outcome as a symbol.
@@ -174,6 +209,8 @@ class Organization < ApplicationRecord
     {
       id:, slug:, name:, timezone:, currency:, published:,
       locations: locations.map(&:as_api),
+      features: feature_list.select(&:in_effect?).map(&:key),
+      labs: feature_list.select(&:labs?).map(&:as_labs_api),
       actor: { name: user.name, email: user.email, demo: demo, permissions: permissions }
     }
   end
