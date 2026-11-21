@@ -16,17 +16,20 @@ where Paper and the app differ, the app changes.
 
 | Set | Paper pages | Report |
 | --- | --- | --- |
-| Home and app chrome, the ten-item sidebar, dark frame | Home | `reports/home.md` |
-| Inbox and Agents (new pages, sample data) | Inbox, Agents | `reports/inbox-agents.md` |
+| Home and app chrome, the ten-item sidebar, dark frame. **Home removed 21 Nov 2026.** | Home | `reports/home.md` |
+| Inbox and Agents. **Removed 21 Nov 2026.** | Inbox, Agents | `reports/inbox-agents.md` |
 | Members and Sales states | Members, Member details, New member, Sales, Sale details, New sale | `reports/members-sales.md` |
-| Check-ins | Check-ins | `reports/check-ins.md` |
+| Check-ins. **Page removed 21 Nov 2026.** Check-in stays on the member page and ⌘K. | Check-ins | `reports/check-ins.md` |
 | Schedule (new page) and sessions | Schedule, Session details | `reports/schedule.md` |
 | Programs | Programs, Program details, New program, Booking rules & settings | `reports/programs.md` |
 | Products, with an "Option B" block for the Rails model | Products | `reports/products.md` |
-| Reports | Reports | `reports/reports.md` |
+| Reports. **Removed 21 Nov 2026.** | Reports | `reports/reports.md` |
 | Settings and sign-in | Settings & sign-in | `reports/settings.md` |
 | Phone and tablet layouts | Narrow screens | `reports/phone.md` |
 | Sidebar on every desktop frame | all desktop pages | `reports/sidebar-a.md`, `reports/sidebar-b.md` |
+
+The removed sets are kept as history. The portal no longer builds them. See
+[Decisions](../decisions.md). The Rails gaps of a removed set are not work to do.
 
 The user's original frames were not changed, with one exception the user
 asked for: the list of pages inside the sidebar now has ten items on every
@@ -34,9 +37,9 @@ desktop frame.
 
 ## Settled
 
-- Paper's page names: Home, Check-ins, Products. The app is renamed to match.
-- Sidebar order: Home, Inbox, Agents, Members, Sales, Check-ins, Schedule,
-  Programs, Products, Reports.
+- Sidebar (decided 21 Nov 2026, replaces the ten-item list of this pass):
+  Calendar, Members, Sales, Programs, Products. Home, Inbox, Agents, Check-ins,
+  and Reports are removed. Until Calendar is built, the sidebar has Schedule.
 - "Fulfill", "Fulfilled", "Unfulfilled". Never "Deliver". The shortcut is F.
 - "Session", not "time". "New program", not "Add program".
 - Page actions sit in the top bar. On phones they sit under the title, and
@@ -75,8 +78,8 @@ desktop frame.
   Receptionist. Coach and the "Front desk" name wait for WorkOS and Rails work.
 - Sign-in (decided 18 Nov 2026): the WorkOS sign-in page, not a form in the
   portal. Passwords never reach our app.
-- Reports (decided 18 Nov 2026): not rebuilt in the portal-only pass. Build the
-  report list and pages together with their Rails endpoints.
+- Reports (decided 21 Nov 2026): removed from the product. The 18 Nov 2026
+  decision to build them with their Rails endpoints no longer applies.
 
 ## Decisions the user still owes
 

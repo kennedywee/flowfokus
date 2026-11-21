@@ -72,7 +72,7 @@ screens, and member linking remain separate work.
 Staff manage offers, prices, locations, settings, and the team. Sales support
 renewal at the agreed price, early delivery with a reason, refunds, voids, and
 revocation. Check-in supports a staff override. Members sign in on the gym
-site, link with a desk code, and see their account. Reports use real data.
+site, link with a desk code, and see their account.
 Workers prove the client IP with a shared secret. A jobs process recovers
 WorkOS sync automatically.
 

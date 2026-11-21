@@ -122,7 +122,7 @@ Existing blocks to compose before adding another abstraction:
 - `FormNotice`: a form's failed request in one bordered line (red icon, title,
   staff sentence). The fields keep their values.
 - `useCheckIn` (`features/check-ins/CheckInFlow.tsx`): checks a member in and
-  shows the toast or the denial dialog. Home, Check-ins, and the member page use it.
+  shows the toast or the denial dialog. The member page and ⌘K use it.
 - `ConfirmDialog`: one consequential decision with pending handling.
 - `Field` plus `FailureNotice`: field errors and request failure at separate levels.
 
@@ -282,7 +282,7 @@ Shell. The sidebar (236px, no fill or edge) holds the logo, the collapse
 button, one list of pages, and the account menu at the foot. The account
 button shows the avatar and name only; the role shows in the organization
 switcher. The account menu
-holds Settings, Theme, What's new, and Sign out. The 48px top bar holds the
+holds Settings, Keyboard shortcuts, Theme, and Sign out. The 48px top bar holds the
 breadcrumb: organization, location, section, and page, then Search and the
 page's actions on the right. A detail route names
 its page with `staticData.crumb(loaderData)`. The top bar has no search field:
@@ -290,8 +290,9 @@ a compact Search button and ⌘K (Ctrl K elsewhere) open `CommandMenu`, which
 finds members through Rails and opens pages. Its Actions group checks in or
 sells to the first member found, for roles that can. The organization
 switcher shows the role on the right; the location switcher ends with Manage
-locations. Below 768px the tab bar (`components/TabBar.tsx`) holds Home,
-Members, Check in, Sales, and More, which opens the drawer. The rail is 56px wide; icons stay
+locations. `/<org>` opens Schedule, and so do the old URLs of removed pages
+(`lib/removed-pages.ts`). Below 768px the tab bar (`components/TabBar.tsx`) holds Schedule,
+Members, Sales, and More, which opens the drawer. The rail is 56px wide; icons stay
 at x=28 when the sidebar collapses.
 
 Member details is the first redesigned screen (`features/members/MemberDetails.tsx`,
@@ -394,32 +395,24 @@ Rails data:
   several lines, notes, card or e-wallet, attachments, member numbers and
   phones, and "Add new member" from the search.
 
-Check-ins is the next redesigned screen (`features/check-ins/CheckIns.tsx`,
-the check-in flow in `CheckInFlow.tsx`, the search in `FindMember.tsx`, facts
-in `facts.ts`, and idempotency in `attempt.ts`). It shows only Rails data:
+The check-in flow (`features/check-ins/CheckInFlow.tsx`, facts in `facts.ts`,
+idempotency in `attempt.ts`, member search in `useMemberSearch.ts`) has no page
+of its own. The Check-ins page left the product on 21 November 2026. The member
+page (Check in, or C) and ⌘K (Check in, for the first member found) start it.
+It shows only Rails data:
 
-- Today's list: the title, Check in (check_ins:create) and ⋯ with Export
-  visits as CSV in the top bar. Filter by Result (Checked in, Denied, with
-  counts) and a "/" search over today's rows. A header band, then 44px rows:
-  24-hour time, member, location when there are several, and the result with
-  its reason. Each row opens the member. The footer is the Rails day count.
-- Check in opens Find member: Rails searches name and email as staff type.
-  Choosing a member checks them in at the top bar location at once. States:
-  searching, no match (New member), search failed, no location (Add
-  location). Phones put the search in the page above the list.
-- The result is a toast. A failed request shows an error toast with Try
-  again, which resends the same idempotency key. A denial opens the denial
-  dialog: the access fact from the Rails reason, the balance due when the
-  role can read sales, then New sale (no access) or Renew (no visits left).
-  "Let in anyway…" (check_ins:override) asks for a reason and lets the
-  member in with the neutral primary button.
-- C on the member page checks in directly, with the same toast or dialog.
-- No check_ins:read: one line naming the permission. No check_ins:create: no
-  Check in.
+- Check in records the visit at the top bar location at once. The result is
+  a toast. A failed request shows an error toast with Try again, which
+  resends the same idempotency key. A denial opens the denial dialog: the
+  access fact from the Rails reason, the balance due when the role can read
+  sales, then New sale (no access) or Renew (no visits left). "Let in
+  anyway…" (check_ins:override) asks for a reason and lets the member in with
+  the neutral primary button.
+- No location: an error toast names the organization and says to add one.
+- No check_ins:create: no Check in.
 - Not shown, because Rails has no data for them: the right used, credits
   used, access hours, the cause behind "no active access", Undo, member
-  numbers and phones, access in the search, a check-in detail page, and
-  walk-ins.
+  numbers and phones, and walk-ins.
 
 Schedule and Session details are the next redesigned screens
 (`features/schedule/Schedule.tsx`, `SessionDetails.tsx`, `BookMember.tsx`,
@@ -469,42 +462,6 @@ styles in `styles/schedule.css`). They show only Rails data:
   marking, member numbers, the sale's payment state on a booking, Change
   payment, Collect payment, Move, session activity and comments, and
   cancellation emails.
-
-Home is the next redesigned screen (`features/home/Home.tsx`, facts in
-`facts.ts`, styles in `styles/home.css`). It shows only Rails data:
-
-- The title "Today" with the date and the desk location. Check in (C) opens
-  Find member and uses `useCheckIn`; Sell (S) shows only with
-  purchases:create; ⋯ holds New member (members:create).
-- Up next: today's sessions at the desk location that have not ended, from
-  `/staff/occurrences?days=1`, up to four, with the Schedule status marks.
-  The band says "4 of 9 today"; the link opens the schedule. Roles without
-  programs:read do not see it.
-- Needs attention: "4 sales with a balance due" and "1 paid sale
-  unfulfilled" from the overview counts. Each opens the filtered sales list
-  for roles with purchases:read. Rails counts only paid sales as awaiting
-  fulfillment, so the row says "paid". A second line gives the total due
-  with the oldest sale's age ("RM 640.00 · oldest 34 days"), and up to three
-  member names for unfulfilled sales. "3 memberships end in the next 7
-  days" counts access that ends with no later period; it opens nothing,
-  because the members list has no such filter.
-- Today: Sales (total and count), Collected, New members, Check-ins (total
-  and denied), and Bookings (booked of capacity in today's sessions that
-  run). Payments today lists each payment method Rails knows: Cash, Bank
-  transfer, and Online.
-- Money shows only when Rails sends it, which needs purchases:read: the
-  second lines in Needs attention, Sales, Collected, and Payments today.
-- Set up: the first-run steps (Add a location, Add a product, Add a member,
-  Record a sale) with "3 of 4 done". A finished step has a green check. An
-  open step links to its form for roles that can do it. The section goes
-  once every step is done.
-- Quiet day: "No more sessions today." with Open schedule, and "Nothing
-  needs attention." Loading keeps the title and bands. Did not load shows
-  one row per section with Try again, and "Counts did not load".
-- Phones: the check-in count under the title, no properties, no actions in
-  the page (Check in is a tab), and two-line rows.
-- Not shown, because Rails has no data for them: sale and member numbers,
-  and waiting lists.
 
 Programs, Program details, and New program are the next redesigned screens
 (`features/programs/ProgramsList.tsx`, `ProgramDetails.tsx`,
@@ -605,7 +562,7 @@ Settings and the sign-in screens are the last redesigned screens
 `sections.ts`; styles in `styles/settings.css`). They show only Rails data:
 
 - The settings sidebar replaces the page list: Back to app, the organization's
-  General, Locations, and Staff, then Notifications and Integrations under
+  General, Locations, and Staff, then Notifications under
   "Samples" (`features/preview/SettingsSamples.tsx`, with the Sample data
   pill). Section icons show on the rail only. The breadcrumb is the
   organization, then Settings, with no location switcher. ⌘, opens Settings.

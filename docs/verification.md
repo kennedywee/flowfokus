@@ -87,8 +87,8 @@ Where `decisions.md` is still open, the build takes the narrowest rule and says
 so in the topic documents: partial refunds per payment that never change
 access, revocation of one delivery, voids only before delivery with no money
 kept, a staff-issued one-time link code, and a one-visit check-in override.
-Manual grants of new rights, organization creation, and the sample Inbox,
-Agents, Notifications, and Integrations screens are not built.
+Manual grants of new rights, organization creation, and the sample
+Notifications screen are not built.
 
 ## Local WorkOS identity sync — 22 October 2026
 
@@ -341,3 +341,31 @@ Local test records from these checks remain in the development database.
 
 What Paper shows and Rails cannot supply yet is listed in
 [Rails gaps](paper-redesign/rails-gaps.md).
+
+## Page removals — 21 November 2026
+
+Home, Inbox, Agents, Check-ins, Reports, Settings Integrations, and What's new
+left the portal. Rails lost `GET /staff/report`. Earlier records above that
+name these screens or the report describe what was true on their date.
+
+Passed: `bash scripts/check-docker` (364 Rails specs, 303 portal and 56 site
+tests, type checks, builds, worker artifact checks), `bun run design:check`,
+`bun run contract:check`, `bun run test:tooling`, `bun run smoke:session`
+(now also checks that `/chainsaw` and removed URLs redirect to the schedule),
+and `bun run smoke:workflows` (without the report step).
+
+`bash scripts/contract-diff origin/master` passes with the planned break in
+`apps/server/openapi-allowed-breaks.txt`. It fails with the line removed. It
+also fails when the contract loses another path, `/staff/overview`, while the
+line is present.
+
+Browser checks, signed in through the emulator, at 1440 pixels in light and
+dark and at 390 pixels: the sidebar, Ctrl K, the account menu, and the
+Settings sections list only what stays. Seven removed URLs open the schedule.
+An unknown URL still shows "Page not found". Check in works from a member page
+and from Ctrl K, and a denied member opens the denial dialog. The phone tab bar
+shows Schedule, Members, Sales, and More.
+
+Not verified: roles other than Owner, real touch devices, and the phone tab bar
+label height (the bar is 50px high and its labels clip at the bottom edge; this
+was the same before the removals).
