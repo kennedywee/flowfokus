@@ -9,6 +9,8 @@ and the record belongs to that gym only.
 - `member-invalid`: refuses a form without a name or a valid email.
 - `member-save`: stores a name and an email, then opens the member page.
 - `member-list`: lists the new member on the Members page.
+- `member-list-display`: the list shows a count, sorts by Member and Member since, hides the email
+  line and the Member since column from Display, searches with `?q=`, and pages 50 at a time.
 - `member-permission`: a Receptionist sees no way to create a member.
 
 ## How to reach it
@@ -41,7 +43,7 @@ steps and writes all the proof.
   `page.getByRole('textbox', { name: 'Full name' }).fill(name)` and
   `page.getByRole('textbox', { name: 'Email' }).fill(email)`. The URL matches
   `/chainsaw/members/<uuid>`, and the level-1 heading is the name.
-- **Confirm the list.** Open `/chainsaw/members`. The `Members` region has a link whose name starts
+- **Confirm the list.** Open `/chainsaw/members`. The `Members` table has a link whose name starts
   with the new name and contains the email.
 - **Confirm the stored row.** Run:
   `docker exec flowfokus-db psql -U flowfokus -d flowfokus_development -Atc "select m.name, m.email, o.slug from members m join organizations o on o.id = m.organization_id where m.email = '<email>'"`.

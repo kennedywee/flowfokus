@@ -1,17 +1,28 @@
 /* Screen styles: members. Add rules here, not in components.css. */
 
-/* ---------- Members list (redesign) ---------- */
+/* ---------- Members list ---------- */
 /*
- * Paper "Members": title and New member in one row, the search on the right
- * of the toolbar, a grey header band, then 52px rows that open the member.
- * The band and the row hover reach 12px past the content, so text lines up.
+ * Paper "Members": the title with the member count on the right, the filter
+ * bar (search and Display), the list table (styles/parts.css), and the page
+ * range. Faint glyph dots sit behind the header.
  */
 
 .members-list {
+  position: relative;
   max-width: 1280px;
-  gap: var(--space-6);
+  gap: var(--space-4);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
+}
+/* The pattern is decoration behind the page; the content paints over it. */
+.members-list > :not(.backdrop) {
+  position: relative;
+}
+/* The dots sit behind the header and fade out before the rows. */
+.members-list > .backdrop {
+  width: 864px;
+  height: 220px;
+  mask-image: linear-gradient(var(--color-ink) 35%, transparent);
 }
 
 .members-head,
@@ -26,126 +37,26 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
-
-/* The table: a header band, then rows. */
-.members-table {
-  display: grid;
-  gap: var(--space-1);
+/* On a phone the count stays beside the title. */
+.members-head .hero__stats {
+  flex-basis: auto;
+}
+.members-list .list-table__link {
   min-width: 0;
 }
-.members-table__head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  height: 36px;
-  padding-inline: var(--space-3);
-  border-radius: var(--radius-compact);
+/* On a phone, search takes the row with Display beside it. */
+@media (max-width: 767.98px) {
+  .members-list .filter-bar .list-search {
+    flex: 1 1 0;
+    width: auto;
+  }
+  .members-list .filter-bar__space {
+    display: none;
+  }
+}
+.members-list .list-search.skeleton-block {
+  border-color: transparent;
   background: var(--color-well);
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-medium);
-  line-height: 16px;
-}
-.members-table__member {
-  flex: 1;
-  color: var(--color-ink);
-}
-.members-table__joined,
-.members-row__joined {
-  flex: none;
-  width: 110px;
-}
-.members-table__chevron,
-.members-row__chevron {
-  flex: none;
-  width: 16px;
-}
-
-.members-rows {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.members-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 52px;
-  padding: 6px var(--space-3);
-  border-radius: var(--radius-compact);
-  color: inherit;
-  text-decoration: none;
-  transition: background-color var(--duration-hover) var(--ease-out);
-}
-a.members-row:hover {
-  background: var(--color-hover);
-}
-a.members-row:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: -2px;
-}
-.members-row__avatar {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--color-avatar);
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight-semibold);
-  line-height: 16px;
-}
-.members-row__main {
-  flex: 1 1 0;
-  display: grid;
-  min-width: 0;
-}
-.members-row__name {
-  overflow: hidden;
-  color: var(--color-ink);
-  font-weight: var(--font-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.members-row__email {
-  overflow: hidden;
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.members-row__joined {
-  color: var(--color-ink-2);
-  font-size: var(--text-xs);
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
-}
-.members-row__joined time {
-  font-family: inherit;
-}
-.members-row__chevron {
-  height: 16px;
-  color: var(--color-ink-4);
-}
-
-/* Loading. */
-.members-list .skeleton-block {
-  background: var(--color-well);
-}
-.members-list .skeleton-line {
-  display: block;
-  height: 12px;
-  margin-block: 4px;
-  border-radius: var(--radius-sm);
-  background: var(--color-well);
-}
-.members-list .skeleton-line--small {
-  height: 10px;
 }
 
 /* ---------- New member (redesign) ---------- */
@@ -211,11 +122,6 @@ a.members-row:focus-visible {
 }
 
 @media (max-width: 767.98px) {
-  /* Phones: name and email, then the chevron, as in the Paper phone lists. */
-  .members-table__joined,
-  .members-row__joined {
-    display: none;
-  }
   .new-member__fields {
     grid-template-columns: minmax(0, 1fr);
   }

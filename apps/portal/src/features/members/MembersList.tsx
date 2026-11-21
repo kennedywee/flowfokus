@@ -1,50 +1,86 @@
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
-import { ListToolbar, ListToolbarLoading, SearchField, useSetListSearch } from "../../components/ListToolbar";
+import { SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
-import { TableState } from "../../components/TableState";
+import { DisplayPopover, FilterBar } from "@/components/parts/FilterBar";
+import { HeroStats } from "@/components/parts/DetailLayout";
+import { RecordBackdrop } from "@/components/parts/Backdrop";
+import {
+  CellStack,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableEmpty,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { Tile } from "@/components/parts/marks";
 import { FailureNotice, Kbd, initials } from "../../components/ui";
 import type { Result } from "../../lib/result";
 import { useCan, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
 import { buttonVariants } from "@/components/ui/button";
+import type { SortState } from "@/lib/list-parts";
+import { PAGE_SIZE, pageRange, rangeLabel } from "../../lib/paging";
 import { useShortDate } from "./dates";
-import { PAGE_SIZE } from "../../lib/paging";
-import { rangeLabel } from "./list";
+import {
+  DEFAULT_MEMBER_COLUMNS,
+  DEFAULT_MEMBER_SORT,
+  MEMBER_SORT_FIELDS,
+  isDefaultDisplay,
+  sortMembers,
+  type MemberColumnId,
+} from "./list";
 
 const icon = { "aria-hidden": true, focusable: false } as const;
 
+/** The first column, and Member since when the Display popover has it on. */
+function memberColumns(since: boolean): ListColumn[] {
+  return [
+    { id: "name", label: "Member", sortable: true },
+    ...(since ? [{ id: "since", label: "Member since", width: "110px", sortable: true }] : []),
+  ];
+}
+
 /**
- * The members list: search, then one row per member with the join date.
- * Rails searches by name or email and returns members newest first.
+ * The members list (Paper "Members"): the title with the member count, a bar
+ * with search and Display, the list table, and the page range. Rails searches
+ * by name or email (`q`) and returns every match, newest first. Sorting,
+ * columns, and paging happen here, on the rows Rails returned.
  */
 export function MembersList({ members, q }: { members: Result<Schemas["Member"][]>; q?: string }) {
+  const search = q ?? "";
   return (
     <div className="page members-list">
-      <ListHead />
-      <Toolbar q={q ?? ""} />
+      <RecordBackdrop record="member" />
+      <ListHead count={members.ok && !search ? members.data.length : null} />
       {members.ok ? (
-        members.data.length ? (
-          <MemberRows key={q ?? ""} members={members.data} />
-        ) : q ? (
-          <NoResults q={q} />
-        ) : (
-          <NoMembers />
-        )
+        <MemberList members={members.data} q={search} />
       ) : (
-        <FailureNotice error={members.error} title="Members did not load" />
+        <>
+          <Bar q={search} />
+          <ListTable label="Members" columns={memberColumns(true)}>
+            <FailureNotice error={members.error} title="Members did not load" />
+          </ListTable>
+        </>
       )}
     </div>
   );
 }
 
-function ListHead() {
+/**
+ * The title, and the member count on the right. A search shows no count: Rails
+ * returns only the matches, so the count of all members is not known then.
+ */
+function ListHead({ count }: { count: number | null }) {
   return (
     <header className="members-head">
       <h1>Members</h1>
+      {count !== null ? <HeroStats stats={[{ value: count, label: "Total" }]} /> : null}
       <PageActions>
         <NewMemberLink shortcut />
       </PageActions>
@@ -77,10 +113,17 @@ function NewMemberLink({ variant = "default", shortcut = false }: { variant?: "d
   );
 }
 
-function Toolbar({ q }: { q: string }) {
+/**
+ * The filter bar. Rails has no member filters yet (issue #17), so it has no
+ * Filter button: search on the right, and Display when the list has rows.
+ */
+function Bar({ q, display }: { q: string; display?: ReactNode }) {
   const setSearch = useSetListSearch("/$org/members", { q }, ["q"]);
   return (
-    <ListToolbar
+    <FilterBar
+      fields={[]}
+      filters={[]}
+      onChange={() => {}}
       search={
         <SearchField
           id="member-search"
@@ -91,82 +134,100 @@ function Toolbar({ q }: { q: string }) {
           delay={300}
         />
       }
+      display={display}
     />
   );
 }
 
-function MemberRows({ members }: { members: Schemas["Member"][] }) {
+function MemberList({ members, q }: { members: Schemas["Member"][]; q: string }) {
   const organization = useOrganization();
   const shortDate = useShortDate();
-  const [requested, setPage] = useState(1);
-  const pages = Math.max(1, Math.ceil(members.length / PAGE_SIZE));
+  const [sort, setSort] = useState<SortState>(DEFAULT_MEMBER_SORT);
+  const [columns, setColumns] = useState(DEFAULT_MEMBER_COLUMNS);
+  // A new search starts on the first page.
+  const [paged, setPaged] = useState({ q, page: 1 });
+  const requested = paged.q === q ? paged.page : 1;
+  const setPage = (next: number) => setPaged({ q, page: next });
+  const sorted = useMemo(() => sortMembers(members, sort), [members, sort]);
+  const { from, to, pages } = pageRange(requested, PAGE_SIZE, sorted.length);
   const page = Math.min(requested, pages);
-  const first = (page - 1) * PAGE_SIZE;
-  const rows = members.slice(first, first + PAGE_SIZE);
+  const rows = sorted.slice(Math.max(from - 1, 0), to);
+  const set = (next: SortState) => {
+    setSort(next);
+    setPage(1);
+  };
 
-  return (
-    <section className="members-table" aria-label="Members">
-      <MembersHead />
-      <ul className="members-rows">
-        {rows.map((member) => (
-          <li key={member.id}>
-            <Link
-              to="/$org/members/$memberId"
-              params={{ org: organization.slug, memberId: member.id }}
-              className="members-row"
-            >
-              <span className="members-row__avatar" aria-hidden="true">
-                {initials(member.name)}
-              </span>
-              <span className="members-row__main">
-                <span className="members-row__name">{member.name}</span>
-                <span className="members-row__email">{member.email}</span>
-              </span>
-              <span className="members-row__joined">
-                <span className="visually-hidden">Joined </span>
-                <time dateTime={member.created_at} suppressHydrationWarning>
-                  {shortDate(member.created_at)}
-                </time>
-              </span>
-              <Icon name="chevronRight" className="members-row__chevron" {...icon} />
-            </Link>
-          </li>
-        ))}
-      </ul>
-      <ListPager
-        label="Members pages"
-        range={rangeLabel(first, rows.length, members.length)}
-        page={page}
-        pages={pages}
-        onPage={setPage}
-      />
-    </section>
+  const display = (
+    <DisplayPopover
+      sortFields={MEMBER_SORT_FIELDS}
+      sort={sort}
+      onSort={set}
+      columns={[
+        { id: "since", label: "Member since", on: columns.since },
+        { id: "email", label: "Email", on: columns.email },
+      ]}
+      onColumn={(id, on) => setColumns((current) => ({ ...current, [id as MemberColumnId]: on }))}
+      isDefault={isDefaultDisplay(sort, columns)}
+      onReset={() => {
+        set(DEFAULT_MEMBER_SORT);
+        setColumns(DEFAULT_MEMBER_COLUMNS);
+      }}
+    />
   );
-}
 
-/** Column titles for sighted staff. Each row link reads its own facts. */
-function MembersHead() {
   return (
-    <div className="members-table__head" aria-hidden="true">
-      <span className="members-table__member">Member</span>
-      <span className="members-table__joined">Joined</span>
-      <span className="members-table__chevron" />
-    </div>
+    <>
+      <Bar q={q} display={display} />
+      <ListTable label="Members" columns={memberColumns(columns.since)} sort={sort} onSort={set}>
+        {rows.length ? (
+          <ListTableBody>
+            {rows.map((member) => (
+              <ListTableRow key={member.id}>
+                <ListTableCell>
+                  <Link
+                    to="/$org/members/$memberId"
+                    params={{ org: organization.slug, memberId: member.id }}
+                    className="list-table__link"
+                  >
+                    <CellStack lead={<Tile>{initials(member.name)}</Tile>} title={member.name} sub={columns.email ? member.email : undefined} />
+                  </Link>
+                </ListTableCell>
+                {columns.since ? (
+                  <ListTableCell className="cell-muted">
+                    <time dateTime={member.created_at} suppressHydrationWarning>
+                      {shortDate(member.created_at)}
+                    </time>
+                  </ListTableCell>
+                ) : null}
+              </ListTableRow>
+            ))}
+          </ListTableBody>
+        ) : q ? (
+          <NoResults q={q} />
+        ) : (
+          <ListTableEmpty title="No members yet" text="Members you add or who join online show up here." action={<NewMemberLink variant="secondary" />} />
+        )}
+      </ListTable>
+      {rows.length ? (
+        <ListPager
+          label="Members pages"
+          range={rangeLabel(page, PAGE_SIZE, sorted.length, "members")}
+          page={page}
+          pages={pages}
+          onPage={setPage}
+        />
+      ) : null}
+    </>
   );
 }
 
 function NoResults({ q }: { q: string }) {
   const organization = useOrganization();
   return (
-    <TableState
+    <ListTableEmpty
       title={`No members match “${q}”`}
       action={
-        <Link
-          to="/$org/members"
-          params={{ org: organization.slug }}
-          search={{}}
-          className={buttonVariants({ variant: "secondary", size: "compact" })}
-        >
+        <Link to="/$org/members" params={{ org: organization.slug }} search={{}} className={buttonVariants({ variant: "secondary", size: "compact" })}>
           Clear search
         </Link>
       }
@@ -174,38 +235,19 @@ function NoResults({ q }: { q: string }) {
   );
 }
 
-function NoMembers() {
-  return (
-    <TableState
-      className="members-table"
-      head={<MembersHead />}
-      title="No members yet"
-      text="Members you add or who join online show up here."
-      action={<NewMemberLink variant="secondary" />}
-    />
-  );
-}
-
 /** Keeps the list shape while members load. */
 export function MembersListLoading() {
   return (
-    <div className="page members-list" role="status" aria-busy="true" aria-label="Loading members">
-      <ListHead />
-      <ListToolbarLoading filter={false} />
-      <div className="members-table">
-        <div className="members-table__head" />
-        <div className="members-rows">
-          {Array.from({ length: 8 }, (_, index) => (
-            <div key={index} className="members-row">
-              <span className="members-row__avatar skeleton-block" />
-              <span className="members-row__main">
-                <span className="skeleton-line" style={{ width: `${40 - index * 2}%` }} />
-                <span className="skeleton-line skeleton-line--small" style={{ width: `${28 - index}%` }} />
-              </span>
-            </div>
-          ))}
-        </div>
+    <div className="page members-list">
+      <RecordBackdrop record="member" />
+      <ListHead count={null} />
+      <div className="filter-bar" aria-hidden="true">
+        <span className="filter-bar__space" />
+        <span className="list-search skeleton-block" />
       </div>
+      <ListTable label="Members" columns={memberColumns(true)}>
+        <ListTableLoading rows={8} label="Loading members" />
+      </ListTable>
     </div>
   );
 }

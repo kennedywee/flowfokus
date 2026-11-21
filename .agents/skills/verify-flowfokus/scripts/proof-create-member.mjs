@@ -84,7 +84,7 @@ try {
 
   await assert("the members list shows the new member", async () => {
     await page.goto(`${PORTAL}/chainsaw/members`);
-    await page.getByRole("region", { name: "Members" }).getByRole("link", { name: new RegExp(NAME) }).waitFor();
+    await page.getByRole("table", { name: "Members" }).getByRole("link", { name: new RegExp(NAME) }).waitFor();
   });
   await shot(page, "members-list");
 
