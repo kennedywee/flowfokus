@@ -5,7 +5,7 @@ belong to more than one. Each role sees only the actions it may use.
 
 ## Sub-features
 
-- `signin-owner`: an Owner with one gym lands on that gym's Home.
+- `signin-owner`: an Owner with one gym lands on that gym's Schedule.
 - `signin-choose`: a user in two gyms picks one, and the portal opens it.
 - `signin-switch`: the top-bar organization switcher changes the gym.
 - `signin-role`: a Receptionist sees no create actions.
@@ -35,19 +35,20 @@ Steps:
 - **Password page.** The heading reads `Enter your password`. Run
   `page.getByRole('textbox', { name: 'Password' }).fill('123123qwe')` and
   `page.getByRole('button', { name: 'Continue' }).click()`.
-- **Home.** The URL becomes `http://localhost:4001/chainsaw`. The heading reads `Today`. The banner has
+- **Schedule.** The URL becomes `http://localhost:4001/chainsaw/schedule` (`/chainsaw` redirects
+  there). The heading reads `Schedule`. The banner has
   `combobox "Organization: Chainsaw. Change organization"`, and the sidebar has the account
   button `Kennedy Wee · Owner , account menu`.
 - **Choose a gym.** Sign in as `rachel@flowfokus.com`. AuthKit or the portal asks for an organization.
   Choose `Irongate`. The URL becomes `/irongate`. Members lists `Dinesh Kumar` and no
   Chainsaw member.
 - **Switch.** Open the organization combobox in the banner and choose Chainsaw. The URL becomes
-  `/chainsaw`.
+  `/chainsaw/schedule`.
 - **Role.** Sign in as `aiman@flowfokus.com`. On `/chainsaw/members` there is no `New member`
-  link. On Home the banner has `Check in` but no `Sell` link.
+  link. On a member's page the banner has `Check in` but no `Sell` link.
 - **Sign out.** Open the account menu in the sidebar and choose the sign-out item. The start page
   shows `Sign in to Flowfokus` again. Opening `/chainsaw/members` asks you to sign in.
-- **Proof.** Screenshots of the emulator pages, Home with the organization combobox, and the
+- **Proof.** Screenshots of the emulator pages, Schedule with the organization combobox, and the
   signed-out start page. For roles, a screenshot of each role's banner.
 
 ## Gotchas
