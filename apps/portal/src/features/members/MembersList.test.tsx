@@ -44,6 +44,12 @@ describe("MembersList", () => {
     expect(html).toContain('aria-label="Page 2"');
   });
 
+  test("at Rails' 200 limit, the count and range say more may exist", () => {
+    const html = render({ ok: true, data: rows(200) });
+    expect(html).toContain('<dd class="hero__value">200+</dd>');
+    expect(html).toContain("1–50 of 200 members shown");
+  });
+
   test("a search hides the count of all members", () => {
     expect(render({ ok: true, data: rows(2) }, "member")).not.toContain("hero__stat");
   });

@@ -493,7 +493,7 @@ The members list and New member are redesigned screens
 
 - Members list (issue #88, Paper "Members"): the title with the member
   count on the right (`HeroStats`; a search hides it, because Rails then
-  returns only the matches), New member (members:create only) in the top bar,
+  returns only the matches), New member in the top bar (it and its N key need members:create and members:read),
   and a filter bar with search (a "/" hint; Rails searches name and email as
   staff type; Escape clears) and Display. Then the list table: a 30px label
   row with Member and Member since as sortable headers, and 56px two-line rows

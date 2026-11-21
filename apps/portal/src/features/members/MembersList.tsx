@@ -52,12 +52,15 @@ function memberColumns(since: boolean): ListColumn[] {
  * by name or email (`q`) and returns every match, newest first. Sorting,
  * columns, and paging happen here, on the rows Rails returned.
  */
+/** Rails returns at most this many members (Staff::MembersController). A full page means there may be more. */
+const MEMBER_LIMIT = 200;
+
 export function MembersList({ members, q }: { members: Result<Schemas["Member"][]>; q?: string }) {
   const search = q ?? "";
   return (
     <div className="page members-list">
       <RecordBackdrop record="member" />
-      <ListHead count={members.ok && !search ? members.data.length : null} />
+      <ListHead count={members.ok && !search ? countLabel(members.data.length) : null} />
       {members.ok ? (
         <MemberList members={members.data} q={search} />
       ) : (
@@ -76,7 +79,7 @@ export function MembersList({ members, q }: { members: Result<Schemas["Member"][
  * The title, and the member count on the right. A search shows no count: Rails
  * returns only the matches, so the count of all members is not known then.
  */
-function ListHead({ count }: { count: number | null }) {
+function ListHead({ count }: { count: string | null }) {
   return (
     <header className="members-head">
       <h1>Members</h1>
@@ -144,10 +147,14 @@ function MemberList({ members, q }: { members: Schemas["Member"][]; q: string })
   const shortDate = useShortDate();
   const [sort, setSort] = useState<SortState>(DEFAULT_MEMBER_SORT);
   const [columns, setColumns] = useState(DEFAULT_MEMBER_COLUMNS);
-  // A new search starts on the first page.
-  const [paged, setPaged] = useState({ q, page: 1 });
-  const requested = paged.q === q ? paged.page : 1;
-  const setPage = (next: number) => setPaged({ q, page: next });
+  const [chosenPage, setPage] = useState(1);
+  // A new search, or clearing one, starts on the first page.
+  const [lastQ, setLastQ] = useState(q);
+  if (lastQ !== q) {
+    setLastQ(q);
+    setPage(1);
+  }
+  const requested = lastQ === q ? chosenPage : 1;
   const sorted = useMemo(() => sortMembers(members, sort), [members, sort]);
   const { from, to, pages } = pageRange(requested, PAGE_SIZE, sorted.length);
   const page = Math.min(requested, pages);
@@ -211,7 +218,7 @@ function MemberList({ members, q }: { members: Schemas["Member"][]; q: string })
       {rows.length ? (
         <ListPager
           label="Members pages"
-          range={rangeLabel(page, PAGE_SIZE, sorted.length, "members")}
+          range={rangeLabel(page, PAGE_SIZE, sorted.length, sorted.length >= MEMBER_LIMIT ? "members shown" : "members")}
           page={page}
           pages={pages}
           onPage={setPage}
@@ -250,4 +257,9 @@ export function MembersListLoading() {
       </ListTable>
     </div>
   );
+}
+
+/** The member count. At Rails' limit it reads "200+", because more may exist. */
+function countLabel(count: number): string {
+  return count >= MEMBER_LIMIT ? `${MEMBER_LIMIT}+` : String(count);
 }
