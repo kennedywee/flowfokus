@@ -683,6 +683,8 @@ frames before a screen review:
   hours when a session falls outside. A group is a host (`host_name`, with "No
   host" last), a program, or one column for None. Sessions that overlap share the
   column side by side (`placeColumn`). A short session is drawn 30 minutes tall.
+  A block says three lines from 55 minutes, two lines (start and name, then status)
+  from 40, and one line below that.
   On today, a red now tag and line cross the grid and the time before it is
   washed grey; the wash stops at the foot of the grid, and the line shows only
   while now is inside the axis. The page does not scroll by itself when the day opens.
