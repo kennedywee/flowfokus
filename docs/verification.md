@@ -402,3 +402,32 @@ and landed on Members from `/<org>`, `/<org>/reports`, and
 Not verified: roles that can read nothing (the redirect to Settings is not run
 in a browser; `startPage` has a unit test), real touch devices, the tablet and
 phone shells beyond one page, and the phone tab bar label height (unchanged).
+
+## Settings as a dialog — 21 November 2026
+
+Settings opens as a dialog over the current page (issue #94). Built while
+Paper was unreachable; the comparison with the Paper frames is
+[#113](https://github.com/kennedywee/flowfokus/issues/113).
+
+Passed: `bash scripts/check-docker` (345 Rails specs, 454 portal and 56 site
+tests, type checks, builds, worker artifact checks), `bun run design:check`,
+`bun run smoke:identity`, `bun run smoke:session`, and
+`bun run smoke:workflows`. The workflow smoke check first failed on a stale
+WorkOS membership in the local database; `bin/rails workos:reconcile` fixed
+the data, and the check passed.
+
+Browser checks, signed in through the emulator, at 1440 pixels in light and
+dark and at 375 pixels: the account menu, Ctrl ,, a `?settings=` URL,
+`/<org>/settings/staff`, `?section=Team`, and `/<org>?settings=roles` open the
+right page; Escape, Close, and Back return to the page behind; 30 Tabs stay
+inside the dialog; the search finds Appearance by "theme"; Appearance sets
+dark and system; the time zone and the gym site's Public switch save to Rails
+and show a toast above the dialog; New location and a staff row menu close
+first on Escape; Aiman's role changed to Manager and back through Staff, and
+Rails stored each role; Settings opens over New member with typed changes and
+no discard prompt. As Receptionist, General and Gym site are view only,
+Locations has no New location, and Staff and Roles show the lock line.
+
+Not verified: a role that can read no page (no local role has that set, so
+its redirects and the `?closed=true` close were not run in a browser), adding the first location over a new
+program (the seed has locations), real touch devices, and the Paper frames.
