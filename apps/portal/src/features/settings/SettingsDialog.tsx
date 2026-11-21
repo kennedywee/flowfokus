@@ -19,7 +19,7 @@ import {
 } from "./sections";
 
 const orgRoute = getRouteApi("/$org");
-const isSettingsIndex = (pathname: string) => /^\/[^/]+\/settings\/?$/.test(pathname);
+const isSettingsIndex = (pathname: string) => /^\/[^/]+\/settings\/?$/i.test(pathname);
 const icon = { "aria-hidden": true, focusable: false } as const;
 
 type Search = Record<string, unknown>;
