@@ -1,0 +1,31 @@
+- passed: sortable header cell has aria-sort=ascending
+- passed: Enter on the sort button flips to descending
+- passed: rows reorder after sort (KR)
+- passed: non-sortable header has no button
+- passed: live region announces the starting selection (2 selected)
+- passed: header checkbox is mixed with some rows chosen (mixed)
+- passed: Space chooses a row and the live region says 3 selected (3 selected)
+- passed: three adjacent chosen rows merge into one band (first, middle, last) (["first","middle","last"])
+- passed: shift-click chooses the whole range between two rows (6 selected)
+- passed: floating bar is a named toolbar with bulk actions
+- passed: Escape in the bar clears the selection (live="")
+- passed: header checkbox chooses all rows (7 selected)
+- passed: and clears them
+- passed: Enter toggles a group (aria-expanded flips) (false → true)
+- passed: load more adds rows when the sentinel scrolls into view (6 rows)
+- passed: Enter on the operator flips is → is not
+- passed: and back to is
+- passed: the Tag chip flips is not → is by click
+- passed: a second value turns the operator into 'is any of'
+- passed: Enter on remove deletes the chip
+- passed: '/' focuses search
+- passed: Display opens a dialog named Display
+- passed: focus moves into the popover (NameMember sinceSpent)
+- passed: Tab x14 keeps focus inside (trap)
+- passed: column chip toggles aria-pressed with Space
+- passed: Reset to default enables after a change
+- passed: Escape closes it
+- passed: focus returns to the Display button (Display)
+- passed: ArrowRight moves the segmented control to Comments
+- passed: background patterns are aria-hidden and take no pointer events
+- passed: background patterns turn off under prefers-contrast: more (none)
