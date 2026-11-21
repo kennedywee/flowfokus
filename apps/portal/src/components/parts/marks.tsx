@@ -197,6 +197,30 @@ export function MixBar({ counts, label }: { counts: readonly number[]; label?: s
   );
 }
 
+/** Past this many uses the segments would crowd a row, so the bar is solid. */
+export const MAX_ALLOWANCE_SEGMENTS = 20;
+
+/**
+ * What a benefit allows. One slanted segment for each visit or booking, or a
+ * solid slanted bar when there is no limit (`limit` null) or the limit is past
+ * 20. The text beside it gives the number, so the bar stays a picture of it.
+ */
+export function AllowanceBar({ limit, label }: { limit: number | null; label: string }) {
+  const segments = limit !== null && limit <= MAX_ALLOWANCE_SEGMENTS ? limit : 0;
+  const width = segments ? segments * 5 : 60;
+  return (
+    <svg className="spot-row" width={width} height="12" viewBox={`0 0 ${width} 12`} role="img" aria-label={label}>
+      {segments ? (
+        Array.from({ length: segments }, (_, index) => (
+          <path key={index} className="spot--booked" d={`M${index * 5} 11L${index * 5 + 1.5} 1H${index * 5 + 4}L${index * 5 + 2.5} 11Z`} />
+        ))
+      ) : (
+        <path className="spot--booked" d="M0 11L2 1H60L58 11Z" />
+      )}
+    </svg>
+  );
+}
+
 /** A round tile of initials, for a person in a row. A hero uses `HeroTile`. */
 export function Tile({ size = "default", square = false, children }: { size?: "default" | "small"; square?: boolean; children: ReactNode }) {
   return (

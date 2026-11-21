@@ -561,6 +561,20 @@ export const GALLERY: readonly GalleryEntry[] = [
     examples: [{ file: "mix-bar-basic", title: "Ways to book" }],
   },
   {
+    slug: "allowance-bar",
+    name: "Allowance bar",
+    group: "Data",
+    summary:
+      "What a benefit allows: one slanted segment for each visit or booking, or one solid slanted bar for unlimited. Past 20 the bar is solid too. Put the amount beside it as text. Product details uses it in Benefits.",
+    source: ["components/parts/marks.tsx"],
+    paper: { page: "Flowfokus Design — Product details", board: "Product" },
+    examples: [{ file: "allowance-bar-basic", title: "Unlimited, counted, and past the limit" }],
+    props: [
+      { name: "limit", type: "number | null", note: "Visits or bookings. Null draws the solid bar." },
+      { name: "label", type: "string", note: "The accessible name, such as \"10 bookings\"." },
+    ],
+  },
+  {
     slug: "tag-chip",
     name: "Tag chip",
     group: "Data",
@@ -654,7 +668,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Record section",
     group: "Blocks",
     summary:
-      "A section of a record page: a small grey title, an optional button (Record payment, Fulfill items) or View all on the right when the list has more rows, then flush list rows with no label row on screen (the list table keeps it for assistive technology with the list-table--bare class). Member details uses it for Holds, Recent sales, and Bookings; New member for Profile; Sale details for Items and Payments; New sale for Products and Payment.",
+      "A section of a record page: a small grey title, an optional button (Record payment, Fulfill items) or View all on the right when the list has more rows, then flush list rows with no label row on screen (the list table keeps it for assistive technology with the list-table--bare class). Member details uses it for Holds, Recent sales, and Bookings; New member for Profile; Sale details for Items and Payments; New sale for Products and Payment; Product details for Prices and Benefits.",
     source: ["features/members/Section.tsx", "components/parts/ListTable.tsx", "styles/members.css"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Light" },
     examples: [{ file: "record-section", title: "Holds with View all, and an empty section", note: "Sample data." }],

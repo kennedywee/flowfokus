@@ -1,11 +1,14 @@
 import type { Schemas } from "@flowfokus/api";
+import type { FilterField } from "@/components/parts/FilterBar";
+import type { ActiveFilter, SortState } from "@/lib/list-parts";
 import { PRODUCT_KIND_LABEL, currencyDigits, formatBenefitUsage, formatDuration, formatMoney, parseAmountToMinor } from "../../lib/format";
-import { priceState } from "../programs/facts";
+import { priceState, type PriceState } from "../programs/facts";
 
 /*
  * Rules for the Products screens, kept apart from the screens so they can be
- * tested. Staff see one price per product, as in Paper. Underneath, Rails
- * keeps fixed prices: a new amount or length is a new price.
+ * tested. A product has many prices. Rails never changes a price a sale may
+ * use, so a new amount or length is a new price; the old one is taken off
+ * sale or archived.
  */
 
 export type Product = Schemas["StaffProduct"];
@@ -21,12 +24,12 @@ export function offers(products: Product[]): Product[] {
   return products.filter((product) => product.kind !== "ticket");
 }
 
-/* ---------- The one price ---------- */
+/* ---------- Prices ---------- */
 
 /**
- * The price staff see. The first price on sale, in Rails order (amount, then
- * age). With none on sale, the first price that is off sale; then the first
- * archived price, so a product never shows without a price it had.
+ * The price the list and Sell use. The first price on sale, in Rails order
+ * (amount, then age). With none on sale, the first price that is off sale;
+ * then the first archived price, so a product never shows without a price it had.
  */
 export function mainPrice(product: Pick<Product, "prices">): Price | null {
   const { prices } = product;
@@ -38,19 +41,13 @@ export function mainPrice(product: Pick<Product, "prices">): Price | null {
   );
 }
 
-/**
- * Other prices staff must still see: not archived, and not the main price.
- * Real data can have several prices on sale for one product.
- */
-export function otherPrices(product: Pick<Product, "prices">): Price[] {
-  const main = mainPrice(product);
-  return product.prices.filter((price) => price.id !== main?.id && priceState(price) !== "archived");
-}
+/** The Status column of the Prices table. */
+export const PRICE_STATUS_LABEL: Record<PriceState, string> = { on_sale: "On sale", off_sale: "Not on sale", archived: "Archived" };
 
-/** "30 days", or "Founding rate · 30 days" when staff named the price. */
-export function priceName(price: Pick<Price, "label" | "duration_days">): string {
-  const length = formatDuration(price.duration_days);
-  return price.label === length ? length : `${price.label} · ${length}`;
+/** Prices on sale first, then not on sale, then archived. Within a status the Rails order stays. */
+export function sortedPrices(product: Pick<Product, "prices">): Price[] {
+  const rank: Record<PriceState, number> = { on_sale: 0, off_sale: 1, archived: 2 };
+  return product.prices.map((price, index) => ({ price, index })).sort((a, b) => rank[priceState(a.price)] - rank[priceState(b.price)] || a.index - b.index).map(({ price }) => price);
 }
 
 /* ---------- Sale state ---------- */
@@ -80,24 +77,18 @@ export function termsText(product: Pick<Product, "kind" | "benefits" | "prices">
   return [uses ? formatBenefitUsage(uses) : null, price ? formatDuration(price.duration_days) : null].filter(Boolean).join(" · ") || "No price";
 }
 
-/** The head line: "Membership · 30 days · RM 220.00". */
-export function headFacts(product: Product): string {
-  const price = mainPrice(product);
-  return [
-    PRODUCT_KIND_LABEL[product.kind],
-    product.prices.length ? termsText(product) : "No price",
-    price ? formatMoney(price.amount_minor, price.currency) : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
-
 /* ---------- The list ---------- */
 
-/** The list URL keeps the filters and the search, so Back and reload keep them. */
+/**
+ * The list URL keeps the filters and the search, so Back and reload keep them.
+ * `type_not` and `status_not` turn a filter into "is not"; without them the
+ * values mean "is any of", as in older links.
+ */
 export interface ProductsSearch {
   type?: string;
+  type_not?: true;
   status?: string;
+  status_not?: true;
   q?: string;
 }
 
@@ -109,22 +100,13 @@ export const STATUS_FILTERS: { value: SaleState; label: string }[] = (["on_sale"
 
 export interface ProductsFilter {
   type: ProductKind[];
+  typeNot: boolean;
   status: SaleState[];
+  statusNot: boolean;
 }
 
 function text(value: unknown, max: number): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined;
-}
-
-export function readProductsSearch(search: Record<string, unknown>): ProductsSearch {
-  const clean: ProductsSearch = {};
-  const type = text(search.type, 100);
-  const status = text(search.status, 100);
-  const q = text(search.q, 200);
-  if (type) clean.type = type;
-  if (status) clean.status = status;
-  if (q) clean.q = q;
-  return clean;
 }
 
 function pick<T extends string>(value: string | undefined, allowed: readonly { value: T }[]): T[] {
@@ -132,19 +114,65 @@ function pick<T extends string>(value: string | undefined, allowed: readonly { v
   return allowed.map((item) => item.value).filter((item) => wanted.has(item));
 }
 
-export function filterFromSearch(search: ProductsSearch): ProductsFilter {
-  return { type: pick(search.type, TYPE_FILTERS), status: pick(search.status, STATUS_FILTERS) };
+/** `_not` counts only when its filter has values. The router reads `true` as a boolean. */
+function negation(flag: unknown, values: readonly string[]): boolean {
+  return values.length > 0 && (flag === true || flag === "true" || flag === "1" || flag === 1);
 }
 
-/** Products on sale first, then by name. Filters and the search narrow the list; the search matches the name. */
+export function readProductsSearch(search: Record<string, unknown>): ProductsSearch {
+  const clean: ProductsSearch = {};
+  const type = pick(text(search.type, 100), TYPE_FILTERS);
+  const status = pick(text(search.status, 100), STATUS_FILTERS);
+  const q = text(search.q, 200);
+  if (type.length) clean.type = type.join(",");
+  if (negation(search.type_not, type)) clean.type_not = true;
+  if (status.length) clean.status = status.join(",");
+  if (negation(search.status_not, status)) clean.status_not = true;
+  if (q) clean.q = q;
+  return clean;
+}
+
+export function filterFromSearch(search: ProductsSearch): ProductsFilter {
+  const type = pick(search.type, TYPE_FILTERS);
+  const status = pick(search.status, STATUS_FILTERS);
+  return { type, typeNot: negation(search.type_not, type), status, statusNot: negation(search.status_not, status) };
+}
+
+/** The chips for the filters in the URL, type first. */
+export function activeFilters(filter: ProductsFilter): ActiveFilter[] {
+  return [
+    ...(filter.type.length ? [{ field: "type", values: filter.type, negated: filter.typeNot }] : []),
+    ...(filter.status.length ? [{ field: "status", values: filter.status, negated: filter.statusNot }] : []),
+  ];
+}
+
+/** The URL search for the chips. A flipped chip keeps its values and sets `_not`. */
+export function searchFromFilters(filters: readonly ActiveFilter[]): Pick<ProductsSearch, "type" | "type_not" | "status" | "status_not"> {
+  const type = filters.find((filter) => filter.field === "type");
+  const status = filters.find((filter) => filter.field === "status");
+  return {
+    ...(type?.values.length ? { type: type.values.join(",") } : {}),
+    ...(type?.values.length && type.negated ? { type_not: true as const } : {}),
+    ...(status?.values.length ? { status: status.values.join(",") } : {}),
+    ...(status?.values.length && status.negated ? { status_not: true as const } : {}),
+  };
+}
+
+/** The filter fields the bar offers, with a count per value. */
+export function productFilterFields(counts: Record<ProductKind | SaleState, number>): FilterField[] {
+  return [
+    { key: "type", label: "Type", options: TYPE_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+    { key: "status", label: "Status", options: STATUS_FILTERS.map((item) => ({ ...item, count: counts[item.value] })) },
+  ];
+}
+
+/** Products that match every chosen fact; the search matches the name. */
 export function filterProducts(products: Product[], filter: ProductsFilter, q: string): Product[] {
   const needle = q.trim().toLocaleLowerCase();
-  const rank: Record<SaleState, number> = { on_sale: 0, staff_only: 0, not_sold: 1 };
   return offers(products)
-    .filter((product) => !filter.type.length || filter.type.includes(product.kind as ProductKind))
-    .filter((product) => !filter.status.length || filter.status.includes(saleState(product)))
-    .filter((product) => !needle || product.name.toLocaleLowerCase().includes(needle))
-    .sort((a, b) => rank[saleState(a)] - rank[saleState(b)] || a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+    .filter((product) => !filter.type.length || filter.type.includes(product.kind as ProductKind) !== filter.typeNot)
+    .filter((product) => !filter.status.length || filter.status.includes(saleState(product)) !== filter.statusNot)
+    .filter((product) => !needle || product.name.toLocaleLowerCase().includes(needle));
 }
 
 /** How many products have each type and each status, for the Filter menu. */
@@ -155,6 +183,38 @@ export function productCounts(products: Product[]): Record<ProductKind | SaleSta
     counts[saleState(product)] += 1;
   }
   return counts;
+}
+
+/* ---------- Display: sort and columns ---------- */
+
+export const PRODUCT_SORT_FIELDS = [
+  { value: "status", label: "Status" },
+  { value: "name", label: "Name" },
+  { value: "price", label: "Price" },
+] as const;
+
+/** On sale first, then by name: the order the list always had. */
+export const DEFAULT_PRODUCT_SORT: SortState = { column: "status", direction: "asc" };
+
+/** The Display popover's column chips. Product, Status, and Price always show. */
+export type ProductColumnId = "type";
+export const DEFAULT_PRODUCT_COLUMNS: Record<ProductColumnId, boolean> = { type: true };
+
+export function isDefaultDisplay(sort: SortState, columns: Record<ProductColumnId, boolean>): boolean {
+  return sort.column === DEFAULT_PRODUCT_SORT.column && sort.direction === DEFAULT_PRODUCT_SORT.direction && columns.type === DEFAULT_PRODUCT_COLUMNS.type;
+}
+
+/** The products in the chosen order. A tie falls back to the name. */
+export function sortProducts(products: readonly Product[], sort: SortState): Product[] {
+  const sign = sort.direction === "asc" ? 1 : -1;
+  const rank: Record<SaleState, number> = { on_sale: 0, staff_only: 0, not_sold: 1 };
+  const byName = (a: Product, b: Product) => a.name.localeCompare(b.name, "en", { sensitivity: "base" });
+  const compare = (a: Product, b: Product) => {
+    if (sort.column === "name") return byName(a, b);
+    if (sort.column === "price") return (mainPrice(a)?.amount_minor ?? -1) - (mainPrice(b)?.amount_minor ?? -1);
+    return rank[saleState(a)] - rank[saleState(b)];
+  };
+  return [...products].sort((a, b) => sign * compare(a, b) || byName(a, b));
 }
 
 /** "1–7 of 7 products". */
@@ -210,12 +270,12 @@ export function startBenefits(kind: ProductKind): BenefitDraft[] {
 
 /** The form's first values: the product's, or a new membership. */
 export function startDraft(product: Product | undefined, currency: string): ProductDraft {
-  const price = product ? mainPrice(product) : null;
   return {
     name: product?.name ?? "",
     kind: product?.kind === "pass" ? "pass" : "membership",
-    amount: price ? (price.amount_minor / 10 ** currencyDigits(currency)).toFixed(currencyDigits(currency)) : "",
-    days: String(price?.duration_days ?? 30),
+    // Prices are set on a new product and added on the product page.
+    amount: "",
+    days: "30",
     published: product?.published ?? false,
     description: product?.description ?? "",
     benefits: product?.benefits.length ? product.benefits.map(benefitDraft) : startBenefits("membership"),
@@ -231,14 +291,10 @@ export const MAX_DAYS = 3660;
 export const MAX_BENEFITS = 10;
 
 /** Checks the draft before anything is sent. Rails checks again. */
-export function checkDraft(draft: ProductDraft, currency: string): DraftErrors {
+export function checkDraft(draft: ProductDraft, currency: string, options: { price?: boolean } = {}): DraftErrors {
   const errors: DraftErrors = {};
   if (!draft.name.trim()) errors.name = "Enter a name.";
-  if (parseAmountToMinor(draft.amount, currency) === null) {
-    errors.amount = currencyDigits(currency) > 0 ? "Enter a price, like 120.50." : "Enter a whole price, like 120.";
-  }
-  const days = draft.days.trim();
-  if (!/^\d{1,4}$/.test(days) || Number(days) < 1 || Number(days) > MAX_DAYS) errors.days = `Enter 1 to ${MAX_DAYS} days.`;
+  if (options.price !== false) Object.assign(errors, checkPrice(draft.amount, draft.days, currency));
   if (!draft.benefits.length) errors.benefits = "Add at least one benefit.";
   const benefit: NonNullable<DraftErrors["benefit"]> = {};
   for (const item of draft.benefits) {
@@ -249,6 +305,17 @@ export function checkDraft(draft: ProductDraft, currency: string): DraftErrors {
     if (Object.keys(found).length) benefit[item.key] = found;
   }
   if (Object.keys(benefit).length) errors.benefit = benefit;
+  return errors;
+}
+
+/** The amount and length of a price, checked before anything is sent. Rails checks again. */
+export function checkPrice(amount: string, days: string, currency: string): Partial<Record<"amount" | "days", string>> {
+  const errors: Partial<Record<"amount" | "days", string>> = {};
+  if (parseAmountToMinor(amount, currency) === null) {
+    errors.amount = currencyDigits(currency) > 0 ? "Enter a price, like 120.50." : "Enter a whole price, like 120.";
+  }
+  const length = days.trim();
+  if (!/^\d{1,4}$/.test(length) || Number(length) < 1 || Number(length) > MAX_DAYS) errors.days = `Enter 1 to ${MAX_DAYS} days.`;
   return errors;
 }
 
@@ -282,28 +349,22 @@ export function draftChanged(draft: ProductDraft, start: ProductDraft): boolean 
   return plain(draft) !== plain(start);
 }
 
-/** The price Rails should sell from now on. */
+/** A price as Rails takes it. */
 export interface PriceSpec {
   label: string;
   amount_minor: number;
   duration_days: number;
 }
 
-/**
- * A price label names the length, such as "30 days". Staff never type it.
- * A label staff chose earlier stays, unless it named the old length.
- */
-export function priceLabel(days: number, old?: Pick<Price, "label" | "duration_days"> | null): string {
-  const named = formatDuration(days);
-  if (!old || old.duration_days === null || old.label === formatDuration(old.duration_days)) return named;
-  return old.duration_days === days ? old.label : named;
+/** A price label names the length, such as "30 days". Staff never type it. */
+export function priceLabel(days: number): string {
+  return formatDuration(days);
 }
 
-/** The new price, or null when the amount and the length are the same as the current price. */
-export function priceChange(draft: ProductDraft, current: Price | null, currency: string): PriceSpec | null {
-  const amount = parseAmountToMinor(draft.amount, currency);
-  const days = Number(draft.days.trim());
-  if (amount === null || !Number.isInteger(days)) return null;
-  if (current && priceState(current) !== "archived" && current.amount_minor === amount && current.duration_days === days) return null;
-  return { label: priceLabel(days, current), amount_minor: amount, duration_days: days };
+/** The price an amount and a length make, or null when either is not valid. */
+export function priceSpec(amount: string, days: string, currency: string): PriceSpec | null {
+  const minor = parseAmountToMinor(amount, currency);
+  const length = Number(days.trim());
+  if (minor === null || !Number.isInteger(length)) return null;
+  return { label: priceLabel(length), amount_minor: minor, duration_days: length };
 }

@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
@@ -11,6 +11,17 @@ import { useAction } from "../../lib/hooks";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
 import { archivePrice, updatePrice, updateProduct } from "../../lib/staff.functions";
+import { DetailHero, DetailLayout, HeroTile, PanelGroup, PanelRow, PanelRows } from "@/components/parts/DetailLayout";
+import {
+  CellStack,
+  ListTable,
+  ListTableBody,
+  ListTableCell,
+  ListTableLoading,
+  ListTableRow,
+  type ListColumn,
+} from "@/components/parts/ListTable";
+import { AllowanceBar, TagChip, Tile, type DotTone } from "@/components/parts/marks";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,10 +31,11 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { priceState } from "../programs/facts";
-import { TicketPriceRow } from "../programs/ProgramDialogs";
-import { SALE_STATE_LABEL, headFacts, mainPrice, otherPrices, passUses, priceName, saleState, type Product } from "./facts";
-import { PRODUCT_ICON, ProductTile } from "./kinds";
+import { Empty, Section } from "../members/Section";
+import { priceState, type PriceState } from "../programs/facts";
+import { AddPriceDialog } from "./PriceDialogs";
+import { PRICE_STATUS_LABEL, SALE_STATE_LABEL, mainPrice, saleState, sortedPrices, type Product, type SaleState } from "./facts";
+import { PRODUCT_ICON } from "./kinds";
 
 const icon = { "aria-hidden": true, focusable: false } as const;
 
@@ -31,11 +43,16 @@ const sendProduct = (input: Parameters<typeof updateProduct>[0]["data"]) => upda
 const sendPrice = (input: Parameters<typeof updatePrice>[0]["data"]) => updatePrice({ data: input });
 const sendArchive = (input: Parameters<typeof archivePrice>[0]["data"]) => archivePrice({ data: input });
 
+type Price = Schemas["Price"];
+
 /**
- * Paper "Product details": the tile, the name, and the one price with its
- * terms. Sell (S), Edit (E), and ⋯ sit in the top bar for roles that can use
- * them. The page shows what the product gives, any other price still on sale,
- * and its properties. Every fact comes from the Rails product.
+ * Paper "Product details": the hero with the product's note, Prices, and
+ * Benefits on the left; Details on the right, on the barcode pattern. Sell (S)
+ * and Edit (E) sit in the top bar for roles that can use them, and Add price
+ * is in the Prices header. Every fact comes from Rails. It leaves out what
+ * Rails cannot supply yet (issue #21): active members and passes, revenue,
+ * sales and average, credits left on passes, who is ending soon, product
+ * activity and comments, and per-price counts.
  */
 export function ProductDetails({ product, programs }: { product: Product; programs: Schemas["ProgramListItem"][] }) {
   const organization = useOrganization();
@@ -44,14 +61,10 @@ export function ProductDetails({ product, programs }: { product: Product; progra
   const toast = useToast();
   const can = useCan();
   const changeProduct = useAction(sendProduct);
-  const changePrice = useAction(sendPrice);
-  const archive = useAction(sendArchive);
-  const [archiving, setArchiving] = useState(false);
   const manage = can("products:update");
   const price = mainPrice(product);
-  const state = price ? priceState(price) : null;
-  const canSell = can("purchases:create") && state === "on_sale";
-  const busy = changeProduct.pending || changePrice.pending || archive.pending;
+  const canSell = can("purchases:create") && price !== null && priceState(price) === "on_sale";
+  const [adding, setAdding] = useState(false);
 
   const sell = () => {
     if (price) void navigate({ to: "/$org/sales/new", params: { org: organization.slug }, search: { price: price.id } });
@@ -70,45 +83,13 @@ export function ProductDetails({ product, programs }: { product: Product; progra
     }
   }
 
-  async function toggleOnSale() {
-    if (!price) return;
-    const result = await changePrice.run({ slug: organization.slug, id: price.id, available: !price.available });
-    if (result.ok) {
-      toast.show({ tone: "success", title: price.available ? "Taken off sale" : "On sale again", body: product.name });
-      void router.invalidate();
-    } else {
-      toast.show({ tone: "error", title: "The price did not change", body: failureMessage(result.error) });
-    }
-  }
-
-  async function archiveNow() {
-    if (!price) return;
-    const result = await archive.run({ slug: organization.slug, id: price.id });
-    setArchiving(false);
-    if (result.ok) {
-      toast.show({ tone: "success", title: "Price archived", body: "Members who bought it keep it." });
-      void router.invalidate();
-    } else {
-      toast.show({ tone: "error", title: "The price was not archived", body: failureMessage(result.error) });
-    }
-  }
-
-  const notSold = saleState(product) === "not_sold";
-
   return (
-    <div className="page program-page product-page">
-      <header className="program-head">
-        <ProductTile kind={product.kind} size={40} />
-        <div className="program-head__text">
-          <h1 className="product-head__title">
-            {product.name}
-            {notSold ? <span className="programs-row__staff">Not sold</span> : null}
-          </h1>
-          <p className="product-head__facts">{headFacts(product)}</p>
-        </div>
+    <>
+      <DetailLayout record="product" className="product-details" panel={<ProductPanel product={product} />}>
+        <ProductHero product={product} />
         <PageActions>
           {canSell ? (
-            <Button type="button" variant="secondary" size="compact" className="product-head__sell" aria-keyshortcuts="S" onClick={sell}>
+            <Button type="button" size="compact" className="product-head__sell" aria-keyshortcuts="S" onClick={sell}>
               Sell
               <Kbd>S</Kbd>
             </Button>
@@ -126,7 +107,7 @@ export function ProductDetails({ product, programs }: { product: Product; progra
           ) : null}
           {manage ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon-compact" })} aria-label="More actions" disabled={busy}>
+              <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon-compact" })} aria-label="More actions" disabled={changeProduct.pending}>
                 <Icon name="more" {...icon} />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="sale-menu">
@@ -134,235 +115,308 @@ export function ProductDetails({ product, programs }: { product: Product; progra
                   {product.published ? <Icon name="visibility" {...icon} /> : <Icon name="gymSite" {...icon} />}
                   {product.published ? "Make staff only" : "Publish on the gym site"}
                 </DropdownMenuItem>
-                {price && state !== "archived" ? (
-                  <DropdownMenuItem onClick={() => void toggleOnSale()}>
-                    <Icon name="products" {...icon} />
-                    {price.available ? "Take off sale" : "Put on sale"}
-                  </DropdownMenuItem>
-                ) : null}
                 <DropdownMenuItem onClick={edit}>
                   <Icon name="edit" {...icon} />
                   Edit product
                   <DropdownMenuShortcut>E</DropdownMenuShortcut>
                 </DropdownMenuItem>
-                {price && state !== "archived" ? (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="menu__item--critical" onClick={() => setArchiving(true)}>
-                      <Icon name="visibility" {...icon} />
-                      Archive price…
-                    </DropdownMenuItem>
-                  </>
-                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
         </PageActions>
-      </header>
+        <PricesSection product={product} manage={manage} onAdd={() => setAdding(true)} />
+        <BenefitsSection product={product} programs={programs} manage={manage} />
+      </DetailLayout>
+      {adding ? <AddPriceDialog product={product} onClose={() => setAdding(false)} /> : null}
+    </>
+  );
+}
 
-      <Properties product={product} />
+/* ---------- Hero ---------- */
 
-      <div className="product-page__main">
-        <OtherPrices product={product} manage={manage} />
-        <Benefits product={product} programs={programs} />
-      </div>
+const STATE_TONE: Record<SaleState, DotTone> = { on_sale: "good", staff_only: "info", not_sold: "neutral" };
 
-      {price ? (
+/** The kind's tile, the name, the note as one muted line, and where the product is sold. */
+function ProductHero({ product }: { product: Product }) {
+  const state = saleState(product);
+  return (
+    <DetailHero tile={<HeroTile icon={PRODUCT_ICON[product.kind]} />} title={product.name} line={product.description ?? undefined}>
+      <TagChip tone={STATE_TONE[state]}>{SALE_STATE_LABEL[state]}</TagChip>
+    </DetailHero>
+  );
+}
+
+/* ---------- Prices ---------- */
+
+const PRICE_COLUMNS: ListColumn[] = [
+  { id: "name", label: "Name" },
+  { id: "length", label: "Length", width: "136px" },
+  { id: "status", label: "Status", width: "128px" },
+  { id: "price", label: "Price", width: "112px", align: "end" },
+  { id: "actions", label: "Actions", width: "32px", hideLabel: true },
+];
+
+const PRICE_TONE: Record<PriceState, DotTone> = { on_sale: "good", off_sale: "neutral", archived: "neutral" };
+
+/**
+ * Every price the product has: name, length, status, and amount, with a row
+ * menu to sell at it, take it off sale or put it on sale, and archive it. On
+ * sale first, then not on sale, then archived in grey. An archived price can
+ * never go back on sale. Add price (products:update) is in the header.
+ */
+function PricesSection({ product, manage, onAdd }: { product: Product; manage: boolean; onAdd: () => void }) {
+  const prices = sortedPrices(product);
+  return (
+    <Section
+      id="prices"
+      title="Prices"
+      action={
+        manage ? (
+          <Button type="button" variant="secondary" size="compact" onClick={onAdd}>
+            <Icon name="plus" {...icon} />
+            Add price
+          </Button>
+        ) : null
+      }
+    >
+      {prices.length ? (
+        <ListTable label="Prices" density="one-line" className="list-table--bare product-prices" columns={PRICE_COLUMNS}>
+          <ListTableBody>
+            {prices.map((price) => (
+              <PriceRow key={price.id} product={product} price={price} manage={manage} />
+            ))}
+          </ListTableBody>
+        </ListTable>
+      ) : (
+        <Empty>{manage ? "No price yet. Add one to sell this product." : "No price yet."}</Empty>
+      )}
+    </Section>
+  );
+}
+
+function PriceRow({ product, price, manage }: { product: Product; price: Price; manage: boolean }) {
+  const organization = useOrganization();
+  const navigate = useNavigate();
+  const router = useRouter();
+  const toast = useToast();
+  const can = useCan();
+  const change = useAction(sendPrice);
+  const archive = useAction(sendArchive);
+  const [confirming, setConfirming] = useState(false);
+  const state = priceState(price);
+  const canSell = can("purchases:create") && state === "on_sale";
+  const canChange = manage && state !== "archived";
+  const others = product.prices.filter((other) => other.id !== price.id && priceState(other) === "on_sale").length;
+
+  async function toggle() {
+    const result = await change.run({ slug: organization.slug, id: price.id, available: !price.available });
+    if (result.ok) {
+      toast.show({ tone: "success", title: price.available ? "Taken off sale" : "On sale again", body: `${price.label} · ${formatMoney(price.amount_minor, price.currency)}` });
+      void router.invalidate();
+    } else {
+      toast.show({ tone: "error", title: "The price did not change", body: failureMessage(result.error) });
+    }
+  }
+
+  async function archiveNow() {
+    const result = await archive.run({ slug: organization.slug, id: price.id });
+    setConfirming(false);
+    if (result.ok) {
+      toast.show({ tone: "success", title: "Price archived", body: "Members who bought it keep it." });
+      void router.invalidate();
+    } else {
+      toast.show({ tone: "error", title: "The price was not archived", body: failureMessage(result.error) });
+    }
+  }
+
+  return (
+    <ListTableRow className={state === "archived" ? "product-prices__row--archived" : undefined}>
+      <ListTableCell className="product-prices__name">{price.label}</ListTableCell>
+      <ListTableCell className="cell-muted">{formatDuration(price.duration_days)}</ListTableCell>
+      <ListTableCell>
+        <span className="products-status">
+          <i className="dot" data-tone={PRICE_TONE[state]} aria-hidden="true" />
+          {PRICE_STATUS_LABEL[state]}
+        </span>
+      </ListTableCell>
+      <ListTableCell align="end" className="cell-figure">
+        {formatMoney(price.amount_minor, price.currency)}
+      </ListTableCell>
+      <ListTableCell align="end">
+        {canSell || canChange ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className={buttonVariants({ variant: "ghost", size: "icon-compact" })}
+              aria-label={`Change ${price.label}, ${formatMoney(price.amount_minor, price.currency)}`}
+              disabled={change.pending || archive.pending}
+            >
+              <Icon name="more" {...icon} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="sale-menu">
+              {canSell ? (
+                <DropdownMenuItem
+                  onClick={() => void navigate({ to: "/$org/sales/new", params: { org: organization.slug }, search: { price: price.id } })}
+                >
+                  <Icon name="sales" {...icon} />
+                  Sell at this price
+                </DropdownMenuItem>
+              ) : null}
+              {canChange ? (
+                <DropdownMenuItem onClick={() => void toggle()}>
+                  <Icon name="products" {...icon} />
+                  {price.available ? "Take off sale" : "Put on sale"}
+                </DropdownMenuItem>
+              ) : null}
+              {canChange ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="menu__item--critical" onClick={() => setConfirming(true)}>
+                    <Icon name="close" {...icon} />
+                    Archive price…
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
         <ConfirmDialog
-          open={archiving}
+          open={confirming}
           tone="critical"
           title={`Archive ${formatMoney(price.amount_minor, price.currency)}?`}
           confirmLabel="Archive price"
           pendingLabel="Archiving…"
           pending={archive.pending}
           onConfirm={() => void archiveNow()}
-          onCancel={() => setArchiving(false)}
+          onCancel={() => setConfirming(false)}
         >
           <p>
             Staff can't sell this price again. Members who bought it keep it.
-            {otherPrices(product).some((other) => priceState(other) === "on_sale") ? null : " To sell the product again, edit it and set a price."}
+            {state === "on_sale" && others === 0 ? " No other price is on sale, so the product will not be for sale until you add one." : ""}
           </p>
         </ConfirmDialog>
-      ) : null}
-    </div>
-  );
-}
-
-/* ---------- Other prices ---------- */
-
-/** Prices beyond the one staff see: shown so staff can see and archive them. */
-function OtherPrices({ product, manage }: { product: Product; manage: boolean }) {
-  const others = otherPrices(product);
-  if (!others.length) return null;
-  const onSale = others.filter((price) => priceState(price) === "on_sale").length;
-  return (
-    <section className="mx-section" aria-labelledby="product-prices-title">
-      <div className="mx-section__head">
-        <Icon name="products" {...icon} />
-        <h2 id="product-prices-title">Other prices</h2>
-        {onSale ? <span className="mx-section__count">{onSale} also on sale</span> : null}
-      </div>
-      <ul className="program-tickets product-prices">
-        {others.map((price) => (
-          <TicketPriceRow key={price.id} price={{ ...price, label: priceName(price) }} manage={manage} />
-        ))}
-      </ul>
-    </section>
+      </ListTableCell>
+    </ListTableRow>
   );
 }
 
 /* ---------- Benefits ---------- */
 
-function Benefits({ product, programs }: { product: Product; programs: Schemas["ProgramListItem"][] }) {
+const BENEFIT_COLUMNS: ListColumn[] = [
+  { id: "benefit", label: "Benefit" },
+  { id: "amount", label: "Amount", width: "232px" },
+  { id: "location", label: "Location", width: "128px" },
+];
+
+/**
+ * What the product gives. Each sale copies these, so a change applies to new
+ * sales only. The graphic shows the allowance: one solid slanted bar for
+ * unlimited, one slanted segment for each visit or booking. The text beside it
+ * is the fact.
+ */
+function BenefitsSection({ product, programs, manage }: { product: Product; programs: Schemas["ProgramListItem"][]; manage: boolean }) {
+  const organization = useOrganization();
   const locationName = useLocationName();
   const programName = (id: string) => programs.find((program) => program.id === id)?.name ?? "A program";
   return (
-    <section className="mx-section" aria-labelledby="product-benefits-title">
-      <div className="mx-section__head">
-        <Icon name="pass" {...icon} />
-        <h2 id="product-benefits-title">Benefits</h2>
-        <span className="mx-section__count">Changes apply to new sales</span>
-      </div>
+    <Section
+      id="benefits"
+      title="Benefits"
+      action={
+        manage ? (
+          <Link
+            to="/$org/products/$productId/edit"
+            params={{ org: organization.slug, productId: product.id }}
+            className={buttonVariants({ variant: "secondary", size: "compact" })}
+          >
+            Edit benefits
+          </Link>
+        ) : null
+      }
+    >
       {product.benefits.length ? (
-        <ul className="product-benefits">
-          {product.benefits.map((benefit) => {
-            const iconName = benefit.kind === "gym_access" ? "checkIns" : "schedule";
-            return (
-              <li key={benefit.id} className="product-benefit">
-                <span className="program-tile" aria-hidden="true">
-                  <Icon name={iconName} {...icon} />
-                </span>
-                <span className="product-benefit__name">{benefit.name}</span>
-                <span className="product-benefit__facts">
-                  {[formatBenefitUsage(benefit), formatProgramScope(benefit, programName)].filter(Boolean).join(" · ")}
-                </span>
-                <span className="product-benefit__location">{locationName(benefit.location_id)}</span>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <ListTable label="Benefits" density="two-line" className="list-table--bare product-benefits" columns={BENEFIT_COLUMNS}>
+            <ListTableBody>
+              {product.benefits.map((benefit) => {
+                const iconName: IconName = benefit.kind === "gym_access" ? "checkIns" : "schedule";
+                const scope = formatProgramScope(benefit, programName);
+                return (
+                  <ListTableRow key={benefit.id}>
+                    <ListTableCell>
+                      <CellStack
+                        lead={
+                          <Tile square>
+                            <Icon name={iconName} size={16} {...icon} />
+                          </Tile>
+                        }
+                        title={benefit.name}
+                        sub={scope ?? undefined}
+                      />
+                    </ListTableCell>
+                    <ListTableCell>
+                      <span className="product-allowance">
+                        <AllowanceBar limit={benefit.usage_limit} label={formatBenefitUsage(benefit)} />
+                        <span>{formatBenefitUsage(benefit)}</span>
+                      </span>
+                    </ListTableCell>
+                    <ListTableCell className="cell-muted">{locationName(benefit.location_id)}</ListTableCell>
+                  </ListTableRow>
+                );
+              })}
+            </ListTableBody>
+          </ListTable>
+          <p className="sale-note">Changes apply to new sales.</p>
+        </>
       ) : (
-        <p className="mx-empty">No benefits</p>
+        <Empty>No benefits</Empty>
       )}
-    </section>
+    </Section>
   );
 }
 
-/* ---------- Properties ---------- */
+/* ---------- Details panel ---------- */
 
-function Property({ label, children }: { label: string; children: ReactNode }) {
+function ProductPanel({ product }: { product: Product }) {
   return (
-    <div className="mx-prop">
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
+    <PanelGroup title="Details">
+      <PanelRows>
+        <PanelRow label="Kind">
+          <Icon name={PRODUCT_ICON[product.kind]} size={14} {...icon} />
+          {PRODUCT_KIND_LABEL[product.kind]}
+        </PanelRow>
+        <PanelRow label="Visibility">
+          <Icon name={product.published ? "gymSite" : "visibility"} size={14} {...icon} />
+          {product.published ? "Gym site and desk" : "Staff only"}
+        </PanelRow>
+      </PanelRows>
+    </PanelGroup>
   );
-}
-
-function Properties({ product }: { product: Product }) {
-  const price = mainPrice(product);
-  const uses = passUses(product);
-  const state = saleState(product);
-  return (
-    <aside className="mx-props program-props" aria-label="Product details">
-      <section className="mx-props__group" aria-labelledby="product-props-title">
-        <h2 id="product-props-title">Details</h2>
-        <dl>
-          <Property label="Type">
-            <span className="mx-value">
-              <ProductIcon kind={product.kind} />
-              <span className="mx-value__text">{PRODUCT_KIND_LABEL[product.kind]}</span>
-            </span>
-          </Property>
-          <Property label="Price">
-            <span className="mx-value" data-empty={price ? undefined : true}>
-              <Icon name="products" {...icon} />
-              <span className="mx-value__text money">{price ? formatMoney(price.amount_minor, price.currency) : "No price"}</span>
-            </span>
-          </Property>
-          {price ? (
-            <Property label={product.kind === "pass" ? "Valid for" : "Length"}>
-              <span className="mx-value">
-                <Icon name="length" {...icon} />
-                <span className="mx-value__text money">{formatDuration(price.duration_days)}</span>
-              </span>
-            </Property>
-          ) : null}
-          {uses ? (
-            <Property label="Uses">
-              <span className="mx-value">
-                <Icon name="schedule" {...icon} />
-                <span className="mx-value__text money">{formatBenefitUsage(uses)}</span>
-              </span>
-            </Property>
-          ) : null}
-          {state === "not_sold" ? null : (
-            <Property label="Sold">
-              <span className="mx-value">
-                {state === "on_sale" ? <Icon name="gymSite" {...icon} /> : <Icon name="visibility" {...icon} />}
-                <span className="mx-value__text">{state === "on_sale" ? "Gym site and desk" : SALE_STATE_LABEL.staff_only}</span>
-              </span>
-            </Property>
-          )}
-        </dl>
-      </section>
-      {product.description ? (
-        <section className="mx-props__group program-props__note" aria-labelledby="product-note-title">
-          <h2 id="product-note-title">
-            <Icon name="customItem" {...icon} />
-            Note
-          </h2>
-          <p>{product.description}</p>
-        </section>
-      ) : null}
-    </aside>
-  );
-}
-
-function ProductIcon({ kind }: { kind: Schemas["ProductKind"] }) {
-  const iconName = PRODUCT_ICON[kind];
-  return <Icon name={iconName} {...icon} />;
 }
 
 /* ---------- Loading and not found ---------- */
 
-/** Paper's loading pattern: the tile, title, bands, and Details as grey bars. */
+/** Keeps the page shape while the product loads. */
 export function ProductLoading() {
   return (
-    <div className="page program-page product-page" role="status" aria-busy="true" aria-label="Loading the product">
-      <header className="program-head" aria-hidden="true">
-        <span className="program-tile skeleton-block" data-size={40} />
-        <div className="program-head__text">
-          <span className="skeleton-line" style={{ width: 200, height: 16 }} />
-          <span className="skeleton-line" style={{ width: 160 }} />
-        </div>
-      </header>
-      <aside className="mx-props program-props" aria-hidden="true">
-        <div className="mx-props__group">
-          <h2>Details</h2>
-          {[56, 48, 60, 52].map((width, index) => (
-            <div key={index} className="mx-prop">
-              <span className="skeleton-line" style={{ width }} />
-              <span className="skeleton-line" style={{ width: 96, marginLeft: 24 }} />
-            </div>
-          ))}
-        </div>
-      </aside>
-      <div className="product-page__main" aria-hidden="true">
-        <div className="mx-section">
-          <div className="mx-section__head">
-            <span className="skeleton-line" style={{ width: 96 }} />
+    <DetailLayout record="product" className="product-details">
+      <div role="status" aria-busy="true" aria-label="Loading the product" className="sale-loading">
+        <header className="hero">
+          <span className="tile tile--hero skeleton" />
+          <div className="hero__text">
+            <span className="skeleton sale-loading__title" />
+            <span className="skeleton sale-loading__line" />
           </div>
-          {[0, 1].map((index) => (
-            <div key={index} className="product-benefit">
-              <span className="program-tile skeleton-block" />
-              <span className="skeleton-line" style={{ width: 120 }} />
-              <span className="skeleton-line" style={{ width: 160 }} />
-            </div>
-          ))}
-        </div>
+        </header>
+        <section className="member-section">
+          <div className="member-section__head">
+            <h2>Prices</h2>
+          </div>
+          <ListTable label="Prices (loading)" density="one-line" className="list-table--bare" columns={PRICE_COLUMNS}>
+            <ListTableLoading rows={3} label="Loading prices" />
+          </ListTable>
+        </section>
       </div>
-    </div>
+    </DetailLayout>
   );
 }
 
@@ -372,7 +426,7 @@ export function ProductDidNotLoad({ notFound, message }: { notFound: boolean; me
   const router = useRouter();
   const [retrying, setRetrying] = useState(false);
   return (
-    <div className="page program-page product-page">
+    <div className="page product-details">
       <div className="list-state" role="alert">
         <p className="list-state__title">{notFound ? "This product was not found." : "This product did not load."}</p>
         {notFound ? null : <p className="list-state__text">{message}</p>}

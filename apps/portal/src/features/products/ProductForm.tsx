@@ -2,17 +2,19 @@ import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
 import { Icon } from "@/components/ui/icon";
+import { DetailHero, DetailLayout, HeroTile, PanelGroup } from "@/components/parts/DetailLayout";
+import { Section } from "../members/Section";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { FormNotice } from "../../components/FormNotice";
 import { PageActions } from "../../components/PageActions";
 import { useToast } from "../../components/Toast";
 import { Kbd } from "../../components/ui";
-import { PROGRAM_KIND_PLURAL, formatDuration, formatMoney } from "../../lib/format";
+import { PROGRAM_KIND_PLURAL, formatMoney } from "../../lib/format";
 import { useAction } from "../../lib/hooks";
 import { useCan, useOrganization } from "../../lib/organization";
 import type { Failure, Result } from "../../lib/result";
 import { useModKeyLabel, useShortcut } from "../../lib/shortcuts";
-import { archivePrice, createPrice, createProduct, listProducts, updateProduct } from "../../lib/staff.functions";
+import { createPrice, createProduct, updateProduct } from "../../lib/staff.functions";
 import { PROGRAM_KINDS } from "../../lib/validate";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,8 +27,7 @@ import {
   checkDraft,
   draftChanged,
   hasErrors,
-  mainPrice,
-  priceChange,
+  priceSpec,
   productFields,
   startBenefits,
   startDraft,
@@ -37,8 +38,7 @@ import {
   type ProductKind,
   type Scope,
 } from "./facts";
-import { PRODUCT_ICON, ProductTile } from "./kinds";
-import { replacePrice } from "./priceChange";
+import { PRODUCT_ICON } from "./kinds";
 
 const sendNew = (input: Parameters<typeof createProduct>[0]["data"]) => createProduct({ data: input });
 const sendEdit = (input: Parameters<typeof updateProduct>[0]["data"]) => updateProduct({ data: input });
@@ -51,15 +51,6 @@ const KIND_META: Record<ProductKind, string> = { membership: "Access for a set t
 
 /** What went wrong after a save started. Field errors show on the fields instead. */
 type Problem = { title: string; error: Failure; after?: string } | null;
-
-/** A call that throws, such as a dropped connection, becomes a failure, so each step reports itself. */
-async function settle<T>(call: () => Promise<Result<T>>): Promise<Result<T>> {
-  try {
-    return await call();
-  } catch {
-    return { ok: false, error: { status: 0, code: "api_unreachable", message: "Check the connection, then try again." } };
-  }
-}
 
 function focusField(id: string) {
   const field = document.getElementById(id);
@@ -81,12 +72,12 @@ function serverErrors(details: Record<string, string[]> | undefined): DraftError
 }
 
 /**
- * Paper "New product" and "Edit product": a page, not a dialog. Name, price,
- * and type; the length; then what the product gives. The gym site and the
- * note sit on the right. ⌘↵ saves. Leaving with changes asks first.
- *
- * Staff see one price. A new amount or length adds a new price and archives
- * the old one, because Rails never changes a price a sale may use.
+ * New product and Edit product, on the record frame: a page, not a dialog.
+ * Name and type, the first price (new products only), then what the product
+ * gives. Where it is sold and the note sit on the right. ⌘↵ saves. Leaving with
+ * changes asks first. Edit has no price: Rails never changes a price a sale
+ * may use, so prices are added, taken off sale, and archived on the product
+ * page.
  */
 export function ProductForm({ product, programs }: { product?: Product; programs: Schemas["ProgramListItem"][] }) {
   const can = useCan();
@@ -94,13 +85,13 @@ export function ProductForm({ product, programs }: { product?: Product; programs
   const allowed = product ? can("products:update") : can("products:create") && can("products:update");
   if (!allowed) {
     return (
-      <div className="page program-form product-form">
+      <DetailLayout record="product" className="product-form">
         <FormHead title={product ? `Edit ${product.name}` : "New product"} />
         <div className="list-state" role="status">
           <p className="list-state__title">Your role cannot change products.</p>
           <p className="list-state__text">A manager adds and edits products.</p>
         </div>
-      </div>
+      </DetailLayout>
     );
   }
   return <Form product={product} programs={programs} />;
@@ -108,11 +99,10 @@ export function ProductForm({ product, programs }: { product?: Product; programs
 
 function FormHead({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <header className="program-form__head">
-      <ProductTile kind="new" size={40} />
-      <h1>{title}</h1>
+    <>
+      <DetailHero tile={<HeroTile icon="products" />} title={title} />
       {children ? <PageActions>{children}</PageActions> : null}
-    </header>
+    </>
   );
 }
 
@@ -125,16 +115,12 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
   const creating = useAction(sendNew);
   const editing = useAction(sendEdit);
   const addingPrice = useAction(sendPrice);
-  const [changingPrice, setChangingPrice] = useState(false);
-  const pending = creating.pending || editing.pending || addingPrice.pending || changingPrice;
+  const pending = creating.pending || editing.pending || addingPrice.pending;
   const form = useRef<HTMLFormElement>(null);
   const saved = useRef(false);
-  // The prices staff saw when the form opened. A price change keeps them apart from the one it adds.
-  const known = useRef(new Set(product?.prices.map((price) => price.id) ?? []));
   // A product this page created already. A retry adds only its price.
   const created = useRef<Product | null>(null);
 
-  const current = product ? mainPrice(product) : null;
   const [start] = useState<ProductDraft>(() => startDraft(product, currency));
   const [draft, setDraft] = useState<ProductDraft>(start);
   const [noteOpen, setNoteOpen] = useState(start.description !== "");
@@ -155,7 +141,6 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
   useShortcut("Enter", () => form.current?.requestSubmit(), { mod: true, enabled: !pending && blocker.status !== "blocked" });
 
   const errors: DraftErrors = { ...server, ...local, benefit: local.benefit };
-  const change = product ? priceChange(draft, current, currency) : null;
 
   function chooseKind(kind: ProductKind) {
     // The benefits follow the type until staff change them.
@@ -177,7 +162,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-    const found = checkDraft(draft, currency);
+    const found = checkDraft(draft, currency, { price: !product });
     setLocal(found);
     setServer({});
     setProblem(null);
@@ -211,7 +196,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
       item = result.data;
       created.current = item;
     }
-    const spec = priceChange(draft, null, currency)!;
+    const spec = priceSpec(draft.amount, draft.days, currency)!;
     const priced = await addingPrice.run({ slug: organization.slug, id: item.id, ...spec });
     if (!priced.ok) {
       // The product exists now. Open it, so staff never create it twice; Edit sets the price.
@@ -251,66 +236,52 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
       }
     }
 
-    const spec = priceChange(draft, current, currency);
-    if (spec) {
-      setChangingPrice(true);
-      const result = await replacePrice(
-        {
-          load: () =>
-            settle(async () => {
-              const list = await listProducts({ data: { slug: organization.slug } });
-              if (!list.ok) return list;
-              const found = list.data.find((candidate) => candidate.id === item.id);
-              return found ? { ok: true, data: found } : { ok: false, error: { status: 404, code: "not_found", message: "Product not found" } };
-            }),
-          create: (priceSpec) => settle(() => createPrice({ data: { slug: organization.slug, id: item.id, ...priceSpec } })),
-          archive: (priceId) => settle(() => archivePrice({ data: { slug: organization.slug, id: priceId } })),
-        },
-        { known: known.current, oldPriceId: current && !current.archived_at ? current.id : null, spec },
-      );
-      setChangingPrice(false);
-      const next = formatMoney(spec.amount_minor, currency);
-      const old = current ? formatMoney(current.amount_minor, current.currency) : "";
-      if (!result.ok && result.stage === "create") {
-        if (result.error.code === "validation_failed") setServer(serverErrors(result.error.details));
-        else
-          setProblem({
-            title: "The new price was not saved",
-            error: result.error,
-            after: fieldsChanged ? "Your other changes were saved. Save again to set the price." : "Save again to set the price.",
-          });
-        return;
-      }
-      if (!result.ok) {
-        // The new price is on sale; the old one is too. Saving again only archives it.
-        setProblem({
-          title: `${old} is still on sale`,
-          error: result.error,
-          after: `${next} is on sale now too. Save again to archive ${old}, or archive it on the product page.`,
-        });
-        return;
-      }
-      finish(item, {
-        tone: "success",
-        title: "Product saved",
-        body: `New sales use ${next} for ${formatDuration(spec.duration_days)}. Members who bought keep their price.`,
-      });
-      return;
-    }
-    finish(item, { tone: "success", title: "Product saved", body: "New sales use these terms." });
+    finish(item, { tone: "success", title: "Product saved", body: "New sales use these benefits." });
   }
 
   const submitLabel = product ? "Save changes" : "Create product";
   const anyFieldError = hasErrors(errors);
 
+  const side = (
+    <>
+      <PanelGroup>
+        <FieldBox id="product-visibility" label="Gym site">
+          <span className="program-select">
+            {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
+            <NativeSelect
+              id="product-visibility"
+              className="program-input program-select__control"
+              value={draft.published ? "published" : "staff_only"}
+              onChange={(event) => set("published", event.target.value === "published")}
+            >
+              <NativeSelectOption value="staff_only">Staff only</NativeSelectOption>
+              <NativeSelectOption value="published">Published</NativeSelectOption>
+            </NativeSelect>
+          </span>
+        </FieldBox>
+      </PanelGroup>
+      <PanelGroup>
+        <FieldBox id="product-note" label="Note">
+          <Textarea
+            id="product-note"
+            className="program-input program-input--note"
+            rows={3}
+            maxLength={2000}
+            value={draft.description}
+            onChange={(event) => set("description", event.target.value)}
+          />
+        </FieldBox>
+      </PanelGroup>
+    </>
+  );
+
   return (
-    <div className="page program-form product-form">
+    <DetailLayout record="product" className="product-form" panel={side}>
       <FormHead title={product ? `Edit ${product.name}` : "New product"}>
         <Button
           type="submit"
           form={FORM_ID}
           size="compact"
-          className="program-form__submit"
           disabled={pending}
           aria-busy={pending || undefined}
           aria-keyshortcuts="Meta+Enter Control+Enter"
@@ -329,46 +300,66 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
         </Button>
       </FormHead>
 
-      <form id={FORM_ID} ref={form} className="program-form__layout" onSubmit={onSubmit} noValidate>
-        <div className="program-form__main">
-          {problem ? (
-            <FormNotice title={problem.title} error={problem.error} after={problem.after} />
-          ) : anyFieldError ? (
-            <p className="visually-hidden" role="alert">
-              {product ? "The changes were not saved." : "The product was not created."} Fix the marked fields.
-            </p>
-          ) : null}
+      <form id={FORM_ID} ref={form} className="product-form__form" onSubmit={onSubmit} noValidate>
+        {problem ? (
+          <FormNotice title={problem.title} error={problem.error} after={problem.after} />
+        ) : anyFieldError ? (
+          <p className="visually-hidden" role="alert">
+            {product ? "The changes were not saved." : "The product was not created."} Fix the marked fields.
+          </p>
+        ) : null}
 
-          <section className="program-form__section" aria-labelledby="product-details-title">
-            <div className="mx-section__head">
-              <Icon name="edit" {...icon} />
-              <h2 id="product-details-title">Details</h2>
+        <Section id="product-details" title="Details">
+          <div className="product-form__fields">
+            <div>
+              <FieldBox id="product-name" label="Name" error={errors.name}>
+                <Input
+                  id="product-name"
+                  className="program-input"
+                  autoFocus={!product}
+                  autoComplete="off"
+                  maxLength={200}
+                  value={draft.name}
+                  onChange={(event) => set("name", event.target.value)}
+                  aria-invalid={errors.name ? true : undefined}
+                  aria-describedby={errors.name ? "product-name-error" : undefined}
+                />
+              </FieldBox>
             </div>
-            <div className="program-form__fields">
+
+            {product ? null : (
+              <fieldset className="program-kinds">
+                <legend className="program-field__label">Type</legend>
+                <div className="program-kinds__cards product-kinds">
+                  {(["membership", "pass"] as const).map((kind) => {
+                    const iconName = PRODUCT_ICON[kind];
+                    return (
+                      <label key={kind} className="program-kind">
+                        <input
+                          type="radio"
+                          name="product-kind"
+                          className="program-kind__input"
+                          value={kind}
+                          checked={draft.kind === kind}
+                          onChange={() => chooseKind(kind)}
+                        />
+                        <Icon name={iconName} className="program-kind__icon" {...icon} />
+                        <span className="program-kind__title">{kind === "membership" ? "Membership" : "Pass"}</span>
+                        <span className="program-kind__meta">{KIND_META[kind]}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+          </div>
+        </Section>
+
+        {product ? null : (
+          <Section id="product-price" title="Price">
+            <div className="product-form__fields">
               <div className="product-form__row">
-                <FieldBox id="product-name" label="Name" error={errors.name}>
-                  <Input
-                    id="product-name"
-                    className="program-input"
-                    autoFocus={!product}
-                    autoComplete="off"
-                    maxLength={200}
-                    value={draft.name}
-                    onChange={(event) => set("name", event.target.value)}
-                    aria-invalid={errors.name ? true : undefined}
-                    aria-describedby={errors.name ? "product-name-error" : undefined}
-                  />
-                </FieldBox>
-                <FieldBox
-                  id="product-amount"
-                  label="Price"
-                  error={errors.amount}
-                  hint={
-                    change && current
-                      ? `New sales only. Saving adds ${formatMoney(change.amount_minor, currency)} for ${formatDuration(change.duration_days)} and archives ${formatMoney(current.amount_minor, current.currency)}. Members who bought keep their price.`
-                      : undefined
-                  }
-                >
+                <FieldBox id="product-amount" label="Price" error={errors.amount}>
                   <span className="program-input program-input--suffix" data-invalid={errors.amount ? true : undefined}>
                     <span className="program-input__unit" aria-hidden="true">
                       {currency === "MYR" ? "RM" : currency}
@@ -381,47 +372,10 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
                       value={draft.amount}
                       onChange={(event) => set("amount", event.target.value)}
                       aria-invalid={errors.amount ? true : undefined}
-                      aria-describedby={[errors.amount ? "product-amount-error" : "", change ? "product-amount-hint" : ""].filter(Boolean).join(" ") || undefined}
+                      aria-describedby={errors.amount ? "product-amount-error" : undefined}
                     />
                   </span>
                 </FieldBox>
-              </div>
-
-              {product ? null : (
-                <fieldset className="program-kinds">
-                  <legend className="program-field__label">Type</legend>
-                  <div className="program-kinds__cards product-kinds">
-                    {(["membership", "pass"] as const).map((kind) => {
-                      const iconName = PRODUCT_ICON[kind];
-                      return (
-                        <label key={kind} className="program-kind">
-                          <input
-                            type="radio"
-                            name="product-kind"
-                            className="program-kind__input"
-                            value={kind}
-                            checked={draft.kind === kind}
-                            onChange={() => chooseKind(kind)}
-                          />
-                          <Icon name={iconName} className="program-kind__icon" {...icon} />
-                          <span className="program-kind__title">{kind === "membership" ? "Membership" : "Pass"}</span>
-                          <span className="program-kind__meta">{KIND_META[kind]}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-              )}
-            </div>
-          </section>
-
-          <section className="program-form__section" aria-labelledby="product-terms-title">
-            <div className="mx-section__head">
-              <Icon name="length" {...icon} />
-              <h2 id="product-terms-title">Terms</h2>
-            </div>
-            <div className="program-form__fields">
-              <div className="product-form__terms">
                 <FieldBox id="product-days" label={draft.kind === "pass" ? "Valid for" : "Length"} error={errors.days}>
                   <span className="program-input program-input--suffix" data-invalid={errors.days ? true : undefined}>
                     <input
@@ -441,59 +395,10 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
                 </FieldBox>
               </div>
             </div>
-          </section>
+          </Section>
+        )}
 
-          <BenefitsFields draft={draft} programs={programs} errors={errors} onChange={setBenefit} onSet={(benefits) => set("benefits", benefits)} />
-        </div>
-
-        <aside className="program-form__side" aria-label="Gym site and note">
-          <div className="program-form__side-group">
-            <FieldBox id="product-visibility" label="Gym site">
-              <span className="program-select">
-                {draft.published ? <Icon name="gymSite" className="program-select__icon" {...icon} /> : <Icon name="visibility" className="program-select__icon" {...icon} />}
-                <NativeSelect
-                  id="product-visibility"
-                  className="program-input program-select__control"
-                  value={draft.published ? "published" : "staff_only"}
-                  onChange={(event) => set("published", event.target.value === "published")}
-                >
-                  <NativeSelectOption value="staff_only">Staff only</NativeSelectOption>
-                  <NativeSelectOption value="published">Published</NativeSelectOption>
-                </NativeSelect>
-              </span>
-            </FieldBox>
-          </div>
-          <div className="program-form__side-group">
-            {noteOpen ? (
-              <FieldBox id="product-note" label="Note">
-                <Textarea
-                  id="product-note"
-                  className="program-input program-input--note"
-                  rows={3}
-                  maxLength={2000}
-                  value={draft.description}
-                  onChange={(event) => set("description", event.target.value)}
-                />
-              </FieldBox>
-            ) : (
-              <div className="program-form__note">
-                <span className="program-field__label">Note</span>
-                <button
-                  type="button"
-                  className="program-form__add"
-                  aria-label="Add a note"
-                  onClick={() => {
-                    setNoteOpen(true);
-                    requestAnimationFrame(() => document.getElementById("product-note")?.focus());
-                  }}
-                >
-                  <Icon name="plus" {...icon} />
-                </button>
-                <span className="program-form__no-note">No note</span>
-              </div>
-            )}
-          </div>
-        </aside>
+        <BenefitsFields draft={draft} programs={programs} errors={errors} onChange={setBenefit} onSet={(benefits) => set("benefits", benefits)} />
       </form>
 
       <ConfirmDialog
@@ -507,7 +412,7 @@ function Form({ product, programs }: { product?: Product; programs: Schemas["Pro
       >
         <p>{product ? `Your changes to ${product.name} will be lost.` : `The details you entered${draft.name.trim() ? ` for ${draft.name.trim()}` : ""} will be lost.`}</p>
       </ConfirmDialog>
-    </div>
+    </DetailLayout>
   );
 }
 
@@ -529,23 +434,18 @@ function BenefitsFields({
 }) {
   const organization = useOrganization();
   return (
-    <section className="program-form__section" aria-labelledby="product-benefits-title">
-      <div className="mx-section__head">
-        <Icon name="pass" {...icon} />
-        <h2 id="product-benefits-title">Benefits</h2>
-        {draft.benefits.length < MAX_BENEFITS ? (
-          <Button
-            id="product-add-benefit"
-            type="button"
-            variant="secondary"
-            size="compact"
-            onClick={() => onSet([...draft.benefits, benefitDraft()])}
-          >
+    <Section
+      id="product-benefits"
+      title="Benefits"
+      action={
+        draft.benefits.length < MAX_BENEFITS ? (
+          <Button id="product-add-benefit" type="button" variant="secondary" size="compact" onClick={() => onSet([...draft.benefits, benefitDraft()])}>
             <Icon name="plus" {...icon} />
             Add benefit
           </Button>
-        ) : null}
-      </div>
+        ) : null
+      }
+    >
       {errors.benefits ? (
         <p className="program-field__error" role="alert">
           {errors.benefits}
@@ -675,7 +575,7 @@ function BenefitsFields({
           );
         })}
       </div>
-    </section>
+    </Section>
   );
 }
 
