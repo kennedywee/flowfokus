@@ -99,8 +99,7 @@ function Ring({ fraction }: { fraction: number }) {
 }
 
 /**
- * The ring of a pass: "7 of 10 left". Amber at two or fewer left, grey when
- * none are left. The text is the fact; the ring only shows it.
+ * The ring of a pass: "7 of 10 left". Amber at two or fewer left, and at none. The text is the fact; the ring only shows it.
  */
 export function CreditRing({ left, total, children }: { left: number; total: number; children?: ReactNode }) {
   const tone = creditTone(left);

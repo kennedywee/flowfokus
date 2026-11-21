@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,6 +61,14 @@ export function FilterBar({
   display?: ReactNode;
   className?: string;
 }) {
+  const filterButton = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+  // A chip that removes itself takes the focused element with it. Focus goes to the Filter button.
+  useEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    filterButton.current?.focus();
+  }, [filters]);
   // A changed filter keeps its place. A new one goes last. `null` removes it.
   const setFilter = (field: string, next: ActiveFilter | null) => {
     const exists = filters.some((filter) => filter.field === field);
@@ -72,7 +80,7 @@ export function FilterBar({
   return (
     <div className={cn("filter-bar", className)} role="group" aria-label="Filters">
       <DropdownMenu>
-        <DropdownMenuTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
+        <DropdownMenuTrigger ref={filterButton} className={buttonVariants({ variant: "secondary", size: "compact" })}>
           <Icon name="filter" size={14} {...icon} />
           Filter
         </DropdownMenuTrigger>
@@ -96,7 +104,17 @@ export function FilterBar({
       {filters.map((filter) => {
         const field = fields.find((item) => item.key === filter.field);
         if (!field) return null;
-        return <FilterBarChip key={filter.field} field={field} filter={filter} onChange={(next) => setFilter(filter.field, next)} />;
+        return (
+          <FilterBarChip
+            key={filter.field}
+            field={field}
+            filter={filter}
+            onChange={(next) => {
+              if (!next) refocus.current = true;
+              setFilter(filter.field, next);
+            }}
+          />
+        );
       })}
       <span className="filter-bar__space" />
       {search}
@@ -196,12 +214,13 @@ export function DisplayPopover({
   toggle?: { label: string; checked: boolean; onChange: (on: boolean) => void };
   columns: readonly DisplayColumn[];
   onColumn: (id: string, on: boolean) => void;
-  /** True when nothing differs from the default. Reset is then disabled. */
+  /** True when nothing differs from the default. Reset is then dimmed and does nothing. It stays focusable, so focus is not lost after a reset. */
   isDefault: boolean;
   onReset: () => void;
 }) {
-  const sortId = "display-sort";
-  const toggleId = "display-toggle";
+  const id = useId();
+  const sortId = `${id}-sort`;
+  const toggleId = `${id}-toggle`;
   return (
     <Popover modal="trap-focus">
       <PopoverTrigger className={buttonVariants({ variant: "secondary", size: "compact" })}>
@@ -257,7 +276,14 @@ export function DisplayPopover({
           </div>
         </div>
         <div className="display-popover__foot">
-          <button type="button" className="display-popover__reset" disabled={isDefault} onClick={onReset}>
+          <button
+            type="button"
+            className="display-popover__reset"
+            aria-disabled={isDefault || undefined}
+            onClick={() => {
+              if (!isDefault) onReset();
+            }}
+          >
             Reset to default
           </button>
         </div>

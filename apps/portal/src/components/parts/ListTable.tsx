@@ -48,9 +48,14 @@ export interface ListColumn {
 interface TableContext {
   template: string;
   selectable: boolean;
+  /** The number of columns, with the selection column when there is one. */
+  columns: number;
 }
 
-const Context = createContext<TableContext>({ template: "1fr", selectable: false });
+const Context = createContext<TableContext>({ template: "1fr", selectable: false, columns: 1 });
+
+/** True inside a ListGroup, whose own rowgroup holds the rows. */
+const GroupContext = createContext(false);
 
 export interface ListTableSelection {
   /** How many of the rows are chosen, and how many there are. */
@@ -86,7 +91,7 @@ export function ListTable({
   const template = (selectable ? ["16px", ...tracks] : tracks).join(" ");
   const state = selection ? selectionState(selection.chosen, selection.total) : null;
   return (
-    <Context.Provider value={{ template, selectable }}>
+    <Context.Provider value={{ template, selectable, columns: columns.length + (selectable ? 1 : 0) }}>
       <div role="table" aria-label={label} className={cn("list-table", className)} data-density={density} data-selectable={selectable || undefined}>
         <div role="row" className="list-table__head" style={{ gridTemplateColumns: template }}>
           {selection && state ? (
@@ -137,10 +142,11 @@ function HeadCell({ column, sort, onSort }: { column: ListColumn; sort: SortStat
  * child row's `selected` prop and tells it where it sits in its run.
  */
 export function ListTableBody({ children, className }: { children: ReactNode; className?: string }) {
+  const grouped = useContext(GroupContext);
   const rows = Children.toArray(children).filter((child): child is ReactElement<ListTableRowProps> => isValidElement(child));
   const bands = bandPositions(rows.map((row) => Boolean(row.props.selected)));
   return (
-    <div role="rowgroup" className={cn("list-table__body", className)}>
+    <div role={grouped ? undefined : "rowgroup"} className={cn("list-table__body", className)}>
       {rows.map((row, index) => cloneElement(row, { band: bands[index] }))}
     </div>
   );
@@ -210,7 +216,8 @@ export function ListTableCell({
 /**
  * A collapsible group of rows with a status mark and a count, such as
  * "Here 2" or "To arrive 9". The heading is a button; the rows stay in the
- * page order when it is open.
+ * page order when it is open. The group is one rowgroup: the heading row and
+ * the rows below it. The heading cell spans every column.
  */
 export function ListGroup({
   mark,
@@ -225,10 +232,11 @@ export function ListGroup({
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
+  const { columns } = useContext(Context);
   return (
     <Collapsible defaultOpen={defaultOpen} className="list-group" role="rowgroup">
       <div role="row" className="list-group__head">
-        <div role="cell" className="list-group__cell">
+        <div role="cell" aria-colspan={columns} className="list-group__cell">
           <CollapsibleTrigger className="list-group__trigger">
             <Icon name="chevronDown" size={12} className="list-group__chevron" {...icon} />
             {mark ? <span className="list-group__mark" aria-hidden="true">{mark}</span> : null}
@@ -237,15 +245,17 @@ export function ListGroup({
           </CollapsibleTrigger>
         </div>
       </div>
-      <CollapsiblePanel className="list-group__panel">{children}</CollapsiblePanel>
+      <CollapsiblePanel className="list-group__panel">
+        <GroupContext.Provider value={true}>{children}</GroupContext.Provider>
+      </CollapsiblePanel>
     </Collapsible>
   );
 }
 
 /** Skeleton rows with the table's own columns, while a list loads. */
 export function ListTableLoading({ rows = 5, label = "Loading" }: { rows?: number; label?: string }) {
-  const { template, selectable } = useContext(Context);
-  const columns = template.split(" ").length - (selectable ? 1 : 0);
+  const { template, selectable, columns: all } = useContext(Context);
+  const columns = all - (selectable ? 1 : 0);
   return (
     <div className="list-table__body" role="status" aria-label={label} aria-busy="true">
       {Array.from({ length: rows }, (_, row) => (
@@ -275,15 +285,21 @@ export function ListTableEmpty({ title, text, action }: { title: string; text?: 
 
 /**
  * Lists inside a detail page load more on scroll. When the sentinel scrolls
- * into view, `onLoadMore` runs once. The button does the same for keyboard
- * and assistive technology users, and for browsers with no observer.
+ * into view, `onLoadMore` runs once for the rows now loaded. When `loaded`
+ * changes (rows were added) the observer starts again, so a sentinel that is
+ * still in view asks for the next page. A failed load does not ask again; the
+ * button does the same for keyboard and assistive technology users, and for
+ * browsers with no observer.
  */
 export function LoadMore({
+  loaded,
   onLoadMore,
   loading = false,
   done = false,
   label = "Show more",
 }: {
+  /** How many rows are loaded now. A change re-arms the scroll trigger. */
+  loaded: number;
   onLoadMore: () => void;
   loading?: boolean;
   done?: boolean;
@@ -292,19 +308,34 @@ export function LoadMore({
   const sentinel = useRef<HTMLDivElement>(null);
   const latest = useRef(onLoadMore);
   latest.current = onLoadMore;
+  const asked = useRef(false);
+  useEffect(() => {
+    asked.current = false;
+  }, [loaded]);
   useEffect(() => {
     const node = sentinel.current;
     if (!node || done || loading || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) latest.current();
+      if (asked.current || !entries.some((entry) => entry.isIntersecting)) return;
+      asked.current = true;
+      latest.current();
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [done, loading]);
+  }, [done, loading, loaded]);
   if (done) return null;
   return (
     <div ref={sentinel} className="list-table__more">
-      <button type="button" className="list-table__more-button" disabled={loading} aria-busy={loading || undefined} onClick={onLoadMore}>
+      <button
+        type="button"
+        className="list-table__more-button"
+        disabled={loading}
+        aria-busy={loading || undefined}
+        onClick={() => {
+          asked.current = true;
+          onLoadMore();
+        }}
+      >
         {loading ? "Loading…" : label}
       </button>
     </div>
@@ -314,35 +345,60 @@ export function LoadMore({
 /**
  * The floating bar over a selection: "2 selected", the bulk actions, and a
  * button that clears the selection. A live region announces the count as it
- * changes. Escape in the bar clears the selection.
+ * changes. The bar is a labelled group in the normal Tab order. Escape in the
+ * bar clears the selection. When the bar closes from inside (Clear, Escape, or
+ * a bulk action that clears the selection), focus moves to the header checkbox
+ * of the nearest table, so it does not fall to the page.
  */
+const BarContext = createContext<((run: () => void) => () => void) | null>(null);
+
 export function SelectionBar({ count, onClear, children }: { count: number; onClear: () => void; children?: ReactNode }) {
   const open = count > 0;
+  const bar = useRef<HTMLDivElement>(null);
+  const inside = (run: () => void) => () => {
+    const target = headerCheckbox(bar.current);
+    run();
+    requestAnimationFrame(() => {
+      if (target?.isConnected && !bar.current?.isConnected) target.focus();
+    });
+  };
   return (
     <>
       <p role="status" className="visually-hidden">
         {open ? selectedLabel(count) : ""}
       </p>
       {open ? (
-        <div
-          role="toolbar"
-          aria-label="Bulk actions"
-          className="selection-bar"
-          onKeyDown={(event: KeyboardEvent) => {
-            if (event.key === "Escape") onClear();
-          }}
-        >
-          <span className="selection-bar__count">{selectedLabel(count)}</span>
-          <span className="selection-bar__rule" aria-hidden="true" />
-          {children}
-          <span className="selection-bar__rule" aria-hidden="true" />
-          <button type="button" className="selection-bar__clear" aria-label="Clear selection" onClick={onClear}>
-            <Icon name="close" {...icon} />
-          </button>
-        </div>
+        <BarContext.Provider value={inside}>
+          <div
+            ref={bar}
+            role="group"
+            aria-label="Bulk actions"
+            className="selection-bar"
+            onKeyDown={(event: KeyboardEvent) => {
+              if (event.key === "Escape") inside(onClear)();
+            }}
+          >
+            <span className="selection-bar__count">{selectedLabel(count)}</span>
+            <span className="selection-bar__rule" aria-hidden="true" />
+            {children}
+            <span className="selection-bar__rule" aria-hidden="true" />
+            <button type="button" className="selection-bar__clear" aria-label="Clear selection" onClick={inside(onClear)}>
+              <Icon name="close" {...icon} />
+            </button>
+          </div>
+        </BarContext.Provider>
       ) : null}
     </>
   );
+}
+
+/** The header checkbox of the table that shares the bar's nearest container. */
+function headerCheckbox(bar: HTMLElement | null): HTMLElement | null {
+  for (let node = bar?.parentElement; node; node = node.parentElement) {
+    const found = node.querySelector<HTMLElement>('[role="table"] .list-table__head [role="checkbox"]');
+    if (found) return found;
+  }
+  return null;
 }
 
 /** A bulk action: an icon and a label. The tone colours the icon only. */
@@ -357,8 +413,9 @@ export function SelectionAction({
   onClick: () => void;
   children: ReactNode;
 }) {
+  const inside = useContext(BarContext);
   return (
-    <button type="button" className="selection-bar__action" data-tone={tone} onClick={onClick}>
+    <button type="button" className="selection-bar__action" data-tone={tone} onClick={inside ? inside(onClick) : onClick}>
       <Icon name={iconName} size={14} {...icon} />
       {children}
     </button>

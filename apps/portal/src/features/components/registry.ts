@@ -487,7 +487,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     ],
     props: [
       { name: "columns", type: "ListColumn[]", note: "id, label, width (a grid track), align, sortable, hideLabel." },
-      { name: "sort / onSort", type: "SortState", note: "Sortable headers are buttons. The header cell carries aria-sort." },
+      { name: "sort / onSort", type: "SortState", note: "Sortable headers are buttons. Only the sorted header cell carries aria-sort." },
       { name: "selection", type: "{ chosen, total, onToggleAll }", note: "Adds a checkbox column. The header box shows none, some (mixed), or all." },
       { name: "density", type: '"two-line" | "one-line"', default: '"two-line"', note: "56px or 44px rows." },
     ],
@@ -516,7 +516,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     summary: "Sort by with a direction button, one toggle, column chips, and Reset to default. Traps focus; Escape closes it.",
     source: ["components/parts/FilterBar.tsx", "components/ui/popover.tsx"],
     paper: { page: "Flowfokus Design — Members", board: "Members — few filters + Display open" },
-    examples: [{ file: "display-popover-basic", title: "Sort, toggle, columns and reset", note: "Reset is disabled while everything is at its default." }],
+    examples: [{ file: "display-popover-basic", title: "Sort, toggle, columns and reset", note: "Reset does nothing while everything is at its default." }],
   },
   {
     slug: "status-marks",
@@ -537,7 +537,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     slug: "credit-ring",
     name: "Credit ring",
     group: "Data",
-    summary: "The ring of a pass: 7 of 10 left. Amber at two or fewer left, grey when none are left.",
+    summary: "The ring of a pass: 7 of 10 left. Amber at two or fewer left, and at none.",
     source: ["components/parts/marks.tsx", "lib/list-parts.ts"],
     paper: { page: "Flowfokus Design — Pass credits", board: "Pass credits — options" },
     examples: [{ file: "credit-ring-states", title: "Full, part used, low, and none" }],

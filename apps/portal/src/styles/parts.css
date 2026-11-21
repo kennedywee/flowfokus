@@ -630,11 +630,11 @@
   font-size: var(--text-xs);
   cursor: pointer;
 }
-.display-popover__reset:hover:not(:disabled) {
+.display-popover__reset:hover:not([aria-disabled="true"]) {
   background: var(--color-hover);
   color: var(--color-ink);
 }
-.display-popover__reset:disabled {
+.display-popover__reset[aria-disabled="true"] {
   color: var(--color-ink-4);
   cursor: default;
 }
@@ -815,10 +815,6 @@
 }
 .credit-ring[data-tone="low"] {
   --tone: var(--color-warning);
-}
-.credit-ring[data-tone="empty"] {
-  --tone: var(--color-ink-4);
-  color: var(--color-ink-3);
 }
 
 /* ---------- Spot stack, mix bar ---------- */
@@ -1289,6 +1285,11 @@
 }
 .composer__space {
   flex: 1 1 0;
+}
+.composer__error {
+  margin: 0;
+  color: var(--color-critical);
+  font-size: var(--text-xs);
 }
 .composer__submit {
   display: inline-flex;

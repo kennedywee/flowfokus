@@ -16,9 +16,9 @@ export function nextSort(current: SortState | null, column: string): SortState {
   return { column, direction: "asc" };
 }
 
-/** The `aria-sort` value of a column header. */
-export function ariaSort(current: SortState | null, column: string): "ascending" | "descending" | "none" {
-  if (current?.column !== column) return "none";
+/** The `aria-sort` value of a column header. Only the sorted column has one. */
+export function ariaSort(current: SortState | null, column: string): "ascending" | "descending" | undefined {
+  if (current?.column !== column) return undefined;
   return current.direction === "asc" ? "ascending" : "descending";
 }
 
@@ -125,11 +125,10 @@ export function filterFeed<T extends { kind: "event" | "comment" }>(items: reado
   return items.filter((item) => (filter === "comments" ? item.kind === "comment" : item.kind === "event"));
 }
 
-/** A pass's credit ring: amber at two or fewer left, grey when none are left. */
-export type CreditTone = "ok" | "low" | "empty";
+/** A pass's credit ring: amber at two or fewer left, and at none. */
+export type CreditTone = "ok" | "low";
 
 export function creditTone(left: number): CreditTone {
-  if (left <= 0) return "empty";
   return left <= 2 ? "low" : "ok";
 }
 

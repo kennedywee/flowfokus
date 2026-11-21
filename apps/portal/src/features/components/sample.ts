@@ -3,6 +3,7 @@
  * leave this folder: a screen shows only what Rails returns.
  */
 import type { DotTone } from "@/components/parts/marks";
+import type { SortState } from "@/lib/list-parts";
 
 export interface SampleMember {
   id: string;
@@ -12,19 +13,30 @@ export interface SampleMember {
   plan: string;
   renews: { label: string; left: number; tone: "good" | "warning" | "critical" };
   since: string;
+  /** Sorts "since": year and month as one number, such as 202501. */
+  sinceKey: number;
   spent: string;
   due?: string;
   tags?: { label: string; tone: DotTone }[];
 }
 
 export const SAMPLE_MEMBERS: readonly SampleMember[] = [
-  { id: "m1", name: "Ahmad Faiz", initials: "AF", code: "M-0402", plan: "Monthly unlimited", renews: { label: "Renews in 12d", left: 0.4, tone: "good" }, since: "Jan 2025", spent: "RM 2,640" },
-  { id: "m2", name: "Daniel Wong", initials: "DW", code: "M-0047", plan: "Monthly unlimited", renews: { label: "Ends in 2d · Not renewing", left: 0.08, tone: "warning" }, since: "Aug 2022", spent: "RM 8,800" },
-  { id: "m3", name: "Farah Aziz", initials: "FA", code: "M-0421", plan: "Monthly unlimited", renews: { label: "Renews in 30d", left: 1, tone: "good" }, since: "Feb 2025", spent: "RM 1,980", tags: [{ label: "Corporate · Acme", tone: "violet" }] },
-  { id: "m4", name: "Hafiz Rahman", initials: "HR", code: "M-0388", plan: "Monthly unlimited", renews: { label: "Renews in 27d", left: 0.9, tone: "good" }, since: "Nov 2024", spent: "RM 1,800", due: "RM 100.00", tags: [{ label: "Student rate", tone: "warning" }] },
-  { id: "m5", name: "Jason Teo", initials: "JT", code: "M-0198", plan: "10-class pass", renews: { label: "7 of 10 left", left: 0.7, tone: "good" }, since: "May 2023", spent: "RM 3,150" },
-  { id: "m6", name: "Kumar Raj", initials: "KR", code: "M-0219", plan: "Monthly unlimited", renews: { label: "Renews in 4d", left: 0.14, tone: "good" }, since: "Jun 2023", spent: "RM 6,420", tags: [{ label: "PT client", tone: "good" }] },
+  { id: "m1", name: "Ahmad Faiz", initials: "AF", code: "M-0402", plan: "Monthly unlimited", renews: { label: "Renews in 12d", left: 0.4, tone: "good" }, since: "Jan 2025", sinceKey: 202501, spent: "RM 2,640" },
+  { id: "m2", name: "Daniel Wong", initials: "DW", code: "M-0047", plan: "Monthly unlimited", renews: { label: "Ends in 2d · Not renewing", left: 0.08, tone: "warning" }, since: "Aug 2022", sinceKey: 202208, spent: "RM 8,800" },
+  { id: "m3", name: "Farah Aziz", initials: "FA", code: "M-0421", plan: "Monthly unlimited", renews: { label: "Renews in 30d", left: 1, tone: "good" }, since: "Feb 2025", sinceKey: 202502, spent: "RM 1,980", tags: [{ label: "Corporate · Acme", tone: "violet" }] },
+  { id: "m4", name: "Hafiz Rahman", initials: "HR", code: "M-0388", plan: "Monthly unlimited", renews: { label: "Renews in 27d", left: 0.9, tone: "good" }, since: "Nov 2024", sinceKey: 202411, spent: "RM 1,800", due: "RM 100.00", tags: [{ label: "Student rate", tone: "warning" }] },
+  { id: "m5", name: "Jason Teo", initials: "JT", code: "M-0198", plan: "10-class pass", renews: { label: "7 of 10 left", left: 0.7, tone: "good" }, since: "May 2023", sinceKey: 202305, spent: "RM 3,150" },
+  { id: "m6", name: "Kumar Raj", initials: "KR", code: "M-0219", plan: "Monthly unlimited", renews: { label: "Renews in 4d", left: 0.14, tone: "good" }, since: "Jun 2023", sinceKey: 202306, spent: "RM 6,420", tags: [{ label: "PT client", tone: "good" }] },
 ];
+
+/** Sorts sample members by a column of MEMBER_COLUMNS. "Member since" sorts by its date key, not its text. */
+export function sortMembers(members: readonly SampleMember[], sort: SortState | null): SampleMember[] {
+  const list = [...members];
+  if (sort?.column === "name") list.sort((a, b) => a.name.localeCompare(b.name));
+  if (sort?.column === "spent") list.sort((a, b) => Number(a.spent.replace(/\D/g, "")) - Number(b.spent.replace(/\D/g, "")));
+  if (sort?.column === "since") list.sort((a, b) => a.sinceKey - b.sinceKey);
+  return sort?.direction === "desc" ? list.reverse() : list;
+}
 
 export const MEMBER_COLUMNS = [
   { id: "name", label: "Member", sortable: true },

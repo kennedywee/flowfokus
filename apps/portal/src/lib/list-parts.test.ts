@@ -35,8 +35,8 @@ describe("sort state", () => {
   test("aria-sort names only the sorted column", () => {
     const sort = { column: "name", direction: "desc" } as const;
     expect(ariaSort(sort, "name")).toBe("descending");
-    expect(ariaSort(sort, "spent")).toBe("none");
-    expect(ariaSort(null, "name")).toBe("none");
+    expect(ariaSort(sort, "spent")).toBeUndefined();
+    expect(ariaSort(null, "name")).toBeUndefined();
     expect(ariaSort({ column: "name", direction: "asc" }, "name")).toBe("ascending");
   });
 });
@@ -169,7 +169,7 @@ describe("marks", () => {
     expect(creditTone(3)).toBe("ok");
     expect(creditTone(2)).toBe("low");
     expect(creditTone(1)).toBe("low");
-    expect(creditTone(0)).toBe("empty");
+    expect(creditTone(0)).toBe("low");
   });
 
   test("a pie slice ends where Paper's does", () => {

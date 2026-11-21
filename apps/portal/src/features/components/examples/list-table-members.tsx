@@ -3,21 +3,29 @@ import { ListPager } from "@/components/ListPager";
 import { CellStack, ListTable, ListTableBody, ListTableCell, ListTableRow } from "@/components/parts/ListTable";
 import { TagChip, Tile, TimeMark } from "@/components/parts/marks";
 import { nextSort, type SortState } from "@/lib/list-parts";
-import { rangeLabel } from "@/lib/paging";
-import { MEMBER_COLUMNS, SAMPLE_MEMBERS } from "../sample";
+import { pageRange, rangeLabel } from "@/lib/paging";
+import { MEMBER_COLUMNS, SAMPLE_MEMBERS, sortMembers } from "../sample";
+
+/** A small page, so the sample data has more than one. */
+const PAGE = 4;
 
 export default function Example() {
   const [sort, setSort] = useState<SortState | null>({ column: "name", direction: "asc" });
-  const rows = useMemo(() => {
-    const sorted = [...SAMPLE_MEMBERS];
-    if (sort?.column === "name") sorted.sort((a, b) => a.name.localeCompare(b.name));
-    if (sort?.column === "spent") sorted.sort((a, b) => Number(a.spent.replace(/\D/g, "")) - Number(b.spent.replace(/\D/g, "")));
-    if (sort?.column === "since") sorted.sort((a, b) => a.since.localeCompare(b.since));
-    return sort?.direction === "desc" ? sorted.reverse() : sorted;
-  }, [sort]);
+  const [page, setPage] = useState(1);
+  const sorted = useMemo(() => sortMembers(SAMPLE_MEMBERS, sort), [sort]);
+  const { from, to, pages } = pageRange(page, PAGE, sorted.length);
+  const rows = sorted.slice(from - 1, to);
   return (
     <div className="gallery-fill">
-      <ListTable label="Members (sample data)" columns={MEMBER_COLUMNS} sort={sort} onSort={(next) => setSort(nextSort(sort, next.column))}>
+      <ListTable
+        label="Members (sample data)"
+        columns={MEMBER_COLUMNS}
+        sort={sort}
+        onSort={(next) => {
+          setSort(nextSort(sort, next.column));
+          setPage(1);
+        }}
+      >
         <ListTableBody>
           {rows.map((member) => (
             <ListTableRow key={member.id}>
@@ -52,7 +60,7 @@ export default function Example() {
           ))}
         </ListTableBody>
       </ListTable>
-      <ListPager label="Members pages" range={rangeLabel(1, 50, 186, "members")} page={1} pages={4} onPage={() => {}} />
+      <ListPager label="Members pages" range={rangeLabel(page, PAGE, sorted.length, "members")} page={page} pages={pages} onPage={setPage} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { earlierLabel, filterFeed, splitEvents, type ActivityFilter } from "@/lib/list-parts";
@@ -114,7 +114,10 @@ export function Subject({ children }: { children: ReactNode }) {
 
 /**
  * The comment box: a 32px avatar and a bordered box with a text area and a
- * Comment button. ⌘↵ submits. The caller owns saving; a failed save keeps the text.
+ * Comment button. ⌘↵ submits. The caller owns saving. While a save is pending
+ * the button is off and a second submit does nothing, but the text area stays
+ * open for typing. A save that works clears the text it saved (text typed
+ * since stays). A save that fails keeps the text and shows an error.
  */
 export function CommentComposer({
   initials,
@@ -126,13 +129,28 @@ export function CommentComposer({
   pending?: boolean;
 }) {
   const id = useId();
+  const errorId = useId();
   const [text, setText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const busy = useRef(false);
+  const busyNow = pending || saving;
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
     const value = text.trim();
-    if (!value || pending) return;
-    await onSubmit(value);
-    setText("");
+    if (!value || pending || busy.current) return;
+    busy.current = true;
+    setSaving(true);
+    setFailed(false);
+    try {
+      await onSubmit(value);
+      setText((current) => (current.trim() === value ? "" : current));
+    } catch {
+      setFailed(true);
+    } finally {
+      busy.current = false;
+      setSaving(false);
+    }
   };
   return (
     <form className="composer" onSubmit={submit}>
@@ -149,14 +167,30 @@ export function CommentComposer({
           rows={1}
           placeholder="Leave a comment…"
           value={text}
-          onChange={(event) => setText(event.target.value)}
+          aria-describedby={failed ? errorId : undefined}
+          aria-invalid={failed || undefined}
+          onChange={(event) => {
+            setText(event.target.value);
+            setFailed(false);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) void submit();
           }}
         />
         <div className="composer__foot">
+          {failed ? (
+            <p id={errorId} role="alert" className="composer__error">
+              The comment was not saved. Try again.
+            </p>
+          ) : null}
           <span className="composer__space" />
-          <button type="submit" className="composer__submit" disabled={!text.trim() || pending} aria-keyshortcuts="Meta+Enter Control+Enter">
+          <button
+            type="submit"
+            className="composer__submit"
+            disabled={!text.trim() || busyNow}
+            aria-busy={busyNow || undefined}
+            aria-keyshortcuts="Meta+Enter Control+Enter"
+          >
             Comment
             <kbd className="composer__hint" aria-hidden="true">
               ⌘↵

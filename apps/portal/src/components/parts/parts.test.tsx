@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ListTable, ListTableBody, ListTableCell, ListTableRow, SelectionBar, ListTableEmpty } from "./ListTable";
+import { ListGroup, ListTable, ListTableBody, ListTableCell, ListTableRow, SelectionBar, ListTableEmpty } from "./ListTable";
 import { FilterBarChip, type FilterField } from "./FilterBar";
 import { CreditRing, SpotRow } from "./marks";
 import { RecordBackdrop } from "./Backdrop";
@@ -39,15 +39,15 @@ describe("ListTable", () => {
     expect(html).toContain('role="columnheader"');
   });
 
-  test("a sortable header is a button, and its cell has aria-sort", () => {
+  test("a sortable header is a button, and only the sorted header has aria-sort", () => {
     const sorted = table([false], { column: "name", direction: "desc" });
     expect(sorted).toContain('aria-sort="descending"');
     expect(sorted).toMatch(/<button[^>]*class="list-table__sort"/);
-    expect(table([false])).toContain('aria-sort="none"');
+    expect(table([false])).not.toContain("aria-sort");
   });
 
   test("the spent column is not sortable, so it has no button and no aria-sort", () => {
-    const html = table([false]);
+    const html = table([false], { column: "name", direction: "asc" });
     expect(html.match(/aria-sort/g)).toHaveLength(1);
   });
 
@@ -64,6 +64,26 @@ describe("ListTable", () => {
     expect([...html.matchAll(/data-band="(\w+)"/g)].map((match) => match[1])).toEqual(["first", "middle", "last", "alone"]);
   });
 
+  test("a group is one rowgroup, and its heading cell spans every column", () => {
+    const html = renderToStaticMarkup(
+      <ListTable
+        label="Members"
+        columns={COLUMNS}
+        selection={{ chosen: 0, total: 1, onToggleAll: () => {} }}
+      >
+        <ListGroup label="Here" count={1}>
+          <ListTableBody>
+            <ListTableRow>
+              <ListTableCell>Row</ListTableCell>
+            </ListTableRow>
+          </ListTableBody>
+        </ListGroup>
+      </ListTable>,
+    );
+    expect(html.match(/role="rowgroup"/g)).toHaveLength(1);
+    expect(html).toContain('role="cell" aria-colspan="3"');
+  });
+
   test("the empty state is a status", () => {
     expect(renderToStaticMarkup(<ListTableEmpty title="No members yet" />)).toContain('role="status"');
   });
@@ -74,7 +94,8 @@ describe("SelectionBar", () => {
     expect(renderToStaticMarkup(<SelectionBar count={0} onClear={() => {}} />)).toContain('<p role="status" class="visually-hidden"></p>');
     const open = renderToStaticMarkup(<SelectionBar count={2} onClear={() => {}} />);
     expect(open).toContain('<p role="status" class="visually-hidden">2 selected</p>');
-    expect(open).toContain('role="toolbar"');
+    expect(open).toContain('role="group"');
+    expect(open).not.toContain('role="toolbar"');
     expect(open).toContain('aria-label="Clear selection"');
   });
 });

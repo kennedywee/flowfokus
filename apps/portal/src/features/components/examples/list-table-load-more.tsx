@@ -23,7 +23,7 @@ export default function Example() {
             </ListTableRow>
           ))}
         </ListTableBody>
-        <LoadMore done={count >= SAMPLE_BOOKINGS.length} onLoadMore={() => setCount((current) => Math.min(SAMPLE_BOOKINGS.length, current + 2))} />
+        <LoadMore loaded={count} done={count >= SAMPLE_BOOKINGS.length} onLoadMore={() => setCount((current) => Math.min(SAMPLE_BOOKINGS.length, current + 2))} />
       </ListTable>
     </div>
   );
