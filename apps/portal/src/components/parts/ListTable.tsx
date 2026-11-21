@@ -123,7 +123,7 @@ function HeadCell({ column, sort, onSort }: { column: ListColumn; sort: SortStat
       className="list-table__heading"
       data-align={column.align}
       data-sorted={sort?.column === column.id || undefined}
-      aria-sort={sortable ? ariaSort(sort, column.id) : undefined}
+      aria-sort={ariaSort(sort, column.id)}
     >
       {sortable ? (
         <button type="button" className="list-table__sort" onClick={() => onSort(nextSort(sort, column.id))}>
@@ -308,16 +308,37 @@ export function LoadMore({
   const sentinel = useRef<HTMLDivElement>(null);
   const latest = useRef(onLoadMore);
   latest.current = onLoadMore;
+  // `asked`: the scroll trigger already asked for this page. `pending`: a
+  // request is out, from the trigger or the button, so neither asks again.
   const asked = useRef(false);
+  const pending = useRef(false);
+  const wasLoading = useRef(loading);
+  // The table to focus when the button, holding focus, goes away at the end.
+  const focusTable = useRef<HTMLElement | null>(null);
   useEffect(() => {
     asked.current = false;
+    pending.current = false;
   }, [loaded]);
+  useEffect(() => {
+    // A request that ends without new rows (it failed) frees the button again.
+    if (wasLoading.current && !loading) pending.current = false;
+    wasLoading.current = loading;
+  }, [loading]);
+  useEffect(() => {
+    if (!done || !focusTable.current) return;
+    const table = focusTable.current;
+    focusTable.current = null;
+    if (document.activeElement && document.activeElement !== document.body) return;
+    if (!table.hasAttribute("tabindex")) table.setAttribute("tabindex", "-1");
+    table.focus();
+  }, [done]);
   useEffect(() => {
     const node = sentinel.current;
     if (!node || done || loading || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver((entries) => {
-      if (asked.current || !entries.some((entry) => entry.isIntersecting)) return;
+      if (asked.current || pending.current || !entries.some((entry) => entry.isIntersecting)) return;
       asked.current = true;
+      pending.current = true;
       latest.current();
     });
     observer.observe(node);
@@ -331,8 +352,16 @@ export function LoadMore({
         className="list-table__more-button"
         disabled={loading}
         aria-busy={loading || undefined}
+        onFocus={(event) => {
+          focusTable.current = event.currentTarget.closest<HTMLElement>('[role="table"]');
+        }}
+        onBlur={(event) => {
+          if (event.relatedTarget) focusTable.current = null;
+        }}
         onClick={() => {
+          if (pending.current) return;
           asked.current = true;
+          pending.current = true;
           onLoadMore();
         }}
       >
@@ -355,13 +384,17 @@ const BarContext = createContext<((run: () => void) => () => void) | null>(null)
 export function SelectionBar({ count, onClear, children }: { count: number; onClear: () => void; children?: ReactNode }) {
   const open = count > 0;
   const bar = useRef<HTMLDivElement>(null);
-  const inside = (run: () => void) => () => {
-    const target = headerCheckbox(bar.current);
-    run();
-    requestAnimationFrame(() => {
-      if (target?.isConnected && !bar.current?.isConnected) target.focus();
-    });
-  };
+  // Set while focus is in the bar. When the bar closes, now or after an async
+  // bulk action, and focus fell to the page, it goes to this checkbox.
+  const restore = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (open || !restore.current) return;
+    const target = restore.current;
+    restore.current = null;
+    const active = document.activeElement;
+    if (target.isConnected && (!active || active === document.body)) target.focus();
+  }, [open]);
+  const inside = (run: () => void) => () => run();
   return (
     <>
       <p role="status" className="visually-hidden">
@@ -374,6 +407,12 @@ export function SelectionBar({ count, onClear, children }: { count: number; onCl
             role="group"
             aria-label="Bulk actions"
             className="selection-bar"
+            onFocus={() => {
+              restore.current = headerCheckbox(bar.current);
+            }}
+            onBlur={(event) => {
+              if (event.relatedTarget && !bar.current?.contains(event.relatedTarget as Node)) restore.current = null;
+            }}
             onKeyDown={(event: KeyboardEvent) => {
               if (event.key === "Escape") inside(onClear)();
             }}
