@@ -49,14 +49,16 @@ function uiSdkEntries(): string[] {
     .map((path) => `@ui-sdk/react/${path.slice(2)}`);
 }
 
+const UI_SDK_ENTRIES = uiSdkEntries();
+
 export default defineConfig(({ command }) => ({
   // `.on.boat.dev`: Boat links (scripts/links). Vite refuses a host name it was not told about.
   server: { port: 4001, strictPort: true, allowedHosts: [".on.boat.dev"] },
   preview: { port: 4001, strictPort: true },
   // `@/` is the portal `src` folder, as shadcn components expect.
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
-  optimizeDeps: { include: uiSdkEntries() },
-  environments: { ssr: { optimizeDeps: { include: uiSdkEntries() } } },
+  optimizeDeps: { include: UI_SDK_ENTRIES },
+  environments: { ssr: { optimizeDeps: { include: UI_SDK_ENTRIES } } },
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
