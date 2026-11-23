@@ -223,7 +223,6 @@ function Shell({
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      {/* The rounded window on the tinted frame. Phones drop the frame (styles/shell.css). */}
       <div className="window">
         <AppSidebar data={data} canSignOut={canSignOut} activeTo={owner?.to} onShortcuts={() => setShortcuts(true)} />
         {/* The main column scrolls inside the window, so the router restores its scroll. */}

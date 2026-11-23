@@ -26,7 +26,6 @@ same file, such as "Member details — Priya Nair · Light".
 | Raised section, card | `--color-surface` | `--surface` | #FFFFFF | #18181B |
 | Menu, dialog, popover | `--color-overlay` (= `--color-raised`) | `--raised` | #FFFFFF | #1F1F23 |
 | Sidebar | `--color-sidebar` | window frame | #FAFAFA | #0C0C0E |
-| Tinted frame around the window | `--color-frame` | artboard behind "Window" | #F4F4F5 | #050506 |
 | Band, recessed group, key hint | `--color-well` | `--sunken` | black 4% | white 4% |
 | Hover | `--color-hover` | `--hover` | black 3% | white 6% |
 | Selected nav item | `--color-selected` | `--selected` | black 5% | white 10% |
@@ -337,12 +336,11 @@ Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
 only where the shortcut works (`lib/shortcuts.ts`).
 
 Shell (`routes/$org/route.tsx`, styles in `styles/shell.css`, pages in
-`lib/pages.ts`). From 768px the app is a rounded window panel (`--radius-window`,
-14px, `--shadow-window`) on a tinted frame (`--color-frame`, 24px of it from
-1181px and 12px on a tablet), as in Paper "Window". The main column scrolls
-inside the window; the router restores its scroll (`data-scroll-restoration-id`).
-Phones drop the frame and scroll the page. Paper's decorative glow and glyph
-field behind the window are not built.
+`lib/pages.ts`). From 768px the app is a window that fills the viewport, edge to
+edge, with no frame, corner radius, or shadow. Paper "Window" draws it inset on a
+tinted artboard; the built app does not. The main column scrolls inside the
+window; the router restores its scroll (`data-scroll-restoration-id`). Phones
+scroll the page.
 
 - Sidebar: 232px, `--color-sidebar` (a slightly darker tone than the window),
   with a hairline on its right edge. It holds the logo and the collapse button,

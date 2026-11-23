@@ -1,8 +1,8 @@
 /*
  * App shell: window, sidebar, top bar, account menu, page header, page grids,
  * and the standalone entry layout (organization chooser, blocked states, 404).
- * From 768px the app is a rounded window panel on a tinted frame, as in Paper.
- * The sidebar is a slightly darker tone inside it, and the main column scrolls.
+ * From 768px the app is a window that fills the viewport: the sidebar in a
+ * slightly darker tone beside the main column, which scrolls.
  * Wide: full sidebar (above 1180px), or the icon rail when staff collapse it.
  * Tablet: icon rail (768px to 1180px). The rail rules are written once and used
  * for both: see the rail section below.
@@ -14,8 +14,6 @@
   /* Desktop collapse and expand. Closing is quicker, like a drawer snapping shut. */
   --rail-open: 180ms;
   --rail-close: 120ms;
-  /* The tinted frame around the window. */
-  --frame-gap: var(--space-3);
   min-height: 100dvh;
 }
 
@@ -27,8 +25,6 @@
 @media (min-width: 768px) {
   .shell {
     height: 100dvh;
-    padding: var(--frame-gap);
-    background: var(--color-frame);
   }
   /* The window: sidebar beside the main column. The main column scrolls inside it. */
   .window {
@@ -37,9 +33,7 @@
     grid-template-rows: minmax(0, 1fr);
     height: 100%;
     min-height: 0;
-    border-radius: var(--radius-window);
     background: var(--color-page);
-    box-shadow: var(--shadow-window);
     overflow: clip;
   }
   .shell__main {
@@ -51,12 +45,6 @@
     scroll-padding-top: var(--topbar-height);
   }
 }
-@media (min-width: 1181px) {
-  .shell {
-    --frame-gap: var(--space-6);
-  }
-}
-
 .shell__main {
   min-width: 0;
   display: flex;
