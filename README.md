@@ -9,9 +9,8 @@ The agreed design is in [docs](docs/README.md). Work to do and open decisions ar
 Flowfokus runs locally as a tested deployment candidate. It is not deployed.
 
 - **Built and backed by Rails:** members, membership products and prices, sales, manual payments, fulfillment, renewal, refunds, programs, sessions, bookings, passes, tickets, locations, settings, feature flags, and the staff team. Members can sign in on the gym site, buy online through a local test payment provider, and book sessions.
-- **Staff portal:** the sidebar has five pages: Calendar, Members, Sales, Programs, and Products. Calendar shows sessions in Day and Week grids. Settings opens as a dialog over the current page. See [Frontend preview](docs/frontend-preview.md).
-- **Feature flags:** each organization has each feature Off, Labs, or On. The gym site is the first flag, `gym_site`. The Developer role sets the states. See [Feature flags](docs/feature-flags.md).
-- **Staff portal redesign:** the portal follows the Paper file "Flowfokus Redesign" and is moving to "Flowfokus Design". Home, Inbox, Agents, Check-ins, and Reports left the scope on 21 November 2026, and so did walk-in gym check-in. The [Paper redesign](docs/paper-redesign/README.md) notes record what is settled. The [Rails gaps](docs/paper-redesign/rails-gaps.md) list what the new screens show that Rails cannot supply yet.
+- **Staff portal:** Calendar replaced Schedule, and Settings opens as a dialog over the current page. The portal follows the Paper file "Flowfokus Design". Home, Inbox, Agents, Check-ins, and Reports left the scope on 21 November 2026, and so did walk-in gym check-in. See [Frontend preview](docs/frontend-preview.md) for the pages and the design reference. The [Rails gaps](docs/paper-redesign/rails-gaps.md) list what the new screens show that Rails cannot supply yet.
+- **Feature flags:** the gym site is the first flag, `gym_site`. See [Feature flags](docs/feature-flags.md).
 - **Sample data only:** the component gallery at `/components`, in local development. No portal screen uses sample data.
 - **Next:** the Rails work for the redesigned screens, the open `decision` issues, live WorkOS verification, and the first deployment.
 
@@ -19,7 +18,7 @@ Flowfokus runs locally as a tested deployment candidate. It is not deployed.
 
 - `apps/server`: Rails 8 API and OpenAPI contract.
 - `apps/portal`: staff portal.
-- `apps/site`: public gym site and future signed-in member area.
+- `apps/site`: public gym site and signed-in member area.
 - `packages/api`: generated API types and shared client.
 - `scripts`: local setup and checks.
 - `compose.yaml`: local services.
@@ -32,11 +31,11 @@ docker compose run --rm server bin/rails db:prepare
 docker compose up
 ```
 
-Open the staff portal at `http://localhost:4001` and the gym site at `http://chainsaw.localhost:4002`. The API uses `http://127.0.0.1:4000`. Local staff sign-in uses WorkOS Emulate in Docker and needs no external credentials. Sign in as `kennedy@flowfokus.com` with password `123123qwe`. To set feature flags, sign in as `dana@flowfokus.com`, the Developer. Run `docker compose run --rm server bin/rails db:seed` once when updating an existing database. See [Local staff authentication](docs/local-auth.md) for other fake users and roles. Manual payment records do not collect money.
+Open the staff portal at `http://localhost:4001` and the gym site at `http://chainsaw.localhost:4002`. The seed turns on `gym_site` for Chainsaw. The API uses `http://127.0.0.1:4000`. Local staff sign-in uses WorkOS Emulate in Docker and needs no external credentials. Sign in as `kennedy@flowfokus.com` with password `123123qwe`. To set feature flags, sign in as `dana@flowfokus.com`, the Developer. Run `docker compose run --rm server bin/rails db:seed` once when updating an existing database. See [Local staff authentication](docs/local-auth.md) for other fake users and roles. Manual payment records do not collect money.
 
 Online checkout on the gym site needs the local test payment provider. Start Rails with `FLOWFOKUS_TEST_PAYMENTS=true docker compose up -d server jobs`. Production refuses this setting.
 
-Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator port 4100 defaults to loopback. To sign in from another device, configure the allowed development hosts and emulator binding in [Local staff authentication](docs/local-auth.md#access-from-another-device). On a Boat machine, run `scripts/links` once the stack is up instead. It prints HTTPS links for the portal and the sign-in emulator that open on any device. See [Access through a Boat link](docs/local-auth.md#access-through-a-boat-link). The optional fixed demo actor remains opt-in. Production refuses demo access. The gym site still selects the organization from its hostname. It serves an organization only when `gym_site` is in effect. The seed turns it on for Chainsaw.
+Docker publishes ports 4000–4002 on all IPv4 interfaces, including LAN and Tailscale. Emulator port 4100 defaults to loopback. To sign in from another device, configure the allowed development hosts and emulator binding in [Local staff authentication](docs/local-auth.md#access-from-another-device). On a Boat machine, run `scripts/links` once the stack is up instead. It prints HTTPS links for the portal and the sign-in emulator that open on any device. See [Access through a Boat link](docs/local-auth.md#access-through-a-boat-link). The optional fixed demo actor remains opt-in. Production refuses demo access. The gym site still selects the organization from its hostname.
 
 PostgreSQL, WorkOS Emulate, all three apps, and a jobs process run in containers. The jobs process (`flowfokus-jobs`) retries lost WorkOS events and reconciles gyms. Run `db:prepare` explicitly on first setup and after adding migrations. It loads demo data into a new database. To reload demo data later, run `docker compose run --rm server bin/rails db:seed`. Data stays in the Compose volume when the stack stops with `docker compose down`.
 
