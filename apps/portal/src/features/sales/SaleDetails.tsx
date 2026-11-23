@@ -162,8 +162,8 @@ function VoidNotice({ sale }: { sale: Schemas["Sale"] }) {
 
 const ITEM_COLUMNS: ListColumn[] = [
   { id: "item", label: "Item" },
-  { id: "price", label: "Price", width: "128px", align: "end" },
-  { id: "total", label: "Total", width: "112px", align: "end" },
+  { id: "price", label: "Price", width: "132px", align: "end" },
+  { id: "total", label: "Total", width: "110px", align: "end" },
 ];
 
 /** The group's mark: the fulfillment fact's ring, coloured by its state. */

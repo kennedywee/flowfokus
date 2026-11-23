@@ -595,7 +595,10 @@ member (#89) with the sale page's rows.
   with the icon tile, the name, the terms line (dates once fulfilled, then the
   price that was sold, unless the line already says it), the rights, the guests of
   a ticket (they wrap onto more lines), the unit price and quantity, and the line total, then
-  Total. "Fulfill items" (F) is in the section header while the sale can be
+  Total. The row keeps 9px free above and below its text, so a row with rights or
+  guests grows past 56px; the price columns are 132px and 110px with 12px between.
+  Total and Balance due are 44px with their hairline. These sizes, and the medium
+  weight of a payment amount, were read from the Paper frame (#130). "Fulfill items" (F) is in the section header while the sale can be
   fulfilled, "Fulfill early" when staff may fulfill it before payment
   (purchases:fulfill_unpaid). Notes under the row say when it was fulfilled early,
   why access ended, or that fulfillment waits for payment, with the link to the
