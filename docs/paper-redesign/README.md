@@ -100,7 +100,7 @@ use.
 | 4 | Card, e-wallet, and online payments | [#9](https://github.com/kennedywee/flowfokus/issues/9) |
 | 5 | Tickets that cover several sessions | [#10](https://github.com/kennedywee/flowfokus/issues/10) |
 | 6 | Check-in rules. Closed 23 Nov 2026: the Check-ins page left scope, and #81 deferred walk-ins. | [#11](https://github.com/kennedywee/flowfokus/issues/11) |
-| 7 | A reason for Cancel session, and "Also end access" on Refund | [#12](https://github.com/kennedywee/flowfokus/issues/12) |
+| 7 | "Also end access" on Refund. The Cancel session reason is settled: Rails stores it. | [#12](https://github.com/kennedywee/flowfokus/issues/12) |
 | 8 | Email required or optional on New member | [#13](https://github.com/kennedywee/flowfokus/issues/13) |
 | 9 | Status words for sales and access | [#14](https://github.com/kennedywee/flowfokus/issues/14) |
 | 10 | Slips in the original frames. Closed 23 Nov 2026: "Flowfokus Design" replaced those frames. | [#15](https://github.com/kennedywee/flowfokus/issues/15) |
