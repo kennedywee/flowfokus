@@ -19,20 +19,10 @@
 /* ---------- Products list ---------- */
 
 .products-list {
-  position: relative;
   max-width: 1280px;
   gap: var(--space-4);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
-}
-/* The pattern is decoration behind the page; the content paints over it. */
-.products-list > :not(.backdrop) {
-  position: relative;
-}
-.products-list > .backdrop {
-  width: 864px;
-  height: 220px;
-  mask-image: linear-gradient(var(--color-ink) 35%, transparent);
 }
 .products-head {
   display: flex;
