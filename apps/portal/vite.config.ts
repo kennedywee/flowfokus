@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
@@ -34,12 +35,30 @@ function localVars(): Record<string, string> {
   return vars;
 }
 
+/**
+ * Every `@ui-sdk/react` entry, read from the installed package.
+ * Vite pre-bundles a new entry when a file first imports it. In the SSR
+ * Worker, that mid-run pass leaves two copies of React, and pages fail with
+ * "Cannot read properties of null (reading 'useContext')". Bundling all
+ * entries at start means a new import never triggers that pass (issue #71).
+ */
+function uiSdkEntries(): string[] {
+  const { exports } = createRequire(import.meta.url)("@ui-sdk/react/package.json") as { exports: Record<string, unknown> };
+  return Object.keys(exports)
+    .filter((path) => path !== "./package.json")
+    .map((path) => `@ui-sdk/react/${path.slice(2)}`);
+}
+
+const UI_SDK_ENTRIES = uiSdkEntries();
+
 export default defineConfig(({ command }) => ({
   // `.on.boat.dev`: Boat links (scripts/links). Vite refuses a host name it was not told about.
   server: { port: 4001, strictPort: true, allowedHosts: [".on.boat.dev"] },
   preview: { port: 4001, strictPort: true },
   // `@/` is the portal `src` folder, as shadcn components expect.
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  optimizeDeps: { include: UI_SDK_ENTRIES },
+  environments: { ssr: { optimizeDeps: { include: UI_SDK_ENTRIES } } },
   plugins: [
     cloudflare({
       viteEnvironment: { name: "ssr" },
