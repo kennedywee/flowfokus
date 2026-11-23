@@ -611,7 +611,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "App shell",
     group: "Blocks",
     summary:
-      "From 768px the app is a rounded window on a tinted frame. The sidebar lists the pages the role can read; the top bar holds the breadcrumb, Search, and the page actions.",
+      "From 768px the app is a window that fills the screen. The sidebar lists the pages the role can read; the top bar holds the breadcrumb, Search, and the page actions.",
     source: ["routes/$org/route.tsx", "components/ui/sidebar.tsx", "lib/pages.ts", "styles/shell.css"],
     paper: { page: "Flowfokus Design — Member details", board: "Member details — Priya Nair · Dark" },
     examples: [{ file: "app-shell", title: "Window, sidebar and top bar", note: "Sample content. It shows from 768px; a phone gets the drawer and the tab bar." }],

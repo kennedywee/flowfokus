@@ -16,7 +16,7 @@ import { Kbd } from "@/components/ui";
 import { PAGES } from "../../../lib/pages";
 
 /*
- * The shell with sample content: a rounded window on a tinted frame, the
+ * The shell with sample content: a window that fills the screen, the
  * sidebar in a darker tone, and the top bar with the breadcrumb, Search, and a
  * page action. In the app, routes/$org/route.tsx fills these parts. It shows
  * from 768px; a phone gets the drawer instead.
