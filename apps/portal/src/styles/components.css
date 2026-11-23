@@ -281,7 +281,7 @@
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
-.button--compact:has(> svg:first-child) {
+.button--compact:not(.button--icon):has(> svg:first-child) {
   padding-left: 7px;
 }
 .button--compact:has(> .kbd:last-child) {
