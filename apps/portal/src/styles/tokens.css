@@ -31,7 +31,6 @@
   --color-page: light-dark(var(--swatch-ffffff), var(--swatch-09090b));
   --color-surface: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
   --color-sidebar: light-dark(var(--swatch-fafafa), var(--swatch-0c0c0e));
-  /* The tinted frame around the window panel (Paper: the artboard behind "Window"). */
   --color-raised: light-dark(var(--swatch-ffffff), var(--swatch-1f1f23));
   --color-overlay: var(--color-raised);
   --color-control: light-dark(var(--swatch-ffffff), var(--swatch-18181b));
