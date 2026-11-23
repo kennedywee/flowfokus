@@ -540,6 +540,14 @@
   overflow-wrap: anywhere;
   white-space: normal;
 }
+/* Paper: 9px stays free above and below the text, also when benefit lines make the row taller than 56px. */
+.sale-items .list-table__row {
+  padding-block: 9px;
+}
+/* Paper: 12px between the item, the unit price, and the total. */
+.sale-items {
+  --list-gap: 12px;
+}
 .sale-items__unit {
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
@@ -551,6 +559,7 @@
 }
 .sale-payments .list-table__cell.cell-figure {
   font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
 }
 .sale-payments__refund {
   color: var(--color-critical);
@@ -584,7 +593,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  min-height: 44px;
+  /* 44px with the hairline. */
+  min-height: 43px;
   font-size: var(--text-sm);
 }
 .sale-sum__row dt {
