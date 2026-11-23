@@ -41,6 +41,12 @@ describe("keyboard shortcuts sheet", () => {
     expect(keysOf(shortcutGroups("⌘", role("members:read")))).toBeUndefined();
   });
 
+  test("lists N on the programs list only for a role that can manage programs", () => {
+    const keysOf = (groups: ReturnType<typeof shortcutGroups>) => groups.find((group) => group.title === "Programs list")?.items.flatMap((item) => item.keys);
+    expect(keysOf(shortcutGroups("⌘", role("programs:read", "programs:manage")))).toEqual(["N"]);
+    expect(keysOf(shortcutGroups("⌘", role("programs:read")))).toBeUndefined();
+  });
+
   test("shows no list search without a list to read", () => {
     expect(keys(shortcutGroups("⌘", role()))).not.toContain("/");
   });

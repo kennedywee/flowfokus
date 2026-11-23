@@ -60,7 +60,8 @@
 .main {
   flex: 1;
   min-width: 0;
-  padding: var(--space-5) var(--space-7) 64px;
+  /* Paper: 36px at the sides, as the top bar's right edge and a detail page. */
+  padding: var(--space-5) 36px 64px;
 }
 
 /* ---------- Sidebar ---------- */

@@ -330,8 +330,12 @@ Numbers use its equal-width figures.
 
 Controls. `Button size="compact"` (and `"icon-compact"`) is the 28px redesign
 button with a 6px radius (`--control-height-compact`, `--radius-compact`). A
-compact secondary button has a hairline and a 1px drop (`--shadow-control`).
-Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button; put
+compact secondary button has a hairline and a soft drop (`--shadow-control`).
+Its text starts 10px from the edge. A leading icon is 14px, 8px from the edge
+and 6px from the text; on a secondary button it is `--color-ink-2`. A key hint
+sits 8px after the text and 6px from the edge.
+Coarse pointers grow it to 40px. `Kbd` shows a key hint inside a button: 11px
+text in a 16px tile with a 4px radius; put
 `aria-keyshortcuts` on the button. Touch screens hide the hints. Show a hint
 only where the shortcut works (`lib/shortcuts.ts`).
 
@@ -361,7 +365,8 @@ scroll the page.
   (`ContextSwitcher`); the location list ends with Manage locations. A detail
   route names its page with `staticData.crumb(loaderData)`.
 - Page actions show their letter on the button (`Kbd`, with `aria-keyshortcuts`):
-  Sell S (member page), New member N (members list), Record
+  Sell S (member page), New member N (members list), New sale N (sales list),
+  New program N (programs list), New product N (products list), Record
   payment P and Fulfill F (sale page), Add sessions T, Sell ticket S, and Book
   member B (program page), Book member B (session page), Sell S and Edit E
   (product page). A letter works only where its hint shows
@@ -414,19 +419,19 @@ and `lib/paging.ts`, styles in `styles/parts.css`.
 | --- | --- |
 | List table (`ListTable`, `ListTableBody`, `ListTableRow`, `ListTableCell`) | Table roles on a grid. Column labels are 12px muted text on a 30px header with one hairline. Rows sit flush with the content edge: no grey band, no row dividers, no inset. Two-line rows are 56px (a list page); one-line rows are 44px (a detail page). A sortable header is a button; its `columnheader` has `aria-sort`, and only the sorted column has one. The count and pager under a list page are the existing `ListPager`. A list inside a detail page loads more on scroll (`LoadMore`, with a button for keyboard users; `loaded` re-arms the trigger after each append, and Show more is free again when the promise `onLoadMore` returns settles, also on failure). Loading is skeleton rows in the same columns (`ListTableLoading`); empty is `ListTableEmpty` under the labels. A row that no bulk action covers is `unselectable`: it keeps the checkbox column and shows no box, so the columns line up (Session details uses it for members already checked in). A row takes `onKeyDown` and `onContextMenu` for a row shortcut and a row menu. |
 | Row selection | `ListTable selection` adds a checkbox column and a header box (none, mixed, all). Chosen rows get `--color-selected`. Adjacent chosen rows merge into one band: `bandPositions` gives each row first, middle, last, or alone, so only the outer corners round (8px). Shift-click chooses a range. `SelectionBar` floats at the bottom with "2 selected" and the bulk actions; a live region announces the count, and Escape in the bar clears it. |
-| Collapsible groups (`ListGroup`) | A 36px heading button with a chevron, a mark, a label, and a count: "Here 2", "To arrive 9", "Fulfilled 1". The group is a ui-sdk Collapsible, so the button has `aria-expanded`. |
+| Collapsible groups (`ListGroup`) | A 36px heading button with a chevron, a mark, a label, and a count: "Here 2", "To arrive 9", "Fulfilled 1". It has no side padding, so the label starts 44px in, in line with the row titles. The group is a ui-sdk Collapsible, so the button has `aria-expanded`. |
 | Filter bar (`FilterBar`) | A Filter button, then a chip per filter, then search (`SearchField`, with its "/" hint) and Display on the right. A chip reads field, operator, value, remove. A click on the operator flips "is" and "is not", or "is any of" and "is none of" (`filterOperator`, `toggleOperator`); there is no operator menu. The value opens the same checkbox list as the Filter menu. The filter state is `ActiveFilter[]` ({ field, values, negated }). With no `fields`, the Filter button is left out and search and Display remain (the Members list, until Rails has member filters). |
 | Display popover (`DisplayPopover`) | Sort by with a direction button, one toggle, column chips (`aria-pressed`), and "Reset to default" (dimmed and inert at the default, but still focusable). A ui-sdk Popover with `modal="trap-focus"`: focus moves in, Escape closes, and focus returns to the Display button. |
 | Segmented control (`ui/segmented-control`) | Two to four views where one is chosen: All, Comments, Activity. One tab stop, arrow keys between items. |
 | Detail layout (`DetailLayout`) | A main column (28px top, 36px sides, 40px between sections) and a 296px right panel. Below 1100px the panel sits under the main column. The panel holds `PanelGroup` (a grey 12px title) with `PanelRow` label and value rows (96px label), and `PanelAddGroup` for Tags and Notes with a "+" button. Leave the button out when the person cannot add. |
-| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. A stat with `above` puts its label over the figure ("Starts in" over "20 min"); with a display title, a lone stat is 28px. `HeroStats` is the stats alone: the Members list shows its count with it. |
+| Hero (`DetailHero`) | A 44px tile (`HeroTile`: initials or an icon), the title (24px, or `size="display"` for a program or session at 36px), one muted line, and up to two stats on the right. Pills sit 6px under the title. A figure is 18px on a 24px line. A stat with `above` puts its label over the figure ("Starts in" over "20 min"); with a display title, a lone stat is 28px on 32px, 4px from its label. A display hero has 12px more above it, so the title sits 40px under the top bar, and its stat sits on the title's last line. `HeroStats` is the stats alone: the Members list shows its count with it. |
 | Activity (`ActivityFeed`) | A comment box (`CommentComposer`, ⌘↵), the All, Comments, Activity control, event rows with a coloured dot, comment rows with a 24px avatar, and "Show N earlier events". Rails has no comments yet, so a screen leaves the composer out and shows events only; the control then hides too. |
-| Background pattern (`RecordBackdrop`, via `DetailLayout record`) | One faint pattern per record: glyph dots (member), ledger rules (sale), orbit dots (program), clock ticks (session), barcode (product). Drawn from the Paper "Atmosphere" frames in `--color-pattern`. The 864 × 560 drawing is pinned to the top right of its page and the box spans the page, so the strong part stays in view at every width; a left fade hides the cropped edge. When the detail panel sits beside the main column (1100px and up), the pattern stays behind the main column and leaves the panel clear. A list page (`.page`) shows a 220px band that fades out before the rows. Decoration: `aria-hidden`, no pointer events, hidden under `prefers-contrast: more`. |
+| Background pattern (`RecordBackdrop`, via `DetailLayout record`) | One faint pattern per record: glyph dots (member), ledger rules (sale), orbit dots (program), clock ticks (session), barcode (product). Drawn from the Paper "Atmosphere" frames in `--color-pattern`. The 864 × 560 drawing is pinned to the top right of its page and the box spans the page, so the strong part stays in view at every width; a left fade hides the cropped edge. When the detail panel sits beside the main column (1100px and up), the pattern stays behind the main column and leaves the panel clear. A list page (`.page`) shows a 176px band that has faded out where the first row starts. Decoration: `aria-hidden`, no pointer events, hidden under `prefers-contrast: more`. |
 | Status marks (`StatusMark`, `TimeMark`) | A ring or pie with its label: Paid, Partly paid, Unpaid, Fulfilled, Partly fulfilled, Unfulfilled (the icon set), and Renews or Ends (a pie of the time left). The label is the word Rails returns (#14 is open). Payment, fulfillment, and access stay separate marks. `boxed` is the pill of a hero. |
 | Credit ring (`CreditRing`) | "7 of 10 left" with a ring. Amber at two or fewer left, and at none. |
-| Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross in the chart and a flat faint line in a row. Chart size is a 10px column per session (16 spots at most); row size is 60 x 12 for twelve spots (20 at most). A larger session is drawn smaller: it never shows full unless it is, and never shows empty with a booking. Put the count beside it as text. |
+| Spot stack (`SpotColumn`, `SpotRow`, `SpotKey`) | One slanted segment per spot: booked is ink, open is faint, full is amber, past is grey, and a cancelled session is a red cross in the chart and a flat faint line in a row. Chart size is a 10px column per session (16 spots at most); row size is 72 x 10 for twelve spots, a 3.72px mark every 6px (20 at most). A larger session is drawn smaller: it never shows full unless it is, and never shows empty with a booking. Put the count beside it as text. |
 | Mix bar (`MixBar`) | Slanted stripes sized by share, darkest first. Put the numbers beside it as text. |
-| Allowance bar (`AllowanceBar`) | What a benefit allows: one slanted segment for each visit or booking, or one solid slanted bar for unlimited (and for more than 20). The amount sits beside it as text. |
+| Allowance bar (`AllowanceBar`) | What a benefit allows: one slanted segment for each visit or booking, or one solid slanted bar for unlimited (and for more than 20). It is 96 x 12 with a segment every 8px; more than twelve segments make it wider. The amount sits beside it as text. |
 | Tag chip (`TagChip`) | A 20px pill with a 6px dot (`DotTone`: neutral, good, warning, critical, info, violet) and the tag name. The dot never carries the meaning alone. |
 
 Differences from Paper, and why:
@@ -444,8 +449,16 @@ Differences from Paper, and why:
   dark) with the alpha of the Paper SVGs. They are faint in both themes by design.
 - Paper's group heading uses a dashed ring for "To arrive". The icon set has
   `unfulfilled` (a dashed ring), so groups use that icon.
-- A hero's tile is a gradient from `--color-raised` toward a 4% ink tint, not
-  Paper's literal #FFFFFF to #F4F4F5, so it follows both themes.
+- A tile is a gradient that is lighter at the top in both themes
+  (`--gradient-tile`). The light stops are `--color-raised` and a 4% ink tint,
+  not Paper's literal #FFFFFF and #F4F4F5. The dark stops are Paper's #2A2A2F
+  and #1B1B1F, with a white 12% ring and a 1px white 8% highlight on the top
+  edge (`--shadow-tile`).
+- The switch has Paper's size: 34 by 20, 2px padding, a 16px thumb with a soft
+  drop, and no border. Its off track is `--color-field-line`, not Paper's
+  #E4E4E7, which is 1.3:1 on the page. A control boundary needs 3:1.
+- The pager's range and the key hints use `--color-ink-3`, the darker muted
+  text, not Paper's #71717A.
 
 Keyboard and screen reader checks (run in the gallery, recorded in
 [Frontend preview](../../docs/frontend-preview.md)): Tab reaches each sort
@@ -505,9 +518,22 @@ the tokens and shared parts built from Paper in #85 and #87.
   main figure stays on the first line, the marks go under it.
 - Layout: `DetailLayout` fills the window (`.main:has(> .detail)` drops the main
   column's own padding) and pads its own sides. Sections share `Section`
-  (`features/members/Section.tsx`): a 12px grey title and View all, then flush
-  rows. The list table keeps its label row for assistive technology and hides
+  (`features/members/Section.tsx`): a 32px header with a 12px medium title in
+  `--color-ink-2` and View all, then flush rows with no gap. Paper's Member
+  frame draws this header 24px high and its Sale and Product frames 32px; the
+  portal uses 32px everywhere, so a header with a button and one without line
+  up. The list table keeps its label row for assistive technology and hides
   it on screen with `list-table--bare`.
+
+List pages (Members, Sales, Programs, Products) share one layout, read from the
+Paper frame "Members" (issue #128). The content has 36px at the sides. The
+title is 36px on a 40px line and sits 40px under the top bar; the count sits
+on the title's last line, 3px up. Then 32px to the toolbar, 20px to the table,
+and 24px to the pager. The search field is 240px wide. The pager's buttons are
+28px, 8px apart; the current page is a white tile with a hairline and a soft
+drop. The New button in the top bar has text and its N hint, without a plus
+icon. Display's Sort by is a 26px control with 6px between the value and its
+12px chevron; a column chip that is on has a 6% ink fill and a 15% ink line.
 
 The members list and New member are redesigned screens
 (`features/members/MembersList.tsx` and `NewMember.tsx`, helpers in
@@ -519,7 +545,8 @@ The members list and New member are redesigned screens
   and a filter bar with search (a "/" hint; Rails searches name and email as
   staff type; Escape clears) and Display. Then the list table: a 30px label
   row with Member and Member since as sortable headers, and 56px two-line rows
-  with initials, name, and the email under it, then the join date. Each row
+  with initials, name, and the email under it, then the month and year the
+  member joined ("Feb 2025"). Each row
   opens the member (one link covers the row). The footer reads "1–50 of 186
   members" and pages 50 at a time. Sorting, columns, and paging work on the
   rows Rails returned, in the page; the URL keeps only `q`. Display has Sort by
@@ -794,7 +821,7 @@ the chart column is the 8px `SpotColumn` step, the chart plot is 14px per day,
 and the ribbon's rows are 34px apart.
 
 - Programs (the Members list pattern): the title with the program count on
-  the right, New program (programs:manage) in the top bar, a filter bar (Filter
+  the right, New program (N, programs:manage) in the top bar, a filter bar (Filter
   with Kind and Visibility, with counts and "is" and "is not" chips; search over
   names and hosts, "/" hint; Display), the list table, and a page range. Rows
   are 56px: the kind tile (the set's groupClass, event, and appointment icons),

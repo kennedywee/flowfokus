@@ -18,7 +18,7 @@ import {
 import { useAction, useIdempotencyKey } from "../../lib/hooks";
 import { useCan, useDeskLocation, useLocationName, useOrganization } from "../../lib/organization";
 import { useShortcut } from "../../lib/shortcuts";
-import { useShortDate } from "./dates";
+import { useMonthYear, useShortDate } from "./dates";
 import type { MemberRecord } from "../../lib/staff.functions";
 import { createLinkCode, renewMembership, unlinkMember } from "../../lib/staff.functions";
 import {
@@ -97,12 +97,6 @@ export function MemberDetails({ record, loadedAt }: { record: MemberRecord; /** 
 }
 
 /* ---------- Hero ---------- */
-
-/** "Nov 2026", in the organization's time zone. */
-function useMonthYear() {
-  const { timezone } = useOrganization();
-  return (iso: string) => new Intl.DateTimeFormat("en-MY", { timeZone: timezone, month: "short", year: "numeric" }).format(new Date(iso));
-}
 
 /**
  * The tile, the name, "Member since Nov 2026", and two stats from the member's

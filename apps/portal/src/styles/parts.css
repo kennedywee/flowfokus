@@ -249,7 +249,8 @@
   gap: 9px;
   width: 100%;
   height: 36px;
-  padding: 4px 8px 0;
+  /* No side padding: the label starts at 44px, in line with the row titles (Paper "Group header"). */
+  padding: 4px 0 0;
   border: 0;
   border-radius: var(--radius-md);
   background: transparent;
@@ -568,10 +569,15 @@
   color: var(--color-ink-2);
   font-size: var(--text-sm);
 }
+/* Paper: 8px, the value, 6px, a 12px chevron, 6px (less the 1px border). */
 .display-popover__select.select {
   width: auto;
+  /* As wide as the chosen value, not the longest option, where the browser supports it. */
+  field-sizing: content;
   min-height: 26px;
-  padding: 0 24px 0 8px;
+  padding: 0 23px 0 7px;
+  background-position: right 5px center;
+  background-size: 12px;
   border-color: var(--color-line);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
@@ -603,8 +609,8 @@
   cursor: pointer;
 }
 .display-popover__chip[aria-pressed="true"] {
-  background: var(--color-well);
-  box-shadow: inset 0 0 0 1px var(--color-line-strong);
+  background: color-mix(in srgb, var(--color-ink) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 15%, transparent);
   color: var(--color-ink);
 }
 .display-popover__chip:hover {
@@ -701,8 +707,8 @@
   width: var(--size);
   height: var(--size);
   border-radius: 50%;
-  background: linear-gradient(180deg in oklab, var(--color-raised), color-mix(in srgb, var(--color-ink) 4%, var(--color-raised)));
-  box-shadow: inset 0 0 0 1px var(--color-line);
+  background: var(--gradient-tile);
+  box-shadow: var(--shadow-tile);
   color: var(--color-ink);
   font-size: var(--text-2xs);
   font-weight: var(--font-weight-medium);
@@ -946,12 +952,21 @@
   gap: 14px;
   min-width: 0;
 }
+/* A display hero (program, session): 12px more above, so the title sits 40px under the top bar, and the stat sits on the title's last line. */
+.hero[data-size="display"] {
+  align-items: flex-end;
+  padding-top: 12px;
+}
 .hero__text {
   display: flex;
   flex: 1 1 0;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+/* The pills sit 6px under the title. */
+.hero__title + .hero__facts {
+  margin-top: 2px;
 }
 .hero__title {
   margin: 0;
@@ -1002,13 +1017,18 @@
 .hero[data-size="display"] .hero__stat[data-above] .hero__value,
 .hero[data-size="display"] .hero__stat:only-child .hero__value {
   font-size: var(--text-figure);
-  line-height: 36px;
-  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-figure);
+  letter-spacing: var(--tracking-figure);
+}
+.hero[data-size="display"] .hero__stat[data-above],
+.hero[data-size="display"] .hero__stat:only-child {
+  gap: 4px;
 }
 .hero__value {
   margin: 0;
   color: var(--color-ink);
-  font-size: var(--text-md);
+  /* Paper: 18px on a 24px line. */
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-medium);
   letter-spacing: -0.02em;
@@ -1390,7 +1410,7 @@
   width: 864px;
   height: 560px;
 }
-/* A list page: the content paints over the pattern, which is a band behind the header that fades out before the rows. */
+/* A list page: the content paints over the pattern, which is a band behind the header. It is 176px tall, so it has faded out where the first row starts. */
 .page:has(> .backdrop) {
   position: relative;
 }
@@ -1398,7 +1418,7 @@
   position: relative;
 }
 .page > .backdrop {
-  height: 220px;
+  height: 176px;
   mask-image: var(--backdrop-fade), linear-gradient(var(--color-ink) 35%, transparent);
   mask-composite: intersect;
 }

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ListGroup, ListTable, ListTableBody, ListTableCell, ListTableRow, SelectionBar, ListTableEmpty } from "./ListTable";
 import { FilterBar, FilterBarChip, type FilterField } from "./FilterBar";
-import { CreditRing, SpotRow } from "./marks";
+import { AllowanceBar, CreditRing, SpotRow } from "./marks";
 import { RecordBackdrop } from "./Backdrop";
 
 const COLUMNS = [
@@ -166,6 +166,19 @@ describe("marks and patterns", () => {
 
   test("a spot row names its count", () => {
     expect(renderToStaticMarkup(<SpotRow capacity={12} booked={11} />)).toContain('aria-label="11 of 12 spots booked"');
+  });
+
+  test("a spot row is 10px tall with a mark every 6px, as in Paper", () => {
+    const html = renderToStaticMarkup(<SpotRow capacity={12} booked={11} />);
+    expect(html).toContain('width="72" height="10"');
+    expect(html).toContain('d="M12 10L14 0H17.72L15.72 10Z"');
+  });
+
+  test("an allowance bar is 96 by 12, and wider past twelve segments", () => {
+    expect(renderToStaticMarkup(<AllowanceBar limit={null} label="Unlimited visits" />)).toContain('width="96" height="12"');
+    expect(renderToStaticMarkup(<AllowanceBar limit={8} label="8 visits" />)).toContain('width="96" height="12"');
+    expect(renderToStaticMarkup(<AllowanceBar limit={8} label="8 visits" />)).toContain('d="M8 12L11 0H14L11 12Z"');
+    expect(renderToStaticMarkup(<AllowanceBar limit={20} label="20 visits" />)).toContain('width="160" height="12"');
   });
 
   test("a background pattern is hidden from assistive technology", () => {

@@ -125,7 +125,6 @@ function NewSaleLink({ variant = "default", shortcut = false }: { variant?: "def
       className={buttonVariants({ variant, size: "compact" })}
       aria-keyshortcuts={shortcut ? "N" : undefined}
     >
-      <Icon name="plus" {...icon} />
       New sale
       {shortcut ? <Kbd>N</Kbd> : null}
     </Link>

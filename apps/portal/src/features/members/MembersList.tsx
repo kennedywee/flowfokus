@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -26,7 +25,7 @@ import { useShortcut } from "../../lib/shortcuts";
 import { buttonVariants } from "@/components/ui/button";
 import type { SortState } from "@/lib/list-parts";
 import { PAGE_SIZE, pageRange, rangeLabel } from "../../lib/paging";
-import { useShortDate } from "./dates";
+import { useMonthYear } from "./dates";
 import {
   DEFAULT_MEMBER_COLUMNS,
   DEFAULT_MEMBER_SORT,
@@ -35,8 +34,6 @@ import {
   sortMembers,
   type MemberColumnId,
 } from "./list";
-
-const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** The first column, and Member since when the Display popover has it on. */
 function memberColumns(since: boolean): ListColumn[] {
@@ -109,7 +106,6 @@ function NewMemberLink({ variant = "default", shortcut = false }: { variant?: "d
       className={buttonVariants({ variant, size: "compact" })}
       aria-keyshortcuts={shortcut ? "N" : undefined}
     >
-      <Icon name="plus" {...icon} />
       New member
       {shortcut ? <Kbd>N</Kbd> : null}
     </Link>
@@ -144,7 +140,7 @@ function Bar({ q, display }: { q: string; display?: ReactNode }) {
 
 function MemberList({ members, q }: { members: Schemas["Member"][]; q: string }) {
   const organization = useOrganization();
-  const shortDate = useShortDate();
+  const monthYear = useMonthYear();
   const [sort, setSort] = useState<SortState>(DEFAULT_MEMBER_SORT);
   const [columns, setColumns] = useState(DEFAULT_MEMBER_COLUMNS);
   const [chosenPage, setPage] = useState(1);
@@ -202,7 +198,7 @@ function MemberList({ members, q }: { members: Schemas["Member"][]; q: string })
                 {columns.since ? (
                   <ListTableCell className="cell-muted">
                     <time dateTime={member.created_at} suppressHydrationWarning>
-                      {shortDate(member.created_at)}
+                      {monthYear(member.created_at)}
                     </time>
                   </ListTableCell>
                 ) : null}

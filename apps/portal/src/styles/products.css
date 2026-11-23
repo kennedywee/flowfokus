@@ -20,14 +20,17 @@
 
 .products-list {
   max-width: 1280px;
-  gap: var(--space-4);
+  /* Paper: 32px from the title to the toolbar, 20px to the table, 24px to the pager. */
+  gap: var(--space-5);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
+/* Paper "Members": the title sits 40px under the top bar, and the count on the title's last line. */
 .products-head {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-3);
+  padding: 20px 0 4px;
 }
 .products-head h1 {
   flex: 1;
@@ -40,6 +43,7 @@
 }
 .products-head .hero__stats {
   flex-basis: auto;
+  padding-bottom: 3px;
 }
 .products-list .list-table__link {
   min-width: 0;
