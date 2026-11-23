@@ -885,6 +885,7 @@
 /* ---------- Detail layout, hero, panel ---------- */
 
 .detail {
+  --detail-panel-width: 296px;
   position: relative;
   display: flex;
   min-width: 0;
@@ -915,8 +916,16 @@
   flex: none;
   flex-direction: column;
   gap: 24px;
-  width: 296px;
+  width: var(--detail-panel-width);
   padding: 28px 36px 28px 24px;
+}
+/* With the panel beside the main column, the pattern stays behind the main column. */
+@media (min-width: 1100px) {
+  .detail:has(> .detail__panel) > .backdrop {
+    right: var(--detail-panel-width);
+    width: auto;
+    left: 0;
+  }
 }
 @media (max-width: 1099.98px) {
   .detail {
