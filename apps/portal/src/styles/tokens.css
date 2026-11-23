@@ -76,6 +76,16 @@
   --gradient-primary-hover: linear-gradient(180deg in oklab, var(--color-primary-top-hover), var(--color-primary-bottom-hover));
   --color-primary-ring: var(--swatch-white-12);
 
+  /*
+   * A person or record tile (Paper "Avatar"): lighter at the top in both
+   * themes. The dark tile has a brighter ring and a 1px highlight on its top
+   * edge. The light stops follow the surface, not Paper's literal hex.
+   */
+  --color-tile-top: light-dark(var(--color-raised), var(--swatch-2a2a2f));
+  --color-tile-bottom: light-dark(color-mix(in srgb, var(--color-ink) 4%, var(--color-raised)), var(--swatch-1b1b1f));
+  --gradient-tile: linear-gradient(180deg in oklab, var(--color-tile-top), var(--color-tile-bottom));
+  --shadow-tile: inset 0 0 0 1px light-dark(var(--swatch-black-08), var(--swatch-white-12)), inset 0 1px 0 light-dark(transparent, var(--swatch-white-08));
+
   /* Information is the portal's blue. Focus and links use it too. */
   --color-info: light-dark(var(--swatch-245eaa), var(--swatch-80b7f5));
   --color-info-wash: color-mix(in srgb, var(--color-info) 9%, transparent);
@@ -182,8 +192,10 @@
   /* The phone tab bar, without the safe area under it. */
   --tab-bar-height: 50px;
 
-  /* The 1px drop under a compact secondary button. */
-  --shadow-control: 0 1px 0 light-dark(rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.4));
+  /* The soft drop under a compact secondary button and the current page of a pager (Paper: 0 1px 2px, black 4%). */
+  --shadow-control: 0 1px 2px light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.4));
+  /* The drop under a switch thumb. */
+  --shadow-thumb: 0 1px 2px rgb(0 0 0 / 0.2);
   /* The primary button: a 1px light edge inside and a soft drop. */
   --shadow-bar: 0 12px 28px -10px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.6)), 0 2px 4px light-dark(rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.3));
   --shadow-primary: inset 0 0 0 1px var(--color-primary-ring), 0 1px 2px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.4));

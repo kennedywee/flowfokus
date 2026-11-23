@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import type { Schemas } from "@flowfokus/api";
-import { Icon } from "@/components/ui/icon";
 import { ListPager } from "../../components/ListPager";
 import { SearchField, useSetListSearch } from "../../components/ListToolbar";
 import { PageActions } from "../../components/PageActions";
@@ -19,11 +18,12 @@ import {
   type ListColumn,
 } from "@/components/parts/ListTable";
 import { TagChip, Tile } from "@/components/parts/marks";
-import { initials } from "../../components/ui";
+import { Kbd, initials } from "../../components/ui";
 import { PROGRAM_KIND_LABEL, failureMessage } from "../../lib/format";
 import { useCan, useLocationName, useOrganization } from "../../lib/organization";
 import { PAGE_SIZE, pageRange, rangeLabel } from "../../lib/paging";
 import type { Failure, Result } from "../../lib/result";
+import { useShortcut } from "../../lib/shortcuts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import type { ActiveFilter, SortState } from "@/lib/list-parts";
 import {
@@ -47,7 +47,6 @@ import { KindTile } from "./kinds";
 
 type Program = Schemas["ProgramListItem"];
 
-const icon = { "aria-hidden": true, focusable: false } as const;
 
 /** The first column, and Host and Upcoming when the Display popover has them on. */
 function programColumns(columns: Record<ProgramColumnId, boolean>): ListColumn[] {
@@ -90,20 +89,31 @@ function ListHead({ count }: { count: string | null }) {
       <h1>Programs</h1>
       {count !== null ? <HeroStats stats={[{ value: count, label: Number(count) === 1 ? "program" : "programs" }]} /> : null}
       <PageActions>
-        <NewProgramLink />
+        <NewProgramLink shortcut />
       </PageActions>
     </header>
   );
 }
 
-function NewProgramLink({ variant = "default" }: { variant?: "default" | "secondary" }) {
+/** `shortcut` adds the N key and its hint. Only the top bar action has it, so the key is bound once. */
+function NewProgramLink({ variant = "default", shortcut = false }: { variant?: "default" | "secondary"; shortcut?: boolean }) {
   const organization = useOrganization();
   const can = useCan();
-  if (!can("programs:manage")) return null;
+  const navigate = useNavigate();
+  const canCreate = can("programs:manage");
+  useShortcut("n", () => void navigate({ to: "/$org/programs/new", params: { org: organization.slug } }), {
+    enabled: shortcut && canCreate,
+  });
+  if (!canCreate) return null;
   return (
-    <Link to="/$org/programs/new" params={{ org: organization.slug }} className={buttonVariants({ variant, size: "compact" })}>
-      <Icon name="plus" {...icon} />
+    <Link
+      to="/$org/programs/new"
+      params={{ org: organization.slug }}
+      className={buttonVariants({ variant, size: "compact" })}
+      aria-keyshortcuts={shortcut ? "N" : undefined}
+    >
       New program
+      {shortcut ? <Kbd>N</Kbd> : null}
     </Link>
   );
 }

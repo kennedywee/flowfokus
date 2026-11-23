@@ -38,19 +38,30 @@
 
 .programs-list {
   max-width: 1280px;
-  gap: var(--space-6);
+  /* Paper: 32px from the title to the toolbar, 20px to the table, 24px to the pager. */
+  gap: var(--space-5);
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
 }
+/* Paper "Members": the title sits 40px under the top bar, and the count on the title's last line. */
 .programs-head {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-3);
+  padding: 20px 0 4px;
 }
 .programs-head h1 {
   flex: 1;
   min-width: 0;
+  font-size: var(--text-display);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+}
+.programs-head .hero__stats {
+  flex-basis: auto;
+  padding-bottom: 3px;
 }
 
 .programs-table {
@@ -980,9 +991,9 @@ a.program-row:focus-visible {
   min-height: 24px;
 }
 .program-chart__head h2 {
-  color: var(--color-ink-3);
+  color: var(--color-ink-2);
   font-size: var(--text-xs);
-  font-weight: var(--font-weight-regular);
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
 }
 /* The plot keeps 14px a day. A phone scrolls it sideways instead of squeezing the stacks. */

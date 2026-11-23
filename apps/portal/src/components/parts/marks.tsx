@@ -118,14 +118,14 @@ export function CreditRing({ left, total, children }: { left: number; total: num
  */
 const SPOT_CLASS: Record<SpotKind, string> = { booked: "spot--booked", open: "spot--open", full: "spot--full", past: "spot--past" };
 
-/** Most segments a row draws (100px). A bigger session is drawn smaller. */
+/** Most segments a row draws (120px). A bigger session is drawn smaller. */
 const ROW_MAX = 20;
 /** Most segments a column draws (128px). */
 const COLUMN_MAX = 16;
 
 /**
- * One run of spots, left to right, at row size (60 x 12 for twelve spots). A
- * cancelled session is a flat faint line, as in Paper.
+ * One run of spots, left to right, at row size (72 x 10 for twelve spots: a
+ * 3.72px mark every 6px). A cancelled session is a flat faint line, as in Paper.
  */
 export function SpotRow({
   capacity,
@@ -142,11 +142,11 @@ export function SpotRow({
 }) {
   const scaled = scaleSpots(capacity, booked, ROW_MAX);
   const spots = spotKinds(scaled.capacity, scaled.booked, state);
-  const width = Math.max(1, cancelled ? Math.min(capacity, ROW_MAX) : spots.length) * 5;
+  const width = Math.max(1, cancelled ? Math.min(capacity, ROW_MAX) : spots.length) * 6;
   if (cancelled) {
     return (
-      <svg className="spot-row" width={width} height="12" viewBox={`0 0 ${width} 12`} role="img" aria-label={label ?? "Cancelled"}>
-        <path className="spot--line" d={`M0 6H${width}`} />
+      <svg className="spot-row" width={width} height="10" viewBox={`0 0 ${width} 10`} role="img" aria-label={label ?? "Cancelled"}>
+        <path className="spot--line" d={`M0 5H${width}`} />
       </svg>
     );
   }
@@ -154,13 +154,13 @@ export function SpotRow({
     <svg
       className="spot-row"
       width={width}
-      height="12"
-      viewBox={`0 0 ${width} 12`}
+      height="10"
+      viewBox={`0 0 ${width} 10`}
       role="img"
       aria-label={label ?? `${booked} of ${capacity} spots booked`}
     >
       {spots.map((kind, index) => (
-        <path key={index} className={SPOT_CLASS[kind]} d={`M${index * 5} 11L${index * 5 + 1.5} 1H${index * 5 + 4}L${index * 5 + 2.5} 11Z`} />
+        <path key={index} className={SPOT_CLASS[kind]} d={`M${index * 6} 10L${index * 6 + 2} 0H${index * 6 + 5}.72L${index * 6 + 3}.72 10Z`} />
       ))}
     </svg>
   );
@@ -230,21 +230,23 @@ export function MixBar({ counts, label }: { counts: readonly number[]; label?: s
 export const MAX_ALLOWANCE_SEGMENTS = 20;
 
 /**
- * What a benefit allows. One slanted segment for each visit or booking, or a
- * solid slanted bar when there is no limit (`limit` null) or the limit is past
- * 20. The text beside it gives the number, so the bar stays a picture of it.
+ * What a benefit allows, 96 x 12 as in Paper. One slanted segment for each
+ * visit or booking (6px wide, every 8px), or a solid slanted bar when there is
+ * no limit (`limit` null) or the limit is past 20. More than twelve segments
+ * make the bar wider. The text beside it gives the number, so the bar stays a
+ * picture of it.
  */
 export function AllowanceBar({ limit, label }: { limit: number | null; label: string }) {
   const segments = limit !== null && limit <= MAX_ALLOWANCE_SEGMENTS ? limit : 0;
-  const width = segments ? segments * 5 : 60;
+  const width = Math.max(96, segments * 8);
   return (
     <svg className="spot-row" width={width} height="12" viewBox={`0 0 ${width} 12`} role="img" aria-label={label}>
       {segments ? (
         Array.from({ length: segments }, (_, index) => (
-          <path key={index} className="spot--booked" d={`M${index * 5} 11L${index * 5 + 1.5} 1H${index * 5 + 4}L${index * 5 + 2.5} 11Z`} />
+          <path key={index} className="spot--booked" d={`M${index * 8} 12L${index * 8 + 3} 0H${index * 8 + 6}L${index * 8 + 3} 12Z`} />
         ))
       ) : (
-        <path className="spot--booked" d="M0 11L2 1H60L58 11Z" />
+        <path className="spot--booked" d="M0 12L3 0H96L93 12Z" />
       )}
     </svg>
   );
