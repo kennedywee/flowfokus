@@ -435,13 +435,17 @@ function BenefitsFields({
   onSet: (benefits: BenefitDraft[]) => void;
 }) {
   const organization = useOrganization();
+  // The highest key this form has shown. A new benefit never takes a removed
+  // one's key, so it does not show that benefit's errors.
+  const highestKey = useRef(0);
+  highestKey.current = Math.max(highestKey.current, nextBenefitKey(draft.benefits) - 1);
   return (
     <Section
       id="product-benefits"
       title="Benefits"
       action={
         draft.benefits.length < MAX_BENEFITS ? (
-          <Button id="product-add-benefit" type="button" variant="secondary" size="compact" onClick={() => onSet([...draft.benefits, benefitDraft(undefined, nextBenefitKey(draft.benefits))])}>
+          <Button id="product-add-benefit" type="button" variant="secondary" size="compact" onClick={() => onSet([...draft.benefits, benefitDraft(undefined, highestKey.current + 1)])}>
             <Icon name="plus" {...icon} />
             Add benefit
           </Button>
