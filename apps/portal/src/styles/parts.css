@@ -1354,22 +1354,44 @@
 /* ---------- Background pattern ---------- */
 
 /* Decoration only. It sits behind the page, takes no pointer events, and is off for reduced-contrast needs. */
+/*
+ * Each pattern is strongest near the top right of its 864 x 560 drawing, so the
+ * drawing is pinned to the top right and the box spans its parent. A wide page
+ * shows the faint left end of the drawing; a narrow page crops that end. The
+ * left fade keeps a cropped drawing from ending in a hard edge.
+ */
 .backdrop {
+  --backdrop-fade: linear-gradient(to right, transparent, var(--color-ink) 160px);
   position: absolute;
   top: 0;
-  left: 0;
-  width: 864px;
-  max-width: 100%;
+  right: 0;
+  width: 100%;
   height: 560px;
   overflow: hidden;
   color: var(--color-pattern);
   pointer-events: none;
   user-select: none;
+  mask-image: var(--backdrop-fade);
 }
 .backdrop svg {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: block;
   width: 864px;
   height: 560px;
+}
+/* A list page: the content paints over the pattern, which is a band behind the header that fades out before the rows. */
+.page:has(> .backdrop) {
+  position: relative;
+}
+.page:has(> .backdrop) > :not(.backdrop) {
+  position: relative;
+}
+.page > .backdrop {
+  height: 220px;
+  mask-image: var(--backdrop-fade), linear-gradient(var(--color-ink) 35%, transparent);
+  mask-composite: intersect;
 }
 .backdrop[data-record="product"] {
   opacity: 0.45;

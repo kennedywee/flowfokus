@@ -688,7 +688,7 @@ export const GALLERY: readonly GalleryEntry[] = [
     name: "Background pattern",
     group: "Blocks",
     summary:
-      "One faint pattern per record type. Decoration only: hidden from assistive technology, no pointer events, and off under prefers-contrast: more.",
+      "One faint pattern per record type, pinned to the top right of its page at every width. A list page shows it as a band behind the header. Decoration only: hidden from assistive technology, no pointer events, and off under prefers-contrast: more.",
     source: ["components/parts/Backdrop.tsx", "styles/parts.css"],
     paper: { page: "Flowfokus Design — Session details", board: "Session · A3 · Chosen (clock ticks)" },
     examples: [{ file: "backdrop-patterns", title: "The five patterns", note: "Drawn at 70% of their size." }],
