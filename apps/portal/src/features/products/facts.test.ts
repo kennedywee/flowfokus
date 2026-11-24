@@ -8,6 +8,7 @@ import {
   filterFromSearch,
   filterProducts,
   mainPrice,
+  nextBenefitKey,
   priceLabel,
   priceSpec,
   productCounts,
@@ -130,6 +131,16 @@ describe("the form", () => {
     expect(draft).toMatchObject({ name: "Monthly unlimited", published: true });
     expect(draftChanged(draft, startDraft(product(), "MYR"))).toBe(false);
     expect(draftChanged({ ...draft, name: "Other" }, draft)).toBe(true);
+  });
+
+  test("gives benefits the same keys on every render, so server and browser ids match", () => {
+    expect(startDraft(undefined, "MYR").benefits.map((item) => item.key)).toEqual([1]);
+    expect(startDraft(undefined, "MYR").benefits.map((item) => item.key)).toEqual([1]);
+    const two = { ...product(), benefits: [product().benefits[0]!, product().benefits[0]!] };
+    const benefits = startDraft(two, "MYR").benefits;
+    expect(benefits.map((item) => item.key)).toEqual([1, 2]);
+    expect(nextBenefitKey(benefits)).toBe(3);
+    expect(nextBenefitKey([])).toBe(1);
   });
 
   test("an edit does not check the price", () => {
